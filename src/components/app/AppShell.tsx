@@ -3,6 +3,7 @@ import { Compass, LayoutDashboard, Map, Wallet, type LucideIcon } from "lucide-r
 import type { ReactNode } from "react";
 
 import { DemoBadge } from "./bits";
+import { cn } from "@/lib/utils";
 
 const NAV: { to: "/" | "/budget" | "/itinerary" | "/dashboard"; label: string; icon: LucideIcon }[] = [
   { to: "/", label: "Plan", icon: Compass },
@@ -48,13 +49,21 @@ export function AppShell({ children }: { children: ReactNode }) {
               key={to}
               to={to}
               activeOptions={{ exact: true }}
-              className="group flex flex-col items-center gap-0.5 rounded-xl py-1.5 text-[11px] font-semibold text-muted-foreground"
-              activeProps={{ className: "text-primary", "data-active": "true" } as Record<string, string>}
+              className="flex flex-col items-center gap-0.5 rounded-xl py-1.5 text-[11px] font-semibold"
             >
-              <span className="grid h-8 w-12 place-items-center rounded-full transition-colors group-data-[active=true]:bg-secondary">
-                <Icon className="size-5" />
-              </span>
-              {label}
+              {({ isActive }) => (
+                <>
+                  <span
+                    className={cn(
+                      "grid h-8 w-12 place-items-center rounded-full transition-colors",
+                      isActive ? "bg-secondary text-primary" : "text-muted-foreground",
+                    )}
+                  >
+                    <Icon className="size-5" />
+                  </span>
+                  <span className={isActive ? "text-primary" : "text-muted-foreground"}>{label}</span>
+                </>
+              )}
             </Link>
           ))}
         </div>
