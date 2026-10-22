@@ -363,7 +363,7 @@ function Welcome() {
         </Field>
 
         {/* Budget */}
-        <Field label="Total budget" hint="Includes a protected emergency fund">
+        <Field label="Total budget" hint="Your reserve comes out of this">
           <NumberField
             aria-label="Total budget"
             prefix="$"
