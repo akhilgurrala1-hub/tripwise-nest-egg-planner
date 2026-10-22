@@ -8,11 +8,12 @@ import { DemoBadge, NumberField } from "@/components/app/bits";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { calculateBudget, defaultInputs, formatMoney, tripShape } from "@/lib/budget";
+import { calculateBudget, defaultEmergencyFund, defaultInputs, formatMoney, tripShape } from "@/lib/budget";
 import {
   CUSTOM_DESTINATION_ID,
   DESTINATIONS,
   INTERESTS,
+  TRANSPORT_MODES,
   TRAVEL_STYLES,
   TRIP_TYPES,
   getDestination,
@@ -49,6 +50,7 @@ function Welcome() {
   const { trip } = useTrip();
   const [form, setForm] = useState<TripSetup>(trip.setup);
   const touched = useRef(false);
+  const reserveTouched = useRef(false);
 
   // Pick up a saved trip once it loads from this device.
   useEffect(() => {
@@ -69,15 +71,26 @@ function Welcome() {
         : shape.days > MAX_DAYS
           ? `Trips up to ${MAX_DAYS} days for now`
           : "";
+  const reserveError = form.emergencyFund > form.totalBudget ? "Reserve can't be more than your total budget" : "";
   const destError =
     form.destinationId === CUSTOM_DESTINATION_ID && !form.customDestination.trim() ? "Type a destination" : "";
 
   const suggested = useMemo(() => {
     const dest = getDestination(form.destinationId, form.customDestination);
-    const totals = calculateBudget(defaultInputs(dest, form.style, form.tripType, form.travelers), shape, 0, 0);
-    // Planned spend plus a 10% protected emergency fund.
-    return Math.ceil(totals.planned / 0.9 / 50) * 50;
-  }, [form.destinationId, form.customDestination, form.style, form.tripType, form.travelers, shape]);
+    const totals = calculateBudget(
+      defaultInputs(dest, form.style, form.tripType, form.travelers, form.transportMode),
+      shape,
+      0,
+      0,
+    );
+    // Planned spend plus the protected reserve (10% of the budget unless the traveler set their own).
+    return reserveTouched.current
+      ? Math.ceil((totals.planned + form.emergencyFund) / 50) * 50
+      : Math.ceil(totals.planned / 0.9 / 50) * 50;
+  }, [form.destinationId, form.customDestination, form.style, form.tripType, form.travelers, form.transportMode, form.emergencyFund, shape]);
+
+  const setBudget = (totalBudget: number) =>
+    update(reserveTouched.current ? { totalBudget } : { totalBudget, emergencyFund: defaultEmergencyFund(totalBudget) });
 
   const orderedDestinations = useMemo(
     () =>
@@ -104,8 +117,8 @@ function Welcome() {
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (dateError || destError) {
-      toast.error(dateError || destError);
+    if (dateError || destError || reserveError) {
+      toast.error(dateError || destError || reserveError);
       return;
     }
     if (form.totalBudget <= 0) {
@@ -291,6 +304,29 @@ function Welcome() {
           </Field>
         </div>
 
+        {/* Transportation */}
+        <Field label="How are you getting there?">
+          <div className="flex flex-wrap gap-2">
+            {TRANSPORT_MODES.map((m) => {
+              const active = form.transportMode === m.id;
+              return (
+                <button
+                  key={m.id}
+                  type="button"
+                  aria-pressed={active}
+                  onClick={() => update({ transportMode: m.id })}
+                  className={cn(
+                    "rounded-full border px-3.5 py-2 text-sm font-semibold transition-all",
+                    active ? "border-primary bg-primary text-primary-foreground" : "border-border bg-card text-foreground hover:border-primary/40",
+                  )}
+                >
+                  {m.label}
+                </button>
+              );
+            })}
+          </div>
+        </Field>
+
         {/* Style */}
         <Field label="Travel style">
           <div className="grid grid-cols-3 gap-2">
@@ -332,7 +368,7 @@ function Welcome() {
             aria-label="Total budget"
             prefix="$"
             value={form.totalBudget}
-            onChange={(n) => update({ totalBudget: n })}
+            onChange={setBudget}
             step={50}
             className="h-14 rounded-2xl"
             inputClassName="text-2xl font-display"
@@ -342,7 +378,7 @@ function Welcome() {
               <button
                 key={p}
                 type="button"
-                onClick={() => update({ totalBudget: p })}
+                onClick={() => setBudget(p)}
                 className={cn(
                   "tabular rounded-full border px-3 py-1.5 text-xs font-semibold transition-colors",
                   form.totalBudget === p ? "border-primary bg-secondary" : "border-border bg-card hover:bg-secondary",
@@ -357,10 +393,26 @@ function Welcome() {
               <span className="text-muted-foreground">Suggested for this trip</span>{" "}
               <span className="tabular font-bold">{formatMoney(suggested)}</span>
             </p>
-            <Button type="button" size="sm" variant="outline" onClick={() => update({ totalBudget: suggested })}>
+            <Button type="button" size="sm" variant="outline" onClick={() => setBudget(suggested)}>
               Use
             </Button>
           </div>
+        </Field>
+
+        <Field label="Emergency reserve" hint="Kept out of your spending money" error={reserveError}>
+          <NumberField
+            aria-label="Emergency reserve"
+            prefix="$"
+            step={25}
+            value={form.emergencyFund}
+            onChange={(n) => {
+              reserveTouched.current = true;
+              update({ emergencyFund: n });
+            }}
+          />
+          <p className="tabular mt-1.5 text-xs text-muted-foreground">
+            Spendable budget: {formatMoney(Math.max(0, form.totalBudget - form.emergencyFund))}
+          </p>
         </Field>
 
         <Button type="submit" variant="hero" size="lg" className="w-full">
