@@ -1,6 +1,6 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
-import { Compass, LayoutDashboard, LogOut, Map, Route as RouteIcon, UserRound, Wallet, type LucideIcon } from "lucide-react";
+import { Compass, LayoutDashboard, LogOut, Map, Monitor, Moon, Route as RouteIcon, Sun, UserRound, Wallet, type LucideIcon } from "lucide-react";
 import type { ReactNode } from "react";
 
 import { DemoBadge } from "./bits";
@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
+import { useTheme, type ThemePref } from "@/lib/theme";
 
 const NAV: { to: "/" | "/budget" | "/road-trip" | "/itinerary" | "/dashboard"; label: string; icon: LucideIcon }[] = [
   { to: "/", label: "Plan", icon: Compass },
@@ -50,7 +51,8 @@ export function AppShell({ children }: { children: ReactNode }) {
             ))}
           </nav>
           <div className="flex items-center gap-2">
-            <DemoBadge label="Demo prices" className="hidden sm:inline-flex" />
+            <DemoBadge label="Demo prices" className="hidden lg:inline-flex" />
+            <ThemeToggle />
             <AccountButton />
           </div>
         </div>
@@ -124,6 +126,33 @@ function AccountButton() {
         <DropdownMenuItem onClick={signOut}>
           <LogOut className="size-4" /> Sign out
         </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
+
+const THEME_OPTIONS: { id: ThemePref; label: string; icon: LucideIcon }[] = [
+  { id: "light", label: "Light", icon: Sun },
+  { id: "dark", label: "Dark", icon: Moon },
+  { id: "system", label: "System", icon: Monitor },
+];
+
+function ThemeToggle() {
+  const { pref, setPref } = useTheme();
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button size="icon" variant="ghost" className="size-9" aria-label="Change theme">
+          <Sun className="dark:hidden" />
+          <Moon className="hidden dark:block" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-40">
+        {THEME_OPTIONS.map(({ id, label, icon: Icon }) => (
+          <DropdownMenuItem key={id} onClick={() => setPref(id)} className={cn(pref === id && "font-semibold text-primary")}>
+            <Icon className="size-4" /> {label}
+          </DropdownMenuItem>
+        ))}
       </DropdownMenuContent>
     </DropdownMenu>
   );
