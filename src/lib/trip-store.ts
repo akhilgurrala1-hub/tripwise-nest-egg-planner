@@ -158,11 +158,12 @@ function getSample(): TripState {
   return trip;
 }
 
-/** Saved trips with missing or epoch-era dates get moved to valid future dates, keeping their length. */
+/** Saved trips with missing or epoch-era dates (and sample trips whose dates have passed) get moved to valid future dates, keeping their length. */
 function repairDates(trip: TripState): TripState {
   const { startDate, endDate } = trip.setup;
   const valid = (d: string) => /^\d{4}-\d{2}-\d{2}$/.test(d) && Number(d.slice(0, 4)) >= 2000;
-  if (valid(startDate) && valid(endDate) && endDate >= startDate) return trip;
+  const staleSample = trip.isSample && startDate < todayIso();
+  if (valid(startDate) && valid(endDate) && endDate >= startDate && !staleSample) return trip;
   const days = Math.min(14, Math.max(1, tripShape(startDate, endDate, 1).days));
   const start = addDays(todayIso(), 30);
   const setup = { ...trip.setup, startDate: start, endDate: addDays(start, days - 1) };
@@ -192,8 +193,7 @@ function load() {
     const raw = window.localStorage.getItem(STORAGE_KEY);
     if (raw) {
       const migrated = migrate(JSON.parse(raw));
-      // Untouched sample trips are rebuilt fresh so their dates stay current.
-      if (migrated && !migrated.isSample) state = repairDates(migrated);
+      if (migrated) state = repairDates(migrated);
     }
   } catch {
     /* ignore corrupt storage */
