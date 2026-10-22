@@ -254,7 +254,7 @@ function CategoryRow({ cat }: { cat: Category }) {
   return (
     <AccordionItem value={cat} className="surface-card overflow-hidden border-b-0 px-0">
       <AccordionTrigger className="px-4 py-3.5 hover:no-underline">
-        <div className="flex min-w-0 flex-1 items-center gap-3 text-left">
+        <div className="flex min-w-0 flex-1 items-center gap-3 text-left font-sans">
           <span
             className="grid size-10 shrink-0 place-items-center rounded-xl text-primary-foreground"
             style={{ backgroundColor: CATEGORY_COLOR_VAR[cat] }}

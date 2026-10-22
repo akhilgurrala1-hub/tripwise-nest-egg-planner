@@ -212,7 +212,10 @@ export function savingsOpportunities(
   tips.push({
     id: "lodging",
     title: "Choose a value stay",
-    detail: "Demo budget-tier lodging nearby for the same nights.",
+    detail:
+      dest.nightly.budget === 0
+        ? "Skip the hotel and sleep at home — the classic staycation move."
+        : "Demo budget-tier lodging nearby for the same nights.",
     category: "accommodations",
     amount: categories.accommodations - budgetLodging,
   });

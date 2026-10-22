@@ -121,7 +121,7 @@ function Dashboard() {
               <div className="relative mx-auto size-44">
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
-                    <Pie data={breakdown} dataKey="value" nameKey="cat" innerRadius="68%" outerRadius="100%" paddingAngle={2} stroke="none">
+                    <Pie data={breakdown} dataKey="value" nameKey="cat" startAngle={90} endAngle={-270} innerRadius="68%" outerRadius="100%" paddingAngle={2} stroke="none">
                       {breakdown.map((d) => (
                         <Cell key={d.cat} fill={CATEGORY_COLOR_VAR[d.cat]} />
                       ))}
