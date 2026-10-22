@@ -4,7 +4,9 @@ import type { CostSource, RealStopsResult, RouteStop, StopKind, StopTag } from "
 
 const GATEWAY_URL = "https://connector-gateway.lovable.dev/google_maps";
 const MAX_QUERIES = 5;
-const RESULTS_PER_QUERY = 5;
+/** Google bills Text Search per request, so ask for a full page and spread picks along the route. */
+const RESULTS_PER_QUERY = 20;
+const KEEP_PER_QUERY = 8;
 
 interface QuerySpec {
   text: string;
@@ -192,6 +194,17 @@ function toStop(p: GPlace, legs: GLeg[] | undefined, spec: QuerySpec, routeSecon
   };
 }
 
+/** Keep results in Google's relevance order but round-robin across route quarters so stops aren't all near the start. */
+function spreadAlongRoute(list: RouteStop[], keep: number): RouteStop[] {
+  const buckets: RouteStop[][] = [[], [], [], []];
+  for (const s of list) buckets[Math.min(3, Math.floor(s.position * 4))]!.push(s);
+  const out: RouteStop[] = [];
+  for (let i = 0; out.length < keep && buckets.some((b) => b.length > i); i++) {
+    for (const b of buckets) if (b[i] && out.length < keep) out.push(b[i]!);
+  }
+  return out;
+}
+
 export async function findRealStops(input: {
   origin: string;
   destination: string;
@@ -264,11 +277,10 @@ export async function findRealStops(input: {
       if (r.status !== "fulfilled") continue;
       const places: GPlace[] = r.value.data?.places ?? [];
       const summaries: { legs?: GLeg[] }[] = r.value.data?.routingSummaries ?? [];
-      places.forEach((p, i) => {
-        if (stops.has(p.id)) return;
-        const stop = toStop(p, summaries[i]?.legs, r.value.q, routeSeconds);
-        if (stop) stops.set(p.id, stop);
-      });
+      const candidates = places
+        .map((p, i) => (stops.has(`g-${p.id}`) ? null : toStop(p, summaries[i]?.legs, r.value.q, routeSeconds)))
+        .filter((x): x is RouteStop => x !== null);
+      for (const stop of spreadAlongRoute(candidates, KEEP_PER_QUERY)) stops.set(stop.id, stop);
     }
     if (stops.size === 0 && firstError) {
       const e = firstError.reason;
