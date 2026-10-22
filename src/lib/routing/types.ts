@@ -32,7 +32,31 @@ export interface RouteStop {
   /** Provider place id for future reviews/booking lookups */
   placeId: string | null;
   isDemo: boolean;
+  /** Where the cost estimate came from */
+  costSource: CostSource;
+  rating: number | null;
+  ratingCount: number | null;
+  address: string | null;
+  mapsUrl: string | null;
 }
+
+/**
+ * demo = sample value; listed = price range published on the map listing;
+ * price-level = estimated from the listing's $ level; unknown = no price published.
+ */
+export type CostSource = "demo" | "listed" | "price-level" | "unknown";
+
+export interface RealRoute {
+  distanceMiles: number;
+  durationMinutes: number;
+  encodedPolyline: string;
+  start: LatLng;
+  end: LatLng;
+}
+
+export type RealStopsResult =
+  | { ok: true; route: RealRoute; stops: RouteStop[] }
+  | { ok: false; error: string };
 
 export interface RouteRequest {
   origin: string;

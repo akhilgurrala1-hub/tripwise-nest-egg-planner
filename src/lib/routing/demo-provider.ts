@@ -64,5 +64,10 @@ export function buildDemoStops(req: Pick<RouteRequest, "origin" | "destination">
     location: null,
     placeId: null,
     isDemo: true,
+    costSource: "demo" as const,
+    rating: null,
+    ratingCount: null,
+    address: null,
+    mapsUrl: null,
   }));
 }
