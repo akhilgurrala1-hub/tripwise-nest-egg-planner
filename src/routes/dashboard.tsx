@@ -63,6 +63,11 @@ function Dashboard() {
               <p className="mt-1 text-sm text-primary-foreground/70">
                 of {formatMoney(totals.spendable)} spendable · {formatMoney(totals.totalBudget)} total budget
               </p>
+              {totals.overBudget && (
+                <Link to="/budget" className="mt-2 inline-block text-sm font-semibold text-sunset underline underline-offset-2">
+                  See where to cut
+                </Link>
+              )}
             </div>
             <div className="flex items-center gap-2 self-start rounded-2xl bg-card/10 px-4 py-3 sm:self-end">
               <Lock className="size-4" />
