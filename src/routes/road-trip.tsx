@@ -84,7 +84,7 @@ function RoadTripPage() {
   const provider = getRouteProvider();
   const driving = isDrivingMode(trip.inputs.transportMode);
 
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const realMode = !!user;
   const fetchRealStops = useServerFn(getRealStops);
   const [search, setSearch] = useState<{ origin: string; destination: string; interests: Interest[] } | null>(null);
@@ -113,7 +113,24 @@ function RoadTripPage() {
   const realOk = realResult?.ok === true ? (realResult as Extract<RealStopsResult, { ok: true }>) : null;
   const realError = realResult && realResult.ok === false ? (realResult as { error: string }).error : null;
   const stops: RouteStop[] = realMode ? (realOk?.stops ?? []) : (demo.data ?? []);
-  const isLoading = realMode ? real.isFetching : demo.isLoading;
+  // Exactly one of these states renders at a time.
+  const view: "auth-loading" | "demo" | "needs-search" | "loading" | "unavailable" | "empty" | "results" = authLoading
+    ? "auth-loading"
+    : !realMode
+      ? demo.isLoading
+        ? "loading"
+        : "demo"
+      : !search
+        ? "needs-search"
+        : real.isFetching
+          ? "loading"
+          : real.isError || realError
+            ? "unavailable"
+            : realOk && realOk.stops.length === 0
+              ? "empty"
+              : realOk
+                ? "results"
+                : "loading";
   const canSearch = rt.origin.trim().length >= 2 && rt.destination.trim().length >= 2;
   const runSearch = () =>
     setSearch({ origin: rt.origin.trim(), destination: rt.destination.trim(), interests: [...rt.interests].sort() });
@@ -232,15 +249,15 @@ function RoadTripPage() {
                 })}
               </div>
             </div>
-            {realMode ? (
+            {authLoading ? null : realMode ? (
               <Button variant="hero" className="w-full" disabled={!canSearch || real.isFetching} onClick={runSearch}>
                 {real.isFetching ? <Loader2 className="animate-spin" /> : <Search />}
-                {real.isFetching ? "Finding stops along your route…" : "Find real stops"}
+                {real.isFetching ? "Looking along your route…" : "Find real stops"}
               </Button>
             ) : (
               <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-sunset-soft px-4 py-3 text-sm">
                 <p>
-                  <strong>Showing demo stops.</strong> Sign in to see real places, routes and drive times.
+                  <strong>You're seeing sample stops.</strong> Sign in to explore real places, routes and drive times.
                 </p>
                 <Button asChild size="sm" variant="outline">
                   <Link to="/auth" search={{ redirect: "/road-trip" }}>
@@ -251,78 +268,82 @@ function RoadTripPage() {
             )}
           </section>
 
-          {realMode && realOk && (
+          {view === "results" && realOk && (
             <p className="tabular text-sm text-muted-foreground">
-              Route: <strong className="text-foreground">{realOk.route.distanceMiles} mi</strong> · about{" "}
+              Your route: <strong className="text-foreground">{realOk.route.distanceMiles} mi</strong>, about{" "}
               <strong className="text-foreground">
                 {Math.floor(realOk.route.durationMinutes / 60)} h {realOk.route.durationMinutes % 60} min
               </strong>{" "}
-              driving without stops
+              of driving without stops.
             </p>
           )}
-          {realMode && realError && (
-            <div className="rounded-2xl border border-destructive/25 bg-destructive-soft p-4 text-sm text-destructive">
-              {realError}
-            </div>
-          )}
-          {realMode && real.isError && (
-            <div className="rounded-2xl border border-destructive/25 bg-destructive-soft p-4 text-sm text-destructive">
-              Couldn't reach the map service. Please try again.
-            </div>
-          )}
 
-          {/* Filters */}
-          <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:flex-wrap sm:px-0">
-            {STOP_FILTERS.map((f) => (
-              <button
-                key={f.id}
-                type="button"
-                aria-pressed={filter === f.id}
-                onClick={() => setFilter(f.id)}
-                className={cn(
-                  "shrink-0 rounded-full border px-4 py-2 text-sm font-semibold transition-all",
-                  filter === f.id ? "border-sunset bg-sunset-soft text-foreground" : "border-border bg-card text-muted-foreground hover:text-foreground",
+          <section className="space-y-3" aria-live="polite">
+            {view === "auth-loading" || view === "loading" ? (
+              <StateCard icon={<Loader2 className="size-5 animate-spin text-sunset" />} title="Looking along your route…">
+                Finding viewpoints, food and places worth the detour.
+              </StateCard>
+            ) : view === "needs-search" ? (
+              <StateCard icon={<Search className="size-5 text-primary" />} title="Where does the road take you?">
+                Add your start and destination above, then tap <strong>Find real stops</strong>.
+              </StateCard>
+            ) : view === "unavailable" ? (
+              <StateCard icon={<Flag className="size-5 text-destructive" />} title="We couldn't reach the map service">
+                {realError ?? "Please try again in a moment."} Your budget and saved stops are safe.
+              </StateCard>
+            ) : view === "empty" ? (
+              <StateCard icon={<MapPin className="size-5 text-muted-foreground" />} title="No stops found on this route">
+                Try nearby cities, or add a few interests for more ideas.
+              </StateCard>
+            ) : (
+              <>
+                <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:flex-wrap sm:px-0">
+                  {STOP_FILTERS.map((f) => (
+                    <button
+                      key={f.id}
+                      type="button"
+                      aria-pressed={filter === f.id}
+                      onClick={() => setFilter(f.id)}
+                      className={cn(
+                        "min-h-10 shrink-0 rounded-full border px-4 py-2 text-sm font-semibold transition-all",
+                        filter === f.id
+                          ? "border-sunset bg-sunset-soft text-foreground"
+                          : "border-border bg-card text-muted-foreground hover:text-foreground",
+                      )}
+                    >
+                      {f.label}
+                    </button>
+                  ))}
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  {visible.length} stop{visible.length === 1 ? "" : "s"} within {rt.maxDetourMinutes} min
+                  {hiddenByDetour > 0 ? ` · ${hiddenByDetour} longer detour${hiddenByDetour === 1 ? "" : "s"} hidden` : ""}.{" "}
+                  {view === "demo"
+                    ? "Demonstration mode: stop types, times and prices are samples, not real businesses."
+                    : "Places and drive times come from Google Maps. Costs are estimates — check before you go."}
+                </p>
+                {visible.length === 0 ? (
+                  <StateCard icon={<MapPin className="size-5 text-muted-foreground" />} title="Nothing matches yet">
+                    Try another filter or allow a slightly longer detour.
+                  </StateCard>
+                ) : (
+                  visible.map((stop) => (
+                    <StopCard
+                      key={stop.id}
+                      stop={stop}
+                      included={includedIds.has(stop.id)}
+                      cost={stopCost(stop, shape.travelers, trip.inputs)}
+                      tripRemaining={totals.remaining}
+                      stopBudgetLeft={stopBudgetLeft}
+                      reasons={whyItMatches(stop, rt.interests, shape.travelers)}
+                      segment={segmentLabel(stop.position, rt.origin, rt.destination)}
+                      travelers={shape.travelers}
+                      driving={driving}
+                    />
+                  ))
                 )}
-              >
-                {f.label}
-              </button>
-            ))}
-          </div>
-
-          {/* Recommendations */}
-          <section className="space-y-3">
-            <p className="text-xs text-muted-foreground">
-              {visible.length} stop{visible.length === 1 ? "" : "s"} within {rt.maxDetourMinutes} min
-              {hiddenByDetour > 0 ? ` · ${hiddenByDetour} longer detour${hiddenByDetour === 1 ? "" : "s"} hidden` : ""}.{" "}
-              {realMode
-                ? "Places and drive times come from Google Maps. Costs are estimates — check before you go."
-                : "Stop names are generic types, not real businesses. Sign in for real places."}
-            </p>
-            {isLoading && <div className="surface-card p-5 text-sm text-muted-foreground">Finding stops along your route…</div>}
-            {realMode && !search && !isLoading && (
-              <div className="surface-card p-6 text-center text-sm text-muted-foreground">
-                Enter your start and destination, then tap <strong>Find real stops</strong>.
-              </div>
+              </>
             )}
-            {!isLoading && (!realMode || realOk) && visible.length === 0 && (
-              <div className="surface-card p-6 text-center text-sm text-muted-foreground">
-                No stops match. Try another filter or allow a longer detour.
-              </div>
-            )}
-            {visible.map((stop) => (
-              <StopCard
-                key={stop.id}
-                stop={stop}
-                included={includedIds.has(stop.id)}
-                cost={stopCost(stop, shape.travelers, trip.inputs)}
-                tripRemaining={totals.remaining}
-                stopBudgetLeft={stopBudgetLeft}
-                reasons={whyItMatches(stop, rt.interests, shape.travelers)}
-                segment={segmentLabel(stop.position, rt.origin, rt.destination)}
-                travelers={shape.travelers}
-                driving={driving}
-              />
-            ))}
           </section>
         </div>
 
@@ -425,7 +446,7 @@ function StopCard({
           <p className="text-[11px] font-bold tracking-wider text-muted-foreground uppercase">
             {label} · {segment}
           </p>
-          <h3 className="font-sans text-base leading-snug font-bold">{stop.name}</h3>
+          <h3 className="font-display text-lg leading-snug font-semibold">{stop.name}</h3>
           {stop.description && <p className="text-xs text-muted-foreground">{stop.description}</p>}
           {(stop.rating !== null || stop.address) && (
             <p className="mt-0.5 flex flex-wrap items-center gap-x-2 text-xs text-muted-foreground">
@@ -540,7 +561,7 @@ function RouteMap({
   return (
     <section className="surface-card p-5">
       <div className="flex items-center justify-between">
-        <h2 className="font-display text-lg font-semibold">Route preview</h2>
+        <h2 className="font-display text-lg font-semibold">Route sketch</h2>
         <DemoBadge label="Schematic" />
       </div>
       <div className="relative mt-4 ml-3 h-80">
@@ -580,8 +601,18 @@ function RouteMap({
         </div>
       </div>
       <p className="mt-3 text-[11px] text-muted-foreground">
-        A live map with real routes and places will appear here once a mapping service is connected.
+        Not a map — a simple sketch of where sample stops fall along the drive. Sign in for a live map.
       </p>
     </section>
+  );
+}
+
+function StateCard({ icon, title, children }: { icon: React.ReactNode; title: string; children: React.ReactNode }) {
+  return (
+    <div className="surface-card flex flex-col items-center gap-2 px-6 py-10 text-center">
+      <span className="grid size-11 place-items-center rounded-full bg-muted">{icon}</span>
+      <p className="font-display text-lg font-semibold">{title}</p>
+      <p className="max-w-sm text-sm text-muted-foreground">{children}</p>
+    </div>
   );
 }
