@@ -1,8 +1,13 @@
 import { useQuery } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import {
   Clock,
+  ExternalLink,
   Flag,
+  Loader2,
+  Search,
+  Star,
   Footprints,
   MapPin,
   Minus,
@@ -14,9 +19,11 @@ import {
   UtensilsCrossed,
   type LucideIcon,
 } from "lucide-react";
-import { useState } from "react";
+import { useCallback, useState } from "react";
 
 import { DemoBadge, NumberField } from "@/components/app/bits";
+import { RealRouteMap } from "@/components/app/RealRouteMap";
+import { Badge } from "@/components/ui/badge";
 import { PageHeader } from "@/components/app/TripHeader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -33,6 +40,8 @@ import {
   type StopFilter,
   type StopKind,
 } from "@/lib/routing";
+import { useAuth } from "@/lib/auth-context";
+import { getRealStops } from "@/lib/places/real-stops.functions";
 import { tripActions, useTrip } from "@/lib/trip-store";
 import { cn } from "@/lib/utils";
 
@@ -74,7 +83,12 @@ function RoadTripPage() {
   const provider = getRouteProvider();
   const driving = isDrivingMode(trip.inputs.transportMode);
 
-  const { data: stops = [], isLoading } = useQuery({
+  const { user } = useAuth();
+  const realMode = !!user;
+  const fetchRealStops = useServerFn(getRealStops);
+  const [search, setSearch] = useState<{ origin: string; destination: string; interests: Interest[] } | null>(null);
+
+  const demo = useQuery({
     queryKey: ["route-stops", provider.id, rt.origin, rt.destination],
     queryFn: () =>
       provider.findStopsAlongRoute({
@@ -83,7 +97,28 @@ function RoadTripPage() {
         interests: rt.interests,
         maxDetourMinutes: rt.maxDetourMinutes,
       }),
+    enabled: !realMode,
   });
+
+  const real = useQuery({
+    queryKey: ["real-stops", search],
+    queryFn: () => fetchRealStops({ data: search! }),
+    enabled: realMode && !!search,
+    staleTime: 30 * 60 * 1000,
+    retry: false,
+  });
+
+  const realResult = real.data;
+  const realOk = realResult && realResult.ok ? realResult : null;
+  const stops: RouteStop[] = realMode ? (realOk?.stops ?? []) : (demo.data ?? []);
+  const isLoading = realMode ? real.isFetching : demo.isLoading;
+  const canSearch = rt.origin.trim().length >= 2 && rt.destination.trim().length >= 2;
+  const runSearch = () =>
+    setSearch({ origin: rt.origin.trim(), destination: rt.destination.trim(), interests: [...rt.interests].sort() });
+  const scrollToStop = useCallback(
+    (id: string) => document.getElementById(`stop-${id}`)?.scrollIntoView({ behavior: "smooth", block: "center" }),
+    [],
+  );
 
   const includedIds = new Set(rt.includedStops.map((s) => s.id));
   const withinDetour = stops.filter((s) => s.extraMinutes <= rt.maxDetourMinutes);
@@ -100,7 +135,13 @@ function RoadTripPage() {
   return (
     <div>
       <PageHeader eyebrow="Road-trip discovery" title="Find the good stops">
-        <DemoBadge label="Demo stops · sample times & prices" />
+        {realMode ? (
+          <Badge variant="success" className="px-3 py-1">
+            Real places & drive times · prices are estimates
+          </Badge>
+        ) : (
+          <DemoBadge label="Demo stops · sample times & prices" />
+        )}
       </PageHeader>
 
       <div className="mx-auto mt-6 grid max-w-6xl grid-cols-1 gap-6 px-4 lg:grid-cols-[minmax(0,1fr)_340px]">
@@ -189,7 +230,44 @@ function RoadTripPage() {
                 })}
               </div>
             </div>
+            {realMode ? (
+              <Button variant="hero" className="w-full" disabled={!canSearch || real.isFetching} onClick={runSearch}>
+                {real.isFetching ? <Loader2 className="animate-spin" /> : <Search />}
+                {real.isFetching ? "Finding stops along your route…" : "Find real stops"}
+              </Button>
+            ) : (
+              <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-sunset-soft px-4 py-3 text-sm">
+                <p>
+                  <strong>Showing demo stops.</strong> Sign in to see real places, routes and drive times.
+                </p>
+                <Button asChild size="sm" variant="outline">
+                  <Link to="/auth" search={{ redirect: "/road-trip" }}>
+                    Sign in
+                  </Link>
+                </Button>
+              </div>
+            )}
           </section>
+
+          {realMode && realOk && (
+            <p className="tabular text-sm text-muted-foreground">
+              Route: <strong className="text-foreground">{realOk.route.distanceMiles} mi</strong> · about{" "}
+              <strong className="text-foreground">
+                {Math.floor(realOk.route.durationMinutes / 60)} h {realOk.route.durationMinutes % 60} min
+              </strong>{" "}
+              driving without stops
+            </p>
+          )}
+          {realMode && realResult && !realResult.ok && (
+            <div className="rounded-2xl border border-destructive/25 bg-destructive-soft p-4 text-sm text-destructive">
+              {realResult.error}
+            </div>
+          )}
+          {realMode && real.isError && (
+            <div className="rounded-2xl border border-destructive/25 bg-destructive-soft p-4 text-sm text-destructive">
+              Couldn't reach the map service. Please try again.
+            </div>
+          )}
 
           {/* Filters */}
           <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:flex-wrap sm:px-0">
@@ -214,10 +292,17 @@ function RoadTripPage() {
             <p className="text-xs text-muted-foreground">
               {visible.length} stop{visible.length === 1 ? "" : "s"} within {rt.maxDetourMinutes} min
               {hiddenByDetour > 0 ? ` · ${hiddenByDetour} longer detour${hiddenByDetour === 1 ? "" : "s"} hidden` : ""}.
-              Stop names are generic types, not real businesses — real places arrive with a mapping service.
+              {realMode
+                ? "Places and drive times come from Google Maps. Costs are estimates — check before you go."
+                : "Stop names are generic types, not real businesses. Sign in for real places."}
             </p>
             {isLoading && <div className="surface-card p-5 text-sm text-muted-foreground">Finding stops along your route…</div>}
-            {!isLoading && visible.length === 0 && (
+            {realMode && !search && !isLoading && (
+              <div className="surface-card p-6 text-center text-sm text-muted-foreground">
+                Enter your start and destination, then tap <strong>Find real stops</strong>.
+              </div>
+            )}
+            {!isLoading && (!realMode || realOk) && visible.length === 0 && (
               <div className="surface-card p-6 text-center text-sm text-muted-foreground">
                 No stops match. Try another filter or allow a longer detour.
               </div>
@@ -274,12 +359,14 @@ function RoadTripPage() {
             </div>
           </section>
 
-          <RouteMap
-            origin={rt.origin}
-            destination={rt.destination}
-            stops={withinDetour}
-            includedIds={includedIds}
-          />
+          {realOk ? (
+            <section className="surface-card p-4">
+              <h2 className="mb-3 font-display text-lg font-semibold">Route map</h2>
+              <RealRouteMap route={realOk.route} stops={withinDetour} includedIds={includedIds} onSelect={scrollToStop} />
+            </section>
+          ) : (
+            <RouteMap origin={rt.origin} destination={rt.destination} stops={withinDetour} includedIds={includedIds} />
+          )}
 
           {rt.includedStops.length > 0 && (
             <Button variant="outline" className="w-full" onClick={tripActions.clearStops}>
@@ -337,7 +424,20 @@ function StopCard({
             {label} · {segment}
           </p>
           <h3 className="font-sans text-base leading-snug font-bold">{stop.name}</h3>
-          <p className="text-xs text-muted-foreground">{stop.description}</p>
+          {stop.description && <p className="text-xs text-muted-foreground">{stop.description}</p>}
+          {(stop.rating !== null || stop.address) && (
+            <p className="mt-0.5 flex flex-wrap items-center gap-x-2 text-xs text-muted-foreground">
+              {stop.rating !== null && (
+                <span className="inline-flex items-center gap-0.5 font-semibold text-foreground">
+                  <Star className="size-3 fill-gold text-gold" /> {stop.rating.toFixed(1)}
+                  {stop.ratingCount !== null && (
+                    <span className="font-normal text-muted-foreground">({stop.ratingCount.toLocaleString()})</span>
+                  )}
+                </span>
+              )}
+              {stop.address && <span className="truncate">{stop.address}</span>}
+            </p>
+          )}
           <ul className="mt-2 flex flex-wrap gap-1.5">
             {reasons.map((r) => (
               <li key={r} className="inline-flex items-center gap-1 rounded-full bg-gold-soft px-2 py-0.5 text-[11px] font-semibold">
@@ -351,18 +451,30 @@ function StopCard({
       <div className="grid grid-cols-3 border-t border-border bg-muted/40 text-center text-xs">
         <div className="p-3">
           <p className="text-muted-foreground">Est. cost</p>
-          <p className="tabular text-sm font-bold">{cost === 0 ? "Free" : formatMoney(cost, { cents: true })}</p>
+          <p className="tabular text-sm font-bold">
+            {stop.costSource === "unknown" && cost === 0
+              ? "Not listed"
+              : cost === 0
+                ? "Free"
+                : formatMoney(cost, { cents: true })}
+          </p>
           <p className="tabular text-[10px] text-muted-foreground">
-            {stop.costPerPerson === 0 ? "no entry fee" : `${formatMoney(stop.costPerPerson)}/pp × ${travelers}`}
+            {stop.costSource === "unknown"
+              ? "price not published"
+              : stop.costPerPerson === 0
+                ? "no entry fee"
+                : `${formatMoney(stop.costPerPerson)}/pp × ${travelers}`}
             {driving && stop.extraMinutes > 0 ? " + fuel" : ""}
           </p>
+          {stop.costSource === "price-level" && <p className="text-[10px] text-muted-foreground">est. from $ level</p>}
+          {stop.costSource === "listed" && <p className="text-[10px] text-muted-foreground">listed price range</p>}
         </div>
         <div className="border-x border-border p-3">
           <p className="text-muted-foreground">Extra drive</p>
           <p className="tabular inline-flex items-center gap-1 text-sm font-bold">
             <Clock className="size-3" /> +{stop.extraMinutes} min
           </p>
-          <p className="text-[10px] text-muted-foreground">sample time</p>
+          <p className="text-[10px] text-muted-foreground">{stop.isDemo ? "sample time" : "Google drive time"}</p>
         </div>
         <div className="p-3">
           <p className="text-muted-foreground">{included ? "Trip remaining" : "Remaining after"}</p>
@@ -376,7 +488,20 @@ function StopCard({
       </div>
 
       <div className="flex items-center justify-between gap-3 border-t border-border px-4 py-3">
-        <DemoBadge label="Demo" />
+        {stop.isDemo ? (
+          <DemoBadge label="Demo" />
+        ) : stop.mapsUrl ? (
+          <a
+            href={stop.mapsUrl}
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex items-center gap-1 text-xs font-semibold text-primary underline-offset-2 hover:underline"
+          >
+            View on Google Maps <ExternalLink className="size-3" />
+          </a>
+        ) : (
+          <span />
+        )}
         <Button
           size="sm"
           variant={included ? "outline" : "default"}
