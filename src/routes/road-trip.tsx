@@ -36,6 +36,7 @@ import {
   matchesFilter,
   rankStops,
   whyItMatches,
+  type RealStopsResult,
   type RouteStop,
   type StopFilter,
   type StopKind,
@@ -109,7 +110,8 @@ function RoadTripPage() {
   });
 
   const realResult = real.data;
-  const realOk = realResult && realResult.ok ? realResult : null;
+  const realOk = realResult?.ok === true ? (realResult as Extract<RealStopsResult, { ok: true }>) : null;
+  const realError = realResult && realResult.ok === false ? (realResult as { error: string }).error : null;
   const stops: RouteStop[] = realMode ? (realOk?.stops ?? []) : (demo.data ?? []);
   const isLoading = realMode ? real.isFetching : demo.isLoading;
   const canSearch = rt.origin.trim().length >= 2 && rt.destination.trim().length >= 2;
@@ -258,9 +260,9 @@ function RoadTripPage() {
               driving without stops
             </p>
           )}
-          {realMode && realResult && !realResult.ok && (
+          {realMode && realError && (
             <div className="rounded-2xl border border-destructive/25 bg-destructive-soft p-4 text-sm text-destructive">
-              {realResult.error}
+              {realError}
             </div>
           )}
           {realMode && real.isError && (

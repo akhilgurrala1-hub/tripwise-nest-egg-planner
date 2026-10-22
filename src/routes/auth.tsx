@@ -10,7 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { safeRedirect, useAuth } from "@/lib/auth-context";
 
 export const Route = createFileRoute("/auth")({
-  validateSearch: (search: Record<string, unknown>) => ({ redirect: safeRedirect(search.redirect) }),
+  validateSearch: (search: Record<string, unknown>) => ({ redirect: safeRedirect(search["redirect"]) }),
   head: () => ({
     meta: [
       { title: "Sign in — Waypoint" },
