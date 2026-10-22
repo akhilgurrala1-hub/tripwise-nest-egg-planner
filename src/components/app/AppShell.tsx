@@ -1,9 +1,21 @@
-import { Link } from "@tanstack/react-router";
-import { Compass, LayoutDashboard, Map, Route as RouteIcon, Wallet, type LucideIcon } from "lucide-react";
+import { Link, useNavigate } from "@tanstack/react-router";
+import { useQueryClient } from "@tanstack/react-query";
+import { Compass, LayoutDashboard, LogOut, Map, Route as RouteIcon, UserRound, Wallet, type LucideIcon } from "lucide-react";
 import type { ReactNode } from "react";
 
 import { DemoBadge } from "./bits";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/lib/auth-context";
 
 const NAV: { to: "/" | "/budget" | "/road-trip" | "/itinerary" | "/dashboard"; label: string; icon: LucideIcon }[] = [
   { to: "/", label: "Plan", icon: Compass },
@@ -37,7 +49,10 @@ export function AppShell({ children }: { children: ReactNode }) {
               </Link>
             ))}
           </nav>
-          <DemoBadge label="Demo prices" />
+          <div className="flex items-center gap-2">
+            <DemoBadge label="Demo prices" className="hidden sm:inline-flex" />
+            <AccountButton />
+          </div>
         </div>
       </header>
 
@@ -70,5 +85,46 @@ export function AppShell({ children }: { children: ReactNode }) {
         </div>
       </nav>
     </div>
+  );
+}
+
+function AccountButton() {
+  const { user, loading } = useAuth();
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+
+  if (loading) return <span className="size-9" aria-hidden />;
+  if (!user) {
+    return (
+      <Button asChild size="sm" variant="outline">
+        <Link to="/auth" search={{ redirect: undefined }}>
+          Sign in
+        </Link>
+      </Button>
+    );
+  }
+
+  const signOut = async () => {
+    await queryClient.cancelQueries({ queryKey: ["real-stops"] });
+    queryClient.removeQueries({ queryKey: ["real-stops"] });
+    await supabase.auth.signOut();
+    navigate({ to: "/auth", search: { redirect: undefined }, replace: true });
+  };
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button size="icon" variant="outline" className="size-9" aria-label="Account">
+          <UserRound />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-56">
+        <DropdownMenuLabel className="truncate text-xs font-normal text-muted-foreground">{user.email}</DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem onClick={signOut}>
+          <LogOut className="size-4" /> Sign out
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }
