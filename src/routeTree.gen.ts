@@ -10,14 +10,21 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthRouteImport } from './routes/auth'
 import { Route as BudgetRouteImport } from './routes/budget'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as ItineraryRouteImport } from './routes/itinerary'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as RoadTripRouteImport } from './routes/road-trip'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
 const BudgetRoute = BudgetRouteImport.update({
@@ -35,6 +42,11 @@ const ItineraryRoute = ItineraryRouteImport.update({
   path: '/itinerary',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const RoadTripRoute = RoadTripRouteImport.update({
   id: '/road-trip',
   path: '/road-trip',
@@ -43,39 +55,69 @@ const RoadTripRoute = RoadTripRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
   '/budget': typeof BudgetRoute
   '/dashboard': typeof DashboardRoute
   '/itinerary': typeof ItineraryRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/road-trip': typeof RoadTripRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
   '/budget': typeof BudgetRoute
   '/dashboard': typeof DashboardRoute
   '/itinerary': typeof ItineraryRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/road-trip': typeof RoadTripRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
   '/budget': typeof BudgetRoute
   '/dashboard': typeof DashboardRoute
   '/itinerary': typeof ItineraryRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/road-trip': typeof RoadTripRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/budget' | '/dashboard' | '/itinerary' | '/road-trip'
+  fullPaths:
+    | '/'
+    | '/auth'
+    | '/budget'
+    | '/dashboard'
+    | '/itinerary'
+    | '/reset-password'
+    | '/road-trip'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/budget' | '/dashboard' | '/itinerary' | '/road-trip'
-  id: '__root__' | '/' | '/budget' | '/dashboard' | '/itinerary' | '/road-trip'
+  to:
+    | '/'
+    | '/auth'
+    | '/budget'
+    | '/dashboard'
+    | '/itinerary'
+    | '/reset-password'
+    | '/road-trip'
+  id:
+    | '__root__'
+    | '/'
+    | '/auth'
+    | '/budget'
+    | '/dashboard'
+    | '/itinerary'
+    | '/reset-password'
+    | '/road-trip'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AuthRoute: typeof AuthRoute
   BudgetRoute: typeof BudgetRoute
   DashboardRoute: typeof DashboardRoute
   ItineraryRoute: typeof ItineraryRoute
+  ResetPasswordRoute: typeof ResetPasswordRoute
   RoadTripRoute: typeof RoadTripRoute
 }
 
@@ -86,6 +128,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/budget': {
@@ -109,6 +158,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ItineraryRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/road-trip': {
       id: '/road-trip'
       path: '/road-trip'
@@ -121,9 +177,11 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AuthRoute: AuthRoute,
   BudgetRoute: BudgetRoute,
   DashboardRoute: DashboardRoute,
   ItineraryRoute: ItineraryRoute,
+  ResetPasswordRoute: ResetPasswordRoute,
   RoadTripRoute: RoadTripRoute,
 }
 export const routeTree = rootRouteImport
