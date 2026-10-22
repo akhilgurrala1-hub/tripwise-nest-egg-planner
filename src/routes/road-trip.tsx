@@ -461,7 +461,8 @@ function StopCard({
               {stop.address && <span className="truncate">{stop.address}</span>}
             </p>
           )}
-          <ul className="mt-2 flex flex-wrap gap-1.5">
+          <p className="mt-2 text-[11px] font-bold tracking-wider text-muted-foreground uppercase">Worth the detour?</p>
+          <ul className="mt-1 flex flex-wrap gap-1.5">
             {reasons.map((r) => (
               <li key={r} className="inline-flex items-center gap-1 rounded-full bg-gold-soft px-2 py-0.5 text-[11px] font-semibold">
                 <Sparkles className="size-3 text-sunset" /> {r}
