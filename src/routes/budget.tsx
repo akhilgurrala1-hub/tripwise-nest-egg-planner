@@ -139,21 +139,21 @@ function BudgetPage() {
 
         {/* Emergency fund */}
         <aside className="lg:order-2">
-          <section className="overflow-hidden rounded-3xl bg-gradient-ink p-5 text-primary-foreground shadow-lift lg:sticky lg:top-20">
+          <section className="overflow-hidden rounded-3xl bg-gradient-ink p-5 text-ink-foreground shadow-lift lg:sticky lg:top-20">
             <div className="flex items-center justify-between">
-              <span className="grid size-10 place-items-center rounded-full bg-card/15">
+              <span className="grid size-10 place-items-center rounded-full bg-ink-foreground/10">
                 <ShieldCheck className="size-5" />
               </span>
-              <span className="inline-flex items-center gap-1 rounded-full bg-card/15 px-2.5 py-1 text-xs font-semibold">
+              <span className="inline-flex items-center gap-1 rounded-full bg-ink-foreground/10 px-2.5 py-1 text-xs font-semibold">
                 <Lock className="size-3" /> Protected
               </span>
             </div>
             <h2 className="mt-4 font-display text-2xl font-semibold">Emergency fund</h2>
-            <p className="mt-1 text-sm text-primary-foreground/75">
+            <p className="mt-1 text-sm text-ink-foreground/75">
               Set aside first and never counted as spending money — for flat tires, urgent care or a surprise night's stay.
             </p>
             <p className="tabular mt-4 font-display text-4xl font-semibold">{formatMoney(totals.emergencyFund)}</p>
-            <p className="text-xs text-primary-foreground/70">
+            <p className="text-xs text-ink-foreground/70">
               {trip.setup.totalBudget > 0 ? Math.round((totals.emergencyFund / trip.setup.totalBudget) * 100) : 0}% of
               your total budget
             </p>
@@ -334,7 +334,7 @@ function CategoryRow({ cat }: { cat: Category }) {
       <AccordionTrigger className="px-4 py-3.5 hover:no-underline">
         <div className="flex min-w-0 flex-1 items-center gap-3 text-left font-sans">
           <span
-            className="grid size-10 shrink-0 place-items-center rounded-xl text-primary-foreground"
+            className="grid size-10 shrink-0 place-items-center rounded-xl text-on-image"
             style={{ backgroundColor: CATEGORY_COLOR_VAR[cat] }}
           >
             <Icon className="size-5" />
@@ -426,7 +426,7 @@ function CutPlan() {
           return (
             <li key={s.category} className="flex items-center gap-3 rounded-xl bg-card p-3">
               <span
-                className="grid size-9 shrink-0 place-items-center rounded-lg text-primary-foreground"
+                className="grid size-9 shrink-0 place-items-center rounded-lg text-on-image"
                 style={{ backgroundColor: CATEGORY_COLOR_VAR[s.category] }}
               >
                 <Icon className="size-4" />

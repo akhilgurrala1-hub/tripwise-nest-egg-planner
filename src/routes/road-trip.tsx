@@ -328,30 +328,30 @@ function RoadTripPage() {
 
         {/* Route plan */}
         <aside className="space-y-4 lg:sticky lg:top-20 lg:self-start">
-          <section className="overflow-hidden rounded-3xl bg-gradient-ink p-5 text-primary-foreground shadow-lift">
+          <section className="overflow-hidden rounded-3xl bg-gradient-ink p-5 text-ink-foreground shadow-lift">
             <h2 className="font-display text-xl font-semibold">Your route plan</h2>
             <dl className="mt-3 grid grid-cols-2 gap-3 text-sm">
-              <div className="rounded-xl bg-card/10 p-3">
-                <dt className="text-xs text-primary-foreground/70">Stops added</dt>
+              <div className="rounded-xl bg-ink-foreground/10 p-3">
+                <dt className="text-xs text-ink-foreground/70">Stops added</dt>
                 <dd className="tabular text-lg font-bold">{rt.includedStops.length}</dd>
               </div>
-              <div className="rounded-xl bg-card/10 p-3">
-                <dt className="text-xs text-primary-foreground/70">Extra drive (sample)</dt>
+              <div className="rounded-xl bg-ink-foreground/10 p-3">
+                <dt className="text-xs text-ink-foreground/70">Extra drive (sample)</dt>
                 <dd className="tabular text-lg font-bold">+{extraMinutes} min</dd>
               </div>
-              <div className="rounded-xl bg-card/10 p-3">
-                <dt className="text-xs text-primary-foreground/70">Stop spend</dt>
+              <div className="rounded-xl bg-ink-foreground/10 p-3">
+                <dt className="text-xs text-ink-foreground/70">Stop spend</dt>
                 <dd className="tabular text-lg font-bold">{formatMoney(stopsTotal, { cents: true })}</dd>
               </div>
-              <div className="rounded-xl bg-card/10 p-3">
-                <dt className="text-xs text-primary-foreground/70">Stop budget left</dt>
+              <div className="rounded-xl bg-ink-foreground/10 p-3">
+                <dt className="text-xs text-ink-foreground/70">Stop budget left</dt>
                 <dd className={cn("tabular text-lg font-bold", stopBudgetLeft < 0 && "text-sunset")}>
                   {formatMoney(stopBudgetLeft, { cents: true })}
                 </dd>
               </div>
             </dl>
-            <div className="mt-3 rounded-xl bg-card/10 p-3 text-sm">
-              <p className="text-xs text-primary-foreground/70">Whole-trip money remaining</p>
+            <div className="mt-3 rounded-xl bg-ink-foreground/10 p-3 text-sm">
+              <p className="text-xs text-ink-foreground/70">Whole-trip money remaining</p>
               <p className={cn("tabular font-display text-2xl font-semibold", totals.overBudget && "text-sunset")}>
                 {formatMoney(totals.remaining, { cents: true })}
               </p>

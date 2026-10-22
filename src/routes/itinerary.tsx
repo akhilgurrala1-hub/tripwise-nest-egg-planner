@@ -165,7 +165,7 @@ function ItineraryPage() {
             itin.days.map((day) => (
               <section key={day.day} className="surface-card animate-rise overflow-hidden">
                 <header className="flex items-center gap-3 border-b border-border bg-gradient-sand px-5 py-4">
-                  <span className="grid size-11 shrink-0 place-items-center rounded-2xl bg-gradient-ink font-display text-lg font-semibold text-primary-foreground">
+                  <span className="grid size-11 shrink-0 place-items-center rounded-2xl bg-gradient-ink font-display text-lg font-semibold text-ink-foreground">
                     {day.day}
                   </span>
                   <div className="min-w-0">

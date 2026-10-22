@@ -144,15 +144,15 @@ function Welcome() {
           />
           <div className="absolute inset-0 bg-hero-fade" />
           <div className="absolute inset-x-0 bottom-0 p-6 pb-14 lg:p-10">
-            <p className="mb-3 inline-flex items-center gap-1.5 rounded-full bg-card/20 px-3 py-1 text-xs font-semibold text-primary-foreground backdrop-blur">
+            <p className="mb-3 inline-flex items-center gap-1.5 rounded-full bg-on-image/20 px-3 py-1 text-xs font-semibold text-on-image backdrop-blur">
               <Sparkles className="size-3.5" /> AI-powered trip planning
             </p>
-            <h1 className="font-display text-4xl leading-[1.05] font-semibold text-primary-foreground sm:text-5xl lg:text-6xl">
+            <h1 className="font-display text-4xl leading-[1.05] font-semibold text-on-image sm:text-5xl lg:text-6xl">
               Big adventures,
               <br />
               <em className="font-medium">smart budgets.</em>
             </h1>
-            <p className="mt-3 max-w-sm text-sm text-primary-foreground/85 sm:text-base">
+            <p className="mt-3 max-w-sm text-sm text-on-image/85 sm:text-base">
               Road trips, getaways and staycations — planned to the dollar, with a safety net built in.
             </p>
           </div>
