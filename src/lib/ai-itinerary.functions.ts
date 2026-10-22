@@ -8,6 +8,7 @@ const inputSchema = z.object({
   tripType: z.string().max(40),
   style: z.string().max(40),
   days: z.number().int().min(1).max(14),
+  startDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
   travelers: z.number().int().min(1).max(20),
   interests: z.array(z.string().max(40)).max(12),
   activityBudgetPerPerson: z.number().min(0).max(100000),

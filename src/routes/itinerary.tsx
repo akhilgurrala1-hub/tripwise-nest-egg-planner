@@ -53,6 +53,7 @@ function ItineraryPage() {
           tripType: label(TRIP_TYPES, trip.setup.tripType),
           style: label(TRAVEL_STYLES, trip.setup.style),
           days: Math.min(14, shape.days),
+          startDate: trip.setup.startDate,
           travelers: shape.travelers,
           interests: trip.setup.interests.map((i) => label(INTERESTS, i)),
           activityBudgetPerPerson: totals.categories.activities / shape.travelers,
