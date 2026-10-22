@@ -100,10 +100,10 @@ function ItineraryPage() {
         </div>
       </PageHeader>
 
-      <div className="mx-auto mt-6 grid max-w-6xl gap-6 px-4 lg:grid-cols-[1fr_320px]">
-        <div className="space-y-4">
+      <div className="mx-auto mt-6 grid max-w-6xl grid-cols-1 gap-6 px-4 lg:grid-cols-[minmax(0,1fr)_320px]">
+        <div className="min-w-0 space-y-4">
           {itin?.source === "ai" ? (
-            <Badge variant="ai" className="px-3 py-1">
+            <Badge variant="ai" className="px-3 py-1 whitespace-normal">
               <Sparkles /> AI suggestion · places and prices are unverified estimates
             </Badge>
           ) : (
@@ -135,7 +135,7 @@ function ItineraryPage() {
                     <p className="text-xs font-semibold tracking-wider text-muted-foreground uppercase">
                       {safeFormat(day.date)}
                     </p>
-                    <h2 className="truncate font-display text-xl font-semibold">{day.title}</h2>
+                    <h2 className="line-clamp-2 font-display text-xl leading-tight font-semibold">{day.title}</h2>
                   </div>
                 </header>
                 <ol className="relative px-5 py-3">

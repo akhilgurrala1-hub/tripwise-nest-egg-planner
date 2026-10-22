@@ -38,8 +38,8 @@ function BudgetPage() {
         <DemoBadge label="Demo estimates" />
       </PageHeader>
 
-      <div className="mx-auto mt-6 grid max-w-6xl gap-6 px-4 lg:grid-cols-[1fr_360px]">
-        <div className="space-y-6 lg:order-1">
+      <div className="mx-auto mt-6 grid max-w-6xl grid-cols-1 gap-6 px-4 lg:grid-cols-[minmax(0,1fr)_360px]">
+        <div className="min-w-0 space-y-6 lg:order-1">
           {/* Summary */}
           <section className="surface-card p-5">
             <div className="grid gap-4 sm:grid-cols-[1.2fr_1fr]">
