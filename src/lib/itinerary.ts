@@ -74,7 +74,7 @@ export function generateDemoItinerary(opts: {
   for (let d = 0; d < days; d++) {
     const items: ItineraryItem[] = [];
     const id = (k: string) => `d${d + 1}-${k}`;
-    const nextSight = () => sights[si++ % sights.length];
+    const nextSight = () => sights[si++ % sights.length]!;
 
     if (d === 0 && tripType === "road-trip") {
       items.push({
@@ -91,13 +91,13 @@ export function generateDemoItinerary(opts: {
       items.push({ id: id("am"), time: "Morning", kind: "sight", name: m.name, area: m.area, note: m.note, costPerPerson: m.costPerPerson });
     }
 
-    const l = lunches[d % lunches.length];
+    const l = lunches[d % lunches.length]!;
     items.push({ id: id("lunch"), time: "Lunch", kind: "restaurant", name: l.name, area: l.cuisine, note: tierNote(l.tier), costPerPerson: l.costPerPerson });
 
     const a = nextSight();
     items.push({ id: id("pm"), time: "Afternoon", kind: "sight", name: a.name, area: a.area, note: a.note, costPerPerson: a.costPerPerson });
 
-    const dn = dinners[(d + 1) % dinners.length];
+    const dn = dinners[(d + 1) % dinners.length]!;
     items.push({ id: id("dinner"), time: "Dinner", kind: "restaurant", name: dn.name, area: dn.cuisine, note: tierNote(dn.tier), costPerPerson: dn.costPerPerson });
 
     out.push({

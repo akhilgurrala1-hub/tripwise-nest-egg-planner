@@ -69,7 +69,7 @@ function describeError(err: unknown): { status: number; error: string } {
 }
 
 export async function generateAiItinerary(req: AiItineraryRequest): Promise<AiItineraryResult> {
-  const apiKey = process.env.LOVABLE_API_KEY;
+  const apiKey = process.env["LOVABLE_API_KEY"];
   if (!apiKey) return { ok: false, status: 401, error: "AI planning isn't configured yet." };
 
   const runIdFetch = createLovableAiGatewayRunIdFetch();

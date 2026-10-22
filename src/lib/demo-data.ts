@@ -268,7 +268,7 @@ export const CUSTOM_DESTINATION_ID = "custom";
 
 /** Generic template used when the traveler types a destination we don't have demo data for. */
 export function buildCustomDestination(name: string): DemoDestination {
-  const base = DESTINATIONS[0];
+  const base = DESTINATIONS[0]!;
   const label = name.trim() || "Your destination";
   return {
     ...base,
@@ -303,5 +303,5 @@ export function buildCustomDestination(name: string): DemoDestination {
 
 export function getDestination(id: string, customName = ""): DemoDestination {
   if (id === CUSTOM_DESTINATION_ID) return buildCustomDestination(customName);
-  return DESTINATIONS.find((d) => d.id === id) ?? DESTINATIONS[0];
+  return DESTINATIONS.find((d) => d.id === id) ?? DESTINATIONS[0]!;
 }

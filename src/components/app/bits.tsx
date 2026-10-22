@@ -3,7 +3,6 @@ import {
   Droplets,
   Fuel,
   Hotel,
-  Landmark,
   Package,
   ParkingCircle,
   Receipt,
@@ -42,8 +41,6 @@ export const CATEGORY_COLOR_VAR: Record<Category, string> = {
   misc: "var(--cat-misc)",
 };
 
-export { Landmark };
-
 export function DemoBadge({ label = "Demo data", className }: { label?: string; className?: string }) {
   return (
     <Badge variant="demo" className={className}>
@@ -68,9 +65,9 @@ export function NumberField({
 }: {
   value: number;
   onChange: (n: number) => void;
-  prefix?: string;
-  suffix?: string;
-  step?: number;
+  prefix?: string | undefined;
+  suffix?: string | undefined;
+  step?: number | undefined;
   min?: number;
   id?: string;
   className?: string;

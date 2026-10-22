@@ -138,7 +138,7 @@ function BudgetPage() {
               value={[Math.min(trip.emergencyFund, maxFund)]}
               max={maxFund || 1}
               step={25}
-              onValueChange={([v]) => tripActions.setEmergencyFund(v)}
+              onValueChange={([v]) => tripActions.setEmergencyFund(v ?? 0)}
               aria-label="Emergency fund amount"
             />
             <NumberField

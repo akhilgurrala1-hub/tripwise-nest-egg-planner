@@ -75,7 +75,7 @@ describe("budget calculator", () => {
 });
 
 describe("savings", () => {
-  const dest = DESTINATIONS[0];
+  const dest = DESTINATIONS[0]!;
   const t = calculateBudget(inputs, trip, 2000, 200);
 
   it("estimates 30% off food for picnic lunches and skips applied ideas", () => {
