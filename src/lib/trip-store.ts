@@ -147,9 +147,42 @@ function migrate(raw: unknown): TripState | null {
   };
 }
 
-const SAMPLE = buildTrip(sampleSetup(), true);
+// Built lazily: edge runtimes freeze the clock at 1970 during module load,
+// which is what produced "Jan 31 – Feb 3, 1970" sample dates.
+let sampleCache: { day: string; trip: TripState } | null = null;
+function getSample(): TripState {
+  const day = todayIso();
+  if (sampleCache?.day === day) return sampleCache.trip;
+  const trip = buildTrip(sampleSetup(), true);
+  if (!day.startsWith("1970")) sampleCache = { day, trip };
+  return trip;
+}
 
-let state: TripState = SAMPLE;
+/** Saved trips with missing or epoch-era dates (and sample trips whose dates have passed) get moved to valid future dates, keeping their length. */
+function repairDates(trip: TripState): TripState {
+  const { startDate, endDate } = trip.setup;
+  const valid = (d: string) => /^\d{4}-\d{2}-\d{2}$/.test(d) && Number(d.slice(0, 4)) >= 2000;
+  const staleSample = trip.isSample && startDate < todayIso();
+  if (valid(startDate) && valid(endDate) && endDate >= startDate && !staleSample) return trip;
+  const days = Math.min(14, Math.max(1, tripShape(startDate, endDate, 1).days));
+  const start = addDays(todayIso(), 30);
+  const setup = { ...trip.setup, startDate: start, endDate: addDays(start, days - 1) };
+  const dest = getDestination(setup.destinationId, setup.customDestination);
+  return {
+    ...trip,
+    setup,
+    itinerary: generateDemoItinerary({
+      dest,
+      days,
+      startDate: start,
+      interests: setup.interests,
+      style: setup.style,
+      tripType: setup.tripType,
+    }),
+  };
+}
+
+let state: TripState | null = null;
 let loaded = false;
 const listeners = new Set<() => void>();
 
@@ -160,7 +193,7 @@ function load() {
     const raw = window.localStorage.getItem(STORAGE_KEY);
     if (raw) {
       const migrated = migrate(JSON.parse(raw));
-      if (migrated) state = migrated;
+      if (migrated) state = repairDates(migrated);
     }
   } catch {
     /* ignore corrupt storage */
@@ -177,7 +210,7 @@ function persist() {
 
 function setState(updater: (s: TripState) => TripState) {
   load();
-  state = updater(state);
+  state = updater(state ?? getSample());
   persist();
   listeners.forEach((l) => l());
 }
@@ -189,11 +222,12 @@ function subscribe(l: () => void) {
 
 function getSnapshot() {
   load();
+  if (!state) state = getSample();
   return state;
 }
 
 function getServerSnapshot() {
-  return SAMPLE;
+  return getSample();
 }
 
 export function stopsTotalFor(trip: TripState): number {

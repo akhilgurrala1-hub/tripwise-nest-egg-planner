@@ -59,6 +59,8 @@ export interface DemoSight {
   costPerPerson: number;
   interests: Interest[];
   note: string;
+  /** Only makes sense after dark (music, stargazing, sunset tours) */
+  evening?: boolean;
 }
 
 export interface DemoRestaurant {
@@ -106,12 +108,12 @@ export const DESTINATIONS: DemoDestination[] = [
     foodPerPersonDay: { budget: 32, comfort: 58, luxury: 115 },
     activitiesPerPerson: { budget: 25, comfort: 70, luxury: 180 },
     sights: [
-      { name: "Ridge Overlook Trail", area: "Parkway mile 382", costPerPerson: 0, interests: ["nature", "adventure"], note: "Sunrise views, easy 2-mile loop" },
+      { name: "Ridge Overlook Trail", area: "Parkway mile 382", costPerPerson: 0, interests: ["nature", "adventure"], note: "Easy 2-mile loop with big views" },
       { name: "Riverbend Arts District", area: "Downtown", costPerPerson: 0, interests: ["arts", "shopping"], note: "Open studios & galleries" },
       { name: "Hilltop Estate Gardens", area: "South side", costPerPerson: 28, interests: ["history", "nature"], note: "Historic house & formal gardens" },
       { name: "Cascade Falls Swim Hole", area: "National forest", costPerPerson: 5, interests: ["nature", "beaches", "family"], note: "Bring water shoes" },
-      { name: "Mountain Music Night", area: "Old Town", costPerPerson: 15, interests: ["arts", "nightlife"], note: "Live bluegrass, Thursdays" },
-      { name: "Treetop Zipline Park", area: "Valley road", costPerPerson: 79, interests: ["adventure", "family"], note: "Book a morning slot" },
+      { name: "Mountain Music Night", area: "Old Town", costPerPerson: 15, interests: ["arts", "nightlife"], note: "Live bluegrass — check this week's lineup", evening: true },
+      { name: "Treetop Zipline Park", area: "Valley road", costPerPerson: 79, interests: ["adventure", "family"], note: "Book ahead in busy season" },
     ],
     restaurants: [
       { name: "Biscuit Barn", cuisine: "Southern breakfast", tier: 1, costPerPerson: 12 },
@@ -138,12 +140,12 @@ export const DESTINATIONS: DemoDestination[] = [
     foodPerPersonDay: { budget: 35, comfort: 62, luxury: 125 },
     activitiesPerPerson: { budget: 20, comfort: 85, luxury: 220 },
     sights: [
-      { name: "Public Beach Access #4", area: "West beach", costPerPerson: 0, interests: ["beaches", "family", "nature"], note: "Free, arrive before 9am" },
+      { name: "Public Beach Access #4", area: "West beach", costPerPerson: 0, interests: ["beaches", "family", "nature"], note: "Free — go early for easier parking" },
       { name: "Dune State Park Boardwalk", area: "State park", costPerPerson: 4, interests: ["nature", "family"], note: "Wildlife & quiet sand" },
       { name: "Harbor Kayak Tour", area: "Marina", costPerPerson: 45, interests: ["adventure", "beaches"], note: "Dolphin sightings common" },
       { name: "Old Fort Museum", area: "Point peninsula", costPerPerson: 10, interests: ["history", "family"], note: "Civil War-era fort" },
-      { name: "Sunset Pier Market", area: "Pier district", costPerPerson: 0, interests: ["shopping", "food", "nightlife"], note: "Local crafts & music" },
-      { name: "Private Sailing Charter", area: "Marina", costPerPerson: 140, interests: ["beaches", "adventure"], note: "Champagne sunset cruise" },
+      { name: "Sunset Pier Market", area: "Pier district", costPerPerson: 0, interests: ["shopping", "food", "nightlife"], note: "Local crafts & music at dusk", evening: true },
+      { name: "Private Sailing Charter", area: "Marina", costPerPerson: 140, interests: ["beaches", "adventure"], note: "Sunset cruise", evening: true },
     ],
     restaurants: [
       { name: "Dockside Shrimp Shack", cuisine: "Seafood baskets", tier: 1, costPerPerson: 15 },
@@ -171,10 +173,10 @@ export const DESTINATIONS: DemoDestination[] = [
     activitiesPerPerson: { budget: 35, comfort: 95, luxury: 260 },
     sights: [
       { name: "Canyon Park Scenic Drive", area: "National park", costPerPerson: 15, interests: ["nature", "family"], note: "Weekly vehicle pass (demo price)" },
-      { name: "Delicate Arch Hike", area: "National park", costPerPerson: 0, interests: ["nature", "adventure"], note: "3 mi round trip, go early" },
+      { name: "Delicate Arch Hike", area: "National park", costPerPerson: 0, interests: ["nature", "adventure"], note: "3 mi round trip — bring water" },
       { name: "Dinosaur Track Site", area: "North mesa", costPerPerson: 0, interests: ["history", "family"], note: "Free self-guided walk" },
       { name: "Slickrock Bike Rental", area: "Main Street", costPerPerson: 55, interests: ["adventure"], note: "Half-day rental" },
-      { name: "Dark Sky Stargazing", area: "Desert camp", costPerPerson: 35, interests: ["nature", "nightlife", "family"], note: "Telescope tour" },
+      { name: "Dark Sky Stargazing", area: "Desert camp", costPerPerson: 35, interests: ["nature", "nightlife", "family"], note: "Telescope tour after dark", evening: true },
       { name: "Helicopter Canyon Flight", area: "Airfield", costPerPerson: 199, interests: ["adventure"], note: "30-minute flight" },
     ],
     restaurants: [
@@ -206,7 +208,7 @@ export const DESTINATIONS: DemoDestination[] = [
       { name: "Riverfront Promenade", area: "River Street", costPerPerson: 0, interests: ["shopping", "nightlife"], note: "Cobblestones & shops" },
       { name: "Antebellum House Tour", area: "Madison Square", costPerPerson: 25, interests: ["history"], note: "Guided 45 minutes" },
       { name: "Tybee-style Beach Day", area: "Island", costPerPerson: 0, interests: ["beaches", "family"], note: "Pay parking at lot" },
-      { name: "Ghost Lantern Tour", area: "Old Town", costPerPerson: 30, interests: ["history", "nightlife"], note: "Evening walk" },
+      { name: "Ghost Lantern Tour", area: "Old Town", costPerPerson: 30, interests: ["history", "nightlife"], note: "After-dark walking tour", evening: true },
       { name: "Private Carriage & Garden Tour", area: "Historic district", costPerPerson: 120, interests: ["history", "arts"], note: "Includes estate garden" },
     ],
     restaurants: [
@@ -237,7 +239,7 @@ export const DESTINATIONS: DemoDestination[] = [
       { name: "Bixby Bridge Viewpoint", area: "Coast highway", costPerPerson: 0, interests: ["nature"], note: "Pull-out parking only" },
       { name: "Redwood Grove Loop", area: "State park", costPerPerson: 10, interests: ["nature", "family", "adventure"], note: "Day-use fee per car (demo)" },
       { name: "Cannery Row Aquarium", area: "Bay front", costPerPerson: 60, interests: ["family", "beaches"], note: "Reserve timed entry" },
-      { name: "Sea Otter Kayak Paddle", area: "Harbor", costPerPerson: 55, interests: ["adventure", "beaches"], note: "Calm morning waters" },
+      { name: "Sea Otter Kayak Paddle", area: "Harbor", costPerPerson: 55, interests: ["adventure", "beaches"], note: "Calmest early in the day" },
       { name: "Mission & Old Adobe", area: "Old town", costPerPerson: 12, interests: ["history", "arts"], note: "1700s mission grounds" },
       { name: "Cliffside Spa Afternoon", area: "Big Sur", costPerPerson: 210, interests: ["nature"], note: "Ocean-view hot tubs" },
     ],
@@ -266,11 +268,11 @@ export const DESTINATIONS: DemoDestination[] = [
     foodPerPersonDay: { budget: 25, comfort: 45, luxury: 95 },
     activitiesPerPerson: { budget: 15, comfort: 50, luxury: 150 },
     sights: [
-      { name: "Free Museum Day", area: "Downtown", costPerPerson: 0, interests: ["arts", "history", "family"], note: "Check first-Friday schedule" },
+      { name: "Free Museum Day", area: "Downtown", costPerPerson: 0, interests: ["arts", "history", "family"], note: "Free days vary — check the schedule" },
       { name: "Riverside Trail & Picnic", area: "City park", costPerPerson: 0, interests: ["nature", "family"], note: "Pack lunch from home" },
-      { name: "Saturday Farmers Market", area: "Market square", costPerPerson: 0, interests: ["food", "shopping"], note: "Budget $10 for snacks" },
+      { name: "Farmers Market", area: "Market square", costPerPerson: 0, interests: ["food", "shopping"], note: "Usually weekend mornings — check dates" },
       { name: "Indoor Climbing Gym", area: "Warehouse district", costPerPerson: 22, interests: ["adventure", "family"], note: "Day pass with rentals" },
-      { name: "Outdoor Movie Night", area: "Amphitheater", costPerPerson: 5, interests: ["arts", "family", "nightlife"], note: "Bring blankets" },
+      { name: "Outdoor Movie Night", area: "Amphitheater", costPerPerson: 5, interests: ["arts", "family", "nightlife"], note: "Bring blankets", evening: true },
       { name: "Day Spa & Rooftop Pool", area: "Boutique hotel", costPerPerson: 120, interests: ["nature"], note: "Day pass" },
     ],
     restaurants: [
@@ -308,7 +310,7 @@ export function buildCustomDestination(name: string): DemoDestination {
       { name: `${label} Regional Park`, area: "Outskirts", costPerPerson: 5, interests: ["nature", "family", "adventure"], note: "Trails & picnic areas" },
       { name: `${label} History Museum`, area: "Museum row", costPerPerson: 15, interests: ["history", "family"], note: "Allow 2 hours" },
       { name: `${label} Waterfront`, area: "Harbor or riverfront", costPerPerson: 0, interests: ["beaches", "nightlife", "food"], note: "Great at sunset" },
-      { name: "Local Live Music Venue", area: "Entertainment district", costPerPerson: 20, interests: ["arts", "nightlife"], note: "Check weekly lineup" },
+      { name: "Local Live Music Venue", area: "Entertainment district", costPerPerson: 20, interests: ["arts", "nightlife"], note: "Check the weekly lineup", evening: true },
       { name: "Guided Adventure Outing", area: "Nearby", costPerPerson: 65, interests: ["adventure"], note: "Half-day tour" },
     ],
     restaurants: [

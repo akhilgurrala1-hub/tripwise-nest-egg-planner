@@ -69,12 +69,23 @@ export function generateDemoItinerary(opts: {
   const lunches = byTier(TIERS[style].lunch);
   const dinners = byTier(TIERS[style].dinner);
 
+  const daySights = sights.filter((x) => !x.evening);
+  const eveningSights = sights.filter((x) => x.evening && x.interests.some((i) => interests.includes(i)));
   const out: ItineraryDay[] = [];
   let si = 0;
+  let ei = 0;
   for (let d = 0; d < days; d++) {
     const items: ItineraryItem[] = [];
     const id = (k: string) => `d${d + 1}-${k}`;
-    const nextSight = () => sights[si++ % sights.length]!;
+    // Never repeat a stop; once ideas run out, leave open time instead.
+    const nextSight = () =>
+      daySights[si++] ?? {
+        name: "Open time to wander",
+        area: dest.name,
+        note: "Unplanned time — revisit a favorite or rest up",
+        costPerPerson: 0,
+        interests: [],
+      };
 
     if (d === 0 && tripType === "road-trip") {
       items.push({
@@ -99,6 +110,12 @@ export function generateDemoItinerary(opts: {
 
     const dn = dinners[(d + 1) % dinners.length]!;
     items.push({ id: id("dinner"), time: "Dinner", kind: "restaurant", name: dn.name, area: dn.cuisine, note: tierNote(dn.tier), costPerPerson: dn.costPerPerson });
+
+    const ev = eveningSights[ei];
+    if (ev && d < days - 1) {
+      ei++;
+      items.push({ id: id("eve"), time: "Evening", kind: "sight", name: ev.name, area: ev.area, note: ev.note, costPerPerson: ev.costPerPerson });
+    }
 
     out.push({
       day: d + 1,

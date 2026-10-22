@@ -53,6 +53,7 @@ function ItineraryPage() {
           tripType: label(TRIP_TYPES, trip.setup.tripType),
           style: label(TRAVEL_STYLES, trip.setup.style),
           days: Math.min(14, shape.days),
+          startDate: trip.setup.startDate,
           travelers: shape.travelers,
           interests: trip.setup.interests.map((i) => label(INTERESTS, i)),
           activityBudgetPerPerson: totals.categories.activities / shape.travelers,
@@ -88,7 +89,7 @@ function ItineraryPage() {
 
   return (
     <div>
-      <PageHeader eyebrow="Itinerary" title="Your days, planned">
+      <PageHeader eyebrow="Itinerary" title="Your trip, day by day">
         <div className="flex w-full flex-wrap gap-2 sm:w-auto">
           <Button variant="hero" onClick={generateWithAi} disabled={loading} className="flex-1 sm:flex-none">
             {loading ? <Loader2 className="animate-spin" /> : <Sparkles />}
@@ -165,7 +166,7 @@ function ItineraryPage() {
             itin.days.map((day) => (
               <section key={day.day} className="surface-card animate-rise overflow-hidden">
                 <header className="flex items-center gap-3 border-b border-border bg-gradient-sand px-5 py-4">
-                  <span className="grid size-11 shrink-0 place-items-center rounded-2xl bg-gradient-ink font-display text-lg font-semibold text-primary-foreground">
+                  <span className="grid size-11 shrink-0 place-items-center rounded-2xl bg-gradient-ink font-display text-lg font-semibold text-ink-foreground">
                     {day.day}
                   </span>
                   <div className="min-w-0">

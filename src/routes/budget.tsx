@@ -44,7 +44,7 @@ function BudgetPage() {
 
   return (
     <div>
-      <PageHeader eyebrow="Budget calculator" title="Every dollar, mapped">
+      <PageHeader eyebrow="Budget" title="Let's make the most of your budget">
         <DemoBadge label="Demo estimates" />
       </PageHeader>
 
@@ -68,11 +68,11 @@ function BudgetPage() {
                 />
               </div>
               <dl className="grid grid-cols-2 gap-3 text-sm">
-                <Stat label="Protected fund" value={formatMoney(totals.emergencyFund)} tone="shield" />
-                <Stat label="Spendable" value={formatMoney(totals.spendable)} />
-                <Stat label="Planned" value={formatMoney(totals.planned)} />
+                <Stat label="Protected reserve" value={formatMoney(totals.emergencyFund)} tone="shield" />
+                <Stat label="Spending money" value={formatMoney(totals.spendable)} />
+                <Stat label="Planned so far" value={formatMoney(totals.planned)} />
                 <Stat
-                  label={totals.overBudget ? "Over budget" : "Remaining"}
+                  label={totals.overBudget ? "Over by" : "Left to explore"}
                   value={formatMoney(Math.abs(totals.remaining))}
                   tone={totals.overBudget ? "danger" : "success"}
                 />
@@ -95,7 +95,7 @@ function BudgetPage() {
           {/* Categories */}
           <section>
             <div className="mb-3 flex items-center justify-between">
-              <h2 className="font-display text-2xl font-semibold">Expenses</h2>
+              <h2 className="font-display text-2xl font-semibold">Where your money goes</h2>
               {hasOverrides && (
                 <Button variant="ghost" size="sm" onClick={tripActions.resetToEstimates}>
                   <RotateCcw /> Reset all
@@ -130,7 +130,7 @@ function BudgetPage() {
               ))}
             </Accordion>
             <p className="mt-3 text-xs text-muted-foreground">
-              Estimates use demo prices for {shape.days} day{shape.days > 1 ? "s" : ""}, {shape.nights} night
+              These are estimates from demo prices for {shape.days} day{shape.days > 1 ? "s" : ""}, {shape.nights} night
               {shape.nights === 1 ? "" : "s"} and {shape.travelers} traveler{shape.travelers > 1 ? "s" : ""}. Open a
               category to tune the inputs or type your own amount.
             </p>
@@ -139,21 +139,21 @@ function BudgetPage() {
 
         {/* Emergency fund */}
         <aside className="lg:order-2">
-          <section className="overflow-hidden rounded-3xl bg-gradient-ink p-5 text-primary-foreground shadow-lift lg:sticky lg:top-20">
+          <section className="overflow-hidden rounded-3xl bg-gradient-ink p-5 text-ink-foreground shadow-lift lg:sticky lg:top-20">
             <div className="flex items-center justify-between">
-              <span className="grid size-10 place-items-center rounded-full bg-card/15">
+              <span className="grid size-10 place-items-center rounded-full bg-ink-foreground/10">
                 <ShieldCheck className="size-5" />
               </span>
-              <span className="inline-flex items-center gap-1 rounded-full bg-card/15 px-2.5 py-1 text-xs font-semibold">
+              <span className="inline-flex items-center gap-1 rounded-full bg-ink-foreground/10 px-2.5 py-1 text-xs font-semibold">
                 <Lock className="size-3" /> Protected
               </span>
             </div>
-            <h2 className="mt-4 font-display text-2xl font-semibold">Emergency fund</h2>
-            <p className="mt-1 text-sm text-primary-foreground/75">
-              Set aside first and never counted as spending money — for flat tires, urgent care or a surprise night's stay.
+            <h2 className="mt-4 font-display text-2xl font-semibold">Emergency reserve</h2>
+            <p className="mt-1 text-sm text-ink-foreground/75">
+              A little extra set aside for peace of mind. It never counts as spending money — it's there for flat tires, urgent care or a surprise night's stay.
             </p>
             <p className="tabular mt-4 font-display text-4xl font-semibold">{formatMoney(totals.emergencyFund)}</p>
-            <p className="text-xs text-primary-foreground/70">
+            <p className="text-xs text-ink-foreground/70">
               {trip.setup.totalBudget > 0 ? Math.round((totals.emergencyFund / trip.setup.totalBudget) * 100) : 0}% of
               your total budget
             </p>
@@ -334,7 +334,7 @@ function CategoryRow({ cat }: { cat: Category }) {
       <AccordionTrigger className="px-4 py-3.5 hover:no-underline">
         <div className="flex min-w-0 flex-1 items-center gap-3 text-left font-sans">
           <span
-            className="grid size-10 shrink-0 place-items-center rounded-xl text-primary-foreground"
+            className="grid size-10 shrink-0 place-items-center rounded-xl text-on-image"
             style={{ backgroundColor: CATEGORY_COLOR_VAR[cat] }}
           >
             <Icon className="size-5" />
@@ -342,7 +342,7 @@ function CategoryRow({ cat }: { cat: Category }) {
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2">
               <span className="truncate font-bold">{CATEGORY_LABELS[cat]}</span>
-              {isCustom ? <Badge variant="gold">Custom</Badge> : <Badge variant="secondary">Estimate</Badge>}
+              {isCustom ? <Badge variant="gold">Your amount</Badge> : <Badge variant="secondary">Estimate</Badge>}
             </div>
             <p className="truncate text-xs font-normal text-muted-foreground">{isCustom ? "Your amount" : formula}</p>
           </div>
@@ -416,8 +416,8 @@ function CutPlan() {
       <div className="flex gap-2.5 text-sm text-destructive">
         <AlertTriangle className="mt-0.5 size-4 shrink-0" />
         <p>
-          <strong>You're {formatMoney(cuts.gap, { cents: true })} over your spendable budget.</strong> Your emergency
-          reserve stays protected. Here's where trimming helps most:
+          <strong>Your plan is {formatMoney(cuts.gap, { cents: true })} more than your spending money.</strong> No worries — your
+          reserve stays untouched. Here's a smarter way to spend less:
         </p>
       </div>
       <ul className="mt-3 space-y-2">
@@ -426,7 +426,7 @@ function CutPlan() {
           return (
             <li key={s.category} className="flex items-center gap-3 rounded-xl bg-card p-3">
               <span
-                className="grid size-9 shrink-0 place-items-center rounded-lg text-primary-foreground"
+                className="grid size-9 shrink-0 place-items-center rounded-lg text-on-image"
                 style={{ backgroundColor: CATEGORY_COLOR_VAR[s.category] }}
               >
                 <Icon className="size-4" />

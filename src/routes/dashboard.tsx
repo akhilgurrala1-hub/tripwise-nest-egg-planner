@@ -37,7 +37,7 @@ function Dashboard() {
 
   return (
     <div>
-      <PageHeader eyebrow="Dashboard" title="Trip at a glance">
+      <PageHeader eyebrow="Your trip" title="Everything at a glance">
         <div className="flex gap-2">
           {type && <Badge variant="secondary">{type.label}</Badge>}
           {style && <Badge variant={style.id === "luxury" ? "gold" : "secondary"}>{style.label}</Badge>}
@@ -46,11 +46,11 @@ function Dashboard() {
 
       <div className="mx-auto mt-6 max-w-6xl space-y-6 px-4">
         {/* Hero balance */}
-        <section className="relative overflow-hidden rounded-4xl bg-gradient-ink p-6 text-primary-foreground shadow-lift sm:p-8">
+        <section className="relative overflow-hidden rounded-4xl bg-gradient-ink p-6 text-ink-foreground shadow-lift sm:p-8">
           <div className="absolute -top-24 -right-24 size-72 rounded-full bg-gradient-sunset opacity-30 blur-3xl" aria-hidden />
           <div className="relative grid gap-6 sm:grid-cols-[1fr_auto] sm:items-end">
             <div>
-              <p className="text-sm text-primary-foreground/70">{totals.overBudget ? "Over your spendable budget" : "Remaining to spend"}</p>
+              <p className="text-sm text-ink-foreground/70">{totals.overBudget ? "Your plan is over your spending money by" : "You've got this much left to explore"}</p>
               <p
                 className={cn(
                   "tabular font-display text-5xl font-semibold sm:text-6xl",
@@ -60,7 +60,7 @@ function Dashboard() {
                 {totals.overBudget ? "−" : ""}
                 {formatMoney(Math.abs(totals.remaining))}
               </p>
-              <p className="mt-1 text-sm text-primary-foreground/70">
+              <p className="mt-1 text-sm text-ink-foreground/70">
                 of {formatMoney(totals.spendable)} spendable · {formatMoney(totals.totalBudget)} total budget
               </p>
               {totals.overBudget && (
@@ -69,22 +69,22 @@ function Dashboard() {
                 </Link>
               )}
             </div>
-            <div className="flex items-center gap-2 self-start rounded-2xl bg-card/10 px-4 py-3 sm:self-end">
+            <div className="flex items-center gap-2 self-start rounded-2xl bg-ink-foreground/10 px-4 py-3 sm:self-end">
               <Lock className="size-4" />
               <div>
-                <p className="text-[11px] text-primary-foreground/70">Emergency fund</p>
+                <p className="text-[11px] text-ink-foreground/70">Emergency reserve</p>
                 <p className="tabular font-bold">{formatMoney(totals.emergencyFund)} protected</p>
               </div>
             </div>
           </div>
           <div className="relative mt-6">
-            <div className="flex h-3 overflow-hidden rounded-full bg-card/15">
+            <div className="flex h-3 overflow-hidden rounded-full bg-ink-foreground/10">
               <div
                 className={cn("h-full transition-all", totals.overBudget ? "bg-destructive" : "bg-gradient-sunset")}
                 style={{ width: `${Math.min(100, totals.percentUsed)}%` }}
               />
             </div>
-            <div className="tabular mt-2 flex justify-between text-xs text-primary-foreground/70">
+            <div className="tabular mt-2 flex justify-between text-xs text-ink-foreground/70">
               <span>{Math.round(totals.percentUsed)}% planned</span>
               <span>{formatMoney(totals.perPersonPerDay)} / person / day</span>
             </div>
@@ -102,7 +102,7 @@ function Dashboard() {
             tone={totals.overBudget ? "danger" : "success"}
           />
           <StatCard icon={PiggyBank} label="Potential savings" value={formatMoney(potentialSavings)} sub={`${savings.length} ideas below`} tone="sunset" />
-          <StatCard icon={ShieldCheck} label="Emergency fund" value={formatMoney(totals.emergencyFund)} sub="Excluded from spending" tone="shield" />
+          <StatCard icon={ShieldCheck} label="Emergency reserve" value={formatMoney(totals.emergencyFund)} sub="Kept safe, never spent" tone="shield" />
         </section>
 
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
@@ -153,8 +153,8 @@ function Dashboard() {
 
           {/* Savings */}
           <section className="surface-card p-5">
-            <h2 className="font-display text-2xl font-semibold">Ways to save</h2>
-            <p className="text-sm text-muted-foreground">Tap apply to update your budget instantly.</p>
+            <h2 className="font-display text-2xl font-semibold">Ways to spend less</h2>
+            <p className="text-sm text-muted-foreground">Each idea updates your budget the moment you apply it. You can undo it anytime.</p>
             <ul className="mt-4 space-y-2.5">
               {savings.map((s) => {
                 const Icon = CATEGORY_ICONS[s.category];

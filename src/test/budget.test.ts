@@ -154,3 +154,63 @@ describe("savings", () => {
     expect(applySaving("tolls", car, dest)).toEqual({ tolls: 0 });
   });
 });
+
+describe("demo itinerary scheduling", () => {
+  it("keeps evening-only events in the evening and never repeats a stop", async () => {
+    const { generateDemoItinerary } = await import("@/lib/itinerary");
+    for (const dest of DESTINATIONS) {
+      const itin = generateDemoItinerary({
+        dest,
+        days: 6,
+        startDate: "2026-11-01",
+        interests: ["nature", "arts", "nightlife", "history", "family"],
+        style: "comfort",
+        tripType: "budget-vacation",
+      });
+      const eveningNames = new Set(dest.sights.filter((s) => s.evening).map((s) => s.name));
+      const seen = new Set<string>();
+      for (const day of itin.days) {
+        for (const item of day.items) {
+          if (eveningNames.has(item.name)) expect(item.time).toBe("Evening");
+          if (item.kind === "sight" && item.name !== "Open time to wander") {
+            expect(seen.has(item.name)).toBe(false);
+            seen.add(item.name);
+          }
+        }
+      }
+    }
+  });
+
+  it("labels each day with consecutive calendar dates", async () => {
+    const { generateDemoItinerary } = await import("@/lib/itinerary");
+    const itin = generateDemoItinerary({
+      dest: DESTINATIONS[0]!,
+      days: 3,
+      startDate: "2026-12-31",
+      interests: [],
+      style: "budget",
+      tripType: "road-trip",
+    });
+    expect(itin.days.map((d) => d.date)).toEqual(["2026-12-31", "2027-01-01", "2027-01-02"]);
+  });
+});
+
+describe("spendable money", () => {
+  it("a $1,000 trip with a $200 reserve has $800 to spend before expenses", () => {
+    const empty: BudgetInputs = {
+      ...car,
+      roundTripMiles: 0,
+      farePerPerson: 0,
+      foodPerPersonDay: 0,
+      snacksPerPersonDay: 0,
+      waterPerPersonDay: 0,
+      nightlyRate: 0,
+      parkingPerDay: 0,
+      tolls: 0,
+      activitiesPerPerson: 0,
+    };
+    const t = calculateBudget(empty, trip, 1000, 200);
+    expect(t.spendable).toBe(800);
+    expect(t.remaining).toBe(800);
+  });
+});
