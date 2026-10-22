@@ -88,7 +88,7 @@ function ItineraryPage() {
 
   return (
     <div>
-      <PageHeader eyebrow="Itinerary" title="Your days, planned">
+      <PageHeader eyebrow="Itinerary" title="Your trip, day by day">
         <div className="flex w-full flex-wrap gap-2 sm:w-auto">
           <Button variant="hero" onClick={generateWithAi} disabled={loading} className="flex-1 sm:flex-none">
             {loading ? <Loader2 className="animate-spin" /> : <Sparkles />}

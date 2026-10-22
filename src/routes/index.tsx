@@ -166,26 +166,14 @@ function Welcome() {
       >
         <div className="flex items-center justify-between gap-3">
           <div>
-            <p className="text-xs font-semibold tracking-[0.16em] text-muted-foreground uppercase">Start here</p>
-            <h2 className="font-display text-3xl font-semibold">Where to next?</h2>
+            <p className="text-xs font-semibold tracking-[0.16em] text-muted-foreground uppercase">Plan a trip</p>
+            <h2 className="font-display text-3xl font-semibold">Your adventure starts here.</h2>
           </div>
           <DemoBadge />
         </div>
 
-        {/* Trip type */}
-        <Field label="Type of trip">
-          <div className="grid grid-cols-3 gap-2">
-            {TRIP_TYPES.map((t) => (
-              <ChoiceCard key={t.id} active={form.tripType === t.id} onClick={() => setTripType(t.id)}>
-                <span className="text-sm font-bold">{t.label}</span>
-                <span className="text-[11px] leading-tight text-muted-foreground">{t.blurb}</span>
-              </ChoiceCard>
-            ))}
-          </div>
-        </Field>
-
         {/* Destination */}
-        <Field label="Destination" hint="Example destinations with demo prices">
+        <Field label="Where are you going?" hint="Example places with demo prices">
           <div className="-mx-4 flex snap-x gap-3 overflow-x-auto px-4 pb-2 sm:mx-0 sm:grid sm:grid-cols-2 sm:overflow-visible sm:px-0">
             {orderedDestinations.map((d) => {
               const active = form.destinationId === d.id;
@@ -253,7 +241,7 @@ function Welcome() {
 
         {/* Dates + travelers */}
         <div className="grid gap-6 sm:grid-cols-[1.4fr_1fr]">
-          <Field label="Dates" error={dateError}>
+          <Field label="When?" error={dateError}>
             <div className="grid grid-cols-2 gap-2">
               <Input
                 type="date"
@@ -277,7 +265,7 @@ function Welcome() {
               </p>
             )}
           </Field>
-          <Field label="Travelers">
+          <Field label="Who's coming?">
             <div className="flex h-11 items-center justify-between rounded-xl border border-input bg-card px-1.5">
               <Button
                 type="button"
@@ -303,6 +291,18 @@ function Welcome() {
             </div>
           </Field>
         </div>
+
+        {/* Trip type */}
+        <Field label="What kind of trip?">
+          <div className="grid grid-cols-3 gap-2">
+            {TRIP_TYPES.map((t) => (
+              <ChoiceCard key={t.id} active={form.tripType === t.id} onClick={() => setTripType(t.id)}>
+                <span className="text-sm font-bold">{t.label}</span>
+                <span className="text-[11px] leading-tight text-muted-foreground">{t.blurb}</span>
+              </ChoiceCard>
+            ))}
+          </div>
+        </Field>
 
         {/* Transportation */}
         <Field label="How are you getting there?">
@@ -340,7 +340,7 @@ function Welcome() {
         </Field>
 
         {/* Interests */}
-        <Field label="Interests" hint="Pick a few">
+        <Field label="What do you love?" hint="Pick a few">
           <div className="flex flex-wrap gap-2">
             {INTERESTS.map((i) => {
               const active = form.interests.includes(i.id);
@@ -363,7 +363,7 @@ function Welcome() {
         </Field>
 
         {/* Budget */}
-        <Field label="Total budget" hint="Your reserve comes out of this">
+        <Field label="What's your budget?" hint="Your reserve comes out of this">
           <NumberField
             aria-label="Total budget"
             prefix="$"
@@ -399,7 +399,7 @@ function Welcome() {
           </div>
         </Field>
 
-        <Field label="Emergency reserve" hint="Kept out of your spending money" error={reserveError}>
+        <Field label="How much should stay protected?" hint="A little extra set aside for peace of mind" error={reserveError}>
           <NumberField
             aria-label="Emergency reserve"
             prefix="$"
@@ -411,12 +411,12 @@ function Welcome() {
             }}
           />
           <p className="tabular mt-1.5 text-xs text-muted-foreground">
-            Spendable budget: {formatMoney(Math.max(0, form.totalBudget - form.emergencyFund))}
+            That leaves {formatMoney(Math.max(0, form.totalBudget - form.emergencyFund))} to spend on the trip itself.
           </p>
         </Field>
 
         <Button type="submit" variant="hero" size="lg" className="w-full">
-          Build my trip plan <ArrowRight />
+          Plan my trip <ArrowRight />
         </Button>
         <p className="text-center text-xs text-muted-foreground">
           Prices and places are demonstrations until live travel data is connected. No bookings or payments.

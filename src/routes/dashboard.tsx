@@ -37,7 +37,7 @@ function Dashboard() {
 
   return (
     <div>
-      <PageHeader eyebrow="Dashboard" title="Trip at a glance">
+      <PageHeader eyebrow="Your trip" title="Everything at a glance">
         <div className="flex gap-2">
           {type && <Badge variant="secondary">{type.label}</Badge>}
           {style && <Badge variant={style.id === "luxury" ? "gold" : "secondary"}>{style.label}</Badge>}
@@ -50,7 +50,7 @@ function Dashboard() {
           <div className="absolute -top-24 -right-24 size-72 rounded-full bg-gradient-sunset opacity-30 blur-3xl" aria-hidden />
           <div className="relative grid gap-6 sm:grid-cols-[1fr_auto] sm:items-end">
             <div>
-              <p className="text-sm text-ink-foreground/70">{totals.overBudget ? "Over your spendable budget" : "Remaining to spend"}</p>
+              <p className="text-sm text-ink-foreground/70">{totals.overBudget ? "Your plan is over your spending money by" : "You've got this much left to explore"}</p>
               <p
                 className={cn(
                   "tabular font-display text-5xl font-semibold sm:text-6xl",
@@ -72,7 +72,7 @@ function Dashboard() {
             <div className="flex items-center gap-2 self-start rounded-2xl bg-ink-foreground/10 px-4 py-3 sm:self-end">
               <Lock className="size-4" />
               <div>
-                <p className="text-[11px] text-ink-foreground/70">Emergency fund</p>
+                <p className="text-[11px] text-ink-foreground/70">Emergency reserve</p>
                 <p className="tabular font-bold">{formatMoney(totals.emergencyFund)} protected</p>
               </div>
             </div>
@@ -102,7 +102,7 @@ function Dashboard() {
             tone={totals.overBudget ? "danger" : "success"}
           />
           <StatCard icon={PiggyBank} label="Potential savings" value={formatMoney(potentialSavings)} sub={`${savings.length} ideas below`} tone="sunset" />
-          <StatCard icon={ShieldCheck} label="Emergency fund" value={formatMoney(totals.emergencyFund)} sub="Excluded from spending" tone="shield" />
+          <StatCard icon={ShieldCheck} label="Emergency reserve" value={formatMoney(totals.emergencyFund)} sub="Kept safe, never spent" tone="shield" />
         </section>
 
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
@@ -153,8 +153,8 @@ function Dashboard() {
 
           {/* Savings */}
           <section className="surface-card p-5">
-            <h2 className="font-display text-2xl font-semibold">Ways to save</h2>
-            <p className="text-sm text-muted-foreground">Tap apply to update your budget instantly.</p>
+            <h2 className="font-display text-2xl font-semibold">Ways to spend less</h2>
+            <p className="text-sm text-muted-foreground">Each idea updates your budget the moment you apply it. You can undo it anytime.</p>
             <ul className="mt-4 space-y-2.5">
               {savings.map((s) => {
                 const Icon = CATEGORY_ICONS[s.category];

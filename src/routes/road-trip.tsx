@@ -153,7 +153,7 @@ function RoadTripPage() {
 
   return (
     <div>
-      <PageHeader eyebrow="Road-trip discovery" title="Find the good stops">
+      <PageHeader eyebrow="Road trip" title="Find the stops worth the detour">
         {realMode ? (
           <Badge variant="success" className="px-3 py-1">
             Real places & drive times · prices are estimates
