@@ -110,7 +110,7 @@ function Dashboard() {
           <StatCard icon={ShieldCheck} label="Emergency fund" value={formatMoney(totals.emergencyFund)} sub="Excluded from spending" tone="shield" />
         </section>
 
-        <div className="grid gap-6 lg:grid-cols-[1fr_1fr]">
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
           {/* Breakdown */}
           <section className="surface-card p-5">
             <div className="flex items-center justify-between">
