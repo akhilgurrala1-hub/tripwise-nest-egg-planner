@@ -9,7 +9,7 @@ import { PageHeader } from "@/components/app/TripHeader";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { createAiItinerary } from "@/lib/ai-itinerary.functions";
-import { formatMoney } from "@/lib/budget";
+import { formatMoney, stopCost } from "@/lib/budget";
 import { INTERESTS, TRAVEL_STYLES, TRIP_TYPES } from "@/lib/demo-data";
 import { addDays, itineraryActivityCost, type ItemKind, type Itinerary } from "@/lib/itinerary";
 import { tripActions, useTrip } from "@/lib/trip-store";
@@ -115,6 +115,43 @@ function ItineraryPage() {
               <Loader2 className="size-5 animate-spin text-sunset" />
               Crafting a plan around your interests and budget — this can take up to a minute.
             </div>
+          )}
+
+          {trip.roadTrip.includedStops.length > 0 && (
+            <section className="surface-card overflow-hidden">
+              <header className="flex items-center justify-between gap-3 border-b border-border bg-gradient-sand px-5 py-4">
+                <div>
+                  <p className="text-xs font-semibold tracking-wider text-muted-foreground uppercase">On the drive</p>
+                  <h2 className="font-display text-xl font-semibold">Road-trip stops</h2>
+                </div>
+                <Link to="/road-trip" className="text-xs font-semibold text-primary underline-offset-2 hover:underline">
+                  Find more
+                </Link>
+              </header>
+              <ol className="px-5 py-2">
+                {trip.roadTrip.includedStops.map((s) => (
+                  <li key={s.id} className="flex items-center gap-3 py-2.5">
+                    <span className="grid size-9 shrink-0 place-items-center rounded-full border border-success/25 bg-success-soft text-success">
+                      <Car className="size-4" />
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-bold">{s.name}</p>
+                      <p className="text-xs text-muted-foreground">+{s.extraMinutes} min detour (sample)</p>
+                    </div>
+                    <span className="tabular rounded-full bg-muted px-2 py-0.5 text-xs font-bold">
+                      {formatMoney(stopCost(s, shape.travelers, trip.inputs), { cents: true })}
+                    </span>
+                    <button
+                      onClick={() => tripActions.toggleStop(s)}
+                      className="grid size-6 place-items-center rounded-full text-muted-foreground opacity-60 transition hover:bg-muted hover:opacity-100"
+                      aria-label={`Remove ${s.name}`}
+                    >
+                      <X className="size-3.5" />
+                    </button>
+                  </li>
+                ))}
+              </ol>
+            </section>
           )}
 
           {!itin || itin.days.length === 0 ? (

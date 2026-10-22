@@ -1,13 +1,14 @@
 import { Link } from "@tanstack/react-router";
-import { Compass, LayoutDashboard, Map, Wallet, type LucideIcon } from "lucide-react";
+import { Compass, LayoutDashboard, Map, Route as RouteIcon, Wallet, type LucideIcon } from "lucide-react";
 import type { ReactNode } from "react";
 
 import { DemoBadge } from "./bits";
 import { cn } from "@/lib/utils";
 
-const NAV: { to: "/" | "/budget" | "/itinerary" | "/dashboard"; label: string; icon: LucideIcon }[] = [
+const NAV: { to: "/" | "/budget" | "/road-trip" | "/itinerary" | "/dashboard"; label: string; icon: LucideIcon }[] = [
   { to: "/", label: "Plan", icon: Compass },
   { to: "/budget", label: "Budget", icon: Wallet },
+  { to: "/road-trip", label: "Road trip", icon: RouteIcon },
   { to: "/itinerary", label: "Itinerary", icon: Map },
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
 ];
@@ -43,7 +44,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       <main className="pb-28 md:pb-16">{children}</main>
 
       <nav className="glass pb-safe fixed inset-x-0 bottom-0 z-40 border-t border-border/70 md:hidden" aria-label="Main">
-        <div className="mx-auto grid max-w-md grid-cols-4 px-2 pt-1.5">
+        <div className="mx-auto grid max-w-lg grid-cols-5 px-1 pt-1.5">
           {NAV.map(({ to, label, icon: Icon }) => (
             <Link
               key={to}
@@ -55,7 +56,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                 <>
                   <span
                     className={cn(
-                      "grid h-8 w-12 place-items-center rounded-full transition-colors",
+                      "grid h-8 w-11 place-items-center rounded-full transition-colors",
                       isActive ? "bg-secondary text-primary" : "text-muted-foreground",
                     )}
                   >
