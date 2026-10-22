@@ -33,6 +33,18 @@ export const TRIP_TYPES: { id: TripType; label: string; blurb: string }[] = [
   { id: "staycation", label: "Staycation", blurb: "Explore close to home" },
 ];
 
+export type TransportMode = "car" | "rental-car" | "flight" | "train" | "bus";
+
+export const TRANSPORT_MODES: { id: TransportMode; label: string }[] = [
+  { id: "car", label: "My car" },
+  { id: "rental-car", label: "Rental car" },
+  { id: "flight", label: "Flight" },
+  { id: "train", label: "Train" },
+  { id: "bus", label: "Bus" },
+];
+
+export const isDrivingMode = (m: TransportMode) => m === "car" || m === "rental-car";
+
 export const TRAVEL_STYLES: { id: TravelStyle; label: string; blurb: string }[] = [
   { id: "budget", label: "Savvy", blurb: "Stretch every dollar" },
   { id: "comfort", label: "Comfort", blurb: "Balanced & easy" },
@@ -68,6 +80,8 @@ export interface DemoDestination {
   parkingPerDay: number;
   tolls: number;
   taxRatePct: number;
+  /** Example round-trip fare per person for non-driving travel */
+  fares: { flight: number; train: number; bus: number };
   nightly: Tiered;
   foodPerPersonDay: Tiered;
   activitiesPerPerson: Tiered;
@@ -87,6 +101,7 @@ export const DESTINATIONS: DemoDestination[] = [
     parkingPerDay: 12,
     tolls: 0,
     taxRatePct: 13,
+    fares: { flight: 320, train: 140, bus: 85 },
     nightly: { budget: 89, comfort: 165, luxury: 340 },
     foodPerPersonDay: { budget: 32, comfort: 58, luxury: 115 },
     activitiesPerPerson: { budget: 25, comfort: 70, luxury: 180 },
@@ -118,6 +133,7 @@ export const DESTINATIONS: DemoDestination[] = [
     parkingPerDay: 15,
     tolls: 8,
     taxRatePct: 14,
+    fares: { flight: 290, train: 150, bus: 95 },
     nightly: { budget: 109, comfort: 195, luxury: 420 },
     foodPerPersonDay: { budget: 35, comfort: 62, luxury: 125 },
     activitiesPerPerson: { budget: 20, comfort: 85, luxury: 220 },
@@ -149,6 +165,7 @@ export const DESTINATIONS: DemoDestination[] = [
     parkingPerDay: 5,
     tolls: 0,
     taxRatePct: 12,
+    fares: { flight: 360, train: 180, bus: 110 },
     nightly: { budget: 95, comfort: 180, luxury: 450 },
     foodPerPersonDay: { budget: 30, comfort: 55, luxury: 110 },
     activitiesPerPerson: { budget: 35, comfort: 95, luxury: 260 },
@@ -180,6 +197,7 @@ export const DESTINATIONS: DemoDestination[] = [
     parkingPerDay: 20,
     tolls: 4,
     taxRatePct: 15,
+    fares: { flight: 270, train: 120, bus: 80 },
     nightly: { budget: 115, comfort: 210, luxury: 460 },
     foodPerPersonDay: { budget: 38, comfort: 68, luxury: 135 },
     activitiesPerPerson: { budget: 20, comfort: 65, luxury: 190 },
@@ -211,6 +229,7 @@ export const DESTINATIONS: DemoDestination[] = [
     parkingPerDay: 25,
     tolls: 9,
     taxRatePct: 14,
+    fares: { flight: 240, train: 110, bus: 70 },
     nightly: { budget: 139, comfort: 260, luxury: 620 },
     foodPerPersonDay: { budget: 42, comfort: 78, luxury: 160 },
     activitiesPerPerson: { budget: 30, comfort: 90, luxury: 280 },
@@ -242,6 +261,7 @@ export const DESTINATIONS: DemoDestination[] = [
     parkingPerDay: 8,
     tolls: 0,
     taxRatePct: 8,
+    fares: { flight: 0, train: 12, bus: 6 },
     nightly: { budget: 0, comfort: 0, luxury: 240 },
     foodPerPersonDay: { budget: 25, comfort: 45, luxury: 95 },
     activitiesPerPerson: { budget: 15, comfort: 50, luxury: 150 },
@@ -282,6 +302,7 @@ export function buildCustomDestination(name: string): DemoDestination {
     parkingPerDay: 15,
     tolls: 5,
     taxRatePct: 12,
+    fares: { flight: 300, train: 140, bus: 90 },
     sights: [
       { name: `${label} Old Town Walk`, area: "City center", costPerPerson: 0, interests: ["history", "arts", "shopping"], note: "Self-guided stroll" },
       { name: `${label} Regional Park`, area: "Outskirts", costPerPerson: 5, interests: ["nature", "family", "adventure"], note: "Trails & picnic areas" },

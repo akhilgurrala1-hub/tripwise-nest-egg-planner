@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as BudgetRouteImport } from './routes/budget'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as ItineraryRouteImport } from './routes/itinerary'
+import { Route as RoadTripRouteImport } from './routes/road-trip'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -34,18 +35,25 @@ const ItineraryRoute = ItineraryRouteImport.update({
   path: '/itinerary',
   getParentRoute: () => rootRouteImport,
 } as any)
+const RoadTripRoute = RoadTripRouteImport.update({
+  id: '/road-trip',
+  path: '/road-trip',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/budget': typeof BudgetRoute
   '/dashboard': typeof DashboardRoute
   '/itinerary': typeof ItineraryRoute
+  '/road-trip': typeof RoadTripRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/budget': typeof BudgetRoute
   '/dashboard': typeof DashboardRoute
   '/itinerary': typeof ItineraryRoute
+  '/road-trip': typeof RoadTripRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -53,13 +61,14 @@ export interface FileRoutesById {
   '/budget': typeof BudgetRoute
   '/dashboard': typeof DashboardRoute
   '/itinerary': typeof ItineraryRoute
+  '/road-trip': typeof RoadTripRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/budget' | '/dashboard' | '/itinerary'
+  fullPaths: '/' | '/budget' | '/dashboard' | '/itinerary' | '/road-trip'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/budget' | '/dashboard' | '/itinerary'
-  id: '__root__' | '/' | '/budget' | '/dashboard' | '/itinerary'
+  to: '/' | '/budget' | '/dashboard' | '/itinerary' | '/road-trip'
+  id: '__root__' | '/' | '/budget' | '/dashboard' | '/itinerary' | '/road-trip'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -67,6 +76,7 @@ export interface RootRouteChildren {
   BudgetRoute: typeof BudgetRoute
   DashboardRoute: typeof DashboardRoute
   ItineraryRoute: typeof ItineraryRoute
+  RoadTripRoute: typeof RoadTripRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -99,6 +109,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ItineraryRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/road-trip': {
+      id: '/road-trip'
+      path: '/road-trip'
+      fullPath: '/road-trip'
+      preLoaderRoute: typeof RoadTripRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -107,6 +124,7 @@ const rootRouteChildren: RootRouteChildren = {
   BudgetRoute: BudgetRoute,
   DashboardRoute: DashboardRoute,
   ItineraryRoute: ItineraryRoute,
+  RoadTripRoute: RoadTripRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

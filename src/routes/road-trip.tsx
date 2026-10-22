@@ -1,0 +1,460 @@
+import { useQuery } from "@tanstack/react-query";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import {
+  Clock,
+  Flag,
+  Footprints,
+  MapPin,
+  Minus,
+  Mountain,
+  Plus,
+  Sparkles,
+  Ticket,
+  Trees,
+  UtensilsCrossed,
+  type LucideIcon,
+} from "lucide-react";
+import { useState } from "react";
+
+import { DemoBadge, NumberField } from "@/components/app/bits";
+import { PageHeader } from "@/components/app/TripHeader";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Slider } from "@/components/ui/slider";
+import { formatMoney, roundMoney, stopCost } from "@/lib/budget";
+import { INTERESTS, isDrivingMode, type Interest } from "@/lib/demo-data";
+import {
+  STOP_FILTERS,
+  getRouteProvider,
+  matchesFilter,
+  rankStops,
+  whyItMatches,
+  type RouteStop,
+  type StopFilter,
+  type StopKind,
+} from "@/lib/routing";
+import { tripActions, useTrip } from "@/lib/trip-store";
+import { cn } from "@/lib/utils";
+
+export const Route = createFileRoute("/road-trip")({
+  head: () => ({
+    meta: [
+      { title: "Road-trip discovery — Waypoint" },
+      {
+        name: "description",
+        content: "Find scenic viewpoints, food, parks and free stops along your route, with cost, detour time and budget impact.",
+      },
+      { property: "og:title", content: "Road-trip discovery — Waypoint" },
+      { property: "og:description", content: "Pick stops along your drive and watch your trip budget update instantly." },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
+    ],
+  }),
+  component: RoadTripPage,
+});
+
+const KIND: Record<StopKind, { icon: LucideIcon; label: string }> = {
+  viewpoint: { icon: Mountain, label: "Scenic viewpoint" },
+  restaurant: { icon: UtensilsCrossed, label: "Food" },
+  park: { icon: Trees, label: "Park" },
+  attraction: { icon: Ticket, label: "Attraction" },
+  "free-activity": { icon: Footprints, label: "Free activity" },
+};
+
+function segmentLabel(pos: number, origin: string, destination: string) {
+  if (pos < 0.34) return `Early in the drive${origin ? ` from ${origin}` : ""}`;
+  if (pos < 0.67) return "Midway";
+  return `Approaching ${destination || "your destination"}`;
+}
+
+function RoadTripPage() {
+  const { trip, totals, shape, stopsTotal } = useTrip();
+  const rt = trip.roadTrip;
+  const [filter, setFilter] = useState<StopFilter>("all");
+  const provider = getRouteProvider();
+  const driving = isDrivingMode(trip.inputs.transportMode);
+
+  const { data: stops = [], isLoading } = useQuery({
+    queryKey: ["route-stops", provider.id, rt.origin, rt.destination],
+    queryFn: () =>
+      provider.findStopsAlongRoute({
+        origin: rt.origin,
+        destination: rt.destination,
+        interests: rt.interests,
+        maxDetourMinutes: rt.maxDetourMinutes,
+      }),
+  });
+
+  const includedIds = new Set(rt.includedStops.map((s) => s.id));
+  const withinDetour = stops.filter((s) => s.extraMinutes <= rt.maxDetourMinutes);
+  const visible = rankStops(withinDetour, rt.interests).filter((s) => matchesFilter(s, filter));
+  const hiddenByDetour = stops.length - withinDetour.length;
+  const stopBudgetLeft = roundMoney(rt.stopBudget - stopsTotal);
+  const extraMinutes = rt.includedStops.reduce((s, x) => s + x.extraMinutes, 0);
+
+  const toggleInterest = (id: Interest) =>
+    tripActions.updateRoadTrip({
+      interests: rt.interests.includes(id) ? rt.interests.filter((i) => i !== id) : [...rt.interests, id],
+    });
+
+  return (
+    <div>
+      <PageHeader eyebrow="Road-trip discovery" title="Find the good stops">
+        <DemoBadge label="Demo stops · sample times & prices" />
+      </PageHeader>
+
+      <div className="mx-auto mt-6 grid max-w-6xl grid-cols-1 gap-6 px-4 lg:grid-cols-[minmax(0,1fr)_340px]">
+        <div className="min-w-0 space-y-6">
+          {/* Route setup */}
+          <section className="surface-card space-y-5 p-5">
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div>
+                <label htmlFor="rt-origin" className="text-sm font-bold">
+                  Starting location
+                </label>
+                <Input
+                  id="rt-origin"
+                  value={rt.origin}
+                  placeholder="e.g. your city"
+                  maxLength={80}
+                  onChange={(e) => tripActions.updateRoadTrip({ origin: e.target.value })}
+                  className="mt-1.5 h-11 rounded-xl bg-card"
+                />
+              </div>
+              <div>
+                <label htmlFor="rt-dest" className="text-sm font-bold">
+                  Destination
+                </label>
+                <Input
+                  id="rt-dest"
+                  value={rt.destination}
+                  placeholder="Where you're headed"
+                  maxLength={80}
+                  onChange={(e) => tripActions.updateRoadTrip({ destination: e.target.value })}
+                  className="mt-1.5 h-11 rounded-xl bg-card"
+                />
+              </div>
+            </div>
+
+            <div className="grid gap-5 sm:grid-cols-2">
+              <div>
+                <label htmlFor="rt-budget" className="text-sm font-bold">
+                  Budget for stops & detours
+                </label>
+                <NumberField
+                  id="rt-budget"
+                  prefix="$"
+                  step={25}
+                  value={rt.stopBudget}
+                  onChange={(v) => tripActions.updateRoadTrip({ stopBudget: v })}
+                  className="mt-1.5"
+                />
+              </div>
+              <div>
+                <div className="flex items-baseline justify-between">
+                  <span className="text-sm font-bold">Max detour per stop</span>
+                  <span className="tabular text-sm font-semibold text-primary">{rt.maxDetourMinutes} min</span>
+                </div>
+                <Slider
+                  className="mt-4"
+                  min={5}
+                  max={60}
+                  step={5}
+                  value={[rt.maxDetourMinutes]}
+                  onValueChange={([v]) => tripActions.updateRoadTrip({ maxDetourMinutes: v ?? 20 })}
+                  aria-label="Maximum detour time"
+                />
+              </div>
+            </div>
+
+            <div>
+              <p className="mb-2 text-sm font-bold">Interests</p>
+              <div className="flex flex-wrap gap-2">
+                {INTERESTS.map((i) => {
+                  const active = rt.interests.includes(i.id);
+                  return (
+                    <button
+                      key={i.id}
+                      type="button"
+                      aria-pressed={active}
+                      onClick={() => toggleInterest(i.id)}
+                      className={cn(
+                        "rounded-full border px-3 py-1.5 text-xs font-semibold transition-all",
+                        active ? "border-primary bg-primary text-primary-foreground" : "border-border bg-card hover:border-primary/40",
+                      )}
+                    >
+                      {i.label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          </section>
+
+          {/* Filters */}
+          <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:flex-wrap sm:px-0">
+            {STOP_FILTERS.map((f) => (
+              <button
+                key={f.id}
+                type="button"
+                aria-pressed={filter === f.id}
+                onClick={() => setFilter(f.id)}
+                className={cn(
+                  "shrink-0 rounded-full border px-4 py-2 text-sm font-semibold transition-all",
+                  filter === f.id ? "border-sunset bg-sunset-soft text-foreground" : "border-border bg-card text-muted-foreground hover:text-foreground",
+                )}
+              >
+                {f.label}
+              </button>
+            ))}
+          </div>
+
+          {/* Recommendations */}
+          <section className="space-y-3">
+            <p className="text-xs text-muted-foreground">
+              {visible.length} stop{visible.length === 1 ? "" : "s"} within {rt.maxDetourMinutes} min
+              {hiddenByDetour > 0 ? ` · ${hiddenByDetour} longer detour${hiddenByDetour === 1 ? "" : "s"} hidden` : ""}.
+              Stop names are generic types, not real businesses — real places arrive with a mapping service.
+            </p>
+            {isLoading && <div className="surface-card p-5 text-sm text-muted-foreground">Finding stops along your route…</div>}
+            {!isLoading && visible.length === 0 && (
+              <div className="surface-card p-6 text-center text-sm text-muted-foreground">
+                No stops match. Try another filter or allow a longer detour.
+              </div>
+            )}
+            {visible.map((stop) => (
+              <StopCard
+                key={stop.id}
+                stop={stop}
+                included={includedIds.has(stop.id)}
+                cost={stopCost(stop, shape.travelers, trip.inputs)}
+                tripRemaining={totals.remaining}
+                stopBudgetLeft={stopBudgetLeft}
+                reasons={whyItMatches(stop, rt.interests, shape.travelers)}
+                segment={segmentLabel(stop.position, rt.origin, rt.destination)}
+                travelers={shape.travelers}
+                driving={driving}
+              />
+            ))}
+          </section>
+        </div>
+
+        {/* Route plan */}
+        <aside className="space-y-4 lg:sticky lg:top-20 lg:self-start">
+          <section className="overflow-hidden rounded-3xl bg-gradient-ink p-5 text-primary-foreground shadow-lift">
+            <h2 className="font-display text-xl font-semibold">Your route plan</h2>
+            <dl className="mt-3 grid grid-cols-2 gap-3 text-sm">
+              <div className="rounded-xl bg-card/10 p-3">
+                <dt className="text-xs text-primary-foreground/70">Stops added</dt>
+                <dd className="tabular text-lg font-bold">{rt.includedStops.length}</dd>
+              </div>
+              <div className="rounded-xl bg-card/10 p-3">
+                <dt className="text-xs text-primary-foreground/70">Extra drive (sample)</dt>
+                <dd className="tabular text-lg font-bold">+{extraMinutes} min</dd>
+              </div>
+              <div className="rounded-xl bg-card/10 p-3">
+                <dt className="text-xs text-primary-foreground/70">Stop spend</dt>
+                <dd className="tabular text-lg font-bold">{formatMoney(stopsTotal, { cents: true })}</dd>
+              </div>
+              <div className="rounded-xl bg-card/10 p-3">
+                <dt className="text-xs text-primary-foreground/70">Stop budget left</dt>
+                <dd className={cn("tabular text-lg font-bold", stopBudgetLeft < 0 && "text-sunset")}>
+                  {formatMoney(stopBudgetLeft, { cents: true })}
+                </dd>
+              </div>
+            </dl>
+            <div className="mt-3 rounded-xl bg-card/10 p-3 text-sm">
+              <p className="text-xs text-primary-foreground/70">Whole-trip money remaining</p>
+              <p className={cn("tabular font-display text-2xl font-semibold", totals.overBudget && "text-sunset")}>
+                {formatMoney(totals.remaining, { cents: true })}
+              </p>
+              <Link to="/budget" className="text-xs font-semibold underline underline-offset-2">
+                Open budget
+              </Link>
+            </div>
+          </section>
+
+          <RouteMap
+            origin={rt.origin}
+            destination={rt.destination}
+            stops={withinDetour}
+            includedIds={includedIds}
+          />
+
+          {rt.includedStops.length > 0 && (
+            <Button variant="outline" className="w-full" onClick={tripActions.clearStops}>
+              Remove all stops
+            </Button>
+          )}
+        </aside>
+      </div>
+    </div>
+  );
+}
+
+function StopCard({
+  stop,
+  included,
+  cost,
+  tripRemaining,
+  stopBudgetLeft,
+  reasons,
+  segment,
+  travelers,
+  driving,
+}: {
+  stop: RouteStop;
+  included: boolean;
+  cost: number;
+  tripRemaining: number;
+  stopBudgetLeft: number;
+  reasons: string[];
+  segment: string;
+  travelers: number;
+  driving: boolean;
+}) {
+  const { icon: Icon, label } = KIND[stop.kind];
+  // Stops are excluded from taxes and the cushion, so their effect on the budget is exactly their cost.
+  const remainingAfter = included ? tripRemaining : roundMoney(tripRemaining - cost);
+  const stopLeftAfter = included ? stopBudgetLeft : roundMoney(stopBudgetLeft - cost);
+
+  return (
+    <article
+      id={`stop-${stop.id}`}
+      className={cn("surface-card animate-rise overflow-hidden transition-all", included && "ring-2 ring-success/40")}
+    >
+      <div className="flex gap-3 p-4">
+        <span
+          className={cn(
+            "grid size-11 shrink-0 place-items-center rounded-2xl",
+            stop.kind === "restaurant" ? "bg-sunset-soft text-sunset" : stop.costPerPerson === 0 ? "bg-success-soft text-success" : "bg-secondary text-primary",
+          )}
+        >
+          <Icon className="size-5" />
+        </span>
+        <div className="min-w-0 flex-1">
+          <p className="text-[11px] font-bold tracking-wider text-muted-foreground uppercase">
+            {label} · {segment}
+          </p>
+          <h3 className="font-sans text-base leading-snug font-bold">{stop.name}</h3>
+          <p className="text-xs text-muted-foreground">{stop.description}</p>
+          <ul className="mt-2 flex flex-wrap gap-1.5">
+            {reasons.map((r) => (
+              <li key={r} className="inline-flex items-center gap-1 rounded-full bg-gold-soft px-2 py-0.5 text-[11px] font-semibold">
+                <Sparkles className="size-3 text-sunset" /> {r}
+              </li>
+            ))}
+          </ul>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-3 border-t border-border bg-muted/40 text-center text-xs">
+        <div className="p-3">
+          <p className="text-muted-foreground">Est. cost</p>
+          <p className="tabular text-sm font-bold">{cost === 0 ? "Free" : formatMoney(cost, { cents: true })}</p>
+          <p className="tabular text-[10px] text-muted-foreground">
+            {stop.costPerPerson === 0 ? "no entry fee" : `${formatMoney(stop.costPerPerson)}/pp × ${travelers}`}
+            {driving && stop.extraMinutes > 0 ? " + fuel" : ""}
+          </p>
+        </div>
+        <div className="border-x border-border p-3">
+          <p className="text-muted-foreground">Extra drive</p>
+          <p className="tabular inline-flex items-center gap-1 text-sm font-bold">
+            <Clock className="size-3" /> +{stop.extraMinutes} min
+          </p>
+          <p className="text-[10px] text-muted-foreground">sample time</p>
+        </div>
+        <div className="p-3">
+          <p className="text-muted-foreground">{included ? "Trip remaining" : "Remaining after"}</p>
+          <p className={cn("tabular text-sm font-bold", remainingAfter < 0 ? "text-destructive" : "text-success")}>
+            {formatMoney(remainingAfter)}
+          </p>
+          <p className={cn("tabular text-[10px]", stopLeftAfter < 0 ? "text-destructive" : "text-muted-foreground")}>
+            stop budget {formatMoney(stopLeftAfter)}
+          </p>
+        </div>
+      </div>
+
+      <div className="flex items-center justify-between gap-3 border-t border-border px-4 py-3">
+        <DemoBadge label="Demo" />
+        <Button
+          size="sm"
+          variant={included ? "outline" : "default"}
+          onClick={() => tripActions.toggleStop(stop)}
+          aria-pressed={included}
+        >
+          {included ? (
+            <>
+              <Minus /> Remove from trip
+            </>
+          ) : (
+            <>
+              <Plus /> Add to trip
+            </>
+          )}
+        </Button>
+      </div>
+    </article>
+  );
+}
+
+/** Schematic route until a mapping service is connected; positions are samples. */
+function RouteMap({
+  origin,
+  destination,
+  stops,
+  includedIds,
+}: {
+  origin: string;
+  destination: string;
+  stops: RouteStop[];
+  includedIds: Set<string>;
+}) {
+  return (
+    <section className="surface-card p-5">
+      <div className="flex items-center justify-between">
+        <h2 className="font-display text-lg font-semibold">Route preview</h2>
+        <DemoBadge label="Schematic" />
+      </div>
+      <div className="relative mt-4 ml-3 h-80">
+        <span className="absolute top-2 bottom-2 left-[7px] w-0.5 rounded-full bg-gradient-sunset" aria-hidden />
+        <div className="absolute top-0 left-0 flex items-center gap-2">
+          <span className="grid size-4 place-items-center rounded-full bg-primary text-primary-foreground">
+            <MapPin className="size-2.5" />
+          </span>
+          <span className="text-xs font-bold">{origin || "Start"}</span>
+        </div>
+        {stops.map((s) => {
+          const on = includedIds.has(s.id);
+          return (
+            <button
+              key={s.id}
+              type="button"
+              onClick={() => document.getElementById(`stop-${s.id}`)?.scrollIntoView({ behavior: "smooth", block: "center" })}
+              className="group absolute left-0 flex items-center gap-2"
+              style={{ top: `calc(${s.position * 100}% - 6px)` }}
+              title={s.name}
+            >
+              <span
+                className={cn(
+                  "ml-[2px] size-3 rounded-full border-2 transition-all",
+                  on ? "border-success bg-success" : "border-border bg-card group-hover:border-primary",
+                )}
+              />
+              {on && <span className="max-w-48 truncate text-[11px] font-semibold text-success">{s.name}</span>}
+            </button>
+          );
+        })}
+        <div className="absolute bottom-0 left-0 flex items-center gap-2">
+          <span className="grid size-4 place-items-center rounded-full bg-sunset text-sunset-foreground">
+            <Flag className="size-2.5" />
+          </span>
+          <span className="text-xs font-bold">{destination || "Destination"}</span>
+        </div>
+      </div>
+      <p className="mt-3 text-[11px] text-muted-foreground">
+        A live map with real routes and places will appear here once a mapping service is connected.
+      </p>
+    </section>
+  );
+}

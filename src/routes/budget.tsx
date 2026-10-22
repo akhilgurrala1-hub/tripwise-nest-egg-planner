@@ -1,6 +1,7 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { AlertTriangle, Lock, RotateCcw, ShieldCheck } from "lucide-react";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { AlertTriangle, Check, Lock, RotateCcw, ShieldCheck } from "lucide-react";
 import type { ReactNode } from "react";
+import { toast } from "sonner";
 
 import { CATEGORY_COLOR_VAR, CATEGORY_ICONS, DemoBadge, NumberField } from "@/components/app/bits";
 import { PageHeader } from "@/components/app/TripHeader";
@@ -8,7 +9,16 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
-import { CATEGORIES, CATEGORY_LABELS, formatMoney, type BudgetInputs, type Category } from "@/lib/budget";
+import {
+  CATEGORIES,
+  CATEGORY_LABELS,
+  OVERRIDABLE,
+  formatMoney,
+  stopCost,
+  type BudgetInputs,
+  type Category,
+} from "@/lib/budget";
+import { TRANSPORT_MODES, isDrivingMode } from "@/lib/demo-data";
 import { itineraryActivityCost } from "@/lib/itinerary";
 import { tripActions, useTrip } from "@/lib/trip-store";
 import { cn } from "@/lib/utils";
@@ -17,7 +27,7 @@ export const Route = createFileRoute("/budget")({
   head: () => ({
     meta: [
       { title: "Budget calculator — Waypoint" },
-      { name: "description", content: "Edit gas, food, lodging, parking, tolls, taxes and activities with live trip budget calculations." },
+      { name: "description", content: "Edit hotels, gas, tolls, parking, transportation, meals, snacks, water, taxes and activities with live budget math." },
       { property: "og:title", content: "Budget calculator — Waypoint" },
       { property: "og:description", content: "A smart, editable trip budget with a protected emergency fund." },
       { property: "og:type", content: "website" },
@@ -79,15 +89,7 @@ function BudgetPage() {
                 {Math.round(totals.percentUsed)}% of spendable money planned · {formatMoney(totals.perPersonPerDay)} per person per day
               </p>
             </div>
-            {totals.overBudget && (
-              <div className="mt-4 flex gap-2.5 rounded-xl bg-destructive-soft p-3 text-sm text-destructive">
-                <AlertTriangle className="mt-0.5 size-4 shrink-0" />
-                <p>
-                  You're {formatMoney(-totals.remaining)} over. Your emergency fund stays protected — trim a category or check
-                  the savings ideas on your dashboard.
-                </p>
-              </div>
-            )}
+            {totals.overBudget && <CutPlan />}
           </section>
 
           {/* Categories */}
@@ -99,6 +101,28 @@ function BudgetPage() {
                   <RotateCcw /> Reset all
                 </Button>
               )}
+            </div>
+            <div className="mb-4">
+              <p className="mb-2 text-sm font-bold">How are you getting there?</p>
+              <div className="flex flex-wrap gap-2">
+                {TRANSPORT_MODES.map((m) => {
+                  const active = trip.inputs.transportMode === m.id;
+                  return (
+                    <button
+                      key={m.id}
+                      type="button"
+                      aria-pressed={active}
+                      onClick={() => tripActions.setTransportMode(m.id)}
+                      className={cn(
+                        "rounded-full border px-3.5 py-2 text-sm font-semibold transition-all",
+                        active ? "border-primary bg-primary text-primary-foreground" : "border-border bg-card hover:border-primary/40",
+                      )}
+                    >
+                      {m.label}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
             <Accordion type="multiple" className="space-y-2.5">
               {CATEGORIES.map((cat) => (
@@ -183,22 +207,52 @@ function CategoryRow({ cat }: { cat: Category }) {
   const i = trip.inputs;
   const set = <K extends keyof BudgetInputs>(k: K) => (v: number) => tripActions.setInput(k, v as BudgetInputs[K]);
 
+  const driving = isDrivingMode(i.transportMode);
+  const modeLabel = TRANSPORT_MODES.find((m) => m.id === i.transportMode)?.label ?? "";
   let fields: ReactNode = null;
   let formula = "";
   switch (cat) {
-    case "gas":
-      formula = `${i.roundTripMiles} mi ÷ ${i.mpg} mpg × ${formatMoney(i.gasPrice, { cents: true })}/gal`;
+    case "transportation": {
+      const fareMode = i.transportMode === "flight" || i.transportMode === "train" || i.transportMode === "bus";
+      const parts: string[] = [];
+      if (fareMode) parts.push(`${formatMoney(i.farePerPerson)} fare × ${shape.travelers}`);
+      if (i.transportMode === "rental-car") parts.push(`${formatMoney(i.rentalPerDay)} rental × ${shape.days} days`);
+      if (i.localTransitPerDay > 0) parts.push(`${formatMoney(i.localTransitPerDay)} local rides × ${shape.days} days`);
+      formula = parts.length ? parts.join(" + ") : `${modeLabel} · no fares or rentals`;
       fields = (
+        <>
+          {fareMode && (
+            <InputCell label={`${modeLabel} fare, per person (round trip)`} value={i.farePerPerson} onChange={set("farePerPerson")} prefix="$" step={5} />
+          )}
+          {i.transportMode === "rental-car" && (
+            <InputCell label="Rental, per day" value={i.rentalPerDay} onChange={set("rentalPerDay")} prefix="$" step={5} />
+          )}
+          <InputCell label="Rideshare & transit, per day (group)" value={i.localTransitPerDay} onChange={set("localTransitPerDay")} prefix="$" />
+        </>
+      );
+      break;
+    }
+    case "gas":
+      formula = driving
+        ? `${i.roundTripMiles} mi ÷ ${i.mpg} mpg × ${formatMoney(i.gasPrice, { cents: true })}/gal`
+        : `Not driving (${modeLabel.toLowerCase()})`;
+      fields = driving ? (
         <>
           <InputCell label="Round-trip miles" value={i.roundTripMiles} onChange={set("roundTripMiles")} suffix="mi" step={10} />
           <InputCell label="Fuel economy" value={i.mpg} onChange={set("mpg")} suffix="mpg" />
           <InputCell label="Gas price" value={i.gasPrice} onChange={set("gasPrice")} prefix="$" suffix="/gal" step={0.05} />
         </>
+      ) : (
+        <NotDriving />
       );
       break;
     case "food":
       formula = `${formatMoney(i.foodPerPersonDay)} × ${shape.travelers} people × ${shape.days} days`;
       fields = <InputCell label="Per person, per day" value={i.foodPerPersonDay} onChange={set("foodPerPersonDay")} prefix="$" />;
+      break;
+    case "snacks":
+      formula = `${formatMoney(i.snacksPerPersonDay, { cents: true })} × ${shape.travelers} people × ${shape.days} days`;
+      fields = <InputCell label="Per person, per day" value={i.snacksPerPersonDay} onChange={set("snacksPerPersonDay")} prefix="$" step={0.5} />;
       break;
     case "water":
       formula = `${formatMoney(i.waterPerPersonDay, { cents: true })} × ${shape.travelers} people × ${shape.days} days`;
@@ -218,11 +272,33 @@ function CategoryRow({ cat }: { cat: Category }) {
       fields = <InputCell label="Per day" value={i.parkingPerDay} onChange={set("parkingPerDay")} prefix="$" />;
       break;
     case "tolls":
-      formula = "Total for the route";
-      fields = <InputCell label="Total tolls" value={i.tolls} onChange={set("tolls")} prefix="$" />;
+      formula = driving ? "Total for the route" : `Not driving (${modeLabel.toLowerCase()})`;
+      fields = driving ? <InputCell label="Total tolls" value={i.tolls} onChange={set("tolls")} prefix="$" /> : <NotDriving />;
+      break;
+    case "stops":
+      formula = `${trip.roadTrip.includedStops.length} stop${trip.roadTrip.includedStops.length === 1 ? "" : "s"} · entry + detour fuel`;
+      fields = (
+        <div className="col-span-full space-y-2 text-sm">
+          {trip.roadTrip.includedStops.length === 0 ? (
+            <p className="text-muted-foreground">No road-trip stops added yet.</p>
+          ) : (
+            <ul className="space-y-1">
+              {trip.roadTrip.includedStops.map((s) => (
+                <li key={s.id} className="flex justify-between gap-2">
+                  <span className="truncate">{s.name}</span>
+                  <span className="tabular font-semibold">{formatMoney(stopCost(s, shape.travelers, i), { cents: true })}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+          <Button asChild size="sm" variant="outline">
+            <Link to="/road-trip">Choose stops</Link>
+          </Button>
+        </div>
+      );
       break;
     case "taxes":
-      formula = `${i.taxRatePct}% of lodging, food & activities`;
+      formula = `${i.taxRatePct}% of hotels, meals, snacks & activities`;
       fields = <InputCell label="Tax rate" value={i.taxRatePct} onChange={set("taxRatePct")} suffix="%" step={0.5} />;
       break;
     case "activities": {
@@ -246,10 +322,12 @@ function CategoryRow({ cat }: { cat: Category }) {
       break;
     }
     case "misc":
-      formula = `${i.miscPct}% cushion on everything else`;
+      formula = `${i.miscPct}% cushion on everything except stops`;
       fields = <InputCell label="Cushion" value={i.miscPct} onChange={set("miscPct")} suffix="%" />;
       break;
   }
+
+  const canOverride = OVERRIDABLE.includes(cat);
 
   return (
     <AccordionItem value={cat} className="surface-card overflow-hidden border-b-0 px-0">
@@ -269,29 +347,31 @@ function CategoryRow({ cat }: { cat: Category }) {
             <p className="truncate text-xs font-normal text-muted-foreground">{isCustom ? "Your amount" : formula}</p>
           </div>
           <div className="mr-1 text-right">
-            <p className="tabular font-bold">{formatMoney(amount)}</p>
+            <p className="tabular font-bold">{formatMoney(amount, { cents: amount % 1 !== 0 && amount < 100 })}</p>
             <p className="tabular text-[11px] font-normal text-muted-foreground">{Math.round(share)}%</p>
           </div>
         </div>
       </AccordionTrigger>
       <AccordionContent className="border-t border-border bg-muted/40 px-4 pt-4 pb-4">
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">{fields}</div>
-        <div className="mt-4 flex flex-wrap items-end gap-3 border-t border-dashed border-border pt-4">
-          <div className="min-w-40 flex-1">
-            <p className="mb-1 text-xs font-semibold text-muted-foreground">Or set your own total</p>
-            <NumberField
-              aria-label={`${CATEGORY_LABELS[cat]} custom amount`}
-              prefix="$"
-              value={amount}
-              onChange={(v) => tripActions.setOverride(cat, v)}
-            />
+        {canOverride && (
+          <div className="mt-4 flex flex-wrap items-end gap-3 border-t border-dashed border-border pt-4">
+            <div className="min-w-40 flex-1">
+              <p className="mb-1 text-xs font-semibold text-muted-foreground">Or set your own total</p>
+              <NumberField
+                aria-label={`${CATEGORY_LABELS[cat]} custom amount`}
+                prefix="$"
+                value={amount}
+                onChange={(v) => tripActions.setOverride(cat, v)}
+              />
+            </div>
+            {isCustom && (
+              <Button variant="outline" onClick={() => tripActions.setOverride(cat, undefined)}>
+                <RotateCcw /> Use estimate ({formatMoney(totals.estimates[cat])})
+              </Button>
+            )}
           </div>
-          {isCustom && (
-            <Button variant="outline" onClick={() => tripActions.setOverride(cat, undefined)}>
-              <RotateCcw /> Use estimate ({formatMoney(totals.estimates[cat])})
-            </Button>
-          )}
-        </div>
+        )}
       </AccordionContent>
     </AccordionItem>
   );
@@ -316,6 +396,77 @@ function InputCell(props: {
         suffix={props.suffix}
         step={props.step}
       />
+    </div>
+  );
+}
+
+function NotDriving() {
+  return (
+    <p className="col-span-full text-sm text-muted-foreground">
+      Not needed for this travel method. Switch to "My car" or "Rental car" above to estimate it, or set your own total
+      below.
+    </p>
+  );
+}
+
+function CutPlan() {
+  const { cuts } = useTrip();
+  return (
+    <div className="mt-4 rounded-2xl border border-destructive/25 bg-destructive-soft p-4">
+      <div className="flex gap-2.5 text-sm text-destructive">
+        <AlertTriangle className="mt-0.5 size-4 shrink-0" />
+        <p>
+          <strong>You're {formatMoney(cuts.gap, { cents: true })} over your spendable budget.</strong> Your emergency
+          reserve stays protected. Here's where trimming helps most:
+        </p>
+      </div>
+      <ul className="mt-3 space-y-2">
+        {cuts.suggestions.map((s) => {
+          const Icon = CATEGORY_ICONS[s.category];
+          return (
+            <li key={s.category} className="flex items-center gap-3 rounded-xl bg-card p-3">
+              <span
+                className="grid size-9 shrink-0 place-items-center rounded-lg text-primary-foreground"
+                style={{ backgroundColor: CATEGORY_COLOR_VAR[s.category] }}
+              >
+                <Icon className="size-4" />
+              </span>
+              <div className="min-w-0 flex-1 text-sm">
+                <p className="font-bold">
+                  {CATEGORY_LABELS[s.category]}{" "}
+                  <span className="tabular font-normal text-muted-foreground">
+                    {formatMoney(s.current)} → {formatMoney(s.current - s.cut, { cents: true })}
+                  </span>
+                </p>
+                <p className="tabular text-xs text-muted-foreground">
+                  Saves {formatMoney(s.saves, { cents: true })} incl. taxes & cushion
+                  {s.closesGap && (
+                    <span className="ml-1 inline-flex items-center gap-0.5 font-semibold text-success">
+                      <Check className="size-3" /> back on budget
+                    </span>
+                  )}
+                </p>
+              </div>
+              {s.category === "stops" ? (
+                <Button asChild size="sm" variant="outline">
+                  <Link to="/road-trip">Review</Link>
+                </Button>
+              ) : (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => {
+                    tripActions.setOverride(s.category, Math.round((s.current - s.cut) * 100) / 100);
+                    toast.success(`${CATEGORY_LABELS[s.category]} trimmed by ${formatMoney(s.cut, { cents: true })}`);
+                  }}
+                >
+                  Apply
+                </Button>
+              )}
+            </li>
+          );
+        })}
+      </ul>
     </div>
   );
 }

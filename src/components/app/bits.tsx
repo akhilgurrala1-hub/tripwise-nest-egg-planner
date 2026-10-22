@@ -1,4 +1,7 @@
 import {
+  Bus,
+  Cookie,
+  MapPinned,
   Car,
   Droplets,
   Fuel,
@@ -18,6 +21,9 @@ import type { Category } from "@/lib/budget";
 import { cn } from "@/lib/utils";
 
 export const CATEGORY_ICONS: Record<Category, LucideIcon> = {
+  transportation: Bus,
+  snacks: Cookie,
+  stops: MapPinned,
   gas: Fuel,
   food: UtensilsCrossed,
   water: Droplets,
@@ -30,6 +36,9 @@ export const CATEGORY_ICONS: Record<Category, LucideIcon> = {
 };
 
 export const CATEGORY_COLOR_VAR: Record<Category, string> = {
+  transportation: "var(--cat-transportation)",
+  snacks: "var(--cat-snacks)",
+  stops: "var(--cat-stops)",
   gas: "var(--cat-gas)",
   food: "var(--cat-food)",
   water: "var(--cat-water)",
