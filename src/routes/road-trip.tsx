@@ -293,7 +293,7 @@ function RoadTripPage() {
           <section className="space-y-3">
             <p className="text-xs text-muted-foreground">
               {visible.length} stop{visible.length === 1 ? "" : "s"} within {rt.maxDetourMinutes} min
-              {hiddenByDetour > 0 ? ` · ${hiddenByDetour} longer detour${hiddenByDetour === 1 ? "" : "s"} hidden` : ""}.
+              {hiddenByDetour > 0 ? ` · ${hiddenByDetour} longer detour${hiddenByDetour === 1 ? "" : "s"} hidden` : ""}.{" "}
               {realMode
                 ? "Places and drive times come from Google Maps. Costs are estimates — check before you go."
                 : "Stop names are generic types, not real businesses. Sign in for real places."}
