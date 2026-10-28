@@ -349,97 +349,114 @@ export interface SavingTip {
   title: string;
   detail: string;
   category: Category;
+  /** Direct drop in this category's own total */
   amount: number;
+  /** Drop in the whole trip's planned total, incl. the taxes & cushion that shrink with it */
+  totalSavings: number;
+  /** What this idea assumes or changes about the trip, shown before applying */
+  assumption: string;
+  /** Applying replaces an amount the traveler typed for this category */
+  replacesCustom: boolean;
 }
 
+const SAVING_COPY: Record<SavingId, { title: string; detail: (dest: DemoDestination) => string; assumption: string }> = {
+  picnic: {
+    title: "Pack picnic lunches",
+    detail: () => "Swap one restaurant meal a day for groceries — meals budget drops 30%.",
+    assumption: "Lowers your daily meal budget. Restaurant picks in your itinerary stay as they are.",
+  },
+  snacks: {
+    title: "Stock up at a grocery store",
+    detail: () => "Buy snacks in bulk before you leave instead of at gas stations — about half off.",
+    assumption: "Halves your daily snack budget.",
+  },
+  refill: {
+    title: "Bring refillable bottles",
+    detail: () => "Fill up at your stay instead of buying bottled drinks — about 75% off.",
+    assumption: "Cuts your daily drinks budget to a quarter.",
+  },
+  lodging: {
+    title: "Choose a value stay",
+    detail: (dest) =>
+      dest.nightly.budget === 0
+        ? "Skip the hotel and sleep at home — the classic staycation move."
+        : `Switch to the demo budget-tier rate of ${formatMoney(dest.nightly.budget)}/night for the same nights.`,
+    assumption: "Changes your lodging assumption to a lower nightly rate. Dates stay the same.",
+  },
+  fares: {
+    title: "Travel midweek",
+    detail: () => "Tuesday–Wednesday departures are often cheaper — about 15% off fares (example).",
+    assumption: "Assumes you can move your travel days to midweek. Your dates in Waypoint aren't changed.",
+  },
+  parking: {
+    title: "Park once & walk",
+    detail: () => "Use free or off-peak lots and explore on foot — about half off parking.",
+    assumption: "Halves your daily parking budget.",
+  },
+  tolls: {
+    title: "Take the toll-free route",
+    detail: () => "Adds some drive time but skips every toll.",
+    assumption: "Sets tolls to $0 and assumes a longer, toll-free route.",
+  },
+  "free-days": {
+    title: "Mix in free attractions",
+    detail: () => "Trade a paid activity for parks, free museum days and markets — about 25% off.",
+    assumption: "Lowers your activities budget. Swap paid stops in your itinerary yourself to match.",
+  },
+  "fuel-rewards": {
+    title: "Use a fuel rewards app",
+    detail: () => "Save about $0.10 per gallon at partner stations.",
+    assumption: "Lowers your gas price by $0.10/gal.",
+  },
+};
+
+const SAVING_ORDER: SavingId[] = ["picnic", "snacks", "refill", "lodging", "fares", "parking", "tolls", "free-days", "fuel-rewards"];
+
+/** Inputs and overrides after applying a saving: the input changes plus clearing that category's custom total. */
+export function withSaving(id: SavingId, inputs: BudgetInputs, overrides: Overrides, dest: DemoDestination) {
+  const cat = SAVING_CATEGORY[id];
+  const nextOverrides = { ...overrides };
+  delete nextOverrides[cat];
+  return { inputs: { ...inputs, ...applySaving(id, inputs, dest) }, overrides: nextOverrides };
+}
+
+/**
+ * Saving ideas priced by the same engine as the budget: each one is applied in
+ * a copy of the trip and the before/after totals are compared.
+ */
 export function savingsOpportunities(
   inputs: BudgetInputs,
   trip: TripShape,
-  categories: Record<Category, number>,
+  overrides: Overrides,
+  stopsTotal: number,
   dest: DemoDestination,
   applied: SavingId[] = [],
+  /** Categories whose amount is controlled elsewhere (e.g. synced to the itinerary) */
+  locked: Category[] = [],
 ): SavingTip[] {
-  const driving = isDrivingMode(inputs.transportMode);
-  const gallons = driving && inputs.mpg > 0 ? clampNum(inputs.roundTripMiles) / inputs.mpg : 0;
-  const budgetLodging = dest.nightly.budget * Math.max(0, inputs.rooms) * trip.nights;
-  const fareTotal =
-    inputs.transportMode === "flight" || inputs.transportMode === "train" || inputs.transportMode === "bus"
-      ? clampNum(inputs.farePerPerson) * trip.travelers
-      : 0;
-
-  const tips: SavingTip[] = [
-    {
-      id: "picnic",
-      title: "Pack picnic lunches",
-      detail: "Swap one restaurant meal a day for groceries — about 30% off meals.",
-      category: "food",
-      amount: categories.food * 0.3,
-    },
-    {
-      id: "snacks",
-      title: "Stock up at a grocery store",
-      detail: "Buy snacks in bulk before you leave instead of at gas stations — about half off.",
-      category: "snacks",
-      amount: categories.snacks * 0.5,
-    },
-    {
-      id: "refill",
-      title: "Bring refillable bottles",
-      detail: "Fill up at your stay instead of buying bottled drinks — about 75% off.",
-      category: "water",
-      amount: categories.water * 0.75,
-    },
-    {
-      id: "lodging",
-      title: "Choose a value stay",
-      detail:
-        dest.nightly.budget === 0
-          ? "Skip the hotel and sleep at home — the classic staycation move."
-          : "Demo budget-tier lodging nearby for the same nights.",
-      category: "accommodations",
-      amount: categories.accommodations - budgetLodging,
-    },
-    {
-      id: "fares",
-      title: "Travel midweek",
-      detail: "Tuesday–Wednesday departures are often cheaper — about 15% off fares (example).",
-      category: "transportation",
-      amount: Math.min(fareTotal * 0.15, categories.transportation),
-    },
-    {
-      id: "parking",
-      title: "Park once & walk",
-      detail: "Use free or off-peak lots and explore on foot — about half off parking.",
-      category: "parking",
-      amount: categories.parking * 0.5,
-    },
-    {
-      id: "tolls",
-      title: "Take the toll-free route",
-      detail: "Adds a little drive time but skips every toll.",
-      category: "tolls",
-      amount: categories.tolls,
-    },
-    {
-      id: "free-days",
-      title: "Mix in free attractions",
-      detail: "Trade a paid activity for parks, free museum days and markets — about 25% off.",
-      category: "activities",
-      amount: categories.activities * 0.25,
-    },
-    {
-      id: "fuel-rewards",
-      title: "Use a fuel rewards app",
-      detail: "Save about $0.10 per gallon at partner stations.",
-      category: "gas",
-      amount: gallons * 0.1,
-    },
-  ];
-
-  return tips
-    .map((t) => ({ ...t, amount: roundMoney(t.amount) }))
-    .filter((t) => t.amount >= 1 && !applied.includes(t.id))
-    .sort((a, b) => b.amount - a.amount);
+  const before = calculateBudget(inputs, trip, 0, 0, overrides, stopsTotal);
+  const tips: SavingTip[] = [];
+  for (const id of SAVING_ORDER) {
+    const category = SAVING_CATEGORY[id];
+    if (applied.includes(id) || locked.includes(category)) continue;
+    const next = withSaving(id, inputs, overrides, dest);
+    const after = calculateBudget(next.inputs, trip, 0, 0, next.overrides, stopsTotal);
+    const amount = roundMoney(before.categories[category] - after.categories[category]);
+    const totalSavings = roundMoney(before.planned - after.planned);
+    if (amount < 1 || totalSavings <= 0) continue;
+    const copy = SAVING_COPY[id];
+    tips.push({
+      id,
+      title: copy.title,
+      detail: copy.detail(dest),
+      category,
+      amount,
+      totalSavings,
+      assumption: copy.assumption,
+      replacesCustom: overrides[category] !== undefined,
+    });
+  }
+  return tips.sort((a, b) => b.totalSavings - a.totalSavings);
 }
 
 /** Input changes for applying a saving. The matching category override is cleared. */
