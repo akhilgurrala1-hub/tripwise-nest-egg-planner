@@ -21,3 +21,5 @@
 - Example prices and venues live only in `src/lib/demo-data.ts` and must be visibly labeled as demo data wherever shown, until real travel-data integrations replace that module.
 - AI itinerary generation runs server-side via a `createServerFn` in `src/lib/ai-itinerary.functions.ts` calling the AI gateway helper in `src/lib/ai/`; AI output is labeled as unverified estimates.
 - No real bookings or payments are implemented.
+- Theming: all colors are semantic tokens in `src/styles.css` with `:root` (light) and `.dark` values; text on photos uses `on-image`, text on deep hero cards uses `ink-foreground` (never `primary-foreground`, which flips in dark mode). The theme class is set by an inline head script before paint to avoid flashes.
+- Never compute dates at module scope: edge runtimes freeze the clock at 1970 during module load. Sample trips are built lazily in `trip-store.ts`.
