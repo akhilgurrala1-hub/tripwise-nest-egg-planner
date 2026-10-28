@@ -15,17 +15,25 @@ let loader: Promise<void> | null = null;
 function loadMaps(): Promise<void> {
   if (window.google?.maps?.geometry) return Promise.resolve();
   if (loader) return loader;
+  const key = import.meta.env["VITE_LOVABLE_CONNECTOR_GOOGLE_MAPS_BROWSER_KEY"];
+  if (!key) return Promise.reject(new Error("Map display isn't configured"));
   loader = new Promise<void>((resolve, reject) => {
-    window.__waypointMapsReady = () => resolve();
-    const key = import.meta.env["VITE_LOVABLE_CONNECTOR_GOOGLE_MAPS_BROWSER_KEY"];
     const channel = import.meta.env["VITE_LOVABLE_CONNECTOR_GOOGLE_MAPS_TRACKING_ID"];
     const s = document.createElement("script");
-    s.src = `https://maps.googleapis.com/maps/api/js?key=${key}&loading=async&libraries=geometry&callback=__waypointMapsReady&channel=${channel}`;
-    s.async = true;
-    s.onerror = () => {
+    const fail = () => {
+      clearTimeout(timer);
+      s.remove();
       loader = null;
       reject(new Error("Map failed to load"));
     };
+    const timer = setTimeout(fail, 20_000);
+    window.__waypointMapsReady = () => {
+      clearTimeout(timer);
+      resolve();
+    };
+    s.src = `https://maps.googleapis.com/maps/api/js?key=${key}&loading=async&libraries=geometry&callback=__waypointMapsReady&channel=${channel}`;
+    s.async = true;
+    s.onerror = fail;
     document.head.appendChild(s);
   });
   return loader;
@@ -77,8 +85,18 @@ export function RealRouteMap({
           strokeWeight: 5,
           strokeOpacity: 0.9,
         });
-        const start = new g.maps.Marker({ position: route.start, map: map.current, label: "A", title: "Start" });
-        const end = new g.maps.Marker({ position: route.end, map: map.current, label: "B", title: "Destination" });
+        const start = new g.maps.Marker({
+          position: route.start,
+          map: map.current,
+          label: "A",
+          title: "Start",
+        });
+        const end = new g.maps.Marker({
+          position: route.end,
+          map: map.current,
+          label: "B",
+          title: "Destination",
+        });
         overlays.current = [line, start, end];
         const bounds = new g.maps.LatLngBounds();
         path.forEach((p: unknown) => bounds.extend(p));
@@ -126,7 +144,9 @@ export function RealRouteMap({
       <div ref={el} className="absolute inset-0" />
       {status !== "ready" && (
         <div className="absolute inset-0 grid place-items-center p-4 text-center text-xs text-muted-foreground">
-          {status === "loading" ? "Loading map…" : "The map couldn't load here. Stops and drive times below still work."}
+          {status === "loading"
+            ? "Loading map…"
+            : "The map couldn't load here. Stops and drive times below still work."}
         </div>
       )}
     </div>

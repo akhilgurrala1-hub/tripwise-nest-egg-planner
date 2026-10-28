@@ -21,7 +21,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setState({ user: session?.user ?? null, loading: false });
       if (event === "SIGNED_OUT") queryClient.removeQueries({ queryKey: ["real-stops"] });
     });
-    supabase.auth.getUser().then(({ data }) => setState({ user: data.user ?? null, loading: false }));
+    supabase.auth
+      .getUser()
+      .then(({ data }) => setState({ user: data.user ?? null, loading: false }));
     return () => sub.subscription.unsubscribe();
   }, [queryClient]);
 
@@ -34,5 +36,11 @@ export function useAuth() {
 
 /** Only same-origin paths are allowed as post-sign-in destinations. */
 export function safeRedirect(value: unknown): string | undefined {
-  return typeof value === "string" && value.startsWith("/") && !value.startsWith("//") ? value : undefined;
+  return typeof value === "string" &&
+    value.startsWith("/") &&
+    !value.startsWith("//") &&
+    !value.includes("\\") &&
+    !Array.from(value).some((char) => char.charCodeAt(0) <= 0x20 || char.charCodeAt(0) === 0x7f)
+    ? value
+    : undefined;
 }

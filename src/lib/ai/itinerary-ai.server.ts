@@ -8,23 +8,29 @@ const GATEWAY_URL = "https://ai.gateway.lovable.dev/v1";
 const MODEL = "openai/gpt-6-astra";
 
 export const aiItinerarySchema = z.object({
-  days: z.array(
-    z.object({
-      day: z.number(),
-      title: z.string(),
-      items: z.array(
-        z.object({
-          time: z.enum(["Morning", "Lunch", "Afternoon", "Dinner", "Evening"]),
-          kind: z.enum(["sight", "restaurant", "stop"]),
-          name: z.string(),
-          area: z.string(),
-          note: z.string(),
-          costPerPerson: z.number(),
-        }),
-      ),
-    }),
-  ),
-  tips: z.array(z.string()),
+  days: z
+    .array(
+      z.object({
+        day: z.number().int().min(1).max(14),
+        title: z.string().max(200),
+        items: z
+          .array(
+            z.object({
+              time: z.enum(["Morning", "Lunch", "Afternoon", "Dinner", "Evening"]),
+              kind: z.enum(["sight", "restaurant", "stop"]),
+              name: z.string().min(1).max(200),
+              area: z.string().max(300),
+              note: z.string().max(500),
+              costPerPerson: z.number().finite().min(0).max(100000),
+            }),
+          )
+          .min(1)
+          .max(8),
+      }),
+    )
+    .min(1)
+    .max(14),
+  tips: z.array(z.string().max(500)).max(4),
 });
 
 export type AiItinerary = z.infer<typeof aiItinerarySchema>;
@@ -44,8 +50,7 @@ export interface AiItineraryRequest {
 }
 
 export type AiItineraryResult =
-  | { ok: true; itinerary: AiItinerary }
-  | { ok: false; status: number; error: string };
+  { ok: true; itinerary: AiItinerary } | { ok: false; status: number; error: string };
 
 const INSTRUCTIONS = `You are Waypoint, a friendly travel planner focused on budget-friendly vacations, road trips and staycations, while still delighting luxury travelers.
 Create a realistic day-by-day itinerary. Each day has 4-5 items: a Morning stop, Lunch, an Afternoon stop, Dinner, and optionally an Evening item.
@@ -54,8 +59,18 @@ costPerPerson is an estimated USD amount per person (0 for free). Keep sightseei
 Only place weekday-specific events (markets, weekly shows) on a day whose weekday matches. Put after-dark activities in the Evening. Keep notes under 90 characters. Give 2-4 short money-saving or practical tips.`;
 
 function describeError(err: unknown): { status: number; error: string } {
-  const e = err as { statusCode?: number; status?: number; message?: string; cause?: unknown; responseBody?: string };
-  const status = e?.statusCode ?? e?.status ?? (e?.cause as { statusCode?: number } | undefined)?.statusCode ?? 500;
+  const e = err as {
+    statusCode?: number;
+    status?: number;
+    message?: string;
+    cause?: unknown;
+    responseBody?: string;
+  };
+  const status =
+    e?.statusCode ??
+    e?.status ??
+    (e?.cause as { statusCode?: number } | undefined)?.statusCode ??
+    500;
   let safe = "";
   try {
     const body = e?.responseBody ? JSON.parse(e.responseBody) : null;
@@ -63,10 +78,23 @@ function describeError(err: unknown): { status: number; error: string } {
   } catch {
     /* not JSON */
   }
-  if (status === 402) return { status, error: safe || "AI credits have run out. Add credits to keep generating itineraries." };
-  if (status === 429) return { status, error: "The AI planner is busy right now. Please wait a moment and try again." };
-  if (status === 403) return { status, error: safe || "AI planning isn't available for this workspace right now." };
-  return { status, error: safe || "The AI planner couldn't create an itinerary. Your demo plan is still available." };
+  if (status === 402)
+    return {
+      status,
+      error: safe || "AI credits have run out. Add credits to keep generating itineraries.",
+    };
+  if (status === 429)
+    return {
+      status,
+      error: "The AI planner is busy right now. Please wait a moment and try again.",
+    };
+  if (status === 403)
+    return { status, error: safe || "AI planning isn't available for this workspace right now." };
+  return {
+    status,
+    error:
+      safe || "The AI planner couldn't create an itinerary. Your demo plan is still available.",
+  };
 }
 
 export async function generateAiItinerary(req: AiItineraryRequest): Promise<AiItineraryResult> {
@@ -99,6 +127,9 @@ export async function generateAiItinerary(req: AiItineraryRequest): Promise<AiIt
   try {
     const result = streamText({
       model: provider.responses(MODEL),
+      abortSignal: AbortSignal.timeout(60_000),
+      maxOutputTokens: 16000,
+      maxRetries: 0,
       instructions: INSTRUCTIONS,
       messages: [{ role: "user", content: prompt }],
       output: Output.object({ schema: aiItinerarySchema }),
@@ -113,8 +144,16 @@ export async function generateAiItinerary(req: AiItineraryRequest): Promise<AiIt
       },
     });
     const output = await result.output;
-    if (!output || !Array.isArray(output.days) || output.days.length === 0) {
-      return { ok: false, status: 502, error: "The AI planner returned an empty plan. Your demo plan is still available." };
+    if (
+      !output ||
+      !aiItinerarySchema.safeParse(output).success ||
+      output.days.length !== req.days
+    ) {
+      return {
+        ok: false,
+        status: 502,
+        error: "The AI planner returned an empty plan. Your demo plan is still available.",
+      };
     }
     return { ok: true, itinerary: output };
   } catch (err) {

@@ -8,7 +8,8 @@ export const THEME_BOOT_SCRIPT = `(function(){try{var p=localStorage.getItem("${
 
 function apply(pref: ThemePref) {
   const dark =
-    pref === "dark" || (pref === "system" && window.matchMedia("(prefers-color-scheme: dark)").matches);
+    pref === "dark" ||
+    (pref === "system" && window.matchMedia("(prefers-color-scheme: dark)").matches);
   document.documentElement.classList.toggle("dark", dark);
 }
 
@@ -16,8 +17,14 @@ export function useTheme() {
   const [pref, setPref] = useState<ThemePref>("system");
 
   useEffect(() => {
-    const stored = (localStorage.getItem(KEY) as ThemePref | null) ?? "system";
-    setPref(stored);
+    try {
+      const stored = localStorage.getItem(KEY);
+      const next = stored === "light" || stored === "dark" ? stored : "system";
+      setPref(next);
+      apply(next);
+    } catch {
+      apply("system");
+    }
   }, []);
 
   useEffect(() => {

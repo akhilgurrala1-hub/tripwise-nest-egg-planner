@@ -23,7 +23,7 @@ export const STOP_FILTERS: { id: StopFilter; label: string }[] = [
 
 export function matchesFilter(stop: RouteStop, filter: StopFilter): boolean {
   if (filter === "all") return true;
-  if (filter === "free") return stop.costPerPerson === 0;
+  if (filter === "free") return isKnownFree(stop);
   return stop.tags.includes(filter);
 }
 
@@ -35,12 +35,18 @@ export function whyItMatches(stop: RouteStop, interests: Interest[], travelers: 
     const labels = matched.map((m) => INTERESTS.find((x) => x.id === m)?.label.toLowerCase() ?? m);
     reasons.push(`Matches your interest in ${labels.join(" & ")}`);
   }
-  if (stop.costPerPerson === 0) reasons.push("Free — keeps your budget intact");
+  if (isKnownFree(stop)) reasons.push("No entry fee — detour fuel may still apply");
+  if (stop.costSource === "unknown") reasons.push("Entry price unknown — check before budgeting");
   if (stop.tags.includes("hidden-gem")) reasons.push("Off the beaten path");
   if (stop.extraMinutes <= 10) reasons.push("Quick detour");
-  if (travelers >= 3 && stop.tags.includes("family")) reasons.push("Works well for groups & families");
+  if (travelers >= 3 && stop.tags.includes("family"))
+    reasons.push("Works well for groups & families");
   if (reasons.length === 0) reasons.push("A good break to stretch your legs");
   return reasons.slice(0, 3);
+}
+
+export function isKnownFree(stop: RouteStop): boolean {
+  return stop.costSource !== "unknown" && stop.costPerPerson === 0;
 }
 
 export function rankStops(stops: RouteStop[], interests: Interest[]): RouteStop[] {

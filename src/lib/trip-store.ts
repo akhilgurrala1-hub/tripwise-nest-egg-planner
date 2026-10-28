@@ -10,7 +10,9 @@ import {
   SAVING_CATEGORY,
   savingsOpportunities,
   stopCost,
+  roundMoney,
   tripShape,
+  withSaving,
   type BudgetInputs,
   type Category,
   type Overrides,
@@ -23,7 +25,8 @@ import {
   type TravelStyle,
   type TripType,
 } from "./demo-data";
-import { addDays, generateDemoItinerary, type Itinerary } from "./itinerary";
+import { generateDemoItinerary, itineraryActivityCost, type Itinerary } from "./itinerary";
+import { addDays, isIsoDate } from "./dates";
 import type { RouteStop } from "./routing/types";
 
 export interface TripSetup {
@@ -52,13 +55,15 @@ export interface RoadTripPlan {
 }
 
 export interface TripState {
-  version: 2;
+  version: 3;
   isSample: boolean;
   setup: TripSetup;
   inputs: BudgetInputs;
   overrides: Overrides;
   emergencyFund: number;
   appliedSavings: Partial<Record<SavingId, Partial<BudgetInputs>>>;
+  savingOverrides: Partial<Record<SavingId, number>>;
+  syncActivities: boolean;
   itinerary: Itinerary | null;
   roadTrip: RoadTripPlan;
 }
@@ -84,13 +89,15 @@ export function buildTrip(setup: TripSetup, isSample = false): TripState {
   const dest = getDestination(setup.destinationId, setup.customDestination);
   const shape = tripShape(setup.startDate, setup.endDate, setup.travelers);
   return {
-    version: 2,
+    version: 3,
     isSample,
     setup,
     inputs: defaultInputs(dest, setup.style, setup.tripType, setup.travelers, setup.transportMode),
     overrides: {},
     emergencyFund: Math.min(Math.max(0, setup.emergencyFund), setup.totalBudget),
     appliedSavings: {},
+    savingOverrides: {},
+    syncActivities: false,
     itinerary: generateDemoItinerary({
       dest,
       days: shape.days,
@@ -122,10 +129,12 @@ export function sampleSetup(): TripSetup {
 }
 
 /** Upgrade trips saved by the first version of the app. */
-function migrate(raw: unknown): TripState | null {
-  const s = raw as Partial<TripState> & { version?: number };
+export function migrate(raw: unknown): TripState | null {
+  const s = raw as Omit<Partial<TripState>, "version"> & { version?: number };
   if (!s || !s.setup || !s.inputs) return null;
-  if (s.version === 2) return s as TripState;
+  if (s.version === 3) return s as TripState;
+  if (s.version === 2)
+    return { ...s, version: 3, savingOverrides: {}, syncActivities: false } as TripState;
   if (s.version !== 1) return null;
   const setup: TripSetup = {
     ...(s.setup as TripSetup),
@@ -135,13 +144,15 @@ function migrate(raw: unknown): TripState | null {
   const dest = getDestination(setup.destinationId, setup.customDestination);
   const fresh = defaultInputs(dest, setup.style, setup.tripType, setup.travelers, "car");
   return {
-    version: 2,
+    version: 3,
     isSample: !!s.isSample,
     setup,
     inputs: { ...fresh, ...s.inputs, transportMode: "car" },
     overrides: s.overrides ?? {},
     emergencyFund: setup.emergencyFund,
     appliedSavings: s.appliedSavings ?? {},
+    savingOverrides: {},
+    syncActivities: false,
     itinerary: s.itinerary ?? null,
     roadTrip: defaultRoadTrip(setup, dest.name),
   };
@@ -161,9 +172,9 @@ function getSample(): TripState {
 /** Saved trips with missing or epoch-era dates (and sample trips whose dates have passed) get moved to valid future dates, keeping their length. */
 function repairDates(trip: TripState): TripState {
   const { startDate, endDate } = trip.setup;
-  const valid = (d: string) => /^\d{4}-\d{2}-\d{2}$/.test(d) && Number(d.slice(0, 4)) >= 2000;
   const staleSample = trip.isSample && startDate < todayIso();
-  if (valid(startDate) && valid(endDate) && endDate >= startDate && !staleSample) return trip;
+  if (isIsoDate(startDate) && isIsoDate(endDate) && endDate >= startDate && !staleSample)
+    return trip;
   const days = Math.min(14, Math.max(1, tripShape(startDate, endDate, 1).days));
   const start = addDays(todayIso(), 30);
   const setup = { ...trip.setup, startDate: start, endDate: addDays(start, days - 1) };
@@ -210,7 +221,10 @@ function persist() {
 
 function setState(updater: (s: TripState) => TripState) {
   load();
-  state = updater(state ?? getSample());
+  const previous = state ?? getSample();
+  const next = updater(previous);
+  if (next === previous) return;
+  state = next;
   persist();
   listeners.forEach((l) => l());
 }
@@ -245,20 +259,29 @@ export const tripActions = {
   setTotalBudget(totalBudget: number) {
     setState((s) => {
       const t = Math.max(0, totalBudget);
-      return { ...s, setup: { ...s.setup, totalBudget: t }, emergencyFund: Math.min(s.emergencyFund, t) };
+      const emergencyFund = Math.min(s.emergencyFund, t);
+      return { ...s, setup: { ...s.setup, totalBudget: t, emergencyFund }, emergencyFund };
     });
   },
   setEmergencyFund(amount: number) {
-    setState((s) => ({ ...s, emergencyFund: Math.max(0, Math.min(amount, s.setup.totalBudget)) }));
+    setState((s) => {
+      const emergencyFund = Math.max(0, Math.min(amount, s.setup.totalBudget));
+      return { ...s, setup: { ...s.setup, emergencyFund }, emergencyFund };
+    });
   },
   setInput<K extends keyof BudgetInputs>(key: K, value: BudgetInputs[K]) {
-    setState((s) => ({ ...s, inputs: { ...s.inputs, [key]: value } }));
+    setState((s) => ({
+      ...s,
+      inputs: { ...s.inputs, [key]: value },
+      syncActivities: key === "activitiesPerPerson" ? false : s.syncActivities,
+    }));
   },
   setTransportMode(mode: TransportMode) {
     setState((s) => {
       const dest = getDestination(s.setup.destinationId, s.setup.customDestination);
       const overrides = { ...s.overrides };
-      for (const c of ["transportation", "gas", "tolls", "parking"] as Category[]) delete overrides[c];
+      for (const c of ["transportation", "gas", "tolls", "parking"] as Category[])
+        delete overrides[c];
       return {
         ...s,
         setup: { ...s.setup, transportMode: mode },
@@ -272,11 +295,22 @@ export const tripActions = {
       const overrides = { ...s.overrides };
       if (value === undefined) delete overrides[cat];
       else overrides[cat] = Math.max(0, value);
-      return { ...s, overrides };
+      const savingOverrides = { ...s.savingOverrides };
+      for (const id of Object.keys(s.appliedSavings) as SavingId[]) {
+        if (SAVING_CATEGORY[id] === cat) delete savingOverrides[id];
+      }
+      return {
+        ...s,
+        overrides,
+        savingOverrides,
+        syncActivities: cat === "activities" ? false : s.syncActivities,
+      };
     });
   },
   applySaving(id: SavingId) {
     setState((s) => {
+      if (s.appliedSavings[id] || (s.syncActivities && SAVING_CATEGORY[id] === "activities"))
+        return s;
       const dest = getDestination(s.setup.destinationId, s.setup.customDestination);
       const changes = applySaving(id, s.inputs, dest);
       const previous = Object.fromEntries(
@@ -289,6 +323,12 @@ export const tripActions = {
         inputs: { ...s.inputs, ...changes },
         overrides,
         appliedSavings: { ...s.appliedSavings, [id]: previous },
+        savingOverrides: {
+          ...s.savingOverrides,
+          ...(s.overrides[SAVING_CATEGORY[id]] !== undefined
+            ? { [id]: s.overrides[SAVING_CATEGORY[id]] }
+            : {}),
+        },
       };
     });
   },
@@ -297,12 +337,45 @@ export const tripActions = {
       const prev = s.appliedSavings[id];
       if (!prev) return s;
       const appliedSavings = { ...s.appliedSavings };
+      const savingOverrides = { ...s.savingOverrides };
+      const overrides = { ...s.overrides };
+      const dest = getDestination(s.setup.destinationId, s.setup.customDestination);
+      const appliedValues = applySaving(id, { ...s.inputs, ...prev }, dest);
+      const restore = Object.fromEntries(
+        Object.entries(prev).filter(
+          ([key]) =>
+            s.inputs[key as keyof BudgetInputs] === appliedValues[key as keyof BudgetInputs],
+        ),
+      );
+      // Keep a newer manual amount; otherwise restore the amount replaced by Apply.
+      if (
+        Object.keys(restore).length === Object.keys(prev).length &&
+        overrides[SAVING_CATEGORY[id]] === undefined &&
+        savingOverrides[id] !== undefined
+      )
+        overrides[SAVING_CATEGORY[id]] = savingOverrides[id];
       delete appliedSavings[id];
-      return { ...s, inputs: { ...s.inputs, ...prev }, appliedSavings };
+      delete savingOverrides[id];
+      return {
+        ...s,
+        inputs: { ...s.inputs, ...restore },
+        overrides,
+        appliedSavings,
+        savingOverrides,
+      };
     });
   },
-  setItinerary(itinerary: Itinerary | null) {
-    setState((s) => ({ ...s, itinerary }));
+  setItinerary(itinerary: Itinerary | null, expectedTrip?: TripState) {
+    let applied = false;
+    setState((s) => {
+      if (expectedTrip && s !== expectedTrip) return s;
+      applied = true;
+      return { ...s, itinerary };
+    });
+    return applied;
+  },
+  setActivitySync(syncActivities: boolean) {
+    setState((s) => (syncActivities && !s.itinerary ? s : { ...s, syncActivities }));
   },
   regenerateDemoItinerary() {
     setState((s) => {
@@ -328,14 +401,17 @@ export const tripActions = {
             ...s,
             itinerary: {
               ...s.itinerary,
-              days: s.itinerary.days.map((d) => ({ ...d, items: d.items.filter((i) => i.id !== itemId) })),
+              days: s.itinerary.days.map((d) => ({
+                ...d,
+                items: d.items.filter((i) => i.id !== itemId),
+              })),
             },
           }
         : s,
     );
   },
   resetToEstimates() {
-    setState((s) => ({ ...s, overrides: {} }));
+    setState((s) => ({ ...s, overrides: {}, syncActivities: false }));
   },
   updateRoadTrip(patch: Partial<Omit<RoadTripPlan, "includedStops">>) {
     setState((s) => ({ ...s, roadTrip: { ...s.roadTrip, ...patch } }));
@@ -354,24 +430,56 @@ export const tripActions = {
   },
 };
 
+export function summarizeTrip(trip: TripState) {
+  const dest = getDestination(trip.setup.destinationId, trip.setup.customDestination);
+  const shape = tripShape(trip.setup.startDate, trip.setup.endDate, trip.setup.travelers);
+  const stopsTotal = stopsTotalFor(trip);
+  const overrides = trip.syncActivities
+    ? { ...trip.overrides, activities: itineraryActivityCost(trip.itinerary, shape.travelers) }
+    : trip.overrides;
+  const totals = calculateBudget(
+    trip.inputs,
+    shape,
+    trip.setup.totalBudget,
+    trip.emergencyFund,
+    overrides,
+    stopsTotal,
+  );
+  const applied = Object.keys(trip.appliedSavings) as SavingId[];
+  const savings = savingsOpportunities(
+    trip.inputs,
+    shape,
+    overrides,
+    stopsTotal,
+    dest,
+    applied,
+    trip.syncActivities ? ["activities"] : [],
+  );
+  const combined = savings.reduce(
+    (current, tip) => withSaving(tip.id, current.inputs, current.overrides, dest),
+    { inputs: trip.inputs, overrides },
+  );
+  const afterSavings = calculateBudget(
+    combined.inputs,
+    shape,
+    trip.setup.totalBudget,
+    trip.emergencyFund,
+    combined.overrides,
+    stopsTotal,
+  );
+  const potentialSavings = roundMoney(totals.planned - afterSavings.planned);
+  const cuts = reductionPlan(
+    trip.inputs,
+    shape,
+    trip.setup.totalBudget,
+    trip.emergencyFund,
+    overrides,
+    stopsTotal,
+  );
+  return { trip, dest, shape, totals, savings, applied, potentialSavings, cuts, stopsTotal };
+}
+
 export function useTrip() {
   const trip = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
-  return useMemo(() => {
-    const dest = getDestination(trip.setup.destinationId, trip.setup.customDestination);
-    const shape = tripShape(trip.setup.startDate, trip.setup.endDate, trip.setup.travelers);
-    const stopsTotal = stopsTotalFor(trip);
-    const totals = calculateBudget(
-      trip.inputs,
-      shape,
-      trip.setup.totalBudget,
-      trip.emergencyFund,
-      trip.overrides,
-      stopsTotal,
-    );
-    const applied = Object.keys(trip.appliedSavings) as SavingId[];
-    const savings = savingsOpportunities(trip.inputs, shape, totals.categories, dest, applied);
-    const potentialSavings = Math.round(savings.reduce((s, t) => s + t.amount, 0) * 100) / 100;
-    const cuts = reductionPlan(trip.inputs, shape, trip.setup.totalBudget, trip.emergencyFund, trip.overrides, stopsTotal);
-    return { trip, dest, shape, totals, savings, applied, potentialSavings, cuts, stopsTotal };
-  }, [trip]);
+  return useMemo(() => summarizeTrip(trip), [trip]);
 }

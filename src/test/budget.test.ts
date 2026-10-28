@@ -102,7 +102,9 @@ describe("road-trip stops", () => {
   it("costs entry for every traveler plus detour fuel at the sample speed", () => {
     // 20 entry + (30 min at 35 mph = 17.5 mi) / 28 mpg * $3.50
     expect(stopCost({ costPerPerson: 10, extraMinutes: 30 }, 2, car)).toBe(22.19);
-    expect(stopCost({ costPerPerson: 10, extraMinutes: 30 }, 2, { ...car, transportMode: "flight" })).toBe(20);
+    expect(
+      stopCost({ costPerPerson: 10, extraMinutes: 30 }, 2, { ...car, transportMode: "flight" }),
+    ).toBe(20);
   });
 
   it("raises planned spending by exactly the stop cost", () => {
@@ -144,9 +146,9 @@ describe("savings", () => {
   const t = calculateBudget(car, trip, 2000, 200);
 
   it("estimates 30% off meals for picnic lunches and skips applied ideas", () => {
-    const tips = savingsOpportunities(car, trip, t.categories, dest);
+    const tips = savingsOpportunities(car, trip, {}, 0, dest);
     expect(tips.find((s) => s.id === "picnic")?.amount).toBe(72);
-    const after = savingsOpportunities(car, trip, t.categories, dest, ["picnic"]);
+    const after = savingsOpportunities(car, trip, {}, 0, dest, ["picnic"]);
     expect(after.find((s) => s.id === "picnic")).toBeUndefined();
   });
 

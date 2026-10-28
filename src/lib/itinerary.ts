@@ -1,4 +1,7 @@
 import type { DemoDestination, Interest, TravelStyle, TripType } from "./demo-data";
+import { toCents } from "./budget";
+import { addDays } from "./dates";
+export { addDays } from "./dates";
 
 export type SlotTime = "Morning" | "Lunch" | "Afternoon" | "Dinner" | "Evening";
 export type ItemKind = "sight" | "restaurant" | "stop";
@@ -24,13 +27,6 @@ export interface Itinerary {
   source: "demo" | "ai";
   days: ItineraryDay[];
   tips: string[];
-}
-
-export function addDays(iso: string, n: number): string {
-  const d = new Date(`${iso}T12:00:00`);
-  if (Number.isNaN(d.getTime())) return iso;
-  d.setDate(d.getDate() + n);
-  return d.toISOString().slice(0, 10);
 }
 
 const TIERS: Record<TravelStyle, { lunch: number[]; dinner: number[] }> = {
@@ -70,7 +66,9 @@ export function generateDemoItinerary(opts: {
   const dinners = byTier(TIERS[style].dinner);
 
   const daySights = sights.filter((x) => !x.evening);
-  const eveningSights = sights.filter((x) => x.evening && x.interests.some((i) => interests.includes(i)));
+  const eveningSights = sights.filter(
+    (x) => x.evening && x.interests.some((i) => interests.includes(i)),
+  );
   const out: ItineraryDay[] = [];
   let si = 0;
   let ei = 0;
@@ -99,28 +97,73 @@ export function generateDemoItinerary(opts: {
       });
     } else {
       const m = nextSight();
-      items.push({ id: id("am"), time: "Morning", kind: "sight", name: m.name, area: m.area, note: m.note, costPerPerson: m.costPerPerson });
+      items.push({
+        id: id("am"),
+        time: "Morning",
+        kind: "sight",
+        name: m.name,
+        area: m.area,
+        note: m.note,
+        costPerPerson: m.costPerPerson,
+      });
     }
 
     const l = lunches[d % lunches.length]!;
-    items.push({ id: id("lunch"), time: "Lunch", kind: "restaurant", name: l.name, area: l.cuisine, note: tierNote(l.tier), costPerPerson: l.costPerPerson });
+    items.push({
+      id: id("lunch"),
+      time: "Lunch",
+      kind: "restaurant",
+      name: l.name,
+      area: l.cuisine,
+      note: tierNote(l.tier),
+      costPerPerson: l.costPerPerson,
+    });
 
     const a = nextSight();
-    items.push({ id: id("pm"), time: "Afternoon", kind: "sight", name: a.name, area: a.area, note: a.note, costPerPerson: a.costPerPerson });
+    items.push({
+      id: id("pm"),
+      time: "Afternoon",
+      kind: "sight",
+      name: a.name,
+      area: a.area,
+      note: a.note,
+      costPerPerson: a.costPerPerson,
+    });
 
     const dn = dinners[(d + 1) % dinners.length]!;
-    items.push({ id: id("dinner"), time: "Dinner", kind: "restaurant", name: dn.name, area: dn.cuisine, note: tierNote(dn.tier), costPerPerson: dn.costPerPerson });
+    items.push({
+      id: id("dinner"),
+      time: "Dinner",
+      kind: "restaurant",
+      name: dn.name,
+      area: dn.cuisine,
+      note: tierNote(dn.tier),
+      costPerPerson: dn.costPerPerson,
+    });
 
     const ev = eveningSights[ei];
     if (ev && d < days - 1) {
       ei++;
-      items.push({ id: id("eve"), time: "Evening", kind: "sight", name: ev.name, area: ev.area, note: ev.note, costPerPerson: ev.costPerPerson });
+      items.push({
+        id: id("eve"),
+        time: "Evening",
+        kind: "sight",
+        name: ev.name,
+        area: ev.area,
+        note: ev.note,
+        costPerPerson: ev.costPerPerson,
+      });
     }
 
     out.push({
       day: d + 1,
       date: addDays(startDate, d),
-      title: d === 0 ? "Arrive & settle in" : d === days - 1 && days > 1 ? "Last look & head home" : `Explore ${dest.name}`,
+      title:
+        d === 0
+          ? "Arrive & settle in"
+          : d === days - 1 && days > 1
+            ? "Last look & head home"
+            : `Explore ${dest.name}`,
       items,
     });
   }
@@ -140,7 +183,11 @@ export function generateDemoItinerary(opts: {
 }
 
 function tierNote(tier: 1 | 2 | 3) {
-  return tier === 1 ? "$ · Casual & affordable" : tier === 2 ? "$$ · Sit-down favorite" : "$$$ · Special occasion";
+  return tier === 1
+    ? "$ · Casual & affordable"
+    : tier === 2
+      ? "$$ · Sit-down favorite"
+      : "$$$ · Special occasion";
 }
 
 /** Planned per-person spend on sightseeing (excludes meals, which live in the food budget). */
@@ -149,6 +196,16 @@ export function itineraryActivityCost(itin: Itinerary | null, travelers: number)
   const perPerson = itin.days
     .flatMap((d) => d.items)
     .filter((i) => i.kind !== "restaurant")
-    .reduce((s, i) => s + (Number.isFinite(i.costPerPerson) ? i.costPerPerson : 0), 0);
-  return Math.round(perPerson * Math.max(1, travelers) * 100) / 100;
+    .reduce((s, i) => s + toCents(i.costPerPerson), 0);
+  return (perPerson * Math.max(1, Math.round(travelers) || 1)) / 100;
+}
+
+/** Restaurant estimates are a comparison with the full meal allowance, not an extra expense. */
+export function itineraryMealCost(itin: Itinerary | null, travelers: number): number {
+  const cents =
+    itin?.days
+      .flatMap((d) => d.items)
+      .filter((i) => i.kind === "restaurant")
+      .reduce((s, i) => s + toCents(i.costPerPerson), 0) ?? 0;
+  return (cents * Math.max(1, Math.round(travelers) || 1)) / 100;
 }

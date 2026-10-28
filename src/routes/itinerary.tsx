@@ -1,6 +1,20 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
 import { format } from "date-fns";
-import { Car, Coffee, Landmark, Lightbulb, Loader2, Moon, RotateCcw, Sparkles, Sun, Sunrise, UtensilsCrossed, X } from "lucide-react";
+import {
+  Car,
+  Coffee,
+  Landmark,
+  Lightbulb,
+  Loader2,
+  Moon,
+  RotateCcw,
+  Sparkles,
+  Sun,
+  Sunrise,
+  UtensilsCrossed,
+  X,
+} from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -11,7 +25,14 @@ import { Button } from "@/components/ui/button";
 import { createAiItinerary } from "@/lib/ai-itinerary.functions";
 import { formatMoney, stopCost } from "@/lib/budget";
 import { INTERESTS, TRAVEL_STYLES, TRIP_TYPES } from "@/lib/demo-data";
-import { addDays, itineraryActivityCost, type ItemKind, type Itinerary } from "@/lib/itinerary";
+import {
+  addDays,
+  itineraryActivityCost,
+  itineraryMealCost,
+  type ItemKind,
+  type Itinerary,
+} from "@/lib/itinerary";
+import { useAuth } from "@/lib/auth-context";
 import { tripActions, useTrip } from "@/lib/trip-store";
 import { cn } from "@/lib/utils";
 
@@ -19,9 +40,17 @@ export const Route = createFileRoute("/itinerary")({
   head: () => ({
     meta: [
       { title: "Your itinerary — Waypoint" },
-      { name: "description", content: "A personalized day-by-day plan with sightseeing stops, restaurants and estimated costs." },
+      {
+        name: "description",
+        content:
+          "A personalized day-by-day plan with sightseeing stops, restaurants and estimated costs.",
+      },
       { property: "og:title", content: "Your itinerary — Waypoint" },
-      { property: "og:description", content: "Day-by-day sightseeing, restaurants and stops matched to your interests and budget." },
+      {
+        property: "og:description",
+        content:
+          "Day-by-day sightseeing, restaurants and stops matched to your interests and budget.",
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
@@ -29,23 +58,27 @@ export const Route = createFileRoute("/itinerary")({
   component: ItineraryPage,
 });
 
-const KIND_ICON: Record<ItemKind, typeof Landmark> = { sight: Landmark, restaurant: UtensilsCrossed, stop: Car };
+const KIND_ICON: Record<ItemKind, typeof Landmark> = {
+  sight: Landmark,
+  restaurant: UtensilsCrossed,
+  stop: Car,
+};
 
 function ItineraryPage() {
   const { trip, dest, shape, totals } = useTrip();
   const [loading, setLoading] = useState(false);
+  const { user, loading: authLoading } = useAuth();
+  const generateItinerary = useServerFn(createAiItinerary);
   const itin = trip.itinerary;
   const activityCost = itineraryActivityCost(itin, shape.travelers);
-  const mealCost = itin
-    ? itin.days.flatMap((d) => d.items).filter((i) => i.kind === "restaurant").reduce((s, i) => s + i.costPerPerson, 0) *
-      shape.travelers
-    : 0;
+  const mealCost = itineraryMealCost(itin, shape.travelers);
 
   const generateWithAi = async () => {
     setLoading(true);
     try {
-      const label = (list: { id: string; label: string }[], id: string) => list.find((x) => x.id === id)?.label ?? id;
-      const res = await createAiItinerary({
+      const label = (list: { id: string; label: string }[], id: string) =>
+        list.find((x) => x.id === id)?.label ?? id;
+      const res = await generateItinerary({
         data: {
           destination: dest.name,
           region: dest.region,
@@ -78,7 +111,12 @@ function ItineraryPage() {
           })),
         })),
       };
-      tripActions.setItinerary(next);
+      if (!tripActions.setItinerary(next, trip)) {
+        toast.info(
+          "Your trip changed while AI was planning. Generate again to use the latest details.",
+        );
+        return;
+      }
       toast.success("AI itinerary ready — double-check details before you go");
     } catch {
       toast.error("Couldn't reach the AI planner. Please try again in a moment.");
@@ -91,11 +129,28 @@ function ItineraryPage() {
     <div>
       <PageHeader eyebrow="Itinerary" title="Your trip, day by day">
         <div className="flex w-full flex-wrap gap-2 sm:w-auto">
-          <Button variant="hero" onClick={generateWithAi} disabled={loading} className="flex-1 sm:flex-none">
-            {loading ? <Loader2 className="animate-spin" /> : <Sparkles />}
-            {loading ? "Planning…" : "Personalize with AI"}
-          </Button>
-          <Button variant="outline" onClick={tripActions.regenerateDemoItinerary} disabled={loading}>
+          {!authLoading && !user ? (
+            <Button asChild variant="hero" className="flex-1 sm:flex-none">
+              <Link to="/auth" search={{ redirect: "/itinerary" }}>
+                <Sparkles /> Sign in for AI planning
+              </Link>
+            </Button>
+          ) : (
+            <Button
+              variant="hero"
+              onClick={generateWithAi}
+              disabled={loading || authLoading}
+              className="flex-1 sm:flex-none"
+            >
+              {loading ? <Loader2 className="animate-spin" /> : <Sparkles />}
+              {loading ? "Planning…" : "Personalize with AI"}
+            </Button>
+          )}
+          <Button
+            variant="outline"
+            onClick={tripActions.regenerateDemoItinerary}
+            disabled={loading}
+          >
             <RotateCcw /> Demo plan
           </Button>
         </div>
@@ -122,10 +177,15 @@ function ItineraryPage() {
             <section className="surface-card overflow-hidden">
               <header className="flex items-center justify-between gap-3 border-b border-border bg-gradient-sand px-5 py-4">
                 <div>
-                  <p className="text-xs font-semibold tracking-wider text-muted-foreground uppercase">On the drive</p>
+                  <p className="text-xs font-semibold tracking-wider text-muted-foreground uppercase">
+                    On the drive
+                  </p>
                   <h2 className="font-display text-xl font-semibold">Road-trip stops</h2>
                 </div>
-                <Link to="/road-trip" className="text-xs font-semibold text-primary underline-offset-2 hover:underline">
+                <Link
+                  to="/road-trip"
+                  className="text-xs font-semibold text-primary underline-offset-2 hover:underline"
+                >
                   Find more
                 </Link>
               </header>
@@ -137,7 +197,9 @@ function ItineraryPage() {
                     </span>
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-sm font-bold">{s.name}</p>
-                      <p className="text-xs text-muted-foreground">+{s.extraMinutes} min detour (sample)</p>
+                      <p className="text-xs text-muted-foreground">
+                        +{s.extraMinutes} min detour (sample)
+                      </p>
                     </div>
                     <span className="tabular rounded-full bg-muted px-2 py-0.5 text-xs font-bold">
                       {formatMoney(stopCost(s, shape.travelers, trip.inputs), { cents: true })}
@@ -173,7 +235,9 @@ function ItineraryPage() {
                     <p className="text-xs font-semibold tracking-wider text-muted-foreground uppercase">
                       {safeFormat(day.date)}
                     </p>
-                    <h2 className="line-clamp-2 font-display text-xl leading-tight font-semibold">{day.title}</h2>
+                    <h2 className="line-clamp-2 font-display text-xl leading-tight font-semibold">
+                      {day.title}
+                    </h2>
                   </div>
                 </header>
                 <ol className="relative px-5 py-3">
@@ -182,7 +246,10 @@ function ItineraryPage() {
                     return (
                       <li key={item.id} className="group relative flex gap-3 py-3">
                         {idx < day.items.length - 1 && (
-                          <span className="absolute top-12 bottom-0 left-[19px] w-px bg-border" aria-hidden />
+                          <span
+                            className="absolute top-12 bottom-0 left-[19px] w-px bg-border"
+                            aria-hidden
+                          />
                         )}
                         <span
                           className={cn(
@@ -210,10 +277,14 @@ function ItineraryPage() {
                           <span
                             className={cn(
                               "tabular rounded-full px-2 py-0.5 text-xs font-bold",
-                              item.costPerPerson === 0 ? "bg-success-soft text-success" : "bg-muted text-foreground",
+                              item.costPerPerson === 0
+                                ? "bg-success-soft text-success"
+                                : "bg-muted text-foreground",
                             )}
                           >
-                            {item.costPerPerson === 0 ? "Free" : `${formatMoney(item.costPerPerson)}/pp`}
+                            {item.costPerPerson === 0
+                              ? "Free"
+                              : `${formatMoney(item.costPerPerson)}/pp`}
                           </span>
                           <button
                             onClick={() => tripActions.removeItineraryItem(item.id)}
@@ -226,7 +297,11 @@ function ItineraryPage() {
                       </li>
                     );
                   })}
-                  {day.items.length === 0 && <li className="py-3 text-sm text-muted-foreground">Free day — wander as you like.</li>}
+                  {day.items.length === 0 && (
+                    <li className="py-3 text-sm text-muted-foreground">
+                      Free day — wander as you like.
+                    </li>
+                  )}
                 </ol>
               </section>
             ))
@@ -237,22 +312,49 @@ function ItineraryPage() {
           <section className="surface-card p-5">
             <h2 className="font-display text-xl font-semibold">Plan costs</h2>
             <dl className="mt-3 space-y-2 text-sm">
-              <Row label={`Sightseeing (${shape.travelers} people)`} value={formatMoney(activityCost)} />
-              <Row label="Activities budget" value={formatMoney(totals.categories.activities)} muted />
+              <Row
+                label={`Sightseeing (${shape.travelers} people)`}
+                value={formatMoney(activityCost)}
+              />
+              <Row
+                label="Activities budget"
+                value={formatMoney(totals.categories.activities)}
+                muted
+              />
               <Row label="Restaurant picks" value={formatMoney(mealCost)} />
               <Row label="Food budget" value={formatMoney(totals.categories.food)} muted />
             </dl>
             <Button
               className="mt-4 w-full"
               variant="ink"
+              disabled={!itin}
               onClick={() => {
-                tripActions.setOverride("activities", activityCost);
-                toast.success(`Activities budget set to ${formatMoney(activityCost)}`);
+                tripActions.setActivitySync(!trip.syncActivities);
+                toast.success(
+                  trip.syncActivities
+                    ? "Activities budget unlinked"
+                    : "Activities budget linked — itinerary edits now update it",
+                );
               }}
             >
-              Use sightseeing total in budget
+              {trip.syncActivities ? "Unlink sightseeing budget" : "Link sightseeing to budget"}
             </Button>
-            <Link to="/budget" className="mt-2 block text-center text-xs font-semibold text-primary underline-offset-2 hover:underline">
+            <p className="mt-2 text-xs text-muted-foreground">
+              {trip.syncActivities
+                ? "Sightseeing edits update activities, taxes and cushion automatically."
+                : "Link to keep your activities budget up to date when you change this plan."}{" "}
+              Restaurant picks are compared with your meal allowance; they do not replace it or add
+              a second charge.
+            </p>
+            {mealCost > totals.categories.food && (
+              <p className="mt-2 text-xs font-semibold text-destructive">
+                Restaurant picks exceed your food budget. Review your meals or raise the allowance.
+              </p>
+            )}
+            <Link
+              to="/budget"
+              className="mt-2 block text-center text-xs font-semibold text-primary underline-offset-2 hover:underline"
+            >
               Open budget calculator
             </Link>
           </section>
@@ -279,7 +381,9 @@ function ItineraryPage() {
 
 function Row({ label, value, muted }: { label: string; value: string; muted?: boolean }) {
   return (
-    <div className={cn("flex items-center justify-between gap-2", muted && "text-muted-foreground")}>
+    <div
+      className={cn("flex items-center justify-between gap-2", muted && "text-muted-foreground")}
+    >
       <dt>{label}</dt>
       <dd className="tabular font-bold">{value}</dd>
     </div>
@@ -291,7 +395,13 @@ function safeFormat(iso: string) {
   return Number.isNaN(d.getTime()) ? iso : format(d, "EEEE, MMM d");
 }
 
-const TIME_ICONS = { Morning: Sunrise, Lunch: Coffee, Afternoon: Sun, Dinner: UtensilsCrossed, Evening: Moon } as const;
+const TIME_ICONS = {
+  Morning: Sunrise,
+  Lunch: Coffee,
+  Afternoon: Sun,
+  Dinner: UtensilsCrossed,
+  Evening: Moon,
+} as const;
 
 function TimeIcon({ time }: { time: keyof typeof TIME_ICONS }) {
   const Icon = TIME_ICONS[time] ?? Sun;

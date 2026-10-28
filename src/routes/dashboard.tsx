@@ -1,5 +1,14 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowRight, Check, Lock, PiggyBank, ShieldCheck, TrendingDown, Undo2, Wallet } from "lucide-react";
+import {
+  ArrowRight,
+  Check,
+  Lock,
+  PiggyBank,
+  ShieldCheck,
+  TrendingDown,
+  Undo2,
+  Wallet,
+} from "lucide-react";
 import { Cell, Pie, PieChart, ResponsiveContainer } from "recharts";
 import { toast } from "sonner";
 
@@ -7,7 +16,13 @@ import { CATEGORY_COLOR_VAR, CATEGORY_ICONS, DemoBadge } from "@/components/app/
 import { PageHeader } from "@/components/app/TripHeader";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { CATEGORIES, CATEGORY_LABELS, SAVING_TITLES, formatMoney } from "@/lib/budget";
+import {
+  CATEGORIES,
+  CATEGORY_LABELS,
+  SAVING_TITLES,
+  formatMoney,
+  percentLabel,
+} from "@/lib/budget";
 import { TRAVEL_STYLES, TRIP_TYPES } from "@/lib/demo-data";
 import { tripActions, useTrip } from "@/lib/trip-store";
 import { cn } from "@/lib/utils";
@@ -16,9 +31,16 @@ export const Route = createFileRoute("/dashboard")({
   head: () => ({
     meta: [
       { title: "Trip dashboard — Waypoint" },
-      { name: "description", content: "See total planned expenses, remaining money, potential savings and your protected emergency fund." },
+      {
+        name: "description",
+        content:
+          "See total planned expenses, remaining money, potential savings and your protected emergency fund.",
+      },
       { property: "og:title", content: "Trip dashboard — Waypoint" },
-      { property: "og:description", content: "Your trip's planned spend, money left and savings opportunities at a glance." },
+      {
+        property: "og:description",
+        content: "Your trip's planned spend, money left and savings opportunities at a glance.",
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
@@ -40,17 +62,26 @@ function Dashboard() {
       <PageHeader eyebrow="Your trip" title="Everything at a glance">
         <div className="flex gap-2">
           {type && <Badge variant="secondary">{type.label}</Badge>}
-          {style && <Badge variant={style.id === "luxury" ? "gold" : "secondary"}>{style.label}</Badge>}
+          {style && (
+            <Badge variant={style.id === "luxury" ? "gold" : "secondary"}>{style.label}</Badge>
+          )}
         </div>
       </PageHeader>
 
       <div className="mx-auto mt-6 max-w-6xl space-y-6 px-4">
         {/* Hero balance */}
         <section className="relative overflow-hidden rounded-4xl bg-gradient-ink p-6 text-ink-foreground shadow-lift sm:p-8">
-          <div className="absolute -top-24 -right-24 size-72 rounded-full bg-gradient-sunset opacity-30 blur-3xl" aria-hidden />
+          <div
+            className="absolute -top-24 -right-24 size-72 rounded-full bg-gradient-sunset opacity-30 blur-3xl"
+            aria-hidden
+          />
           <div className="relative grid gap-6 sm:grid-cols-[1fr_auto] sm:items-end">
             <div>
-              <p className="text-sm text-ink-foreground/70">{totals.overBudget ? "Your plan is over your spending money by" : "You've got this much left to explore"}</p>
+              <p className="text-sm text-ink-foreground/70">
+                {totals.overBudget
+                  ? "Your plan is over your spending money by"
+                  : "You've got this much left to explore"}
+              </p>
               <p
                 className={cn(
                   "tabular font-display text-5xl font-semibold sm:text-6xl",
@@ -61,10 +92,14 @@ function Dashboard() {
                 {formatMoney(Math.abs(totals.remaining))}
               </p>
               <p className="mt-1 text-sm text-ink-foreground/70">
-                of {formatMoney(totals.spendable)} spendable · {formatMoney(totals.totalBudget)} total budget
+                of {formatMoney(totals.spendable)} spendable · {formatMoney(totals.totalBudget)}{" "}
+                total budget
               </p>
               {totals.overBudget && (
-                <Link to="/budget" className="mt-2 inline-block text-sm font-semibold text-sunset underline underline-offset-2">
+                <Link
+                  to="/budget"
+                  className="mt-2 inline-block text-sm font-semibold text-sunset underline underline-offset-2"
+                >
                   See where to cut
                 </Link>
               )}
@@ -80,12 +115,15 @@ function Dashboard() {
           <div className="relative mt-6">
             <div className="flex h-3 overflow-hidden rounded-full bg-ink-foreground/10">
               <div
-                className={cn("h-full transition-all", totals.overBudget ? "bg-destructive" : "bg-gradient-sunset")}
-                style={{ width: `${Math.min(100, totals.percentUsed)}%` }}
+                className={cn(
+                  "h-full transition-all",
+                  totals.overBudget ? "bg-destructive" : "bg-gradient-sunset",
+                )}
+                style={{ width: `${Math.min(100, totals.percentUsed ?? 0)}%` }}
               />
             </div>
             <div className="tabular mt-2 flex justify-between text-xs text-ink-foreground/70">
-              <span>{Math.round(totals.percentUsed)}% planned</span>
+              <span>{percentLabel(totals)}</span>
               <span>{formatMoney(totals.perPersonPerDay)} / person / day</span>
             </div>
           </div>
@@ -93,7 +131,12 @@ function Dashboard() {
 
         {/* Stats */}
         <section className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-          <StatCard icon={Wallet} label="Total planned" value={formatMoney(totals.planned)} sub={`${shape.days} days · ${shape.travelers} travelers`} />
+          <StatCard
+            icon={Wallet}
+            label="Total planned"
+            value={formatMoney(totals.planned)}
+            sub={`${shape.days} days · ${shape.travelers} travelers`}
+          />
           <StatCard
             icon={TrendingDown}
             label={totals.overBudget ? "Over budget" : "Remaining"}
@@ -101,8 +144,20 @@ function Dashboard() {
             sub={totals.overBudget ? "Trim or apply savings" : "Free to spend"}
             tone={totals.overBudget ? "danger" : "success"}
           />
-          <StatCard icon={PiggyBank} label="Potential savings" value={formatMoney(potentialSavings)} sub={`${savings.length} ideas below`} tone="sunset" />
-          <StatCard icon={ShieldCheck} label="Emergency reserve" value={formatMoney(totals.emergencyFund)} sub="Kept safe, never spent" tone="shield" />
+          <StatCard
+            icon={PiggyBank}
+            label="Potential savings"
+            value={formatMoney(potentialSavings)}
+            sub={`${savings.length} ideas below`}
+            tone="sunset"
+          />
+          <StatCard
+            icon={ShieldCheck}
+            label="Emergency reserve"
+            value={formatMoney(totals.emergencyFund)}
+            sub="Kept safe, never spent"
+            tone="shield"
+          />
         </section>
 
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
@@ -116,7 +171,17 @@ function Dashboard() {
               <div className="relative mx-auto size-44">
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
-                    <Pie data={breakdown} dataKey="value" nameKey="cat" startAngle={90} endAngle={-270} innerRadius="68%" outerRadius="100%" paddingAngle={2} stroke="none">
+                    <Pie
+                      data={breakdown}
+                      dataKey="value"
+                      nameKey="cat"
+                      startAngle={90}
+                      endAngle={-270}
+                      innerRadius="68%"
+                      outerRadius="100%"
+                      paddingAngle={2}
+                      stroke="none"
+                    >
                       {breakdown.map((d) => (
                         <Cell key={d.cat} fill={CATEGORY_COLOR_VAR[d.cat]} />
                       ))}
@@ -126,7 +191,9 @@ function Dashboard() {
                 <div className="pointer-events-none absolute inset-0 grid place-items-center text-center">
                   <div>
                     <p className="text-[11px] text-muted-foreground">Planned</p>
-                    <p className="tabular font-display text-xl font-semibold">{formatMoney(totals.planned)}</p>
+                    <p className="tabular font-display text-xl font-semibold">
+                      {formatMoney(totals.planned)}
+                    </p>
                   </div>
                 </div>
               </div>
@@ -135,7 +202,10 @@ function Dashboard() {
                   const Icon = CATEGORY_ICONS[cat];
                   return (
                     <li key={cat} className="flex items-center gap-2.5 text-sm">
-                      <span className="size-2.5 shrink-0 rounded-full" style={{ backgroundColor: CATEGORY_COLOR_VAR[cat] }} />
+                      <span
+                        className="size-2.5 shrink-0 rounded-full"
+                        style={{ backgroundColor: CATEGORY_COLOR_VAR[cat] }}
+                      />
                       <Icon className="size-3.5 text-muted-foreground" />
                       <span className="flex-1 truncate">{CATEGORY_LABELS[cat]}</span>
                       <span className="tabular font-semibold">{formatMoney(value)}</span>
@@ -154,21 +224,37 @@ function Dashboard() {
           {/* Savings */}
           <section className="surface-card p-5">
             <h2 className="font-display text-2xl font-semibold">Ways to spend less</h2>
-            <p className="text-sm text-muted-foreground">Each idea updates your budget the moment you apply it. You can undo it anytime.</p>
+            <p className="text-sm text-muted-foreground">
+              Each idea updates your budget the moment you apply it. You can undo it anytime.
+            </p>
             <ul className="mt-4 space-y-2.5">
               {savings.map((s) => {
                 const Icon = CATEGORY_ICONS[s.category];
                 return (
-                  <li key={s.id} className="flex items-center gap-3 rounded-2xl border border-border bg-background/60 p-3">
+                  <li
+                    key={s.id}
+                    className="flex items-center gap-3 rounded-2xl border border-border bg-background/60 p-3"
+                  >
                     <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-success-soft text-success">
                       <Icon className="size-4" />
                     </span>
                     <div className="min-w-0 flex-1">
                       <p className="text-sm font-bold">{s.title}</p>
                       <p className="text-xs leading-snug text-muted-foreground">{s.detail}</p>
+                      <p className="mt-1 text-xs text-muted-foreground">{s.assumption}</p>
+                      {s.replacesCustom && (
+                        <p className="text-xs font-semibold text-sunset">
+                          Replaces your custom amount. Undo restores it.
+                        </p>
+                      )}
                     </div>
                     <div className="flex shrink-0 flex-col items-end gap-1">
-                      <span className="tabular text-sm font-bold text-success">−{formatMoney(s.amount)}</span>
+                      <span className="tabular text-sm font-bold text-success">
+                        −{formatMoney(s.totalSavings, { cents: true })}
+                      </span>
+                      <span className="text-[10px] text-muted-foreground">
+                        incl. taxes & cushion
+                      </span>
                       <Button
                         size="sm"
                         variant="success"
@@ -184,12 +270,16 @@ function Dashboard() {
                 );
               })}
               {savings.length === 0 && (
-                <li className="rounded-2xl bg-success-soft p-4 text-sm text-success">You've applied every saving idea — nicely done.</li>
+                <li className="rounded-2xl bg-success-soft p-4 text-sm text-success">
+                  You've applied every saving idea — nicely done.
+                </li>
               )}
             </ul>
             {applied.length > 0 && (
               <div className="mt-4 border-t border-dashed border-border pt-4">
-                <p className="mb-2 text-xs font-semibold tracking-wider text-muted-foreground uppercase">Applied</p>
+                <p className="mb-2 text-xs font-semibold tracking-wider text-muted-foreground uppercase">
+                  Applied
+                </p>
                 <div className="flex flex-wrap gap-2">
                   {applied.map((id) => (
                     <button
@@ -198,7 +288,8 @@ function Dashboard() {
                       className="inline-flex items-center gap-1.5 rounded-full bg-success-soft px-3 py-1.5 text-xs font-semibold text-success transition hover:bg-muted hover:text-foreground"
                       aria-label={`Undo ${SAVING_TITLES[id]}`}
                     >
-                      <Check className="size-3" /> {SAVING_TITLES[id]} <Undo2 className="size-3 opacity-60" />
+                      <Check className="size-3" /> {SAVING_TITLES[id]}{" "}
+                      <Undo2 className="size-3 opacity-60" />
                     </button>
                   ))}
                 </div>
@@ -209,7 +300,11 @@ function Dashboard() {
 
         <section className="grid gap-3 sm:grid-cols-2">
           <QuickLink to="/itinerary" title="View itinerary" sub="Day-by-day stops & restaurants" />
-          <QuickLink to="/" title="Plan a different trip" sub="Change destination, dates or budget" />
+          <QuickLink
+            to="/"
+            title="Plan a different trip"
+            sub="Change destination, dates or budget"
+          />
         </section>
       </div>
     </div>
@@ -260,7 +355,10 @@ function StatCard({
 
 function QuickLink({ to, title, sub }: { to: "/itinerary" | "/"; title: string; sub: string }) {
   return (
-    <Link to={to} className="surface-card group flex items-center justify-between p-5 transition hover:shadow-lift">
+    <Link
+      to={to}
+      className="surface-card group flex items-center justify-between p-5 transition hover:shadow-lift"
+    >
       <div>
         <p className="font-display text-lg font-semibold">{title}</p>
         <p className="text-sm text-muted-foreground">{sub}</p>
