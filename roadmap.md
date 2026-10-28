@@ -1,18 +1,25 @@
 # Waypoint roadmap
 
-## In progress / done this round
-- [x] Budget: transportation method, emergency reserve on setup, hotels/gas/tolls/parking/transportation/meals/snacks/water/taxes/activities/misc
-- [x] Over-budget warning with exact "where to cut" recommendations
-- [x] Road-trip discovery: start, destination, stop budget, interests, max detour; filters; include/remove stops updating the budget; map-ready provider layer (demo data)
+## Audit & fix round (current)
+- [ ] P1 Cross-tab sync, stable trip IDs, AI results scoped to the trip they were requested for
+- [ ] P1 Trip type ↔ transport ↔ route consistency (flights get airport handling, no driving stops)
+- [ ] P1 Trip-type transitions explain what changed
+- [ ] P1 Date inputs: no reverting, one-day trips, timezone-safe dates, clear validation
+- [ ] P2 One shared money engine in cents; "No spendable budget" instead of 999%
+- [ ] P2 Itinerary ↔ activities budget discrepancy flag + explicit sync
+- [ ] P2 Live tips after itinerary edits; stale AI number tips hidden
+- [ ] P2 Savings show category vs total-trip savings; safe apply/undo
+- [ ] P2 Arrival/departure times, travel days; AI cancel/retry/timeout, previous plan kept
+- [ ] P2 Demo / AI / your-own / map-verified labels per item
+- [ ] P3 Saved trips in accounts (create, list, open, rename, duplicate, recoverable delete, save status, conflict detection)
+- [ ] P3 Verify sign-in flow and live maps signed in
+- [ ] P4 Dark-mode contrast, 44px touch targets, responsive check
+- [ ] P4 Itinerary editing: add, edit, swap, reorder, undo remove
+- [ ] Tests + browser checks (two tabs, delayed AI, mobile, both themes)
 
-## Next (waiting on decisions or credentials)
-- [x] Accounts (email & password, no profiles)
-- [x] Real routes, places, drive times and map on the Road trip page (Google Maps, signed-in users)
-- [ ] Saved trips in the database — next; accounts are ready
-- [ ] Real budgets stored in the database — after accounts
-- [ ] AI that learns preferences from past trips — after accounts + saved trips
-- [ ] Credit card & membership perks (Chase Sapphire, Priority Pass lounges, Costco Travel) — needs: which cards/memberships to support first; perk terms change, needs a maintained source
-- [ ] Real hotel/flight prices — needs a travel-pricing provider (e.g. Amadeus, Duffel); Google Maps covers places but not live hotel rates
-- [ ] Wire the day-by-day itinerary to real places (road-trip stops done) — ready to build
+## Later (waiting on decisions or credentials)
+- [ ] AI that learns preferences from past trips — after saved trips
+- [ ] Credit card & membership perks (Chase Sapphire, Priority Pass lounges, Costco Travel) — needs: which cards/memberships first; perk terms need a maintained source
+- [ ] Real hotel/flight prices — needs a travel-pricing provider (e.g. Amadeus, Duffel)
 - [ ] Reviews (hotels, restaurants, malls) incl. Reddit threads — needs: reviews provider; Reddit API access/terms
-- [ ] Booking flows — needs: booking partner (e.g. Expedia/Booking affiliate, Duffel) and payments decision
+- [ ] Booking flows — needs: booking partner and payments decision
