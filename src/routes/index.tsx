@@ -438,7 +438,7 @@ function Field({
   children: React.ReactNode;
 }) {
   return (
-    <fieldset>
+    <fieldset className="min-w-0">
       <div className="mb-2.5 flex items-baseline justify-between gap-2">
         <legend className="text-sm font-bold text-foreground">{label}</legend>
         {hint && <span className="text-xs text-muted-foreground">{hint}</span>}
