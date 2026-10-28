@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { format } from "date-fns";
-import { Car, Landmark, Lightbulb, Loader2, RotateCcw, Sparkles, UtensilsCrossed, X } from "lucide-react";
+import { Car, Coffee, Landmark, Lightbulb, Loader2, Moon, RotateCcw, Sparkles, Sun, Sunrise, UtensilsCrossed, X } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -197,7 +197,9 @@ function ItineraryPage() {
                           <Icon className="size-4" />
                         </span>
                         <div className="min-w-0 flex-1">
-                          <p className="text-[11px] font-bold tracking-wider text-muted-foreground uppercase">{item.time}</p>
+                          <p className="inline-flex items-center gap-1 text-[11px] font-bold tracking-wider text-muted-foreground uppercase">
+                            <TimeIcon time={item.time} /> {item.time}
+                          </p>
                           <p className="font-bold leading-snug">{item.name}</p>
                           <p className="text-xs text-muted-foreground">
                             {item.area}
@@ -287,4 +289,11 @@ function Row({ label, value, muted }: { label: string; value: string; muted?: bo
 function safeFormat(iso: string) {
   const d = new Date(`${iso}T12:00:00`);
   return Number.isNaN(d.getTime()) ? iso : format(d, "EEEE, MMM d");
+}
+
+const TIME_ICONS = { Morning: Sunrise, Lunch: Coffee, Afternoon: Sun, Dinner: UtensilsCrossed, Evening: Moon } as const;
+
+function TimeIcon({ time }: { time: keyof typeof TIME_ICONS }) {
+  const Icon = TIME_ICONS[time] ?? Sun;
+  return <Icon className="size-3" aria-hidden />;
 }
