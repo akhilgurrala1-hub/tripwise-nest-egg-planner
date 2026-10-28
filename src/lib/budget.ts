@@ -87,24 +87,26 @@ export interface BudgetTotals {
   planned: number;
   remaining: number;
   overBudget: boolean;
-  percentUsed: number;
+  /** Share of spendable money already planned; null when there is no spendable money. */
+  percentUsed: number | null;
   perPersonPerDay: number;
 }
 
 const clampNum = (n: number) => (Number.isFinite(n) && n > 0 ? n : 0);
-export const roundMoney = (n: number) => Math.round((n + Number.EPSILON) * 100) / 100;
+/** Whole cents, immune to binary float noise like 1.005 * 100 = 100.49999… */
+export const toCents = (n: number) => Math.round(Number((clampNum(n) * 100).toPrecision(12)));
+const signedCents = (n: number) => (Number.isFinite(n) ? Math.round(Number((n * 100).toPrecision(12))) : 0);
+export const roundMoney = (n: number) => signedCents(n) / 100;
 
 export function tripShape(startDate: string, endDate: string, travelers: number): TripShape {
-  const start = Date.parse(startDate);
-  const end = Date.parse(endDate);
-  let days = 1;
-  if (Number.isFinite(start) && Number.isFinite(end) && end >= start) {
-    days = Math.round((end - start) / 86_400_000) + 1;
-  }
+  const days = inclusiveDays(startDate, endDate) ?? 1;
   return { travelers: Math.max(1, Math.round(travelers) || 1), days, nights: Math.max(0, days - 1) };
 }
 
-/** Estimate for every category from the editable inputs, with custom totals applied. */
+/**
+ * Estimate for every category from the editable inputs, with custom totals applied.
+ * All sums run in whole cents; every category is rounded to the cent exactly once.
+ */
 export function estimateCategories(
   inputs: BudgetInputs,
   trip: TripShape,
@@ -113,40 +115,38 @@ export function estimateCategories(
 ): { estimates: Record<Category, number>; categories: Record<Category, number> } {
   const est: Partial<Record<Category, number>> = {};
   const eff: Partial<Record<Category, number>> = {};
-  const set = (cat: Category, value: number) => {
-    const estimate = roundMoney(clampNum(value));
-    est[cat] = estimate;
+  const set = (cat: Category, cents: number) => {
+    est[cat] = cents;
     const o = overrides[cat];
-    eff[cat] = o !== undefined && OVERRIDABLE.includes(cat) ? roundMoney(clampNum(o)) : estimate;
+    eff[cat] = o !== undefined && OVERRIDABLE.includes(cat) ? toCents(o) : cents;
   };
 
   const driving = isDrivingMode(inputs.transportMode);
   const fareModes: TransportMode[] = ["flight", "train", "bus"];
   const gallons = driving && inputs.mpg > 0 ? clampNum(inputs.roundTripMiles) / inputs.mpg : 0;
 
-  const fares = fareModes.includes(inputs.transportMode) ? clampNum(inputs.farePerPerson) * trip.travelers : 0;
-  const rental = inputs.transportMode === "rental-car" ? clampNum(inputs.rentalPerDay) * trip.days : 0;
-  set("transportation", fares + rental + clampNum(inputs.localTransitPerDay) * trip.days);
-  set("gas", gallons * clampNum(inputs.gasPrice));
-  set("tolls", driving ? clampNum(inputs.tolls) : 0);
-  set("parking", clampNum(inputs.parkingPerDay) * trip.days);
-  set("accommodations", clampNum(inputs.nightlyRate) * Math.max(0, Math.round(inputs.rooms)) * trip.nights);
-  set("food", clampNum(inputs.foodPerPersonDay) * trip.travelers * trip.days);
-  set("snacks", clampNum(inputs.snacksPerPersonDay) * trip.travelers * trip.days);
-  set("water", clampNum(inputs.waterPerPersonDay) * trip.travelers * trip.days);
-  set("activities", clampNum(inputs.activitiesPerPerson) * trip.travelers);
-  set("stops", stopsTotal);
+  const fares = fareModes.includes(inputs.transportMode) ? toCents(inputs.farePerPerson) * trip.travelers : 0;
+  const rental = inputs.transportMode === "rental-car" ? toCents(inputs.rentalPerDay) * trip.days : 0;
+  set("transportation", fares + rental + toCents(inputs.localTransitPerDay) * trip.days);
+  set("gas", toCents(gallons * clampNum(inputs.gasPrice)));
+  set("tolls", driving ? toCents(inputs.tolls) : 0);
+  set("parking", toCents(inputs.parkingPerDay) * trip.days);
+  set("accommodations", toCents(inputs.nightlyRate) * Math.max(0, Math.round(inputs.rooms)) * trip.nights);
+  set("food", toCents(inputs.foodPerPersonDay) * trip.travelers * trip.days);
+  set("snacks", toCents(inputs.snacksPerPersonDay) * trip.travelers * trip.days);
+  set("water", toCents(inputs.waterPerPersonDay) * trip.travelers * trip.days);
+  set("activities", toCents(inputs.activitiesPerPerson) * trip.travelers);
+  set("stops", toCents(stopsTotal));
 
   const taxBase = TAXABLE.reduce((s, c) => s + (eff[c] ?? 0), 0);
-  set("taxes", (clampNum(inputs.taxRatePct) / 100) * taxBase);
+  set("taxes", Math.round((clampNum(inputs.taxRatePct) / 100) * taxBase));
 
   const cushionBase = CATEGORIES.filter((c) => c !== "misc" && c !== "stops").reduce((s, c) => s + (eff[c] ?? 0), 0);
-  set("misc", (clampNum(inputs.miscPct) / 100) * cushionBase);
+  set("misc", Math.round((clampNum(inputs.miscPct) / 100) * cushionBase));
 
-  return {
-    estimates: est as Record<Category, number>,
-    categories: eff as Record<Category, number>,
-  };
+  const dollars = (m: Partial<Record<Category, number>>) =>
+    Object.fromEntries(CATEGORIES.map((c) => [c, (m[c] ?? 0) / 100])) as Record<Category, number>;
+  return { estimates: dollars(est), categories: dollars(eff) };
 }
 
 /**
@@ -162,23 +162,28 @@ export function calculateBudget(
   stopsTotal = 0,
 ): BudgetTotals {
   const { estimates, categories } = estimateCategories(inputs, trip, overrides, stopsTotal);
-  const total = clampNum(totalBudget);
-  const emergency = Math.min(clampNum(emergencyFund), total);
-  const spendable = roundMoney(total - emergency);
-  const planned = roundMoney(CATEGORIES.reduce((s, c) => s + categories[c], 0));
-  const remaining = roundMoney(spendable - planned);
+  const totalC = toCents(totalBudget);
+  const reserveC = Math.min(toCents(emergencyFund), totalC);
+  const spendableC = totalC - reserveC;
+  const plannedC = CATEGORIES.reduce((s, c) => s + Math.round(categories[c] * 100), 0);
+  const remainingC = spendableC - plannedC;
   return {
     categories,
     estimates,
-    totalBudget: total,
-    emergencyFund: emergency,
-    spendable,
-    planned,
-    remaining,
-    overBudget: remaining < 0,
-    percentUsed: spendable > 0 ? Math.min(999, (planned / spendable) * 100) : planned > 0 ? 999 : 0,
-    perPersonPerDay: roundMoney(planned / trip.travelers / trip.days),
+    totalBudget: totalC / 100,
+    emergencyFund: reserveC / 100,
+    spendable: spendableC / 100,
+    planned: plannedC / 100,
+    remaining: remainingC / 100,
+    overBudget: remainingC < 0,
+    percentUsed: spendableC > 0 ? (plannedC / spendableC) * 100 : null,
+    perPersonPerDay: Math.round(plannedC / trip.travelers / trip.days) / 100,
   };
+}
+
+/** Plain-language progress label shared by every page. */
+export function percentLabel(t: Pick<BudgetTotals, "percentUsed">): string {
+  return t.percentUsed === null ? "No spendable budget" : `${Math.round(t.percentUsed)}% of spendable money planned`;
 }
 
 // ---------- Defaults (example prices) ----------
