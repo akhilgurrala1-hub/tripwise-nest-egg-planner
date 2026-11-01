@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { format } from "date-fns";
-import { Car, Coffee, Landmark, Lightbulb, Loader2, Moon, RotateCcw, Sparkles, Sun, Sunrise, UtensilsCrossed, X } from "lucide-react";
+import { Car, Coffee, ExternalLink, Landmark, Lightbulb, Loader2, MapPin, Moon, RotateCcw, Sparkles, Star, Sun, Sunrise, UtensilsCrossed, X } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -9,9 +9,12 @@ import { PageHeader } from "@/components/app/TripHeader";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { createAiItinerary } from "@/lib/ai-itinerary.functions";
+import { useAuth } from "@/lib/auth-context";
 import { formatMoney, stopCost } from "@/lib/budget";
 import { INTERESTS, TRAVEL_STYLES, TRIP_TYPES } from "@/lib/demo-data";
-import { addDays, itineraryActivityCost, type ItemKind, type Itinerary } from "@/lib/itinerary";
+import { addDays, buildRealItinerary, itineraryActivityCost, unpricedItems, type ItemKind, type ItineraryItem, type Itinerary } from "@/lib/itinerary";
+import { getDestinationPlaces } from "@/lib/places/destination-places.functions";
+import type { DestinationPlacesResult } from "@/lib/places/types";
 import { tripActions, useTrip } from "@/lib/trip-store";
 import { cn } from "@/lib/utils";
 
@@ -31,9 +34,15 @@ export const Route = createFileRoute("/itinerary")({
 
 const KIND_ICON: Record<ItemKind, typeof Landmark> = { sight: Landmark, restaurant: UtensilsCrossed, stop: Car };
 
+/** Map lookups are billed, so identical searches in one session reuse the first answer. */
+const placesCache = new Map<string, DestinationPlacesResult>();
+
 function ItineraryPage() {
   const { trip, dest, shape, totals } = useTrip();
+  const { user } = useAuth();
   const [loading, setLoading] = useState(false);
+  const [loadingReal, setLoadingReal] = useState(false);
+  const busy = loading || loadingReal;
   const itin = trip.itinerary;
   const activityCost = itineraryActivityCost(itin, shape.travelers);
   const mealCost = itin
@@ -87,15 +96,62 @@ function ItineraryPage() {
     }
   };
 
+  const useRealPlaces = async () => {
+    const destination = dest.region ? `${dest.name}, ${dest.region}` : dest.name;
+    const request = { destination, interests: trip.setup.interests, style: trip.setup.style };
+    const key = JSON.stringify(request);
+    setLoadingReal(true);
+    try {
+      let res = placesCache.get(key);
+      if (!res) {
+        res = await getDestinationPlaces({ data: request });
+        if (res.ok) placesCache.set(key, res);
+      }
+      if (!res.ok) {
+        toast.error(res.error);
+        return;
+      }
+      tripActions.setItinerary(
+        buildRealItinerary({
+          sights: res.sights,
+          restaurants: res.restaurants,
+          destName: dest.name,
+          days: Math.min(14, shape.days),
+          startDate: trip.setup.startDate,
+          interests: trip.setup.interests,
+          tripType: trip.setup.tripType,
+        }),
+      );
+      toast.success("Itinerary built from real places on Google Maps");
+    } catch {
+      toast.error("Couldn't reach the map service. Please try again in a moment.");
+    } finally {
+      setLoadingReal(false);
+    }
+  };
+  const unpriced = unpricedItems(itin);
+
   return (
     <div>
       <PageHeader eyebrow="Itinerary" title="Your trip, day by day">
         <div className="flex w-full flex-wrap gap-2 sm:w-auto">
-          <Button variant="hero" onClick={generateWithAi} disabled={loading} className="flex-1 sm:flex-none">
+          {user ? (
+            <Button variant="ink" onClick={useRealPlaces} disabled={busy} className="flex-1 sm:flex-none">
+              {loadingReal ? <Loader2 className="animate-spin" /> : <MapPin />}
+              {loadingReal ? "Finding places…" : "Use real places"}
+            </Button>
+          ) : (
+            <Button variant="ink" asChild className="flex-1 sm:flex-none">
+              <Link to="/auth" search={{ redirect: "/itinerary" }}>
+                <MapPin /> Sign in for real places
+              </Link>
+            </Button>
+          )}
+          <Button variant="hero" onClick={generateWithAi} disabled={busy} className="flex-1 sm:flex-none">
             {loading ? <Loader2 className="animate-spin" /> : <Sparkles />}
             {loading ? "Planning…" : "Personalize with AI"}
           </Button>
-          <Button variant="outline" onClick={tripActions.regenerateDemoItinerary} disabled={loading}>
+          <Button variant="outline" onClick={tripActions.regenerateDemoItinerary} disabled={busy}>
             <RotateCcw /> Demo plan
           </Button>
         </div>
@@ -103,7 +159,11 @@ function ItineraryPage() {
 
       <div className="mx-auto mt-6 grid max-w-6xl grid-cols-1 gap-6 px-4 lg:grid-cols-[minmax(0,1fr)_320px]">
         <div className="min-w-0 space-y-4">
-          {itin?.source === "ai" ? (
+          {itin?.source === "google" ? (
+            <Badge variant="success" className="px-3 py-1 whitespace-normal">
+              <MapPin /> Real places from Google Maps · costs are estimates
+            </Badge>
+          ) : itin?.source === "ai" ? (
             <Badge variant="ai" className="px-3 py-1 whitespace-normal">
               <Sparkles /> AI suggestion · places and prices are unverified estimates
             </Badge>
@@ -205,16 +265,31 @@ function ItineraryPage() {
                             {item.area}
                             {item.note ? ` · ${item.note}` : ""}
                           </p>
+                          {(item.rating || item.mapsUrl) && (
+                            <p className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
+                              {item.rating ? (
+                                <span className="tabular inline-flex items-center gap-1 font-semibold">
+                                  <Star className="size-3 fill-current text-gold" aria-hidden /> {item.rating.toFixed(1)}
+                                  {item.ratingCount ? (
+                                    <span className="font-normal text-muted-foreground">({item.ratingCount.toLocaleString()} reviews)</span>
+                                  ) : null}
+                                </span>
+                              ) : null}
+                              {item.mapsUrl && (
+                                <a
+                                  href={item.mapsUrl}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="inline-flex items-center gap-1 font-semibold text-primary underline-offset-2 hover:underline"
+                                >
+                                  Open in Google Maps <ExternalLink className="size-3" aria-hidden />
+                                </a>
+                              )}
+                            </p>
+                          )}
                         </div>
                         <div className="flex shrink-0 items-start gap-1">
-                          <span
-                            className={cn(
-                              "tabular rounded-full px-2 py-0.5 text-xs font-bold",
-                              item.costPerPerson === 0 ? "bg-success-soft text-success" : "bg-muted text-foreground",
-                            )}
-                          >
-                            {item.costPerPerson === 0 ? "Free" : `${formatMoney(item.costPerPerson)}/pp`}
-                          </span>
+                          <CostChip item={item} />
                           <button
                             onClick={() => tripActions.removeItineraryItem(item.id)}
                             className="grid size-6 place-items-center rounded-full text-muted-foreground opacity-60 transition hover:bg-muted hover:opacity-100"
@@ -242,6 +317,11 @@ function ItineraryPage() {
               <Row label="Restaurant picks" value={formatMoney(mealCost)} />
               <Row label="Food budget" value={formatMoney(totals.categories.food)} muted />
             </dl>
+            {unpriced > 0 && (
+              <p className="mt-3 rounded-xl bg-muted px-3 py-2 text-xs leading-snug text-muted-foreground">
+                {unpriced} {unpriced === 1 ? "place doesn't" : "places don't"} publish prices, so {unpriced === 1 ? "it isn't" : "they aren't"} counted above. Check before you go.
+              </p>
+            )}
             <Button
               className="mt-4 w-full"
               variant="ink"
@@ -274,6 +354,25 @@ function ItineraryPage() {
         </aside>
       </div>
     </div>
+  );
+}
+
+function CostChip({ item }: { item: ItineraryItem }) {
+  if (item.costSource === "unknown") {
+    return <span className="rounded-full bg-muted px-2 py-0.5 text-xs font-semibold text-muted-foreground">Price not listed</span>;
+  }
+  if (item.costPerPerson === 0) {
+    return <span className="rounded-full bg-success-soft px-2 py-0.5 text-xs font-bold text-success">Free</span>;
+  }
+  const approx = item.costSource === "price-level" ? "~" : "";
+  return (
+    <span
+      className="tabular rounded-full bg-muted px-2 py-0.5 text-xs font-bold text-foreground"
+      title={item.costSource === "price-level" ? "Estimated from the listing's $ level" : undefined}
+    >
+      {approx}
+      {formatMoney(item.costPerPerson)}/pp
+    </span>
   );
 }
 
