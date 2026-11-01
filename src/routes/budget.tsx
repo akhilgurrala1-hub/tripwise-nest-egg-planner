@@ -14,6 +14,7 @@ import {
   CATEGORY_LABELS,
   OVERRIDABLE,
   formatMoney,
+  percentLabel,
   stopCost,
   type BudgetInputs,
   type Category,
