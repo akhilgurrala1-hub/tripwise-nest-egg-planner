@@ -8,6 +8,7 @@ import {
   savingsOpportunities,
   stopCost,
   tripShape,
+  withSaving,
   type BudgetInputs,
 } from "@/lib/budget";
 import { DESTINATIONS } from "@/lib/demo-data";
