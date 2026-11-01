@@ -144,10 +144,22 @@ describe("savings", () => {
   const t = calculateBudget(car, trip, 2000, 200);
 
   it("estimates 30% off meals for picnic lunches and skips applied ideas", () => {
-    const tips = savingsOpportunities(car, trip, t.categories, dest);
-    expect(tips.find((s) => s.id === "picnic")?.amount).toBe(72);
-    const after = savingsOpportunities(car, trip, t.categories, dest, ["picnic"]);
+    const tips = savingsOpportunities(car, trip, {}, 0, dest);
+    const picnic = tips.find((s) => s.id === "picnic");
+    expect(picnic?.amount).toBe(72);
+    // 72 off food also removes its 10% tax and 5% cushion: 72 * 1.10 * 1.05
+    expect(picnic?.totalSavings).toBe(83.16);
+    const after = savingsOpportunities(car, trip, {}, 0, dest, ["picnic"]);
     expect(after.find((s) => s.id === "picnic")).toBeUndefined();
+  });
+
+  it("a saving's preview equals the real drop in planned spending once applied", () => {
+    const tips = savingsOpportunities(car, trip, {}, 0, dest);
+    for (const tip of tips) {
+      const next = withSaving(tip.id, car, {}, dest);
+      const after = calculateBudget(next.inputs, trip, 2000, 200, next.overrides);
+      expect(Math.round((t.planned - after.planned) * 100) / 100).toBe(tip.totalSavings);
+    }
   });
 
   it("applying the toll-free route sets tolls to zero", () => {

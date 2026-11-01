@@ -82,11 +82,11 @@ function BudgetPage() {
               <div className="h-2.5 overflow-hidden rounded-full bg-muted">
                 <div
                   className={cn("h-full rounded-full transition-all", totals.overBudget ? "bg-destructive" : "bg-gradient-sunset")}
-                  style={{ width: `${Math.min(100, totals.percentUsed)}%` }}
+                  style={{ width: `${totals.percentUsed === null ? (totals.planned > 0 ? 100 : 0) : Math.min(100, totals.percentUsed)}%` }}
                 />
               </div>
               <p className="tabular mt-1.5 text-xs text-muted-foreground">
-                {Math.round(totals.percentUsed)}% of spendable money planned · {formatMoney(totals.perPersonPerDay)} per person per day
+                {percentLabel(totals)} · {formatMoney(totals.perPersonPerDay)} per person per day
               </p>
             </div>
             {totals.overBudget && <CutPlan />}
