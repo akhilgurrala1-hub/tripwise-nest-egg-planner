@@ -81,11 +81,11 @@ function Dashboard() {
             <div className="flex h-3 overflow-hidden rounded-full bg-ink-foreground/10">
               <div
                 className={cn("h-full transition-all", totals.overBudget ? "bg-destructive" : "bg-gradient-sunset")}
-                style={{ width: `${Math.min(100, totals.percentUsed)}%` }}
+                style={{ width: `${totals.percentUsed === null ? (totals.planned > 0 ? 100 : 0) : Math.min(100, totals.percentUsed)}%` }}
               />
             </div>
             <div className="tabular mt-2 flex justify-between text-xs text-ink-foreground/70">
-              <span>{Math.round(totals.percentUsed)}% planned</span>
+              <span>{totals.percentUsed === null ? "No spendable budget" : `${Math.round(totals.percentUsed)}% planned`}</span>
               <span>{formatMoney(totals.perPersonPerDay)} / person / day</span>
             </div>
           </div>
@@ -168,7 +168,7 @@ function Dashboard() {
                       <p className="text-xs leading-snug text-muted-foreground">{s.detail}</p>
                     </div>
                     <div className="flex shrink-0 flex-col items-end gap-1">
-                      <span className="tabular text-sm font-bold text-success">−{formatMoney(s.amount)}</span>
+                      <span className="tabular text-sm font-bold text-success">−{formatMoney(s.totalSavings)}</span>
                       <Button
                         size="sm"
                         variant="success"

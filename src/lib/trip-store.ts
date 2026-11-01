@@ -369,8 +369,8 @@ export function useTrip() {
       stopsTotal,
     );
     const applied = Object.keys(trip.appliedSavings) as SavingId[];
-    const savings = savingsOpportunities(trip.inputs, shape, totals.categories, dest, applied);
-    const potentialSavings = Math.round(savings.reduce((s, t) => s + t.amount, 0) * 100) / 100;
+    const savings = savingsOpportunities(trip.inputs, shape, trip.overrides, stopsTotal, dest, applied);
+    const potentialSavings = Math.round(savings.reduce((s, t) => s + t.totalSavings * 100, 0)) / 100;
     const cuts = reductionPlan(trip.inputs, shape, trip.setup.totalBudget, trip.emergencyFund, trip.overrides, stopsTotal);
     return { trip, dest, shape, totals, savings, applied, potentialSavings, cuts, stopsTotal };
   }, [trip]);
