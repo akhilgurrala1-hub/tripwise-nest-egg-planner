@@ -2,7 +2,7 @@
 import type { Interest } from "../demo-data";
 import type { CostSource, RealStopsResult, RouteStop, StopKind, StopTag } from "../routing/types";
 
-const GATEWAY_URL = "https://connector-gateway.lovable.dev/google_maps";
+export const GATEWAY_URL = "https://connector-gateway.lovable.dev/google_maps";
 const MAX_QUERIES = 5;
 /** Google bills Text Search per request, so ask for a full page and spread picks along the route. */
 const RESULTS_PER_QUERY = 20;
@@ -31,9 +31,9 @@ const INTEREST_QUERIES: Partial<Record<Interest, QuerySpec>> = {
   food: { text: "bakery", kind: "restaurant" },
 };
 
-const FOOD_TYPES = ["restaurant", "cafe", "bakery", "food", "meal_takeaway", "bar", "brewery", "winery", "coffee_shop"];
+export const FOOD_TYPES = ["restaurant", "cafe", "bakery", "food", "meal_takeaway", "bar", "brewery", "winery", "coffee_shop"];
 const FAMILY_TYPES = ["amusement_park", "zoo", "aquarium", "playground", "park", "museum", "water_park", "childrens_camp"];
-const TYPE_INTERESTS: [string, Interest][] = [
+export const TYPE_INTERESTS: [string, Interest][] = [
   ["park", "nature"],
   ["scenic_spot", "nature"],
   ["hiking_area", "adventure"],
@@ -64,7 +64,7 @@ const PRICE_LEVEL_ESTIMATE: Record<string, number> = {
   PRICE_LEVEL_VERY_EXPENSIVE: 90,
 };
 
-interface GPlace {
+export interface GPlace {
   id: string;
   displayName?: { text?: string };
   formattedAddress?: string;
@@ -90,7 +90,7 @@ const seconds = (d?: string) => {
   return Number.isFinite(n) ? n : null;
 };
 
-class GatewayError extends Error {
+export class GatewayError extends Error {
   constructor(
     public status: number,
     message: string,
@@ -99,7 +99,7 @@ class GatewayError extends Error {
   }
 }
 
-async function gatewayPost(path: string, body: unknown, fieldMask: string, keys: { lovable: string; maps: string }) {
+export async function gatewayPost(path: string, body: unknown, fieldMask: string, keys: { lovable: string; maps: string }) {
   const res = await fetch(`${GATEWAY_URL}${path}`, {
     method: "POST",
     headers: {
@@ -137,7 +137,7 @@ function buildQueries(interests: Interest[]): QuerySpec[] {
   return list.slice(0, MAX_QUERIES);
 }
 
-function costFor(p: GPlace): { cost: number; source: CostSource } {
+export function costFor(p: GPlace): { cost: number; source: CostSource } {
   const start = Number(p.priceRange?.startPrice?.units);
   const end = Number(p.priceRange?.endPrice?.units);
   if (Number.isFinite(start) && start >= 0) {
