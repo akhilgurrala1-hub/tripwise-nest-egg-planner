@@ -20,6 +20,8 @@
 ## Later (waiting on decisions or credentials)
 - [ ] AI that learns preferences from past trips — after saved trips
 - [ ] Credit card & membership perks (Chase Sapphire, Priority Pass lounges, Costco Travel) — needs: which cards/memberships first; perk terms need a maintained source
-- [ ] Real hotel/flight prices — needs a travel-pricing provider (e.g. Amadeus, Duffel)
+- [x] Real places (sights, restaurants, ratings, Maps links) in the itinerary for signed-in users
+- [ ] Real hotel/flight prices — needs a SerpApi key (Google Hotels/Flights); user declined the key request for now
+- [ ] Real gas prices — needs a free EIA key; user declined the key request for now
 - [ ] Reviews (hotels, restaurants, malls) incl. Reddit threads — needs: reviews provider; Reddit API access/terms
 - [ ] Booking flows — needs: booking partner and payments decision
