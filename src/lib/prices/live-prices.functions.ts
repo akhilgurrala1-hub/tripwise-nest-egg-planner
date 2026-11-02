@@ -18,7 +18,7 @@ const inputSchema = z
     originAirport: z.string().regex(/^([A-Z]{3})?$/),
     destinationAirport: z.string().regex(/^([A-Z]{3})?$/),
   })
-  .refine((d) => d.endDate > d.startDate, { message: "Check-out must be after check-in" });
+  .refine((d) => d.endDate >= d.startDate, { message: "The trip must end on or after its start date" });
 
 /** Signed-in only: each call spends paid price searches, so it runs on an explicit button press. */
 export const getLivePrices = createServerFn({ method: "POST" })

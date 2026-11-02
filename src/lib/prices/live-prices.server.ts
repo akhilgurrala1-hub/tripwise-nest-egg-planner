@@ -203,7 +203,11 @@ export async function fetchLivePrices(req: LivePricesRequest): Promise<LivePrice
 
   const [gas, hotels, flights] = await Promise.allSettled([
     eia ? gasQuote(req.destination, eia) : missing("Gas prices"),
-    serp ? hotelQuote(req, serp) : missing("Hotel prices"),
+    req.endDate <= req.startDate
+      ? Promise.resolve(null)
+      : serp
+        ? hotelQuote(req, serp)
+        : missing("Hotel prices"),
     req.includeFlights ? (serp ? flightQuote(req, serp) : missing("Flight prices")) : Promise.resolve(null),
   ]);
   for (const r of [gas, hotels, flights]) if (r.status === "rejected") notes.push(reason(r));
