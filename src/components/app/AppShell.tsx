@@ -1,6 +1,7 @@
-import { Link, useNavigate } from "@tanstack/react-router";
+import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import {
+  Bookmark,
   Compass,
   LayoutDashboard,
   LogOut,
@@ -8,14 +9,17 @@ import {
   Monitor,
   Moon,
   Route as RouteIcon,
+  Settings2,
   Sun,
+  Ticket,
   UserRound,
   Wallet,
   type LucideIcon,
 } from "lucide-react";
 import type { ReactNode } from "react";
 
-import { PriceSourceBadge } from "./bits";
+import { LogoMark } from "./Intro";
+import { useActiveIndicator } from "./motion";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
@@ -45,77 +49,99 @@ const NAV: {
 
 export function AppShell({ children }: { children: ReactNode }) {
   const { trip } = useTrip();
+  const pathname = useRouterState({ select: (r) => r.location.pathname });
   // Route stops only make sense on a road trip, so the tab appears only for one.
   const nav = NAV.filter((n) => n.to !== "/road-trip" || trip.setup.tripType === "road-trip");
+  const active = nav.find((n) => n.to === pathname)?.to;
+  const desk = useActiveIndicator<HTMLDivElement>([active, nav.length]);
+  const mobile = useActiveIndicator<HTMLDivElement>([active, nav.length]);
+
   return (
     <div className="min-h-screen bg-background">
-      <header className="glass sticky top-0 z-40 border-b border-border/70">
+      <header className="glass sticky top-0 z-40 border-b border-border">
         <div className="mx-auto flex h-14 max-w-6xl items-center justify-between gap-4 px-4">
-          <Link to="/" className="flex items-center gap-2">
-            <span className="grid size-8 place-items-center rounded-full bg-gradient-sunset text-sunset-foreground shadow-glow">
-              <Compass className="size-4" />
-            </span>
-            <span className="font-display text-xl font-semibold tracking-tight text-foreground">
+          <Link to="/" className="flex items-center gap-2 rounded-md" aria-label="Waypoint home">
+            <LogoMark className="size-6 text-foreground" />
+            <span className="text-[15px] font-semibold tracking-tight text-foreground">
               Waypoint
             </span>
           </Link>
-          <nav className="hidden items-center gap-1 md:flex">
-            {nav.map((item) => (
-              <Link
-                key={item.to}
-                to={item.to}
-                activeOptions={{ exact: true }}
-                className="rounded-full px-4 py-2 text-sm font-semibold text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
-                activeProps={{ className: "bg-secondary text-foreground" }}
-              >
-                {item.label}
-              </Link>
-            ))}
+          <nav className="hidden md:block" aria-label="Main">
+            <div ref={desk.ref} className="relative flex items-center gap-0.5">
+              <span
+                aria-hidden
+                className={cn(
+                  "pointer-events-none absolute top-0 left-0 rounded-md bg-secondary transition-[transform,width,opacity] duration-300 ease-[var(--ease-out-quint)]",
+                  desk.ready && active ? "opacity-100" : "opacity-0",
+                )}
+                style={desk.style}
+              />
+              {nav.map((item) => (
+                <Link
+                  key={item.to}
+                  to={item.to}
+                  data-active={item.to === active}
+                  className={cn(
+                    "relative rounded-md px-3 py-1.5 text-sm font-medium transition-colors",
+                    item.to === active
+                      ? "text-foreground"
+                      : "text-muted-foreground hover:text-foreground",
+                  )}
+                >
+                  {item.label}
+                </Link>
+              ))}
+            </div>
           </nav>
-          <div className="flex items-center gap-2">
-            <PriceSourceBadge className="hidden lg:inline-flex" />
+          <div className="flex items-center gap-1.5">
             <ThemeToggle />
             <AccountButton />
           </div>
         </div>
       </header>
 
-      <main className="pb-28 md:pb-16">{children}</main>
+      <main key={pathname} className="animate-page pb-28 md:pb-20">
+        {children}
+      </main>
 
       <nav
-        className="glass pb-safe fixed inset-x-0 bottom-0 z-40 border-t border-border/70 md:hidden"
+        className="glass pb-safe fixed inset-x-0 bottom-0 z-40 border-t border-border md:hidden"
         aria-label="Main"
       >
         <div
+          ref={mobile.ref}
           className={cn(
-            "mx-auto grid max-w-lg px-1 pt-1.5",
+            "relative mx-auto grid max-w-lg px-2 pt-1",
             nav.length === 5 ? "grid-cols-5" : "grid-cols-4",
           )}
         >
-          {nav.map(({ to, label, icon: Icon }) => (
-            <Link
-              key={to}
-              to={to}
-              activeOptions={{ exact: true }}
-              className="flex flex-col items-center gap-0.5 rounded-xl py-1.5 text-[11px] font-semibold"
-            >
-              {({ isActive }) => (
-                <>
-                  <span
-                    className={cn(
-                      "grid h-8 w-11 place-items-center rounded-full transition-colors",
-                      isActive ? "bg-secondary text-primary" : "text-muted-foreground",
-                    )}
-                  >
-                    <Icon className="size-5" />
-                  </span>
-                  <span className={isActive ? "text-primary" : "text-muted-foreground"}>
-                    {label}
-                  </span>
-                </>
-              )}
-            </Link>
-          ))}
+          <span
+            aria-hidden
+            className={cn(
+              "pointer-events-none absolute top-0 left-0 transition-[transform,width,opacity] duration-300 ease-[var(--ease-out-quint)]",
+              mobile.ready && active ? "opacity-100" : "opacity-0",
+            )}
+            style={mobile.style ? { ...mobile.style, height: 2 } : undefined}
+          >
+            <span className="mx-auto block h-0.5 w-6 rounded-full bg-foreground" />
+          </span>
+          {nav.map(({ to, label, icon: Icon }) => {
+            const isActive = to === active;
+            return (
+              <Link
+                key={to}
+                to={to}
+                data-active={isActive}
+                className={cn(
+                  "flex flex-col items-center gap-1 py-2 text-[11px] font-medium transition-colors active:scale-95",
+                  isActive ? "text-foreground" : "text-muted-foreground",
+                )}
+              >
+                <Icon className="size-5" strokeWidth={isActive ? 2.2 : 1.8} />
+                {label}
+              </Link>
+            );
+          })}
         </div>
       </nav>
     </div>
@@ -156,6 +182,22 @@ function AccountButton() {
         <DropdownMenuLabel className="truncate text-xs font-normal text-muted-foreground">
           {user.email}
         </DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem asChild>
+          <Link to="/trips">
+            <Bookmark className="size-4" /> Saved trips
+          </Link>
+        </DropdownMenuItem>
+        <DropdownMenuItem asChild>
+          <Link to="/bookings">
+            <Ticket className="size-4" /> Bookings & live prices
+          </Link>
+        </DropdownMenuItem>
+        <DropdownMenuItem asChild>
+          <Link to="/profile">
+            <Settings2 className="size-4" /> Profile & preferences
+          </Link>
+        </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={signOut}>
           <LogOut className="size-4" /> Sign out

@@ -9,15 +9,14 @@ import {
   Plane,
   Plus,
   Ship,
-  Sparkles,
   TrainFront,
   type LucideIcon,
 } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 
-import heroImg from "@/assets/hero-roadtrip.jpg";
-import { DemoBadge, NumberField } from "@/components/app/bits";
+import { NumberField } from "@/components/app/bits";
+import { Segmented, stagger } from "@/components/app/motion";
 import { PlaceInput } from "@/components/app/PlaceInput";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -171,166 +170,99 @@ function Welcome() {
     navigate({ to: "/dashboard" });
   };
 
+  const dest = getDestination(form.destinationId, form.customDestination);
+  const destLabel =
+    form.destinationId === CUSTOM_DESTINATION_ID
+      ? form.customDestination.trim() || "Somewhere else"
+      : dest.name;
+
   return (
-    <div className="mx-auto max-w-6xl lg:grid lg:grid-cols-[1fr_1.15fr] lg:gap-10 lg:px-4 lg:pt-8">
-      {/* Hero */}
-      <section className="relative lg:sticky lg:top-22 lg:h-[calc(100vh-7rem)]">
-        <div className="relative h-[46vh] min-h-[320px] overflow-hidden lg:h-full lg:rounded-4xl lg:shadow-lift">
-          <img
-            src={heroImg}
-            alt="Vintage convertible driving a coastal highway at sunset"
-            width={1280}
-            height={1600}
-            className="absolute inset-0 h-full w-full object-cover"
-          />
-          <div className="absolute inset-0 bg-hero-fade" />
-          <div className="absolute inset-x-0 bottom-0 p-6 pb-14 lg:p-10">
-            <p className="mb-3 inline-flex items-center gap-1.5 rounded-full bg-on-image/20 px-3 py-1 text-xs font-semibold text-on-image backdrop-blur">
-              <Sparkles className="size-3.5" /> AI-powered trip planning
-            </p>
-            <h1 className="font-display text-4xl leading-[1.05] font-semibold text-on-image sm:text-5xl lg:text-6xl">
-              Big adventures,
-              <br />
-              <em className="font-medium">smart budgets.</em>
-            </h1>
-            <p className="mt-3 max-w-sm text-sm text-on-image/85 sm:text-base">
-              Road trips, getaways and staycations — planned to the dollar, with a safety net built
-              in.
-            </p>
-          </div>
-        </div>
-      </section>
+    <form onSubmit={submit} className="mx-auto max-w-2xl px-4 pt-10 pb-10 sm:pt-16">
+      <header className="animate-rise">
+        <p className="eyebrow">New trip</p>
+        <h1 className="mt-2 text-[34px] leading-[1.1] font-semibold sm:text-[44px]">
+          Plan a trip, to the dollar.
+        </h1>
+        <p className="mt-3 max-w-md text-[15px] text-muted-foreground">
+          Pick how you're traveling, where and when. Waypoint builds the budget, keeps a reserve
+          aside and lays out each day.
+        </p>
+      </header>
 
-      {/* Form */}
-      <form
-        onSubmit={submit}
-        className="animate-rise relative -mt-8 space-y-8 rounded-t-4xl bg-background px-4 pt-7 pb-6 sm:px-6 lg:mt-0 lg:rounded-none lg:px-0 lg:pt-0"
-      >
-        <div className="flex items-center justify-between gap-3">
-          <div>
-            <p className="text-xs font-semibold tracking-[0.16em] text-muted-foreground uppercase">
-              Plan a trip
-            </p>
-            <h2 className="font-display text-3xl font-semibold">Your adventure starts here.</h2>
-          </div>
-          <DemoBadge />
-        </div>
-
-        {/* Trip type */}
-        <Field label="What kind of trip?">
-          <div className="grid grid-cols-2 gap-2 sm:grid-cols-5">
-            {TRIP_TYPES.map((t) => {
+      <div className="mt-12 divide-y divide-border">
+        <Section n={1} title="Trip" style={stagger(1)}>
+          <Segmented
+            ariaLabel="Trip type"
+            size="lg"
+            columns={5}
+            value={form.tripType}
+            onChange={setTripType}
+            options={TRIP_TYPES.map((t) => {
               const Icon = TRIP_ICONS[t.id];
-              return (
-                <ChoiceCard
-                  key={t.id}
-                  active={form.tripType === t.id}
-                  onClick={() => setTripType(t.id)}
-                >
-                  <Icon className="mb-1 size-5 text-sunset" aria-hidden />
-                  <span className="text-sm font-bold">{t.label}</span>
-                  <span className="text-[11px] leading-tight text-muted-foreground">{t.blurb}</span>
-                </ChoiceCard>
-              );
+              return {
+                value: t.id,
+                label: t.label,
+                icon: <Icon className="size-[18px]" strokeWidth={1.7} />,
+              };
             })}
-          </div>
+          />
+          <p key={form.tripType} className="animate-pop mt-2.5 text-[13px] text-muted-foreground">
+            {typeInfo.blurb}.
+          </p>
           {modes.length > 1 && (
-            <div className="mt-3">
-              <p className="mb-2 text-xs font-semibold text-muted-foreground">
-                {typeInfo.modeQuestion}
-              </p>
-              <div className="flex flex-wrap gap-2">
-                {modes.map((m) => {
-                  const active = form.transportMode === m.id;
-                  return (
-                    <button
-                      key={m.id}
-                      type="button"
-                      aria-pressed={active}
-                      onClick={() => update({ transportMode: m.id })}
-                      className={cn(
-                        "min-h-11 rounded-full border px-4 py-2 text-sm font-semibold transition-all",
-                        active
-                          ? "border-primary bg-primary text-primary-foreground"
-                          : "border-border bg-card text-foreground hover:border-primary/40",
-                      )}
-                    >
-                      {m.label}
-                    </button>
-                  );
-                })}
-              </div>
+            <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2">
+              <p className="text-sm text-muted-foreground">{typeInfo.modeQuestion}</p>
+              <Segmented
+                ariaLabel={typeInfo.modeQuestion}
+                size="sm"
+                value={form.transportMode}
+                onChange={(m) => update({ transportMode: m })}
+                options={modes.map((m) => ({ value: m.id, label: m.label }))}
+              />
             </div>
           )}
-        </Field>
+        </Section>
 
-        {/* Destination */}
-        <Field
-          label={
+        <Section
+          n={2}
+          title={
             form.tripType === "cruise"
-              ? "Which cruise?"
+              ? "Cruise"
               : form.tripType === "staycation"
-                ? "Where's home base?"
-                : "Where are you going?"
+                ? "Home base"
+                : "Destination"
           }
-          hint="Example places with demo prices"
+          aside="Example places, demo prices"
+          style={stagger(2)}
         >
-          <div className="-mx-4 flex snap-x gap-3 overflow-x-auto px-4 pb-2 sm:mx-0 sm:grid sm:grid-cols-2 sm:overflow-visible sm:px-0">
-            {orderedDestinations.map((d) => {
-              const active = form.destinationId === d.id;
-              return (
-                <button
-                  type="button"
-                  key={d.id}
-                  onClick={() => update({ destinationId: d.id })}
-                  className={cn(
-                    "relative w-56 shrink-0 snap-start rounded-2xl border p-4 text-left transition-all sm:w-auto",
-                    active
-                      ? "border-primary bg-card shadow-lift ring-2 ring-primary/20"
-                      : "border-border bg-card/60 hover:bg-card",
-                  )}
-                >
-                  {active && (
-                    <span className="absolute top-3 right-3 grid size-5 place-items-center rounded-full bg-primary text-primary-foreground">
-                      <Check className="size-3" />
-                    </span>
-                  )}
-                  <p className="text-[11px] font-semibold tracking-wider text-muted-foreground uppercase">
-                    {d.region}
-                  </p>
-                  <p className="mt-0.5 font-display text-lg leading-tight font-semibold">
-                    {d.name}
-                  </p>
-                  <p className="mt-1 text-xs text-muted-foreground">{d.tagline}</p>
-                  <p className="tabular mt-2 text-xs font-semibold text-primary">
-                    {d.cruisePerNight
-                      ? `from ${formatMoney(d.cruisePerNight.budget)}/person/night`
-                      : d.nightly.budget === 0
-                        ? "No lodging needed"
-                        : `from ${formatMoney(d.nightly.budget)}/night`}
-                  </p>
-                </button>
-              );
-            })}
-            <button
-              type="button"
+          <div className="grid gap-2 sm:grid-cols-2" role="radiogroup" aria-label="Destination">
+            {orderedDestinations.map((d) => (
+              <OptionRow
+                key={d.id}
+                active={form.destinationId === d.id}
+                onClick={() => update({ destinationId: d.id })}
+                title={d.name}
+                meta={d.region}
+                detail={
+                  d.cruisePerNight
+                    ? `from ${formatMoney(d.cruisePerNight.budget)} / person / night`
+                    : d.nightly.budget === 0
+                      ? "No lodging needed"
+                      : `from ${formatMoney(d.nightly.budget)} / night`
+                }
+              />
+            ))}
+            <OptionRow
+              active={form.destinationId === CUSTOM_DESTINATION_ID}
               onClick={() => update({ destinationId: CUSTOM_DESTINATION_ID })}
-              className={cn(
-                "w-56 shrink-0 snap-start rounded-2xl border border-dashed p-4 text-left transition-all sm:w-auto",
-                form.destinationId === CUSTOM_DESTINATION_ID
-                  ? "border-primary bg-card ring-2 ring-primary/20"
-                  : "border-input bg-transparent hover:bg-card/60",
-              )}
-            >
-              <MapPin className="size-5 text-sunset" />
-              <p className="mt-1 font-display text-lg font-semibold">Somewhere else</p>
-              <p className="text-xs text-muted-foreground">
-                Search any real place — live weather & places, demo prices.
-              </p>
-            </button>
+              title="Somewhere else"
+              meta="Any real place"
+              detail="Live weather and places"
+              icon={<MapPin className="size-4" />}
+            />
           </div>
           {form.destinationId === CUSTOM_DESTINATION_ID && (
-            <div className="mt-3">
+            <div className="animate-pop mt-3">
               <PlaceInput
                 autoFocus
                 aria-label="Destination"
@@ -341,104 +273,105 @@ function Welcome() {
                 }
                 value={form.customDestination}
                 onChange={(v) => update({ customDestination: v })}
-                className="h-11 rounded-xl bg-card"
+                className="h-11"
               />
+              {destError && <p className="mt-1.5 text-xs text-destructive">{destError}</p>}
             </div>
           )}
-          <div className="mt-3">
-            <Label htmlFor="origin" className="text-xs text-muted-foreground">
+          <div className="mt-5">
+            <Label htmlFor="origin" className="text-[13px] font-normal text-muted-foreground">
               {form.tripType === "staycation"
-                ? "Your home city (for live weather & places)"
+                ? "Your home city — for live weather and places"
                 : "Starting from (optional)"}
             </Label>
-            <div className="mt-1">
+            <div className="mt-1.5">
               <PlaceInput
                 id="origin"
-                placeholder={
-                  form.tripType === "staycation" ? "Your city — we'll plan around it" : "Your city"
-                }
+                placeholder="City, e.g. Charlotte, NC"
                 value={form.origin}
                 onChange={(v) => update({ origin: v })}
-                className="h-11 rounded-xl bg-card"
+                className="h-11"
               />
             </div>
           </div>
-        </Field>
+        </Section>
 
-        {/* Dates + travelers */}
-        <div className="grid gap-6 sm:grid-cols-[1.4fr_1fr]">
-          <Field label="When?" error={dateError}>
-            <div className="grid grid-cols-2 gap-2">
-              <Input
-                type="date"
-                aria-label="Start date"
-                value={form.startDate}
-                onChange={(e) => update({ startDate: e.target.value })}
-                className="h-11 rounded-xl bg-card"
-              />
-              <Input
-                type="date"
-                aria-label="End date"
-                value={form.endDate}
-                min={form.startDate}
-                onChange={(e) => update({ endDate: e.target.value })}
-                className="h-11 rounded-xl bg-card"
-              />
-            </div>
-            {!dateError && (
-              <p className="mt-1.5 text-xs text-muted-foreground">
-                {shape.days} day{shape.days > 1 ? "s" : ""} · {shape.nights} night
-                {shape.nights === 1 ? "" : "s"}
+        <Section n={3} title="When & who" style={stagger(3)}>
+          <div className="grid gap-4 sm:grid-cols-[1fr_auto]">
+            <div>
+              <div className="grid grid-cols-2 gap-2">
+                <Input
+                  type="date"
+                  aria-label="Start date"
+                  value={form.startDate}
+                  onChange={(e) => update({ startDate: e.target.value })}
+                  className="h-11"
+                />
+                <Input
+                  type="date"
+                  aria-label="End date"
+                  value={form.endDate}
+                  min={form.startDate}
+                  onChange={(e) => update({ endDate: e.target.value })}
+                  className="h-11"
+                />
+              </div>
+              <p
+                className={cn(
+                  "mt-1.5 text-xs",
+                  dateError ? "text-destructive" : "text-muted-foreground",
+                )}
+              >
+                {dateError ||
+                  `${shape.days} day${shape.days > 1 ? "s" : ""}, ${shape.nights} night${shape.nights === 1 ? "" : "s"}`}
               </p>
-            )}
-          </Field>
-          <Field label="Who's coming?">
-            <div className="flex h-11 items-center justify-between rounded-xl border border-input bg-card px-1.5">
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                className="size-8"
-                aria-label="Fewer travelers"
-                onClick={() => update({ travelers: Math.max(1, form.travelers - 1) })}
-              >
-                <Minus />
-              </Button>
-              <span className="tabular text-base font-bold">{form.travelers}</span>
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                className="size-8"
-                aria-label="More travelers"
-                onClick={() => update({ travelers: Math.min(12, form.travelers + 1) })}
-              >
-                <Plus />
-              </Button>
             </div>
-          </Field>
-        </div>
-
-        {/* Style */}
-        <Field label="Travel style">
-          <div className="grid grid-cols-3 gap-2">
-            {TRAVEL_STYLES.map((s) => (
-              <ChoiceCard
-                key={s.id}
-                active={form.style === s.id}
-                onClick={() => update({ style: s.id })}
-                tone={s.id === "luxury" ? "gold" : "default"}
-              >
-                <span className="text-sm font-bold">{s.label}</span>
-                <span className="text-[11px] leading-tight text-muted-foreground">{s.blurb}</span>
-              </ChoiceCard>
-            ))}
+            <div>
+              <div className="flex h-11 items-center gap-1 rounded-lg border border-input bg-card px-1">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="size-9"
+                  aria-label="Fewer travelers"
+                  disabled={form.travelers <= 1}
+                  onClick={() => update({ travelers: Math.max(1, form.travelers - 1) })}
+                >
+                  <Minus />
+                </Button>
+                <span
+                  key={form.travelers}
+                  className="animate-pop tabular w-16 text-center text-[15px] font-medium"
+                >
+                  {form.travelers} {form.travelers === 1 ? "person" : "people"}
+                </span>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="size-9"
+                  aria-label="More travelers"
+                  disabled={form.travelers >= 12}
+                  onClick={() => update({ travelers: Math.min(12, form.travelers + 1) })}
+                >
+                  <Plus />
+                </Button>
+              </div>
+            </div>
           </div>
-        </Field>
+        </Section>
 
-        {/* Interests */}
-        <Field label="What do you love?" hint="Pick a few">
-          <div className="flex flex-wrap gap-2">
+        <Section n={4} title="Style" style={stagger(4)}>
+          <Segmented
+            ariaLabel="Travel style"
+            columns={3}
+            size="lg"
+            value={form.style}
+            onChange={(v) => update({ style: v })}
+            options={TRAVEL_STYLES.map((t) => ({ value: t.id, label: t.label, hint: t.blurb }))}
+          />
+          <p className="mt-5 mb-2.5 text-sm text-muted-foreground">Interests</p>
+          <div className="flex flex-wrap gap-1.5">
             {INTERESTS.map((i) => {
               const active = form.interests.includes(i.id);
               return (
@@ -448,140 +381,196 @@ function Welcome() {
                   aria-pressed={active}
                   onClick={() => toggleInterest(i.id)}
                   className={cn(
-                    "rounded-full border px-3.5 py-2 text-sm font-semibold transition-all",
+                    "inline-flex h-9 items-center gap-1.5 rounded-lg border px-3 text-[13px] font-medium transition-[background-color,border-color,color,transform] duration-150 active:scale-[0.97]",
                     active
-                      ? "border-primary bg-primary text-primary-foreground"
-                      : "border-border bg-card text-foreground hover:border-primary/40",
+                      ? "border-foreground bg-foreground text-background"
+                      : "border-border bg-card text-foreground hover:border-muted-foreground/40",
                   )}
                 >
+                  <Check
+                    className={cn(
+                      "size-3.5 transition-[width,opacity] duration-200",
+                      active ? "w-3.5 opacity-100" : "-mr-1.5 w-0 opacity-0",
+                    )}
+                    aria-hidden
+                  />
                   {i.label}
                 </button>
               );
             })}
           </div>
-        </Field>
+        </Section>
 
-        {/* Budget */}
-        <Field label="What's your budget?" hint="Your reserve comes out of this">
-          <NumberField
-            aria-label="Total budget"
-            prefix="$"
-            value={form.totalBudget}
-            onChange={setBudget}
-            step={50}
-            className="h-14 rounded-2xl"
-            inputClassName="text-2xl font-display"
-          />
-          <div className="mt-2 flex flex-wrap gap-2">
-            {BUDGET_PRESETS.map((p) => (
-              <button
-                key={p}
-                type="button"
-                onClick={() => setBudget(p)}
+        <Section n={5} title="Budget" style={stagger(5)}>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div>
+              <Label className="text-[13px] font-normal text-muted-foreground">Total budget</Label>
+              <NumberField
+                aria-label="Total budget"
+                prefix="$"
+                value={form.totalBudget}
+                onChange={setBudget}
+                step={50}
+                className="mt-1.5 h-12"
+                inputClassName="text-xl"
+              />
+              <div className="mt-2 flex flex-wrap gap-1.5">
+                {BUDGET_PRESETS.map((p) => (
+                  <button
+                    key={p}
+                    type="button"
+                    onClick={() => setBudget(p)}
+                    className={cn(
+                      "tabular h-7 rounded-md border px-2 text-xs font-medium transition-colors active:scale-[0.97]",
+                      form.totalBudget === p
+                        ? "border-foreground text-foreground"
+                        : "border-border text-muted-foreground hover:text-foreground",
+                    )}
+                  >
+                    {formatMoney(p)}
+                  </button>
+                ))}
+                <button
+                  type="button"
+                  onClick={() => setBudget(suggested)}
+                  className="tabular h-7 rounded-md px-2 text-xs font-medium text-primary transition-colors hover:bg-accent active:scale-[0.97]"
+                >
+                  Suggested {formatMoney(suggested)}
+                </button>
+              </div>
+            </div>
+            <div>
+              <Label className="text-[13px] font-normal text-muted-foreground">
+                Protected reserve
+              </Label>
+              <NumberField
+                aria-label="Emergency reserve"
+                prefix="$"
+                step={25}
+                value={form.emergencyFund}
+                className="mt-1.5 h-12"
+                inputClassName="text-xl"
+                onChange={(n) => {
+                  reserveTouched.current = true;
+                  update({ emergencyFund: n });
+                }}
+              />
+              <p
                 className={cn(
-                  "tabular rounded-full border px-3 py-1.5 text-xs font-semibold transition-colors",
-                  form.totalBudget === p
-                    ? "border-primary bg-secondary"
-                    : "border-border bg-card hover:bg-secondary",
+                  "mt-2 text-xs",
+                  reserveError ? "text-destructive" : "text-muted-foreground",
                 )}
               >
-                {formatMoney(p)}
-              </button>
-            ))}
+                {reserveError || "Set aside for emergencies. Never counted as spending money."}
+              </p>
+            </div>
           </div>
-          <div className="mt-3 flex items-center justify-between gap-3 rounded-2xl bg-sunset-soft px-4 py-3">
-            <p className="text-sm">
-              <span className="text-muted-foreground">Suggested for this trip</span>{" "}
-              <span className="tabular font-bold">{formatMoney(suggested)}</span>
+        </Section>
+      </div>
+
+      {/* Summary + action, pinned while scrolling */}
+      <div className="sticky bottom-20 z-20 mt-6 md:bottom-4">
+        <div className="glass flex items-center justify-between gap-4 rounded-xl border border-border p-2 pl-4 shadow-lift">
+          <div className="min-w-0 text-sm">
+            <p className="truncate font-medium">{destLabel}</p>
+            <p className="tabular truncate text-xs text-muted-foreground">
+              {tripTypeInfo(form.tripType).label} · {shape.days} day{shape.days > 1 ? "s" : ""} ·{" "}
+              {formatMoney(Math.max(0, form.totalBudget - form.emergencyFund))} to spend
             </p>
-            <Button type="button" size="sm" variant="outline" onClick={() => setBudget(suggested)}>
-              Use
-            </Button>
           </div>
-        </Field>
-
-        <Field
-          label="How much should stay protected?"
-          hint="A little extra set aside for peace of mind"
-          error={reserveError}
-        >
-          <NumberField
-            aria-label="Emergency reserve"
-            prefix="$"
-            step={25}
-            value={form.emergencyFund}
-            onChange={(n) => {
-              reserveTouched.current = true;
-              update({ emergencyFund: n });
-            }}
-          />
-          <p className="tabular mt-1.5 text-xs text-muted-foreground">
-            That leaves {formatMoney(Math.max(0, form.totalBudget - form.emergencyFund))} to spend
-            on the trip itself.
-          </p>
-        </Field>
-
-        <Button type="submit" variant="hero" size="lg" className="w-full">
-          Plan my trip <ArrowRight />
-        </Button>
-        <p className="text-center text-xs text-muted-foreground">
-          Weather is live. Sign in for real places and routes. Prices are demo estimates until you
-          check live prices. No bookings or payments.
-        </p>
-      </form>
-    </div>
+          <Button type="submit" variant="hero" size="lg" className="shrink-0 px-5">
+            Plan trip <ArrowRight />
+          </Button>
+        </div>
+      </div>
+      <p className="mt-4 text-center text-xs text-muted-foreground">
+        Weather is live. Sign in for real places and routes. Prices are demo estimates until you
+        check live prices.
+      </p>
+    </form>
   );
 }
 
-function Field({
-  label,
-  hint,
-  error,
+function Section({
+  n,
+  title,
+  aside,
   children,
+  style,
 }: {
-  label: string;
-  hint?: string;
-  error?: string;
+  n: number;
+  title: string;
+  aside?: string;
   children: React.ReactNode;
+  style?: React.CSSProperties;
 }) {
   return (
-    <fieldset className="min-w-0">
-      <div className="mb-2.5 flex items-baseline justify-between gap-2">
-        <legend className="text-sm font-bold text-foreground">{label}</legend>
-        {hint && <span className="text-xs text-muted-foreground">{hint}</span>}
+    <section
+      className="animate-rise grid gap-4 py-8 first:pt-0 sm:grid-cols-[120px_1fr] sm:gap-8"
+      style={style}
+    >
+      <div className="flex items-baseline gap-3 sm:block">
+        <p className="tabular font-mono text-xs text-muted-foreground">
+          {String(n).padStart(2, "0")}
+        </p>
+        <h2 className="text-[15px] font-semibold sm:mt-1">{title}</h2>
+        {aside && <p className="ml-auto text-xs text-muted-foreground sm:mt-1 sm:ml-0">{aside}</p>}
       </div>
-      {children}
-      {error && <p className="mt-1.5 text-xs font-semibold text-destructive">{error}</p>}
-    </fieldset>
+      <div className="min-w-0">{children}</div>
+    </section>
   );
 }
 
-function ChoiceCard({
+function OptionRow({
   active,
   onClick,
-  children,
-  tone = "default",
+  title,
+  meta,
+  detail,
+  icon,
 }: {
   active: boolean;
   onClick: () => void;
-  children: React.ReactNode;
-  tone?: "default" | "gold";
+  title: string;
+  meta: string;
+  detail: string;
+  icon?: React.ReactNode;
 }) {
   return (
     <button
       type="button"
-      aria-pressed={active}
+      role="radio"
+      aria-checked={active}
       onClick={onClick}
       className={cn(
-        "flex flex-col items-start gap-0.5 rounded-2xl border p-3 text-left transition-all",
+        "group relative flex items-start gap-3 rounded-xl border p-3.5 text-left transition-[border-color,background-color,box-shadow,transform] duration-200 active:scale-[0.99]",
         active
-          ? tone === "gold"
-            ? "border-gold bg-gold-soft shadow-soft ring-2 ring-gold/30"
-            : "border-primary bg-card shadow-soft ring-2 ring-primary/20"
-          : "border-border bg-card/60 hover:bg-card",
+          ? "border-primary bg-card ring-3 ring-primary/12"
+          : "border-border bg-card hover:border-muted-foreground/40",
       )}
     >
-      {children}
+      <span
+        className={cn(
+          "mt-0.5 grid size-4 shrink-0 place-items-center rounded-full border transition-colors duration-200",
+          active ? "border-primary bg-primary" : "border-input",
+        )}
+        aria-hidden
+      >
+        <span
+          className={cn(
+            "size-1.5 rounded-full bg-primary-foreground transition-transform duration-200",
+            active ? "scale-100" : "scale-0",
+          )}
+        />
+      </span>
+      <span className="min-w-0 flex-1">
+        <span className="flex items-center gap-1.5 text-sm font-medium">
+          {icon}
+          {title}
+        </span>
+        <span className="mt-0.5 block text-xs text-muted-foreground">{meta}</span>
+        <span className="tabular mt-2 block text-xs text-foreground/80">{detail}</span>
+      </span>
     </button>
   );
 }

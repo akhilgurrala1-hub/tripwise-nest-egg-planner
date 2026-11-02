@@ -10,6 +10,7 @@ import {
   PriceSourceBadge,
 } from "@/components/app/bits";
 import { LivePricesPanel } from "@/components/app/LivePricesPanel";
+import { AnimatedMoney, Segmented, stagger } from "@/components/app/motion";
 import { PageHeader } from "@/components/app/TripHeader";
 import {
   Accordion,
@@ -64,17 +65,17 @@ function BudgetPage() {
 
   return (
     <div>
-      <PageHeader eyebrow="Budget" title="Let's make the most of your budget">
+      <PageHeader eyebrow="Spending plan" title="Budget">
         <PriceSourceBadge />
       </PageHeader>
 
-      <div className="mx-auto mt-6 grid max-w-6xl grid-cols-1 gap-6 px-4 lg:grid-cols-[minmax(0,1fr)_360px]">
-        <div className="min-w-0 space-y-6 lg:order-1">
+      <div className="mx-auto mt-8 grid max-w-6xl grid-cols-1 gap-4 px-4 lg:grid-cols-[minmax(0,1fr)_340px]">
+        <div className="min-w-0 space-y-4 lg:order-1">
           {/* Summary */}
-          <section className="surface-card p-5">
-            <div className="grid gap-4 sm:grid-cols-[1.2fr_1fr]">
+          <section className="surface-card animate-rise p-5">
+            <div className="grid gap-5 sm:grid-cols-[1fr_1.3fr] sm:items-end">
               <div>
-                <label htmlFor="total-budget" className="text-sm font-bold">
+                <label htmlFor="total-budget" className="text-[13px] text-muted-foreground">
                   Total trip budget
                 </label>
                 <NumberField
@@ -83,31 +84,27 @@ function BudgetPage() {
                   step={50}
                   value={trip.setup.totalBudget}
                   onChange={tripActions.setTotalBudget}
-                  className="mt-2 h-14 rounded-2xl"
-                  inputClassName="font-display text-2xl"
+                  className="mt-2 h-12"
+                  inputClassName="text-xl"
                 />
               </div>
-              <dl className="grid grid-cols-2 gap-3 text-sm">
+              <dl className="grid grid-cols-2 gap-px overflow-hidden rounded-lg border border-border bg-border text-sm sm:grid-cols-4">
+                <Stat label="Reserve" value={totals.emergencyFund} />
+                <Stat label="To spend" value={totals.spendable} />
+                <Stat label="Planned" value={totals.planned} />
                 <Stat
-                  label="Protected reserve"
-                  value={formatMoney(totals.emergencyFund)}
-                  tone="shield"
-                />
-                <Stat label="Spending money" value={formatMoney(totals.spendable)} />
-                <Stat label="Planned so far" value={formatMoney(totals.planned)} />
-                <Stat
-                  label={totals.overBudget ? "Over by" : "Left to explore"}
-                  value={formatMoney(Math.abs(totals.remaining))}
+                  label={totals.overBudget ? "Over by" : "Left"}
+                  value={Math.abs(totals.remaining)}
                   tone={totals.overBudget ? "danger" : "success"}
                 />
               </dl>
             </div>
             <div className="mt-5">
-              <div className="h-2.5 overflow-hidden rounded-full bg-muted">
+              <div className="h-1.5 overflow-hidden rounded-full bg-muted">
                 <div
                   className={cn(
-                    "h-full rounded-full transition-all",
-                    totals.overBudget ? "bg-destructive" : "bg-gradient-sunset",
+                    "h-full rounded-full transition-[width] duration-500 ease-[var(--ease-out-quint)]",
+                    totals.overBudget ? "bg-destructive" : "bg-foreground",
                   )}
                   style={{
                     width: `${totals.percentUsed === null ? (totals.planned > 0 ? 100 : 0) : Math.min(100, totals.percentUsed)}%`,
@@ -121,54 +118,54 @@ function BudgetPage() {
             {totals.overBudget && <CutPlan />}
           </section>
 
-          <LivePricesPanel />
+          <TripTypeSwitcher />
 
           {/* Categories */}
-          <section>
-            <div className="mb-3 flex items-center justify-between">
-              <h2 className="font-display text-2xl font-semibold">Where your money goes</h2>
+          <section className="animate-rise" style={stagger(2)}>
+            <div className="mb-2.5 flex min-h-8 items-center justify-between">
+              <h2 className="text-[15px] font-semibold">Where your money goes</h2>
               {hasOverrides && (
                 <Button variant="ghost" size="sm" onClick={tripActions.resetToEstimates}>
-                  <RotateCcw /> Reset all
+                  <RotateCcw /> Reset custom amounts
                 </Button>
               )}
             </div>
-            <TripTypeSwitcher />
-            <Accordion type="multiple" className="space-y-2.5">
+            <Accordion type="multiple" className="surface-card overflow-hidden">
               {categoriesFor(trip.setup.tripType, trip.inputs.transportMode).map((cat) => (
                 <CategoryRow key={cat} cat={cat} />
               ))}
             </Accordion>
-            <p className="mt-3 text-xs text-muted-foreground">
-              Amounts marked “Estimate” use demo prices for {shape.days} day
+            <p className="mt-2.5 text-xs text-muted-foreground">
+              Unmarked amounts are estimates from demo prices for {shape.days} day
               {shape.days > 1 ? "s" : ""}, {shape.nights} night
               {shape.nights === 1 ? "" : "s"} and {shape.travelers} traveler
               {shape.travelers > 1 ? "s" : ""}. Open a category to tune the inputs or type your own
               amount.
             </p>
           </section>
+
+          <LivePricesPanel className="animate-rise" />
         </div>
 
         {/* Emergency fund */}
         <aside className="lg:order-2">
-          <section className="overflow-hidden rounded-3xl bg-gradient-ink p-5 text-ink-foreground shadow-lift lg:sticky lg:top-20">
+          <section className="surface-card animate-rise p-5 lg:sticky lg:top-20" style={stagger(1)}>
             <div className="flex items-center justify-between">
-              <span className="grid size-10 place-items-center rounded-full bg-ink-foreground/10">
-                <ShieldCheck className="size-5" />
-              </span>
-              <span className="inline-flex items-center gap-1 rounded-full bg-ink-foreground/10 px-2.5 py-1 text-xs font-semibold">
+              <h2 className="flex items-center gap-2 text-[15px] font-semibold">
+                <ShieldCheck className="size-4" strokeWidth={1.8} /> Emergency reserve
+              </h2>
+              <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
                 <Lock className="size-3" /> Protected
               </span>
             </div>
-            <h2 className="mt-4 font-display text-2xl font-semibold">Emergency reserve</h2>
-            <p className="mt-1 text-sm text-ink-foreground/75">
+            <p className="mt-2 text-[13px] leading-relaxed text-muted-foreground">
               A little extra set aside for peace of mind. It never counts as spending money — it's
               there for flat tires, urgent care or a surprise night's stay.
             </p>
-            <p className="tabular mt-4 font-display text-4xl font-semibold">
-              {formatMoney(totals.emergencyFund)}
+            <p className="mt-5 text-[32px] leading-none font-semibold tracking-tight">
+              <AnimatedMoney value={totals.emergencyFund} />
             </p>
-            <p className="text-xs text-ink-foreground/70">
+            <p className="mt-1.5 text-xs text-muted-foreground">
               {trip.setup.totalBudget > 0
                 ? Math.round((totals.emergencyFund / trip.setup.totalBudget) * 100)
                 : 0}
@@ -188,7 +185,7 @@ function BudgetPage() {
               step={25}
               value={trip.emergencyFund}
               onChange={tripActions.setEmergencyFund}
-              className="mt-4 border-card/20 bg-card text-foreground"
+              className="mt-4"
             />
           </section>
         </aside>
@@ -203,21 +200,20 @@ function Stat({
   tone,
 }: {
   label: string;
-  value: string;
-  tone?: "shield" | "success" | "danger";
+  value: number;
+  tone?: "success" | "danger";
 }) {
   return (
-    <div className="rounded-xl bg-muted/70 px-3 py-2.5">
+    <div className="bg-card px-3 py-2.5">
       <dt className="text-xs text-muted-foreground">{label}</dt>
       <dd
         className={cn(
-          "tabular text-lg font-bold",
-          tone === "shield" && "text-shield",
+          "mt-0.5 text-[15px] font-medium",
           tone === "success" && "text-success",
           tone === "danger" && "text-destructive",
         )}
       >
-        {value}
+        <AnimatedMoney value={value} />
       </dd>
     </div>
   );
@@ -487,33 +483,32 @@ function CategoryRow({ cat }: { cat: Category }) {
   const canOverride = OVERRIDABLE.includes(cat);
 
   return (
-    <AccordionItem value={cat} className="surface-card overflow-hidden border-b-0 px-0">
-      <AccordionTrigger className="px-4 py-3.5 hover:no-underline">
+    <AccordionItem value={cat} className="border-b border-border px-0 last:border-b-0">
+      <AccordionTrigger className="px-4 py-3.5 transition-colors hover:bg-muted/50 hover:no-underline data-[state=open]:bg-muted/40">
         <div className="flex min-w-0 flex-1 items-center gap-3 text-left font-sans">
-          <span
-            className="grid size-10 shrink-0 place-items-center rounded-xl text-on-image"
-            style={{ backgroundColor: CATEGORY_COLOR_VAR[cat] }}
-          >
-            <Icon className="size-5" />
+          <span className="relative grid size-8 shrink-0 place-items-center rounded-lg border border-border">
+            <Icon className="size-4 text-foreground/80" strokeWidth={1.8} />
+            <span
+              className="absolute -right-0.5 -bottom-0.5 size-2 rounded-[3px] ring-2 ring-card"
+              style={{ backgroundColor: CATEGORY_COLOR_VAR[cat] }}
+            />
           </span>
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2">
-              <span className="truncate font-bold">{CATEGORY_LABELS[cat]}</span>
+              <span className="truncate text-sm font-medium">{CATEGORY_LABELS[cat]}</span>
               {source === "custom" ? (
-                <Badge variant="gold">Your amount</Badge>
+                <Badge variant="secondary">Custom</Badge>
               ) : source === "live" ? (
-                <Badge variant="success">Live price</Badge>
-              ) : (
-                <Badge variant="secondary">Estimate</Badge>
-              )}
+                <Badge variant="success">Live</Badge>
+              ) : null}
             </div>
             <p className="truncate text-xs font-normal text-muted-foreground">
               {isCustom ? "Your amount" : formula}
             </p>
           </div>
           <div className="mr-1 text-right">
-            <p className="tabular font-bold">
-              {formatMoney(amount, { cents: amount % 1 !== 0 && amount < 100 })}
+            <p className="text-sm font-medium">
+              <AnimatedMoney value={amount} cents={amount % 1 !== 0 && amount < 100} />
             </p>
             <p className="tabular text-[11px] font-normal text-muted-foreground">
               {Math.round(share)}%
@@ -521,7 +516,7 @@ function CategoryRow({ cat }: { cat: Category }) {
           </div>
         </div>
       </AccordionTrigger>
-      <AccordionContent className="border-t border-border bg-muted/40 px-4 pt-4 pb-4">
+      <AccordionContent className="bg-muted/40 px-4 pt-1 pb-4">
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">{fields}</div>
         {canOverride && (
           <div className="mt-4 flex flex-wrap items-end gap-3 border-t border-dashed border-border pt-4">
@@ -583,7 +578,7 @@ function NotDriving() {
 function CutPlan() {
   const { cuts } = useTrip();
   return (
-    <div className="mt-4 rounded-2xl border border-destructive/25 bg-destructive-soft p-4">
+    <div className="animate-pop mt-5 rounded-xl border border-destructive/25 p-4">
       <div className="flex gap-2.5 text-sm text-destructive">
         <AlertTriangle className="mt-0.5 size-4 shrink-0" />
         <p>
@@ -593,19 +588,19 @@ function CutPlan() {
           No worries — your reserve stays untouched. Here's a smarter way to spend less:
         </p>
       </div>
-      <ul className="mt-3 space-y-2">
+      <ul className="mt-2">
         {cuts.suggestions.map((s) => {
           const Icon = CATEGORY_ICONS[s.category];
           return (
-            <li key={s.category} className="flex items-center gap-3 rounded-xl bg-card p-3">
-              <span
-                className="grid size-9 shrink-0 place-items-center rounded-lg text-on-image"
-                style={{ backgroundColor: CATEGORY_COLOR_VAR[s.category] }}
-              >
-                <Icon className="size-4" />
+            <li
+              key={s.category}
+              className="flex items-center gap-3 border-t border-border py-3 first:border-t-0"
+            >
+              <span className="grid size-8 shrink-0 place-items-center rounded-lg border border-border">
+                <Icon className="size-4 text-foreground/80" strokeWidth={1.8} />
               </span>
               <div className="min-w-0 flex-1 text-sm">
-                <p className="font-bold">
+                <p className="font-medium">
                   {CATEGORY_LABELS[s.category]}{" "}
                   <span className="tabular font-normal text-muted-foreground">
                     {formatMoney(s.current)} → {formatMoney(s.current - s.cut, { cents: true })}
@@ -655,65 +650,39 @@ function TripTypeSwitcher() {
   const info = tripTypeInfo(trip.setup.tripType);
   const modes = TRANSPORT_MODES.filter((m) => info.modes.includes(m.id));
   return (
-    <div className="mb-4 space-y-3">
-      <div>
-        <p className="mb-2 text-sm font-bold">Trip type</p>
-        <div className="flex flex-wrap gap-2" role="group" aria-label="Trip type">
-          {TRIP_TYPES.map((t) => {
-            const active = trip.setup.tripType === t.id;
-            return (
-              <button
-                key={t.id}
-                type="button"
-                aria-pressed={active}
-                onClick={() => {
-                  if (active) return;
-                  const [headline, ...details] = tripActions.setTripType(t.id);
-                  if (headline)
-                    toast.success(
-                      headline,
-                      details.length ? { description: details.join(" ") } : undefined,
-                    );
-                }}
-                className={cn(
-                  "min-h-11 rounded-full border px-4 py-2 text-sm font-semibold transition-all",
-                  active
-                    ? "border-primary bg-primary text-primary-foreground"
-                    : "border-border bg-card hover:border-primary/40",
-                )}
-              >
-                {t.label}
-              </button>
-            );
-          })}
-        </div>
+    <section
+      className="surface-card animate-rise flex flex-wrap items-center gap-x-6 gap-y-3 p-4"
+      style={stagger(1)}
+    >
+      <div className="flex min-w-0 flex-wrap items-center gap-3">
+        <p className="text-[13px] text-muted-foreground">Trip</p>
+        <Segmented
+          ariaLabel="Trip type"
+          size="sm"
+          value={trip.setup.tripType}
+          onChange={(t) => {
+            const [headline, ...details] = tripActions.setTripType(t);
+            if (headline)
+              toast.success(
+                headline,
+                details.length ? { description: details.join(" ") } : undefined,
+              );
+          }}
+          options={TRIP_TYPES.map((t) => ({ value: t.id, label: t.label }))}
+        />
       </div>
       {modes.length > 1 && (
-        <div>
-          <p className="mb-2 text-sm font-bold">{info.modeQuestion}</p>
-          <div className="flex flex-wrap gap-2">
-            {modes.map((m) => {
-              const active = trip.inputs.transportMode === m.id;
-              return (
-                <button
-                  key={m.id}
-                  type="button"
-                  aria-pressed={active}
-                  onClick={() => tripActions.setTransportMode(m.id)}
-                  className={cn(
-                    "min-h-11 rounded-full border px-4 py-2 text-sm font-semibold transition-all",
-                    active
-                      ? "border-secondary-foreground/20 bg-secondary text-foreground"
-                      : "border-border bg-card hover:border-primary/40",
-                  )}
-                >
-                  {m.label}
-                </button>
-              );
-            })}
-          </div>
+        <div className="flex flex-wrap items-center gap-3">
+          <p className="text-[13px] text-muted-foreground">{info.modeQuestion}</p>
+          <Segmented
+            ariaLabel={info.modeQuestion}
+            size="sm"
+            value={trip.inputs.transportMode}
+            onChange={(m) => tripActions.setTransportMode(m)}
+            options={modes.map((m) => ({ value: m.id, label: m.label }))}
+          />
         </div>
       )}
-    </div>
+    </section>
   );
 }

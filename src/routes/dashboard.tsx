@@ -1,25 +1,14 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import {
-  ArrowRight,
-  Check,
-  CircleDashed,
-  Lock,
-  PiggyBank,
-  ShieldCheck,
-  TrendingDown,
-  Undo2,
-  Wallet,
-} from "lucide-react";
-import { Cell, Pie, PieChart, ResponsiveContainer } from "recharts";
+import { ArrowRight, Check, Lock, Undo2 } from "lucide-react";
 import { toast } from "sonner";
 
-import { CATEGORY_COLOR_VAR, CATEGORY_ICONS, PriceSourceBadge } from "@/components/app/bits";
-import { WeatherCard } from "@/components/app/Weather";
+import { CATEGORY_COLOR_VAR, PriceSourceBadge } from "@/components/app/bits";
+import { AnimatedMoney, stagger } from "@/components/app/motion";
 import { PageHeader } from "@/components/app/TripHeader";
-import { Badge } from "@/components/ui/badge";
+import { WeatherCard } from "@/components/app/Weather";
 import { Button } from "@/components/ui/button";
-import { CATEGORIES, CATEGORY_LABELS, SAVING_TITLES, formatMoney } from "@/lib/budget";
 import { useAuth } from "@/lib/auth-context";
+import { CATEGORIES, CATEGORY_LABELS, SAVING_TITLES, formatMoney } from "@/lib/budget";
 import { TRAVEL_STYLES, TRIP_TYPES } from "@/lib/demo-data";
 import { liveCategories } from "@/lib/live/sources";
 import { tripActions, useTrip } from "@/lib/trip-store";
@@ -54,173 +43,128 @@ function Dashboard() {
   const breakdown = CATEGORIES.map((c) => ({ cat: c, value: totals.categories[c] }))
     .filter((d) => d.value > 0)
     .sort((a, b) => b.value - a.value);
+  // The bar is scaled to whichever is larger, so over-budget plans visibly overflow the spending line.
+  const scale = Math.max(totals.spendable, totals.planned, 1);
+  const spendLine = (totals.spendable / scale) * 100;
 
   return (
     <div>
-      <PageHeader eyebrow="Your trip" title="Everything at a glance">
-        <div className="flex gap-2">
-          {type && <Badge variant="secondary">{type.label}</Badge>}
-          {style && (
-            <Badge variant={style.id === "luxury" ? "gold" : "secondary"}>{style.label}</Badge>
-          )}
-        </div>
-      </PageHeader>
+      <PageHeader
+        eyebrow={[type?.label, style?.label].filter(Boolean).join(" · ")}
+        title="Overview"
+      />
 
-      <div className="mx-auto mt-6 max-w-6xl space-y-6 px-4">
-        {/* Hero balance */}
-        <section className="relative overflow-hidden rounded-4xl bg-gradient-ink p-6 text-ink-foreground shadow-lift sm:p-8">
-          <div
-            className="absolute -top-24 -right-24 size-72 rounded-full bg-gradient-sunset opacity-30 blur-3xl"
-            aria-hidden
-          />
-          <div className="relative grid gap-6 sm:grid-cols-[1fr_auto] sm:items-end">
+      <div className="mx-auto mt-8 max-w-6xl space-y-4 px-4">
+        {/* Balance */}
+        <section className="surface-card animate-rise p-5 sm:p-7">
+          <div className="grid gap-6 sm:grid-cols-[1fr_auto] sm:items-end">
             <div>
-              <p className="text-sm text-ink-foreground/70">
-                {totals.overBudget
-                  ? "Your plan is over your spending money by"
-                  : "You've got this much left to explore"}
+              <p className="text-sm text-muted-foreground">
+                {totals.overBudget ? "Over your spending money" : "Left to spend"}
               </p>
               <p
                 className={cn(
-                  "tabular font-display text-5xl font-semibold sm:text-6xl",
-                  totals.overBudget && "text-sunset",
+                  "mt-1 text-[44px] leading-none font-semibold tracking-[-0.035em] sm:text-[56px]",
+                  totals.overBudget && "text-destructive",
                 )}
               >
                 {totals.overBudget ? "−" : ""}
-                {formatMoney(Math.abs(totals.remaining))}
+                <AnimatedMoney value={Math.abs(totals.remaining)} />
               </p>
-              <p className="mt-1 text-sm text-ink-foreground/70">
-                of {formatMoney(totals.spendable)} spendable · {formatMoney(totals.totalBudget)}{" "}
-                total budget
+              <p className="tabular mt-3 text-sm text-muted-foreground">
+                {formatMoney(totals.planned)} planned of {formatMoney(totals.spendable)}
+                <span className="px-1.5 text-border">/</span>
+                <Lock className="mr-1 inline size-3 -translate-y-px" />
+                {formatMoney(totals.emergencyFund)} reserve, untouched
               </p>
-              {totals.overBudget && (
+            </div>
+            <dl className="grid grid-cols-2 gap-x-8 gap-y-3 text-sm sm:text-right">
+              <div>
+                <dt className="text-muted-foreground">Per person, per day</dt>
+                <dd className="tabular mt-0.5 text-base font-medium">
+                  <AnimatedMoney value={totals.perPersonPerDay} />
+                </dd>
+              </div>
+              <div>
+                <dt className="text-muted-foreground">Could save</dt>
+                <dd className="tabular mt-0.5 text-base font-medium text-success">
+                  <AnimatedMoney value={potentialSavings} />
+                </dd>
+              </div>
+            </dl>
+          </div>
+
+          {/* One stacked bar: every category in proportion, with the spending limit marked. */}
+          <div className="relative mt-7">
+            <div className="flex h-2.5 gap-px overflow-hidden rounded-full bg-muted">
+              {breakdown.map((d) => (
+                <span
+                  key={d.cat}
+                  title={`${CATEGORY_LABELS[d.cat]} ${formatMoney(d.value)}`}
+                  className="h-full transition-[width] duration-500 ease-[var(--ease-out-quint)] first:rounded-l-full last:rounded-r-full"
+                  style={{
+                    width: `${(d.value / scale) * 100}%`,
+                    backgroundColor: CATEGORY_COLOR_VAR[d.cat],
+                  }}
+                />
+              ))}
+            </div>
+            {totals.overBudget && (
+              <span
+                className="absolute -top-1 -bottom-1 w-0.5 rounded-full bg-foreground transition-[left] duration-500"
+                style={{ left: `${spendLine}%` }}
+                aria-hidden
+              />
+            )}
+            <div className="mt-2.5 flex flex-wrap justify-between gap-2 text-xs text-muted-foreground">
+              <span className="tabular">
+                {totals.percentUsed === null
+                  ? "No spendable budget"
+                  : `${Math.round(totals.percentUsed)}% of spending money planned`}
+              </span>
+              {totals.overBudget ? (
                 <Link
                   to="/budget"
-                  className="mt-2 inline-block text-sm font-semibold text-sunset underline underline-offset-2"
+                  className="font-medium text-foreground underline decoration-border underline-offset-4 hover:decoration-foreground"
                 >
                   See where to cut
                 </Link>
+              ) : (
+                <span>
+                  {shape.days} days · {shape.travelers} traveler{shape.travelers > 1 ? "s" : ""}
+                </span>
               )}
-            </div>
-            <div className="flex items-center gap-2 self-start rounded-2xl bg-ink-foreground/10 px-4 py-3 sm:self-end">
-              <Lock className="size-4" />
-              <div>
-                <p className="text-[11px] text-ink-foreground/70">Emergency reserve</p>
-                <p className="tabular font-bold">{formatMoney(totals.emergencyFund)} protected</p>
-              </div>
-            </div>
-          </div>
-          <div className="relative mt-6">
-            <div className="flex h-3 overflow-hidden rounded-full bg-ink-foreground/10">
-              <div
-                className={cn(
-                  "h-full transition-all",
-                  totals.overBudget ? "bg-destructive" : "bg-gradient-sunset",
-                )}
-                style={{
-                  width: `${totals.percentUsed === null ? (totals.planned > 0 ? 100 : 0) : Math.min(100, totals.percentUsed)}%`,
-                }}
-              />
-            </div>
-            <div className="tabular mt-2 flex justify-between text-xs text-ink-foreground/70">
-              <span>
-                {totals.percentUsed === null
-                  ? "No spendable budget"
-                  : `${Math.round(totals.percentUsed)}% planned`}
-              </span>
-              <span>{formatMoney(totals.perPersonPerDay)} / person / day</span>
             </div>
           </div>
         </section>
 
         <NextSteps />
 
-        {/* Stats */}
-        <section className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-          <StatCard
-            icon={Wallet}
-            label="Total planned"
-            value={formatMoney(totals.planned)}
-            sub={`${shape.days} days · ${shape.travelers} travelers`}
-          />
-          <StatCard
-            icon={TrendingDown}
-            label={totals.overBudget ? "Over budget" : "Remaining"}
-            value={formatMoney(Math.abs(totals.remaining))}
-            sub={totals.overBudget ? "Trim or apply savings" : "Free to spend"}
-            tone={totals.overBudget ? "danger" : "success"}
-          />
-          <StatCard
-            icon={PiggyBank}
-            label="Potential savings"
-            value={formatMoney(potentialSavings)}
-            sub={`${savings.length} ideas below`}
-            tone="sunset"
-          />
-          <StatCard
-            icon={ShieldCheck}
-            label="Emergency reserve"
-            value={formatMoney(totals.emergencyFund)}
-            sub="Kept safe, never spent"
-            tone="shield"
-          />
-        </section>
-
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
           {/* Breakdown */}
-          <section className="surface-card p-5">
-            <div className="flex items-center justify-between">
-              <h2 className="font-display text-2xl font-semibold">Where it goes</h2>
+          <section className="surface-card animate-rise p-5" style={stagger(2)}>
+            <div className="flex items-center justify-between gap-3">
+              <h2 className="text-[15px] font-semibold">Where it goes</h2>
               <PriceSourceBadge />
             </div>
-            <div className="mt-2 grid items-center gap-4 sm:grid-cols-[180px_1fr]">
-              <div className="relative mx-auto size-44">
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={breakdown}
-                      dataKey="value"
-                      nameKey="cat"
-                      startAngle={90}
-                      endAngle={-270}
-                      innerRadius="68%"
-                      outerRadius="100%"
-                      paddingAngle={2}
-                      stroke="none"
-                    >
-                      {breakdown.map((d) => (
-                        <Cell key={d.cat} fill={CATEGORY_COLOR_VAR[d.cat]} />
-                      ))}
-                    </Pie>
-                  </PieChart>
-                </ResponsiveContainer>
-                <div className="pointer-events-none absolute inset-0 grid place-items-center text-center">
-                  <div>
-                    <p className="text-[11px] text-muted-foreground">Planned</p>
-                    <p className="tabular font-display text-xl font-semibold">
-                      {formatMoney(totals.planned)}
-                    </p>
-                  </div>
-                </div>
-              </div>
-              <ul className="space-y-1.5">
-                {breakdown.map(({ cat, value }) => {
-                  const Icon = CATEGORY_ICONS[cat];
-                  return (
-                    <li key={cat} className="flex items-center gap-2.5 text-sm">
-                      <span
-                        className="size-2.5 shrink-0 rounded-full"
-                        style={{ backgroundColor: CATEGORY_COLOR_VAR[cat] }}
-                      />
-                      <Icon className="size-3.5 text-muted-foreground" />
-                      <span className="flex-1 truncate">{CATEGORY_LABELS[cat]}</span>
-                      <span className="tabular font-semibold">{formatMoney(value)}</span>
-                    </li>
-                  );
-                })}
-              </ul>
-            </div>
-            <Button asChild variant="outline" className="mt-5 w-full">
+            <ul className="mt-4 divide-y divide-border">
+              {breakdown.map(({ cat, value }) => (
+                <li key={cat} className="flex items-center gap-3 py-2.5 text-sm">
+                  <span
+                    className="size-2 shrink-0 rounded-[3px]"
+                    style={{ backgroundColor: CATEGORY_COLOR_VAR[cat] }}
+                  />
+                  <span className="min-w-0 flex-1 truncate">{CATEGORY_LABELS[cat]}</span>
+                  <span className="tabular w-10 text-right text-xs text-muted-foreground">
+                    {totals.planned > 0 ? Math.round((value / totals.planned) * 100) : 0}%
+                  </span>
+                  <span className="tabular w-20 text-right font-medium">
+                    <AnimatedMoney value={value} />
+                  </span>
+                </li>
+              ))}
+            </ul>
+            <Button asChild variant="outline" className="mt-4 w-full">
               <Link to="/budget">
                 Edit budget <ArrowRight />
               </Link>
@@ -228,142 +172,64 @@ function Dashboard() {
           </section>
 
           {/* Savings */}
-          <section className="surface-card p-5">
-            <h2 className="font-display text-2xl font-semibold">Ways to spend less</h2>
-            <p className="text-sm text-muted-foreground">
-              Each idea updates your budget the moment you apply it. You can undo it anytime.
+          <section className="surface-card animate-rise p-5" style={stagger(3)}>
+            <h2 className="text-[15px] font-semibold">Ways to spend less</h2>
+            <p className="mt-0.5 text-[13px] text-muted-foreground">
+              Applies to your budget instantly. Undo anytime.
             </p>
-            <ul className="mt-4 space-y-2.5">
-              {savings.map((s) => {
-                const Icon = CATEGORY_ICONS[s.category];
-                return (
-                  <li
-                    key={s.id}
-                    className="flex items-center gap-3 rounded-2xl border border-border bg-background/60 p-3"
+            <ul className="mt-3 divide-y divide-border">
+              {savings.map((s) => (
+                <li key={s.id} className="flex items-center gap-3 py-3">
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-medium">{s.title}</p>
+                    <p className="mt-0.5 text-xs leading-snug text-muted-foreground">{s.detail}</p>
+                  </div>
+                  <span className="tabular shrink-0 text-sm font-medium text-success">
+                    −{formatMoney(s.totalSavings)}
+                  </span>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="shrink-0"
+                    onClick={() => {
+                      tripActions.applySaving(s.id);
+                      toast.success(`${s.title} applied`, {
+                        action: { label: "Undo", onClick: () => tripActions.undoSaving(s.id) },
+                      });
+                    }}
                   >
-                    <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-success-soft text-success">
-                      <Icon className="size-4" />
-                    </span>
-                    <div className="min-w-0 flex-1">
-                      <p className="text-sm font-bold">{s.title}</p>
-                      <p className="text-xs leading-snug text-muted-foreground">{s.detail}</p>
-                    </div>
-                    <div className="flex shrink-0 flex-col items-end gap-1">
-                      <span className="tabular text-sm font-bold text-success">
-                        −{formatMoney(s.totalSavings)}
-                      </span>
-                      <Button
-                        size="sm"
-                        variant="success"
-                        onClick={() => {
-                          tripActions.applySaving(s.id);
-                          toast.success(`${s.title} applied`);
-                        }}
-                      >
-                        Apply
-                      </Button>
-                    </div>
-                  </li>
-                );
-              })}
+                    Apply
+                  </Button>
+                </li>
+              ))}
               {savings.length === 0 && (
-                <li className="rounded-2xl bg-success-soft p-4 text-sm text-success">
-                  You've applied every saving idea — nicely done.
+                <li className="py-4 text-sm text-muted-foreground">
+                  Every saving idea is applied.
                 </li>
               )}
             </ul>
             {applied.length > 0 && (
-              <div className="mt-4 border-t border-dashed border-border pt-4">
-                <p className="mb-2 text-xs font-semibold tracking-wider text-muted-foreground uppercase">
-                  Applied
-                </p>
-                <div className="flex flex-wrap gap-2">
-                  {applied.map((id) => (
-                    <button
-                      key={id}
-                      onClick={() => tripActions.undoSaving(id)}
-                      className="inline-flex items-center gap-1.5 rounded-full bg-success-soft px-3 py-1.5 text-xs font-semibold text-success transition hover:bg-muted hover:text-foreground"
-                      aria-label={`Undo ${SAVING_TITLES[id]}`}
-                    >
-                      <Check className="size-3" /> {SAVING_TITLES[id]}{" "}
-                      <Undo2 className="size-3 opacity-60" />
-                    </button>
-                  ))}
-                </div>
+              <div className="mt-3 flex flex-wrap items-center gap-1.5 border-t border-border pt-3">
+                <span className="mr-1 text-xs text-muted-foreground">Applied</span>
+                {applied.map((id) => (
+                  <button
+                    key={id}
+                    onClick={() => tripActions.undoSaving(id)}
+                    className="animate-pop inline-flex h-7 items-center gap-1.5 rounded-md border border-border px-2 text-xs font-medium transition-colors hover:border-muted-foreground/40 active:scale-[0.97]"
+                    aria-label={`Undo ${SAVING_TITLES[id]}`}
+                  >
+                    <Check className="size-3 text-success" /> {SAVING_TITLES[id]}
+                    <Undo2 className="size-3 text-muted-foreground" />
+                  </button>
+                ))}
               </div>
             )}
           </section>
         </div>
 
-        <WeatherCard />
-
-        <section className="grid gap-3 sm:grid-cols-2">
-          <QuickLink to="/itinerary" title="View itinerary" sub="Day-by-day stops & restaurants" />
-          <QuickLink
-            to="/"
-            title="Plan a different trip"
-            sub="Change destination, dates or budget"
-          />
-        </section>
+        <WeatherCard className="animate-rise" />
       </div>
     </div>
-  );
-}
-
-function StatCard({
-  icon: Icon,
-  label,
-  value,
-  sub,
-  tone,
-}: {
-  icon: typeof Wallet;
-  label: string;
-  value: string;
-  sub: string;
-  tone?: "success" | "danger" | "sunset" | "shield";
-}) {
-  return (
-    <div className="surface-card p-4">
-      <span
-        className={cn(
-          "grid size-9 place-items-center rounded-xl",
-          tone === "success" && "bg-success-soft text-success",
-          tone === "danger" && "bg-destructive-soft text-destructive",
-          tone === "sunset" && "bg-sunset-soft text-sunset",
-          tone === "shield" && "bg-shield-soft text-shield",
-          !tone && "bg-secondary text-primary",
-        )}
-      >
-        <Icon className="size-4" />
-      </span>
-      <p className="mt-3 text-xs text-muted-foreground">{label}</p>
-      <p
-        className={cn(
-          "tabular font-display text-2xl font-semibold",
-          tone === "danger" && "text-destructive",
-          tone === "success" && "text-success",
-        )}
-      >
-        {value}
-      </p>
-      <p className="text-[11px] text-muted-foreground">{sub}</p>
-    </div>
-  );
-}
-
-function QuickLink({ to, title, sub }: { to: "/itinerary" | "/"; title: string; sub: string }) {
-  return (
-    <Link
-      to={to}
-      className="surface-card group flex items-center justify-between p-5 transition hover:shadow-lift"
-    >
-      <div>
-        <p className="font-display text-lg font-semibold">{title}</p>
-        <p className="text-sm text-muted-foreground">{sub}</p>
-      </div>
-      <ArrowRight className="size-5 text-primary transition group-hover:translate-x-1" />
-    </Link>
   );
 }
 
@@ -377,26 +243,21 @@ function NextSteps() {
   const live = liveCategories(trip.inputs, trip.overrides, trip.live).length > 0;
   const realPlan = trip.itinerary?.source === "google" || trip.itinerary?.source === "ai";
   const steps: { title: string; done: boolean; to: StepTo; cta: string }[] = [
-    { title: "Plan your trip", done: !trip.isSample, to: "/", cta: "Start planning" },
+    { title: "Plan the trip", done: !trip.isSample, to: "/", cta: "Start planning" },
     { title: "Check live prices", done: live, to: "/budget", cta: "Open budget" },
     ...(roadTrip
       ? [
           {
-            title: "Pick stops on the drive",
+            title: "Pick stops",
             done: trip.roadTrip.includedStops.length > 0,
             to: "/road-trip" as const,
             cta: "Plan route",
           },
         ]
       : []),
+    { title: "Build itinerary", done: realPlan, to: "/itinerary", cta: "Open itinerary" },
     {
-      title: user ? "Build your itinerary from real places" : "Build your itinerary",
-      done: realPlan,
-      to: "/itinerary",
-      cta: "Open itinerary",
-    },
-    {
-      title: "Save it to your account",
+      title: "Save trip",
       done: !!trip.cloud,
       to: user ? "/trips" : "/auth",
       cta: user ? "Save trip" : "Sign in to save",
@@ -405,77 +266,85 @@ function NextSteps() {
   const next = steps.find((s) => !s.done);
   const doneCount = steps.filter((s) => s.done).length;
 
+  const link = (to: StepTo, children: React.ReactNode, className: string) =>
+    to === "/auth" ? (
+      <Link to="/auth" search={{ redirect: "/trips" }} className={className}>
+        {children}
+      </Link>
+    ) : (
+      <Link to={to} className={className}>
+        {children}
+      </Link>
+    );
+
   return (
-    <section className="surface-card p-5">
+    <section className="surface-card animate-rise p-5" style={stagger(1)}>
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h2 className="font-display text-xl font-semibold">Your planning checklist</h2>
-          <p className="text-sm text-muted-foreground">
-            {next
-              ? `${doneCount} of ${steps.length} done · next: ${next.title.toLowerCase()}`
-              : "All set — have a great trip!"}
+          <h2 className="text-[15px] font-semibold">Checklist</h2>
+          <p className="tabular mt-0.5 text-[13px] text-muted-foreground">
+            {next ? `${doneCount} of ${steps.length} done` : "All set. Have a great trip."}
           </p>
         </div>
         {next && (
           <Button asChild variant="hero" size="sm">
-            {next.to === "/auth" ? (
-              <Link to="/auth" search={{ redirect: "/trips" }}>
+            {link(
+              next.to,
+              <>
                 {next.cta} <ArrowRight />
-              </Link>
-            ) : (
-              <Link to={next.to}>
-                {next.cta} <ArrowRight />
-              </Link>
+              </>,
+              "",
             )}
           </Button>
         )}
       </div>
-      <ol
-        className={cn(
-          "mt-4 grid gap-2 sm:grid-cols-2",
-          steps.length === 5 ? "lg:grid-cols-5" : "lg:grid-cols-4",
-        )}
-      >
+      <ol className="mt-4 flex items-center">
         {steps.map((s, i) => (
-          <li key={s.title}>
-            {s.to === "/auth" ? (
-              <Link
-                to="/auth"
-                search={{ redirect: "/trips" }}
-                className={stepClass(s.done, s === next)}
-              >
-                <StepMark done={s.done} n={i + 1} /> <span className="min-w-0">{s.title}</span>
-              </Link>
-            ) : (
-              <Link to={s.to} className={stepClass(s.done, s === next)}>
-                <StepMark done={s.done} n={i + 1} /> <span className="min-w-0">{s.title}</span>
-              </Link>
+          <li key={s.title} className="flex min-w-0 flex-1 items-center last:flex-none">
+            {link(
+              s.to,
+              <>
+                <span
+                  className={cn(
+                    "tabular grid size-6 shrink-0 place-items-center rounded-full border text-[11px] font-medium transition-colors duration-300",
+                    s.done
+                      ? "border-foreground bg-foreground text-background"
+                      : s === next
+                        ? "border-primary text-primary ring-3 ring-primary/15"
+                        : "border-input text-muted-foreground",
+                  )}
+                >
+                  {s.done ? <Check className="size-3.5" aria-label="Done" /> : i + 1}
+                </span>
+                <span
+                  className={cn(
+                    "hidden truncate text-[13px] lg:inline",
+                    s.done || s === next ? "text-foreground" : "text-muted-foreground",
+                  )}
+                >
+                  {s.title}
+                </span>
+              </>,
+              "group flex min-w-0 items-center gap-2 rounded-md py-1 pr-2",
+            )}
+            {i < steps.length - 1 && (
+              <span className="mx-1 h-px min-w-3 flex-1 overflow-hidden bg-border">
+                <span
+                  className={cn(
+                    "block h-full bg-foreground transition-[width] duration-500",
+                    s.done ? "w-full" : "w-0",
+                  )}
+                />
+              </span>
             )}
           </li>
         ))}
       </ol>
+      {next && (
+        <p className="mt-3 text-[13px] text-muted-foreground lg:hidden">
+          Next: {next.title.toLowerCase()}
+        </p>
+      )}
     </section>
-  );
-}
-
-function stepClass(done: boolean, current: boolean) {
-  return cn(
-    "flex min-h-11 items-center gap-2.5 rounded-2xl border px-3 py-2 text-sm font-semibold transition hover:shadow-soft",
-    done
-      ? "border-success/25 bg-success-soft text-success"
-      : current
-        ? "border-primary bg-card ring-2 ring-primary/20"
-        : "border-border bg-background/60",
-  );
-}
-
-function StepMark({ done, n }: { done: boolean; n: number }) {
-  return done ? (
-    <Check className="size-4 shrink-0" aria-label="Done" />
-  ) : (
-    <span className="relative grid size-5 shrink-0 place-items-center">
-      <CircleDashed className="absolute size-5 text-muted-foreground" aria-hidden />
-      <span className="text-[10px] font-bold">{n}</span>
-    </span>
   );
 }
