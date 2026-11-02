@@ -310,7 +310,7 @@ function NextSteps() {
                     s.done
                       ? "border-foreground bg-foreground text-background"
                       : s === next
-                        ? "border-primary text-primary ring-3 ring-primary/15"
+                        ? "border-brand-coral text-foreground ring-3 ring-brand-coral/20"
                         : "border-input text-muted-foreground",
                   )}
                 >

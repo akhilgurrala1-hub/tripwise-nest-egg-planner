@@ -21,6 +21,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 
 import { DemoBadge } from "@/components/app/bits";
+import { LogoMark } from "@/components/app/Logo";
 import { stagger } from "@/components/app/motion";
 import { WeatherChip } from "@/components/app/Weather";
 import { PageHeader } from "@/components/app/TripHeader";
@@ -249,7 +250,7 @@ function ItineraryPage() {
 
           {loading && (
             <div className="surface-card animate-pop flex items-center gap-3 p-4 text-sm text-muted-foreground">
-              <Loader2 className="size-4 animate-spin text-muted-foreground" />
+              <LogoMark loading className="size-7" />
               Crafting a plan around your interests and budget — this can take up to a minute.
             </div>
           )}

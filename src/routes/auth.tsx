@@ -3,7 +3,7 @@ import { Loader2, MailCheck } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
-import { LogoMark } from "@/components/app/Intro";
+import { LogoMark } from "@/components/app/Logo";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -82,7 +82,7 @@ function AuthPage() {
   return (
     <div className="mx-auto flex max-w-md flex-col px-4 pt-10">
       <div className="surface-card animate-rise p-6">
-        <LogoMark className="size-8 text-foreground" />
+        <LogoMark className="size-10" />
 
         {user ? (
           <>

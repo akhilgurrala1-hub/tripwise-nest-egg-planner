@@ -56,6 +56,7 @@
   --color-shield-foreground: var(--shield-foreground);
   --color-demo: var(--demo);
   --color-demo-soft: var(--demo-soft);
+  --color-brand-coral: var(--brand-coral);
   --color-destructive: var(--destructive);
   --color-destructive-foreground: var(--destructive-foreground);
   --color-destructive-soft: var(--destructive-soft);
@@ -92,8 +93,9 @@
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.2 0.008 260);
   /* The one accent: interactive, selected, focused. */
-  --primary: oklch(0.53 0.16 256);
-  --primary-deep: oklch(0.47 0.16 258);
+  /* Brand blue (#2457E6), the logo's tile color, doubles as the interactive accent. */
+  --primary: oklch(0.519 0.223 264.5);
+  --primary-deep: oklch(0.455 0.197 264.8);
   --primary-foreground: oklch(0.99 0 0);
   --secondary: oklch(0.96 0.003 250);
   --secondary-foreground: oklch(0.25 0.008 260);
@@ -119,7 +121,9 @@
   --destructive-soft: oklch(0.965 0.02 27);
   --border: oklch(0.915 0.004 260);
   --input: oklch(0.88 0.005 260);
-  --ring: oklch(0.53 0.16 256);
+  --ring: oklch(0.519 0.223 264.5);
+  /* Brand coral (#FF6B4A): the logo's destination dot. Used sparingly for "you are here / next" cues. */
+  --brand-coral: oklch(0.707 0.187 34.1);
   /* Solid emphasis surface (primary call to action, the balance card). */
   --ink: oklch(0.2 0.008 260);
   --ink-foreground: oklch(0.985 0 0);
@@ -175,8 +179,8 @@
   --card-foreground: oklch(0.96 0.002 260);
   --popover: oklch(0.22 0.005 260);
   --popover-foreground: oklch(0.96 0.002 260);
-  --primary: oklch(0.7 0.14 256);
-  --primary-deep: oklch(0.76 0.12 256);
+  --primary: oklch(0.7 0.16 264);
+  --primary-deep: oklch(0.76 0.13 264);
   --primary-foreground: oklch(0.16 0.01 260);
   --secondary: oklch(0.25 0.005 260);
   --secondary-foreground: oklch(0.94 0.002 260);
@@ -201,7 +205,8 @@
   --destructive-soft: oklch(0.27 0.04 25);
   --border: oklch(0.28 0.005 260);
   --input: oklch(0.33 0.006 260);
-  --ring: oklch(0.7 0.14 256);
+  --ring: oklch(0.7 0.16 264);
+  --brand-coral: oklch(0.74 0.17 36);
   --ink: oklch(0.96 0.002 260);
   --ink-foreground: oklch(0.16 0.004 260);
   --on-image: oklch(0.99 0 0);
@@ -388,8 +393,48 @@
   }
 }
 
-/* Opening animation: the mark draws itself, the wordmark settles, then the overlay lifts.
-   Pure CSS so it never waits on JavaScript; skipped after the first visit in a session. */
+/* ---------- Brand mark motion ---------- */
+/* The mark's parts are animated in SVG user space around their own centers. */
+.logo-mark .logo-tile,
+.logo-mark .logo-origin,
+.logo-mark .logo-dest,
+.logo-mark .logo-ripple {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+.logo-mark .logo-ripple {
+  opacity: 0;
+}
+/* Hovering the header logo sends a ripple out from the destination. */
+a:hover > .logo .logo-ripple,
+a:focus-visible > .logo .logo-ripple {
+  animation: logo-ripple 0.7s var(--ease-out-quint);
+}
+
+/* Loading: the route keeps re-drawing toward the destination. */
+.logo-mark.is-loading .logo-route {
+  stroke-dasharray: 100 120;
+  animation: logo-loop 1.6s cubic-bezier(0.65, 0, 0.35, 1) infinite;
+}
+.logo-mark.is-loading .logo-ripple {
+  animation: logo-ripple 1.6s var(--ease-out-quint) 0.7s infinite;
+}
+@keyframes logo-loop {
+  0% {
+    stroke-dashoffset: 100;
+  }
+  55%,
+  80% {
+    stroke-dashoffset: 0;
+  }
+  100% {
+    stroke-dashoffset: -100;
+  }
+}
+
+/* Opening animation, a tiny trip: the tile lands, the route draws from the origin ring,
+   the destination dot arrives with a ripple, the wordmark wipes in, then the overlay lifts.
+   Pure CSS so it never waits on JavaScript; shown once per session (see Intro.tsx). */
 .intro {
   position: fixed;
   inset: 0;
@@ -397,40 +442,81 @@
   display: grid;
   place-items: center;
   background: var(--background);
-  animation: intro-out 0.4s var(--ease-out-quint) 0.85s forwards;
+  animation: intro-out 0.42s var(--ease-out-quint) 1.3s forwards;
   pointer-events: none;
 }
-.intro-mark circle,
-.intro-mark path {
-  stroke-dasharray: 100;
-  stroke-dashoffset: 100;
-  animation: intro-draw 0.7s var(--ease-out-quint) forwards;
+.intro .logo-tile {
+  animation: logo-land 0.5s cubic-bezier(0.34, 1.4, 0.64, 1) both;
 }
-.intro-mark path {
-  animation-delay: 0.25s;
+.intro .logo-origin {
+  animation: logo-pop 0.32s cubic-bezier(0.34, 1.6, 0.64, 1) 0.18s both;
 }
-.intro-word {
-  opacity: 0;
-  animation: intro-word 0.5s var(--ease-out-quint) 0.45s forwards;
+.intro .logo-route {
+  /* Gap longer than the path, so no round cap peeks out at the far end before the line arrives. */
+  stroke-dasharray: 100 120;
+  animation: logo-draw 0.62s cubic-bezier(0.65, 0, 0.35, 1) 0.28s both;
+}
+.intro .logo-dest {
+  animation: logo-pop 0.36s cubic-bezier(0.34, 1.8, 0.64, 1) 0.82s both;
+}
+.intro .logo-ripple {
+  /* "forwards", not "both": during the delay the ripple must stay at its hidden base style. */
+  animation: logo-ripple 0.75s var(--ease-out-quint) 0.92s forwards;
+}
+.intro .logo-word {
+  animation: logo-word 0.55s var(--ease-out-quint) 0.62s both;
 }
 .no-intro .intro {
   display: none;
 }
-@keyframes intro-draw {
-  to {
-    stroke-dashoffset: 0;
-  }
-}
-@keyframes intro-word {
+@keyframes logo-land {
   from {
     opacity: 0;
-    transform: translateY(4px);
-    letter-spacing: 0.02em;
+    transform: scale(0.55) rotate(-8deg);
   }
   to {
     opacity: 1;
     transform: none;
-    letter-spacing: -0.025em;
+  }
+}
+@keyframes logo-pop {
+  from {
+    opacity: 0;
+    transform: scale(0);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+@keyframes logo-draw {
+  from {
+    stroke-dashoffset: 100;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+@keyframes logo-ripple {
+  from {
+    opacity: 0.9;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(2.8);
+  }
+}
+@keyframes logo-word {
+  from {
+    opacity: 0;
+    clip-path: inset(0 100% 0 0);
+    transform: translateX(-6px);
+  }
+  to {
+    opacity: 1;
+    clip-path: inset(0 0 0 0);
+    transform: none;
   }
 }
 @keyframes intro-out {
