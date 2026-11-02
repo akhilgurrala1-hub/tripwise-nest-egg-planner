@@ -24,6 +24,7 @@ import {
   type TripType,
 } from "./demo-data";
 import { addDays, generateDemoItinerary, type Itinerary } from "./itinerary";
+import type { LivePrices } from "./prices/live";
 import type { RouteStop } from "./routing/types";
 
 export interface TripSetup {
@@ -51,8 +52,16 @@ export interface RoadTripPlan {
   includedStops: RouteStop[];
 }
 
+/** Link between the local trip and its copy in the signed-in user's account. */
+export interface CloudLink {
+  id: string;
+  revision: number;
+  name: string;
+  savedAt: string;
+}
+
 export interface TripState {
-  version: 2;
+  version: 3;
   isSample: boolean;
   setup: TripSetup;
   inputs: BudgetInputs;
@@ -61,6 +70,9 @@ export interface TripState {
   appliedSavings: Partial<Record<SavingId, Partial<BudgetInputs>>>;
   itinerary: Itinerary | null;
   roadTrip: RoadTripPlan;
+  /** Last live price lookup applied to this trip */
+  live: LivePrices | null;
+  cloud: CloudLink | null;
 }
 
 const STORAGE_KEY = "waypoint.trip.v1";
@@ -84,7 +96,7 @@ export function buildTrip(setup: TripSetup, isSample = false): TripState {
   const dest = getDestination(setup.destinationId, setup.customDestination);
   const shape = tripShape(setup.startDate, setup.endDate, setup.travelers);
   return {
-    version: 2,
+    version: 3,
     isSample,
     setup,
     inputs: defaultInputs(dest, setup.style, setup.tripType, setup.travelers, setup.transportMode),
@@ -100,6 +112,8 @@ export function buildTrip(setup: TripSetup, isSample = false): TripState {
       tripType: setup.tripType,
     }),
     roadTrip: defaultRoadTrip(setup, dest.name),
+    live: null,
+    cloud: null,
   };
 }
 
@@ -121,11 +135,12 @@ export function sampleSetup(): TripSetup {
   };
 }
 
-/** Upgrade trips saved by the first version of the app. */
-function migrate(raw: unknown): TripState | null {
+/** Upgrade trips saved by earlier versions of the app (also used for trips loaded from an account). */
+export function migrate(raw: unknown): TripState | null {
   const s = raw as Partial<TripState> & { version?: number };
   if (!s || !s.setup || !s.inputs) return null;
-  if (s.version === 2) return s as TripState;
+  if (s.version === 3) return { ...(s as TripState), live: s.live ?? null, cloud: s.cloud ?? null };
+  if (s.version === 2) return { ...(s as unknown as TripState), version: 3, live: null, cloud: null };
   if (s.version !== 1) return null;
   const setup: TripSetup = {
     ...(s.setup as TripSetup),
@@ -135,7 +150,7 @@ function migrate(raw: unknown): TripState | null {
   const dest = getDestination(setup.destinationId, setup.customDestination);
   const fresh = defaultInputs(dest, setup.style, setup.tripType, setup.travelers, "car");
   return {
-    version: 2,
+    version: 3,
     isSample: !!s.isSample,
     setup,
     inputs: { ...fresh, ...s.inputs, transportMode: "car" },
@@ -144,6 +159,8 @@ function migrate(raw: unknown): TripState | null {
     appliedSavings: s.appliedSavings ?? {},
     itinerary: s.itinerary ?? null,
     roadTrip: defaultRoadTrip(setup, dest.name),
+    live: null,
+    cloud: null,
   };
 }
 
@@ -238,9 +255,63 @@ export function stopsTotalFor(trip: TripState): number {
   return Math.round(total * 100) / 100;
 }
 
+/** The trip as stored in an account: everything except the account link itself. */
+export function tripForSaving(trip: TripState): Omit<TripState, "cloud"> {
+  const { cloud: _cloud, ...rest } = trip;
+  return { ...rest, isSample: false };
+}
+
+/** The current trip, read outside React (e.g. right before saving). */
+export function currentTrip(): TripState {
+  return getSnapshot();
+}
+
 export const tripActions = {
   startTrip(setup: TripSetup) {
     setState(() => buildTrip(setup));
+  },
+  /** Replace the current trip with one opened from the account. */
+  openSavedTrip(data: unknown, link: CloudLink): boolean {
+    const migrated = migrate(data);
+    if (!migrated) return false;
+    setState(() => ({ ...repairDates(migrated), isSample: false, cloud: link }));
+    return true;
+  },
+  setCloudLink(link: CloudLink | null) {
+    setState((s) => ({ ...s, cloud: link, isSample: link ? false : s.isSample }));
+  },
+  /** Use live prices in the budget. Custom amounts and savings tied to those prices are cleared so the new numbers show. */
+  applyLivePrices(prices: LivePrices) {
+    setState((s) => {
+      const inputs = { ...s.inputs };
+      const overrides = { ...s.overrides };
+      const appliedSavings = { ...s.appliedSavings };
+      if (prices.gas) {
+        inputs.gasPrice = prices.gas.price;
+        delete overrides.gas;
+        delete appliedSavings["fuel-rewards"];
+      }
+      if (prices.hotels && prices.hotels.nightly > 0) {
+        inputs.nightlyRate = prices.hotels.nightly;
+        delete overrides.accommodations;
+        delete appliedSavings.lodging;
+      }
+      if (prices.flights && s.inputs.transportMode === "flight") {
+        inputs.farePerPerson = prices.flights.perPerson;
+        delete overrides.transportation;
+        delete appliedSavings.fares;
+      }
+      return { ...s, inputs, overrides, appliedSavings, live: prices };
+    });
+  },
+  /** Real driving distance from the map service, as a round trip. */
+  setRouteMiles(roundTripMiles: number) {
+    setState((s) => {
+      if (s.inputs.roundTripMiles === roundTripMiles) return s;
+      const overrides = { ...s.overrides };
+      delete overrides.gas;
+      return { ...s, inputs: { ...s.inputs, roundTripMiles }, overrides };
+    });
   },
   setTotalBudget(totalBudget: number) {
     setState((s) => {
