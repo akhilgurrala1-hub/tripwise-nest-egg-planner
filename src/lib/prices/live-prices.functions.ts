@@ -15,6 +15,7 @@ const inputSchema = z
     rooms: z.number().int().min(1).max(10),
     style: z.enum(["budget", "comfort", "luxury"]),
     includeFlights: z.boolean(),
+    includeHotels: z.boolean().default(true),
     originAirport: z.string().regex(/^([A-Z]{3})?$/),
     destinationAirport: z.string().regex(/^([A-Z]{3})?$/),
   })
@@ -28,3 +29,12 @@ export const getLivePrices = createServerFn({ method: "POST" })
     const { fetchLivePrices } = await import("./live-prices.server");
     return fetchLivePrices(data);
   });
+
+/** Which live price sources have keys configured, so the UI never offers a search that can't run. */
+export const getLivePriceStatus = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async () => ({
+    gas: !!process.env["EIA_API_KEY"],
+    hotels: !!process.env["SERPAPI_API_KEY"],
+    flights: !!process.env["SERPAPI_API_KEY"],
+  }));

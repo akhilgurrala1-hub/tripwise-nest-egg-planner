@@ -3,7 +3,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { Compass, LayoutDashboard, LogOut, Map, Monitor, Moon, Route as RouteIcon, Sun, UserRound, Wallet, type LucideIcon } from "lucide-react";
 import type { ReactNode } from "react";
 
-import { DemoBadge } from "./bits";
+import { PriceSourceBadge } from "./bits";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
@@ -17,6 +17,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { useTheme, type ThemePref } from "@/lib/theme";
+import { useTrip } from "@/lib/trip-store";
 
 const NAV: { to: "/" | "/budget" | "/road-trip" | "/itinerary" | "/dashboard"; label: string; icon: LucideIcon }[] = [
   { to: "/", label: "Plan", icon: Compass },
@@ -27,6 +28,9 @@ const NAV: { to: "/" | "/budget" | "/road-trip" | "/itinerary" | "/dashboard"; l
 ];
 
 export function AppShell({ children }: { children: ReactNode }) {
+  const { trip } = useTrip();
+  // Route stops only make sense on a road trip, so the tab appears only for one.
+  const nav = NAV.filter((n) => n.to !== "/road-trip" || trip.setup.tripType === "road-trip");
   return (
     <div className="min-h-screen bg-background">
       <header className="glass sticky top-0 z-40 border-b border-border/70">
@@ -38,7 +42,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             <span className="font-display text-xl font-semibold tracking-tight text-foreground">Waypoint</span>
           </Link>
           <nav className="hidden items-center gap-1 md:flex">
-            {NAV.map((item) => (
+            {nav.map((item) => (
               <Link
                 key={item.to}
                 to={item.to}
@@ -51,7 +55,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             ))}
           </nav>
           <div className="flex items-center gap-2">
-            <DemoBadge label="Demo prices" className="hidden lg:inline-flex" />
+            <PriceSourceBadge className="hidden lg:inline-flex" />
             <ThemeToggle />
             <AccountButton />
           </div>
@@ -61,8 +65,8 @@ export function AppShell({ children }: { children: ReactNode }) {
       <main className="pb-28 md:pb-16">{children}</main>
 
       <nav className="glass pb-safe fixed inset-x-0 bottom-0 z-40 border-t border-border/70 md:hidden" aria-label="Main">
-        <div className="mx-auto grid max-w-lg grid-cols-5 px-1 pt-1.5">
-          {NAV.map(({ to, label, icon: Icon }) => (
+        <div className={cn("mx-auto grid max-w-lg px-1 pt-1.5", nav.length === 5 ? "grid-cols-5" : "grid-cols-4")}>
+          {nav.map(({ to, label, icon: Icon }) => (
             <Link
               key={to}
               to={to}

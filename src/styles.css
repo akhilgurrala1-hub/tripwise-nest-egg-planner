@@ -131,6 +131,7 @@
   --cat-transportation: oklch(0.52 0.08 235);
   --cat-snacks: oklch(0.68 0.11 30);
   --cat-stops: oklch(0.58 0.1 135);
+  --cat-cruise: oklch(0.5 0.09 215);
 
   --chart-1: var(--cat-gas);
   --chart-2: var(--cat-accommodations);
@@ -213,6 +214,7 @@
   --cat-transportation: oklch(0.68 0.08 235);
   --cat-snacks: oklch(0.74 0.1 30);
   --cat-stops: oklch(0.72 0.1 135);
+  --cat-cruise: oklch(0.7 0.09 215);
 
   --gradient-sunset: linear-gradient(135deg, oklch(0.82 0.09 68), oklch(0.76 0.11 55));
   --gradient-ink: linear-gradient(160deg, oklch(0.31 0.045 192), oklch(0.25 0.035 210));

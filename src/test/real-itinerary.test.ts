@@ -29,7 +29,7 @@ describe("itinerary from real places", () => {
     days: 3,
     startDate: "2026-11-01",
     interests: [],
-    tripType: "budget-vacation",
+    tripType: "flight",
   });
   const items = itin.days.flatMap((d) => d.items);
 

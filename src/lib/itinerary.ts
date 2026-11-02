@@ -1,3 +1,4 @@
+import { addDays } from "./dates";
 import type { DemoDestination, Interest, TravelStyle, TripType } from "./demo-data";
 import type { RealPlace } from "./places/types";
 import type { CostSource } from "./routing/types";
@@ -34,12 +35,16 @@ export interface Itinerary {
   tips: string[];
 }
 
-export function addDays(iso: string, n: number): string {
-  const d = new Date(`${iso}T12:00:00`);
-  if (Number.isNaN(d.getTime())) return iso;
-  d.setDate(d.getDate() + n);
-  return d.toISOString().slice(0, 10);
-}
+// Calendar math runs in UTC (see dates.ts): local-noon + toISOString shifted dates for travelers east of UTC+12.
+export { addDays } from "./dates";
+
+/** First stop on day one, by how the trip is taken (staycations start at home). */
+const ARRIVAL: Partial<Record<TripType, { name: string; note: string }>> = {
+  "road-trip": { name: "Scenic drive & roadside stop", note: "Stretch, refuel and grab a photo — fuel is in your gas budget." },
+  flight: { name: "Fly in & check in", note: "Your fare is in Transportation; leave time for the airport transfer." },
+  rail: { name: "Ride in by train or bus", note: "Your ticket is in Transportation — pack snacks for the ride." },
+  cruise: { name: "Board the ship", note: "Check-in, muster drill and sail-away — cabin and main dining are in your fare." },
+};
 
 const TIERS: Record<TravelStyle, { lunch: number[]; dinner: number[] }> = {
   budget: { lunch: [1], dinner: [1, 2] },
@@ -95,14 +100,15 @@ export function generateDemoItinerary(opts: {
         interests: [],
       };
 
-    if (d === 0 && tripType === "road-trip") {
+    const arrival = d === 0 ? ARRIVAL[tripType] : undefined;
+    if (arrival) {
       items.push({
-        id: id("drive"),
+        id: id("arrive"),
         time: "Morning",
         kind: "stop",
-        name: "Scenic drive & roadside stop",
-        area: `On the way to ${dest.name}`,
-        note: "Stretch, refuel and grab a photo — fuel is in your gas budget.",
+        name: arrival.name,
+        area: tripType === "cruise" ? `Port of ${dest.port ?? dest.name}` : `On the way to ${dest.name}`,
+        note: arrival.note,
         costPerPerson: 0,
       });
     } else {
@@ -128,7 +134,18 @@ export function generateDemoItinerary(opts: {
     out.push({
       day: d + 1,
       date: addDays(startDate, d),
-      title: d === 0 ? "Arrive & settle in" : d === days - 1 && days > 1 ? "Last look & head home" : `Explore ${dest.name}`,
+      title:
+        tripType === "cruise"
+          ? d === 0
+            ? "Embarkation day"
+            : d === days - 1 && days > 1
+              ? "Disembark & head home"
+              : `Ports & sea days · ${dest.name}`
+          : d === 0
+            ? "Arrive & settle in"
+            : d === days - 1 && days > 1
+              ? "Last look & head home"
+              : `Explore ${dest.name}`,
       items,
     });
   }

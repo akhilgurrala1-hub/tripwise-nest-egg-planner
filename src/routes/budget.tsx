@@ -3,15 +3,16 @@ import { AlertTriangle, Check, Lock, RotateCcw, ShieldCheck } from "lucide-react
 import type { ReactNode } from "react";
 import { toast } from "sonner";
 
-import { CATEGORY_COLOR_VAR, CATEGORY_ICONS, DemoBadge, NumberField } from "@/components/app/bits";
+import { CATEGORY_COLOR_VAR, CATEGORY_ICONS, NumberField, PriceSourceBadge } from "@/components/app/bits";
+import { LivePricesPanel } from "@/components/app/LivePricesPanel";
 import { PageHeader } from "@/components/app/TripHeader";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import {
-  CATEGORIES,
   CATEGORY_LABELS,
+  categoriesFor,
   OVERRIDABLE,
   formatMoney,
   percentLabel,
@@ -19,8 +20,9 @@ import {
   type BudgetInputs,
   type Category,
 } from "@/lib/budget";
-import { TRANSPORT_MODES, isDrivingMode } from "@/lib/demo-data";
+import { TRANSPORT_MODES, TRIP_TYPES, isDrivingMode, tripTypeInfo } from "@/lib/demo-data";
 import { itineraryActivityCost } from "@/lib/itinerary";
+import { categorySource } from "@/lib/live/sources";
 import { tripActions, useTrip } from "@/lib/trip-store";
 import { cn } from "@/lib/utils";
 
@@ -46,7 +48,7 @@ function BudgetPage() {
   return (
     <div>
       <PageHeader eyebrow="Budget" title="Let's make the most of your budget">
-        <DemoBadge label="Demo estimates" />
+        <PriceSourceBadge />
       </PageHeader>
 
       <div className="mx-auto mt-6 grid max-w-6xl grid-cols-1 gap-6 px-4 lg:grid-cols-[minmax(0,1fr)_360px]">
@@ -93,6 +95,8 @@ function BudgetPage() {
             {totals.overBudget && <CutPlan />}
           </section>
 
+          <LivePricesPanel />
+
           {/* Categories */}
           <section>
             <div className="mb-3 flex items-center justify-between">
@@ -103,35 +107,14 @@ function BudgetPage() {
                 </Button>
               )}
             </div>
-            <div className="mb-4">
-              <p className="mb-2 text-sm font-bold">How are you getting there?</p>
-              <div className="flex flex-wrap gap-2">
-                {TRANSPORT_MODES.map((m) => {
-                  const active = trip.inputs.transportMode === m.id;
-                  return (
-                    <button
-                      key={m.id}
-                      type="button"
-                      aria-pressed={active}
-                      onClick={() => tripActions.setTransportMode(m.id)}
-                      className={cn(
-                        "rounded-full border px-3.5 py-2 text-sm font-semibold transition-all",
-                        active ? "border-primary bg-primary text-primary-foreground" : "border-border bg-card hover:border-primary/40",
-                      )}
-                    >
-                      {m.label}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
+            <TripTypeSwitcher />
             <Accordion type="multiple" className="space-y-2.5">
-              {CATEGORIES.map((cat) => (
+              {categoriesFor(trip.setup.tripType, trip.inputs.transportMode).map((cat) => (
                 <CategoryRow key={cat} cat={cat} />
               ))}
             </Accordion>
             <p className="mt-3 text-xs text-muted-foreground">
-              These are estimates from demo prices for {shape.days} day{shape.days > 1 ? "s" : ""}, {shape.nights} night
+              Amounts marked “Estimate” use demo prices for {shape.days} day{shape.days > 1 ? "s" : ""}, {shape.nights} night
               {shape.nights === 1 ? "" : "s"} and {shape.travelers} traveler{shape.travelers > 1 ? "s" : ""}. Open a
               category to tune the inputs or type your own amount.
             </p>
@@ -203,6 +186,7 @@ function CategoryRow({ cat }: { cat: Category }) {
   const { trip, totals, shape } = useTrip();
   const Icon = CATEGORY_ICONS[cat];
   const isCustom = trip.overrides[cat] !== undefined;
+  const source = categorySource(cat, trip.inputs, trip.overrides, trip.live);
   const amount = totals.categories[cat];
   const share = totals.planned > 0 ? (amount / totals.planned) * 100 : 0;
   const i = trip.inputs;
@@ -213,6 +197,20 @@ function CategoryRow({ cat }: { cat: Category }) {
   let fields: ReactNode = null;
   let formula = "";
   switch (cat) {
+    case "cruise":
+      formula = `(${formatMoney(i.cruisePerNight)} fare + ${formatMoney(i.gratuitiesPerNight)} tips) × ${shape.travelers} × ${shape.nights} nights + ${formatMoney(i.portFeesPerPerson)} port fees each`;
+      fields = (
+        <>
+          <InputCell label="Cruise fare, per person per night" value={i.cruisePerNight} onChange={set("cruisePerNight")} prefix="$" step={10} />
+          <InputCell label="Gratuities, per person per night" value={i.gratuitiesPerNight} onChange={set("gratuitiesPerNight")} prefix="$" />
+          <InputCell label="Port fees & taxes, per person" value={i.portFeesPerPerson} onChange={set("portFeesPerPerson")} prefix="$" step={10} />
+          <p className="col-span-full text-xs text-muted-foreground">
+            Your cabin and main dining are in the fare, so hotel nights stay at $0 and Meals covers only specialty dining and food
+            ashore.
+          </p>
+        </>
+      );
+      break;
     case "transportation": {
       const fareMode = i.transportMode === "flight" || i.transportMode === "train" || i.transportMode === "bus";
       const parts: string[] = [];
@@ -260,7 +258,10 @@ function CategoryRow({ cat }: { cat: Category }) {
       fields = <InputCell label="Per person, per day" value={i.waterPerPersonDay} onChange={set("waterPerPersonDay")} prefix="$" step={0.5} />;
       break;
     case "accommodations":
-      formula = `${formatMoney(i.nightlyRate)} × ${i.rooms} room${i.rooms === 1 ? "" : "s"} × ${shape.nights} nights`;
+      formula =
+        trip.setup.tripType === "cruise" && i.nightlyRate === 0
+          ? "Your cabin is in the cruise fare — add a pre-cruise hotel night here if you need one"
+          : `${formatMoney(i.nightlyRate)} × ${i.rooms} room${i.rooms === 1 ? "" : "s"} × ${shape.nights} nights`;
       fields = (
         <>
           <InputCell label="Nightly rate" value={i.nightlyRate} onChange={set("nightlyRate")} prefix="$" step={5} />
@@ -343,7 +344,13 @@ function CategoryRow({ cat }: { cat: Category }) {
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2">
               <span className="truncate font-bold">{CATEGORY_LABELS[cat]}</span>
-              {isCustom ? <Badge variant="gold">Your amount</Badge> : <Badge variant="secondary">Estimate</Badge>}
+              {source === "custom" ? (
+                <Badge variant="gold">Your amount</Badge>
+              ) : source === "live" ? (
+                <Badge variant="success">Live price</Badge>
+              ) : (
+                <Badge variant="secondary">Estimate</Badge>
+              )}
             </div>
             <p className="truncate text-xs font-normal text-muted-foreground">{isCustom ? "Your amount" : formula}</p>
           </div>
@@ -468,6 +475,67 @@ function CutPlan() {
           );
         })}
       </ul>
+    </div>
+  );
+}
+
+/** Separate trip categories: switching re-estimates the budget for that kind of trip and says what changed. */
+function TripTypeSwitcher() {
+  const { trip } = useTrip();
+  const info = tripTypeInfo(trip.setup.tripType);
+  const modes = TRANSPORT_MODES.filter((m) => info.modes.includes(m.id));
+  return (
+    <div className="mb-4 space-y-3">
+      <div>
+        <p className="mb-2 text-sm font-bold">Trip type</p>
+        <div className="flex flex-wrap gap-2" role="group" aria-label="Trip type">
+          {TRIP_TYPES.map((t) => {
+            const active = trip.setup.tripType === t.id;
+            return (
+              <button
+                key={t.id}
+                type="button"
+                aria-pressed={active}
+                onClick={() => {
+                  if (active) return;
+                  const [headline, ...details] = tripActions.setTripType(t.id);
+                  if (headline) toast.success(headline, details.length ? { description: details.join(" ") } : undefined);
+                }}
+                className={cn(
+                  "min-h-11 rounded-full border px-4 py-2 text-sm font-semibold transition-all",
+                  active ? "border-primary bg-primary text-primary-foreground" : "border-border bg-card hover:border-primary/40",
+                )}
+              >
+                {t.label}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+      {modes.length > 1 && (
+        <div>
+          <p className="mb-2 text-sm font-bold">{info.modeQuestion}</p>
+          <div className="flex flex-wrap gap-2">
+            {modes.map((m) => {
+              const active = trip.inputs.transportMode === m.id;
+              return (
+                <button
+                  key={m.id}
+                  type="button"
+                  aria-pressed={active}
+                  onClick={() => tripActions.setTransportMode(m.id)}
+                  className={cn(
+                    "min-h-11 rounded-full border px-4 py-2 text-sm font-semibold transition-all",
+                    active ? "border-secondary-foreground/20 bg-secondary text-foreground" : "border-border bg-card hover:border-primary/40",
+                  )}
+                >
+                  {m.label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

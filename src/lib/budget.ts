@@ -8,6 +8,7 @@ import {
 } from "./demo-data";
 
 export const CATEGORIES = [
+  "cruise",
   "transportation",
   "gas",
   "tolls",
@@ -24,6 +25,7 @@ export const CATEGORIES = [
 export type Category = (typeof CATEGORIES)[number];
 
 export const CATEGORY_LABELS: Record<Category, string> = {
+  cruise: "Cruise fare & port fees",
   transportation: "Transportation",
   gas: "Gas",
   tolls: "Tolls",
@@ -43,6 +45,22 @@ export const OVERRIDABLE: Category[] = CATEGORIES.filter((c) => c !== "stops");
 
 /** Taxes are applied to these categories. */
 export const TAXABLE: Category[] = ["accommodations", "food", "snacks", "activities"];
+
+/**
+ * Categories that apply to a trip type: cruise costs only on cruises, road-trip
+ * stops only on road trips, gas and tolls only when driving.
+ */
+export function categoriesFor(tripType: TripType, mode: TransportMode): Category[] {
+  const driving = isDrivingMode(mode);
+  return CATEGORIES.filter((c) => {
+    if (c === "cruise") return tripType === "cruise";
+    if (c === "stops") return tripType === "road-trip";
+    if (c === "gas" || c === "tolls") return driving;
+    // Flying to a cruise port: no car to park.
+    if (c === "parking") return driving || tripType !== "cruise";
+    return true;
+  });
+}
 
 /** Sample assumption until a mapping service supplies real detour distances. */
 export const DETOUR_SAMPLE_MPH = 35;
@@ -69,6 +87,12 @@ export interface BudgetInputs {
   taxRatePct: number;
   /** Cushion applied to every planned category except road-trip stops and itself */
   miscPct: number;
+  /** Cruise fare per person per night (cabin, main dining). 0 when not cruising. */
+  cruisePerNight: number;
+  /** Port fees & taxes per person, whole cruise */
+  portFeesPerPerson: number;
+  /** Crew gratuities per person per night */
+  gratuitiesPerNight: number;
 }
 
 export type Overrides = Partial<Record<Category, number>>;
@@ -138,6 +162,11 @@ export function estimateCategories(
   set("water", toCents(inputs.waterPerPersonDay) * trip.travelers * trip.days);
   set("activities", toCents(inputs.activitiesPerPerson) * trip.travelers);
   set("stops", toCents(stopsTotal));
+  set(
+    "cruise",
+    (toCents(inputs.cruisePerNight) + toCents(inputs.gratuitiesPerNight)) * trip.travelers * trip.nights +
+      toCents(inputs.portFeesPerPerson) * trip.travelers,
+  );
 
   const taxBase = TAXABLE.reduce((s, c) => s + (eff[c] ?? 0), 0);
   set("taxes", Math.round((clampNum(inputs.taxRatePct) / 100) * taxBase));
@@ -192,19 +221,27 @@ export function percentLabel(t: Pick<BudgetTotals, "percentUsed">): string {
 const RENTAL_PER_DAY: Record<TravelStyle, number> = { budget: 55, comfort: 75, luxury: 140 };
 const LOCAL_TRANSIT_PER_DAY: Record<TravelStyle, number> = { budget: 20, comfort: 35, luxury: 80 };
 const SNACKS_PER_PERSON_DAY: Record<TravelStyle, number> = { budget: 6, comfort: 10, luxury: 18 };
+/** Generic cruise fare when a destination has none of its own (e.g. a typed-in cruise). */
+const CRUISE_PER_NIGHT: Record<TravelStyle, number> = { budget: 90, comfort: 150, luxury: 400 };
+const CRUISE_PORT_FEES = 150;
+const CRUISE_GRATUITIES: Record<TravelStyle, number> = { budget: 16, comfort: 18, luxury: 22 };
 
 /** Inputs that depend on how the traveler gets there. */
 export function modeDefaults(
   dest: DemoDestination,
   style: TravelStyle,
   mode: TransportMode,
+  tripType: TripType = "road-trip",
 ): Pick<BudgetInputs, "transportMode" | "farePerPerson" | "rentalPerDay" | "localTransitPerDay" | "parkingPerDay"> {
   const driving = isDrivingMode(mode);
+  const cruise = tripType === "cruise";
   return {
     transportMode: mode,
     farePerPerson: mode === "flight" || mode === "train" || mode === "bus" ? dest.fares[mode] : 0,
     rentalPerDay: RENTAL_PER_DAY[style],
-    localTransitPerDay: driving ? 0 : LOCAL_TRANSIT_PER_DAY[style],
+    // On a cruise the ship is the ride: only a transfer to the port, not daily rideshares.
+    localTransitPerDay: driving ? 0 : cruise ? 10 : LOCAL_TRANSIT_PER_DAY[style],
+    // Cruise port parking is charged per day; flying to the port needs none.
     parkingPerDay: driving ? dest.parkingPerDay : 0,
   };
 }
@@ -217,20 +254,26 @@ export function defaultInputs(
   mode: TransportMode = "car",
 ): BudgetInputs {
   const isStay = tripType === "staycation";
+  const cruise = tripType === "cruise";
   return {
     roundTripMiles: dest.roundTripMiles,
     mpg: 28,
     gasPrice: dest.gasPrice,
-    foodPerPersonDay: dest.foodPerPersonDay[style],
+    // Main dining is part of a cruise fare; destinations without cruise data get a quarter of the usual food budget.
+    foodPerPersonDay: cruise && !dest.cruisePerNight ? Math.round(dest.foodPerPersonDay[style] * 0.25) : dest.foodPerPersonDay[style],
     snacksPerPersonDay: SNACKS_PER_PERSON_DAY[style],
     waterPerPersonDay: style === "luxury" ? 8 : style === "comfort" ? 5 : 3,
-    nightlyRate: isStay && style !== "luxury" ? 0 : dest.nightly[style],
+    // A cruise cabin replaces hotel nights.
+    nightlyRate: cruise || (isStay && style !== "luxury") ? 0 : dest.nightly[style],
     rooms: Math.max(1, Math.ceil(travelers / 4)),
     tolls: dest.tolls,
     activitiesPerPerson: dest.activitiesPerPerson[style],
     taxRatePct: dest.taxRatePct,
     miscPct: 5,
-    ...modeDefaults(dest, style, mode),
+    cruisePerNight: cruise ? (dest.cruisePerNight ?? CRUISE_PER_NIGHT)[style] : 0,
+    portFeesPerPerson: cruise ? CRUISE_PORT_FEES : 0,
+    gratuitiesPerNight: cruise ? CRUISE_GRATUITIES[style] : 0,
+    ...modeDefaults(dest, style, mode, tripType),
   };
 }
 
@@ -269,6 +312,7 @@ export const MAX_CUT_SHARE: Partial<Record<Category, number>> = {
   gas: 0.15,
   tolls: 1,
   stops: 1,
+  cruise: 0.3,
 };
 
 export interface CutSuggestion {
@@ -342,7 +386,8 @@ export type SavingId =
   | "tolls"
   | "free-days"
   | "fuel-rewards"
-  | "fares";
+  | "fares"
+  | "cabin";
 
 export interface SavingTip {
   id: SavingId;
@@ -403,6 +448,11 @@ const SAVING_COPY: Record<SavingId, { title: string; detail: (dest: DemoDestinat
     detail: () => "Trade a paid activity for parks, free museum days and markets — about 25% off.",
     assumption: "Lowers your activities budget. Swap paid stops in your itinerary yourself to match.",
   },
+  cabin: {
+    title: "Book an inside cabin",
+    detail: () => "An inside cabin is often about 25% cheaper than an ocean view for the same sailing (example).",
+    assumption: "Lowers your cruise fare per night by 25%. Port fees and gratuities stay the same.",
+  },
   "fuel-rewards": {
     title: "Use a fuel rewards app",
     detail: () => "Save about $0.10 per gallon at partner stations.",
@@ -410,7 +460,7 @@ const SAVING_COPY: Record<SavingId, { title: string; detail: (dest: DemoDestinat
   },
 };
 
-const SAVING_ORDER: SavingId[] = ["picnic", "snacks", "refill", "lodging", "fares", "parking", "tolls", "free-days", "fuel-rewards"];
+const SAVING_ORDER: SavingId[] = ["cabin", "picnic", "snacks", "refill", "lodging", "fares", "parking", "tolls", "free-days", "fuel-rewards"];
 
 /** Inputs and overrides after applying a saving: the input changes plus clearing that category's custom total. */
 export function withSaving(id: SavingId, inputs: BudgetInputs, overrides: Overrides, dest: DemoDestination) {
@@ -478,6 +528,8 @@ export function applySaving(id: SavingId, inputs: BudgetInputs, dest: DemoDestin
       return { tolls: 0 };
     case "free-days":
       return { activitiesPerPerson: roundMoney(inputs.activitiesPerPerson * 0.75) };
+    case "cabin":
+      return { cruisePerNight: roundMoney(inputs.cruisePerNight * 0.75) };
     case "fuel-rewards":
       return { gasPrice: roundMoney(Math.max(0, inputs.gasPrice - 0.1)) };
   }
@@ -493,6 +545,7 @@ export const SAVING_CATEGORY: Record<SavingId, Category> = {
   tolls: "tolls",
   "free-days": "activities",
   "fuel-rewards": "gas",
+  cabin: "cruise",
 };
 
 export const SAVING_TITLES: Record<SavingId, string> = {
@@ -505,6 +558,7 @@ export const SAVING_TITLES: Record<SavingId, string> = {
   tolls: "Toll-free route",
   "free-days": "Free attractions",
   "fuel-rewards": "Fuel rewards",
+  cabin: "Inside cabin",
 };
 
 export function formatMoney(n: number, opts: { cents?: boolean } = {}): string {

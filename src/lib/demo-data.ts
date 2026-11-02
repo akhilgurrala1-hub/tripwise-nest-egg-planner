@@ -2,7 +2,8 @@
 // Every price, venue, and distance below is an illustrative example, not live data.
 // Replace with real travel-data integrations before relying on any figure.
 
-export type TripType = "road-trip" | "budget-vacation" | "staycation";
+/** How the trip is taken. Each type has its own transport options, destinations and budget categories. */
+export type TripType = "road-trip" | "flight" | "cruise" | "rail" | "staycation";
 export type TravelStyle = "budget" | "comfort" | "luxury";
 export type Interest =
   | "nature"
@@ -27,13 +28,42 @@ export const INTERESTS: { id: Interest; label: string }[] = [
   { id: "shopping", label: "Markets & shops" },
 ];
 
-export const TRIP_TYPES: { id: TripType; label: string; blurb: string }[] = [
-  { id: "road-trip", label: "Road trip", blurb: "Open road, flexible stops" },
-  { id: "budget-vacation", label: "Getaway", blurb: "A few nights somewhere new" },
-  { id: "staycation", label: "Staycation", blurb: "Explore close to home" },
+export type TransportMode = "car" | "rental-car" | "flight" | "train" | "bus";
+
+export const TRIP_TYPES: {
+  id: TripType;
+  label: string;
+  blurb: string;
+  /** Ways to travel for this trip type; the first is the default */
+  modes: TransportMode[];
+  /** Question shown above the transport choices */
+  modeQuestion: string;
+}[] = [
+  { id: "road-trip", label: "Road trip", blurb: "Open road, flexible stops", modes: ["car", "rental-car"], modeQuestion: "Whose car?" },
+  { id: "flight", label: "Fly-away", blurb: "Fly in, explore, fly home", modes: ["flight"], modeQuestion: "Getting there" },
+  { id: "cruise", label: "Cruise", blurb: "Cabin, meals & ports included", modes: ["car", "flight"], modeQuestion: "How are you getting to the port?" },
+  { id: "rail", label: "Train & bus", blurb: "Sit back and ride", modes: ["train", "bus"], modeQuestion: "Train or bus?" },
+  { id: "staycation", label: "Staycation", blurb: "Explore close to home", modes: ["car"], modeQuestion: "Getting around" },
 ];
 
-export type TransportMode = "car" | "rental-car" | "flight" | "train" | "bus";
+export function tripTypeInfo(t: TripType) {
+  return TRIP_TYPES.find((x) => x.id === t) ?? TRIP_TYPES[0]!;
+}
+
+/** A transport mode that fits the trip type: the current one if allowed, else the type's default. */
+export function modeForTripType(t: TripType, current: TransportMode): TransportMode {
+  const modes = tripTypeInfo(t).modes;
+  return modes.includes(current) ? current : modes[0]!;
+}
+
+/** Trip types from earlier versions ("budget-vacation" = Getaway) mapped onto today's types. */
+export function upgradeTripType(t: string, mode: TransportMode): TripType {
+  if (TRIP_TYPES.some((x) => x.id === t) && tripTypeInfo(t as TripType).modes.includes(mode)) return t as TripType;
+  if (t === "staycation") return "staycation";
+  if (mode === "flight") return "flight";
+  if (mode === "train" || mode === "bus") return "rail";
+  return "road-trip";
+}
 
 export const TRANSPORT_MODES: { id: TransportMode; label: string }[] = [
   { id: "car", label: "My car" },
@@ -89,15 +119,22 @@ export interface DemoDestination {
   activitiesPerPerson: Tiered;
   sights: DemoSight[];
   restaurants: DemoRestaurant[];
+  /** Cruise fare per person per night (cabin, main dining, onboard fun). Cruise destinations only. */
+  cruisePerNight?: Tiered;
+  /** Departure port for cruises: where travelers fly or drive to. */
+  port?: string;
+  /** A real town at the heart of the area, used for live weather. Prices above stay demo data. */
+  anchor?: { name: string; lat: number; lon: number };
 }
 
 export const DESTINATIONS: DemoDestination[] = [
   {
     id: "blue-ridge",
+    anchor: { name: "Asheville, NC", lat: 35.5951, lon: -82.5515 },
     name: "Blue Ridge Mountains",
     region: "North Carolina",
     tagline: "Scenic parkway drives & mountain towns",
-    bestFor: ["road-trip", "budget-vacation"],
+    bestFor: ["road-trip", "flight", "rail"],
     roundTripMiles: 480,
     gasPrice: 3.29,
     parkingPerDay: 12,
@@ -126,10 +163,11 @@ export const DESTINATIONS: DemoDestination[] = [
   },
   {
     id: "gulf-coast",
+    anchor: { name: "Gulf Shores, AL", lat: 30.246, lon: -87.7008 },
     name: "Emerald Gulf Coast",
     region: "Alabama & Florida",
     tagline: "White sand beaches without the big price tag",
-    bestFor: ["budget-vacation", "road-trip"],
+    bestFor: ["road-trip", "flight", "rail"],
     roundTripMiles: 620,
     gasPrice: 3.09,
     parkingPerDay: 15,
@@ -158,10 +196,11 @@ export const DESTINATIONS: DemoDestination[] = [
   },
   {
     id: "red-rock",
+    anchor: { name: "Moab, UT", lat: 38.5733, lon: -109.5498 },
     name: "Red Rock Canyons",
     region: "Southern Utah",
     tagline: "Arches, canyons & star-filled skies",
-    bestFor: ["road-trip"],
+    bestFor: ["road-trip", "flight"],
     roundTripMiles: 760,
     gasPrice: 3.59,
     parkingPerDay: 5,
@@ -190,10 +229,11 @@ export const DESTINATIONS: DemoDestination[] = [
   },
   {
     id: "historic-coast",
+    anchor: { name: "Savannah, GA", lat: 32.0809, lon: -81.0912 },
     name: "Historic Lowcountry",
     region: "Georgia & South Carolina",
     tagline: "Oak-lined squares, porches & Southern kitchens",
-    bestFor: ["budget-vacation", "road-trip"],
+    bestFor: ["road-trip", "flight", "rail"],
     roundTripMiles: 540,
     gasPrice: 3.15,
     parkingPerDay: 20,
@@ -222,10 +262,11 @@ export const DESTINATIONS: DemoDestination[] = [
   },
   {
     id: "pacific-coast",
+    anchor: { name: "Big Sur, CA", lat: 36.2704, lon: -121.8081 },
     name: "Pacific Coast Highway",
     region: "Central California",
     tagline: "Cliffside curves, redwoods & ocean views",
-    bestFor: ["road-trip"],
+    bestFor: ["road-trip", "flight", "rail"],
     roundTripMiles: 400,
     gasPrice: 4.79,
     parkingPerDay: 25,
@@ -250,6 +291,78 @@ export const DESTINATIONS: DemoDestination[] = [
       { name: "Cypress Garden Café", cuisine: "Californian", tier: 2, costPerPerson: 40 },
       { name: "Cliff House Kitchen", cuisine: "Ocean-view tasting", tier: 3, costPerPerson: 135 },
       { name: "Redwood Hearth", cuisine: "Wood-fired fine dining", tier: 3, costPerPerson: 96 },
+    ],
+  },
+  {
+    id: "caribbean-cruise",
+    anchor: { name: "Nassau, Bahamas", lat: 25.0443, lon: -77.3504 },
+    port: "Miami, FL",
+    name: "Bahamas & Caribbean",
+    region: "Cruise from Miami, FL",
+    tagline: "Island hops with your cabin & meals included",
+    bestFor: ["cruise"],
+    roundTripMiles: 600,
+    gasPrice: 3.19,
+    parkingPerDay: 22,
+    tolls: 12,
+    taxRatePct: 7,
+    fares: { flight: 280, train: 160, bus: 110 },
+    // Cabin is in the cruise fare, so no hotel nights.
+    nightly: { budget: 0, comfort: 0, luxury: 0 },
+    cruisePerNight: { budget: 80, comfort: 140, luxury: 380 },
+    // Main dining is included: this covers specialty dining, drinks and lunches ashore.
+    foodPerPersonDay: { budget: 10, comfort: 25, luxury: 60 },
+    activitiesPerPerson: { budget: 60, comfort: 150, luxury: 350 },
+    sights: [
+      { name: "Public Beach Day in Port", area: "Port of call", costPerPerson: 0, interests: ["beaches", "nature", "family"], note: "Free — bring towels from the ship" },
+      { name: "Old Town Walking Tour", area: "Historic downtown", costPerPerson: 0, interests: ["history", "arts", "shopping"], note: "Self-guided from the pier" },
+      { name: "Snorkel Shore Excursion", area: "Reef near port", costPerPerson: 65, interests: ["adventure", "beaches"], note: "Book through the cruise line or a local operator" },
+      { name: "Straw Market & Local Crafts", area: "Near the pier", costPerPerson: 0, interests: ["shopping", "arts"], note: "Haggling is expected" },
+      { name: "Onboard Show & Live Music", area: "Ship theater", costPerPerson: 0, interests: ["arts", "nightlife", "family"], note: "Included in your fare", evening: true },
+      { name: "Private Island Cabana", area: "Cruise line's island", costPerPerson: 180, interests: ["beaches"], note: "Reserve early — sells out" },
+    ],
+    restaurants: [
+      { name: "Main Dining Room", cuisine: "Included with your fare", tier: 1, costPerPerson: 0 },
+      { name: "Lido Buffet", cuisine: "Included with your fare", tier: 1, costPerPerson: 0 },
+      { name: "Conch Shack Ashore", cuisine: "Bahamian seafood", tier: 2, costPerPerson: 18 },
+      { name: "Poolside Grill", cuisine: "Included burgers & tacos", tier: 2, costPerPerson: 0 },
+      { name: "Onboard Steakhouse", cuisine: "Specialty dining", tier: 3, costPerPerson: 55 },
+      { name: "Chef's Table", cuisine: "Specialty tasting menu", tier: 3, costPerPerson: 95 },
+    ],
+  },
+  {
+    id: "alaska-cruise",
+    anchor: { name: "Juneau, AK", lat: 58.3019, lon: -134.4197 },
+    port: "Seattle, WA",
+    name: "Alaska Inside Passage",
+    region: "Cruise from Seattle, WA",
+    tagline: "Glaciers, whales & rainforest ports",
+    bestFor: ["cruise"],
+    roundTripMiles: 300,
+    gasPrice: 4.29,
+    parkingPerDay: 25,
+    tolls: 0,
+    taxRatePct: 10,
+    fares: { flight: 320, train: 150, bus: 100 },
+    nightly: { budget: 0, comfort: 0, luxury: 0 },
+    cruisePerNight: { budget: 110, comfort: 180, luxury: 450 },
+    foodPerPersonDay: { budget: 12, comfort: 28, luxury: 70 },
+    activitiesPerPerson: { budget: 90, comfort: 220, luxury: 500 },
+    sights: [
+      { name: "Glacier Viewing from Deck", area: "Scenic cruising", costPerPerson: 0, interests: ["nature", "family"], note: "Dress warm — bring binoculars" },
+      { name: "Rainforest Trail Walk", area: "Port town", costPerPerson: 0, interests: ["nature", "adventure"], note: "Easy trail a short walk from the pier" },
+      { name: "Whale-Watching Excursion", area: "Inside Passage", costPerPerson: 140, interests: ["nature", "adventure", "family"], note: "Best on calm mornings" },
+      { name: "Gold Rush History Museum", area: "Historic district", costPerPerson: 15, interests: ["history"], note: "About an hour" },
+      { name: "Onboard Naturalist Talk", area: "Ship lounge", costPerPerson: 0, interests: ["nature", "history", "family"], note: "Included in your fare", evening: true },
+      { name: "Glacier Helicopter Landing", area: "Icefield", costPerPerson: 380, interests: ["adventure"], note: "Weather permitting" },
+    ],
+    restaurants: [
+      { name: "Main Dining Room", cuisine: "Included with your fare", tier: 1, costPerPerson: 0 },
+      { name: "Marketplace Buffet", cuisine: "Included with your fare", tier: 1, costPerPerson: 0 },
+      { name: "Crab Shack Ashore", cuisine: "Alaskan king crab", tier: 2, costPerPerson: 35 },
+      { name: "Pizzeria Deck", cuisine: "Included pizza", tier: 2, costPerPerson: 0 },
+      { name: "Onboard Seafood Grill", cuisine: "Specialty dining", tier: 3, costPerPerson: 50 },
+      { name: "Wine-Paired Dinner", cuisine: "Specialty tasting menu", tier: 3, costPerPerson: 110 },
     ],
   },
   {
@@ -290,15 +403,18 @@ export const CUSTOM_DESTINATION_ID = "custom";
 
 /** Generic template used when the traveler types a destination we don't have demo data for. */
 export function buildCustomDestination(name: string): DemoDestination {
-  const base = DESTINATIONS[0]!;
+  // The template's anchor town is a real place elsewhere: never let a custom destination inherit it.
+  const { anchor: _anchor, ...base } = DESTINATIONS[0]!;
   const label = name.trim() || "Your destination";
+  // "Chattanooga, TN" → "Chattanooga" for example venue names.
+  const short = label.split(",")[0]!.trim() || label;
   return {
     ...base,
     id: CUSTOM_DESTINATION_ID,
     name: label,
     region: "Custom destination",
     tagline: "Estimated with generic demo prices",
-    bestFor: ["road-trip", "budget-vacation", "staycation"],
+    bestFor: ["road-trip", "flight", "cruise", "rail", "staycation"],
     roundTripMiles: 350,
     gasPrice: 3.4,
     parkingPerDay: 15,
@@ -306,10 +422,10 @@ export function buildCustomDestination(name: string): DemoDestination {
     taxRatePct: 12,
     fares: { flight: 300, train: 140, bus: 90 },
     sights: [
-      { name: `${label} Old Town Walk`, area: "City center", costPerPerson: 0, interests: ["history", "arts", "shopping"], note: "Self-guided stroll" },
-      { name: `${label} Regional Park`, area: "Outskirts", costPerPerson: 5, interests: ["nature", "family", "adventure"], note: "Trails & picnic areas" },
-      { name: `${label} History Museum`, area: "Museum row", costPerPerson: 15, interests: ["history", "family"], note: "Allow 2 hours" },
-      { name: `${label} Waterfront`, area: "Harbor or riverfront", costPerPerson: 0, interests: ["beaches", "nightlife", "food"], note: "Great at sunset" },
+      { name: `${short} Old Town Walk`, area: "City center", costPerPerson: 0, interests: ["history", "arts", "shopping"], note: "Self-guided stroll" },
+      { name: `${short} Regional Park`, area: "Outskirts", costPerPerson: 5, interests: ["nature", "family", "adventure"], note: "Trails & picnic areas" },
+      { name: `${short} History Museum`, area: "Museum row", costPerPerson: 15, interests: ["history", "family"], note: "Allow 2 hours" },
+      { name: `${short} Waterfront`, area: "Harbor or riverfront", costPerPerson: 0, interests: ["beaches", "nightlife", "food"], note: "Great at sunset" },
       { name: "Local Live Music Venue", area: "Entertainment district", costPerPerson: 20, interests: ["arts", "nightlife"], note: "Check the weekly lineup", evening: true },
       { name: "Guided Adventure Outing", area: "Nearby", costPerPerson: 65, interests: ["adventure"], note: "Half-day tour" },
     ],

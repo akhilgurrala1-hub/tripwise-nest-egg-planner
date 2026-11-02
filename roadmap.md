@@ -2,8 +2,8 @@
 
 ## Audit & fix round (current)
 - [ ] P1 Cross-tab sync, stable trip IDs, AI results scoped to the trip they were requested for
-- [ ] P1 Trip type ↔ transport ↔ route consistency (flights get airport handling, no driving stops)
-- [ ] P1 Trip-type transitions explain what changed
+- [x] P1 Trip type ↔ transport ↔ route consistency (flights get airport handling, no driving stops)
+- [x] P1 Trip-type transitions explain what changed
 - [ ] P1 Date inputs: no reverting, one-day trips, timezone-safe dates, clear validation
 - [ ] P2 One shared money engine in cents; "No spendable budget" instead of 999%
 - [ ] P2 Itinerary ↔ activities budget discrepancy flag + explicit sync
@@ -16,6 +16,14 @@
 - [ ] P4 Dark-mode contrast, 44px touch targets, responsive check
 - [ ] P4 Itinerary editing: add, edit, swap, reorder, undo remove
 - [ ] Tests + browser checks (two tabs, delayed AI, mobile, both themes)
+
+## Live data & flow (done)
+- [x] Live weather per trip day (forecast + typical beyond 16 days), weather-aware AI itineraries and rainy-day hints
+- [x] Real place autocomplete for destinations and starting city
+- [x] Live prices panel on the Budget page, per-category "Live price" labels, stale/date-changed warnings, connection status
+- [x] Dashboard planning checklist (plan → live prices → stops → itinerary → save)
+- [x] Separate trip types: road trip, fly-away, cruise (fare, gratuities, port fees), train & bus, staycation
+- [x] Fixed custom/staycation destinations being searched as "X, Custom destination"
 
 ## Later (waiting on decisions or credentials)
 - [ ] AI that learns preferences from past trips — after saved trips

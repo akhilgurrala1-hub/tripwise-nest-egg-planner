@@ -97,7 +97,10 @@ function TripsPage() {
 
   const open = (row: SavedTripRow) => {
     const ok = tripActions.openSavedTrip(row.data, { id: row.id, revision: row.revision, name: row.name, savedAt: row.updated_at });
-    if (!ok) return toast.error("This trip was saved in a format this version can't open.");
+    if (!ok) {
+      toast.error("This trip was saved in a format this version can't open.");
+      return;
+    }
     toast.success(`Opened “${row.name}”`);
     navigate({ to: "/dashboard" });
   };

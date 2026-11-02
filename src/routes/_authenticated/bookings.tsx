@@ -41,7 +41,7 @@ function BookingsPage() {
   const queryClient = useQueryClient();
   const live = trip.live;
   const refresh = () => queryClient.invalidateQueries({ queryKey: bookingsQuery.queryKey });
-  const place = destinationQuery(dest);
+  const place = destinationQuery(dest, trip.setup.origin);
 
   const track = async (b: NewBooking) => {
     try {

@@ -20,6 +20,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { useCallback, useState } from "react";
+import { toast } from "sonner";
 
 import { DemoBadge, NumberField } from "@/components/app/bits";
 import { RealRouteMap } from "@/components/app/RealRouteMap";
@@ -29,7 +30,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Slider } from "@/components/ui/slider";
 import { formatMoney, roundMoney, stopCost } from "@/lib/budget";
-import { INTERESTS, isDrivingMode, type Interest } from "@/lib/demo-data";
+import { INTERESTS, TRIP_TYPES, isDrivingMode, type Interest } from "@/lib/demo-data";
 import {
   STOP_FILTERS,
   getRouteProvider,
@@ -150,6 +151,8 @@ function RoadTripPage() {
     tripActions.updateRoadTrip({
       interests: rt.interests.includes(id) ? rt.interests.filter((i) => i !== id) : [...rt.interests, id],
     });
+
+  if (trip.setup.tripType !== "road-trip") return <NotARoadTrip />;
 
   return (
     <div>
@@ -614,6 +617,39 @@ function StateCard({ icon, title, children }: { icon: React.ReactNode; title: st
       <span className="grid size-11 place-items-center rounded-full bg-muted">{icon}</span>
       <p className="font-display text-lg font-semibold">{title}</p>
       <p className="max-w-sm text-sm text-muted-foreground">{children}</p>
+    </div>
+  );
+}
+
+/** Shown when the current trip isn't a road trip: stops along a drive don't apply. */
+function NotARoadTrip() {
+  const { trip } = useTrip();
+  const label = TRIP_TYPES.find((t) => t.id === trip.setup.tripType)?.label ?? "This trip";
+  return (
+    <div>
+      <PageHeader eyebrow="Road trip" title="Stops along the drive" />
+      <div className="mx-auto mt-6 max-w-2xl px-4">
+        <section className="surface-card p-6 text-center">
+          <p className="font-display text-xl font-semibold">Your trip is a {label.toLowerCase()}, not a road trip</p>
+          <p className="mt-2 text-sm text-muted-foreground">
+            Route stops and detours are for road trips. Switch the trip type to plan stops, or head to your itinerary.
+          </p>
+          <div className="mt-5 flex flex-wrap justify-center gap-2">
+            <Button
+              variant="hero"
+              onClick={() => {
+                const [headline, ...details] = tripActions.setTripType("road-trip");
+                if (headline) toast.success(headline, details.length ? { description: details.join(" ") } : undefined);
+              }}
+            >
+              Make it a road trip
+            </Button>
+            <Button asChild variant="outline">
+              <Link to="/itinerary">Open itinerary</Link>
+            </Button>
+          </div>
+        </section>
+      </div>
     </div>
   );
 }

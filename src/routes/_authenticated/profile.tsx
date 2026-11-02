@@ -50,7 +50,10 @@ function ProfilePage() {
   const airportOk = form.home_airport === "" || /^[A-Z]{3}$/.test(form.home_airport);
 
   const save = async () => {
-    if (!airportOk) return toast.error("Home airport should be a 3-letter code, like CLT.");
+    if (!airportOk) {
+      toast.error("Home airport should be a 3-letter code, like CLT.");
+      return;
+    }
     setSaving(true);
     try {
       await savePreferences(userId, { ...form, home_city: form.home_city.trim() });
