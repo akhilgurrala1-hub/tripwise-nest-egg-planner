@@ -20,6 +20,8 @@ export interface ItineraryItem {
   rating?: number | null;
   ratingCount?: number | null;
   costSource?: CostSource;
+  /** Added or edited by the traveler (shown as "Your stop"; never replaced by suggestions) */
+  custom?: boolean;
 }
 
 export interface ItineraryDay {

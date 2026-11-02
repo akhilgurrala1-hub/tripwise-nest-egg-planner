@@ -1,6 +1,8 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
+import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+
 const inputSchema = z.object({
   destination: z.string().min(1).max(120),
   region: z.string().max(120),
@@ -17,7 +19,9 @@ const inputSchema = z.object({
   weather: z.array(z.string().max(120)).max(14).default([]),
 });
 
+/** Signed-in only: each call spends AI credits, so it must never be callable anonymously. */
 export const createAiItinerary = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
   .inputValidator((data: unknown) => inputSchema.parse(data))
   .handler(async ({ data }) => {
     const { generateAiItinerary } = await import("./ai/itinerary-ai.server");

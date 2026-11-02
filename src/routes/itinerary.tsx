@@ -21,6 +21,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 
 import { DemoBadge } from "@/components/app/bits";
+import { AddItemButton, ItemActions } from "@/components/app/ItineraryEditor";
 import { LogoMark } from "@/components/app/Logo";
 import { stagger } from "@/components/app/motion";
 import { WeatherChip } from "@/components/app/Weather";
@@ -142,8 +143,8 @@ function ItineraryPage() {
           })),
         })),
       };
-      tripActions.setItinerary(next);
-      toast.success("AI itinerary ready — double-check details before you go");
+      const kept = tripActions.setItinerary(next);
+      toast.success("Plan ready — double-check details before you go", keptNote(kept));
     } catch {
       toast.error("Couldn't reach the AI planner. Please try again in a moment.");
     } finally {
@@ -169,7 +170,7 @@ function ItineraryPage() {
         toast.error(res.error);
         return;
       }
-      tripActions.setItinerary(
+      const kept = tripActions.setItinerary(
         buildRealItinerary({
           sights: res.sights,
           restaurants: res.restaurants,
@@ -180,7 +181,7 @@ function ItineraryPage() {
           tripType: trip.setup.tripType,
         }),
       );
-      toast.success("Itinerary built from real places on Google Maps");
+      toast.success("Itinerary built from real places on Google Maps", keptNote(kept));
     } catch {
       toast.error("Couldn't reach the map service. Please try again in a moment.");
     } finally {
@@ -206,23 +207,31 @@ function ItineraryPage() {
           ) : (
             <Button variant="ink" asChild className="flex-1 sm:flex-none">
               <Link to="/auth" search={{ redirect: "/itinerary" }}>
-                <MapPin /> Sign in for real places
+                <MapPin /> Sign in for real places & planning
               </Link>
             </Button>
           )}
-          <Button
-            variant="outline"
-            onClick={generateWithAi}
-            disabled={busy}
-            className="flex-1 sm:flex-none"
-          >
-            {loading ? <Loader2 className="animate-spin" /> : <Wand2 />}
-            {loading ? "Planning…" : "Plan around my interests"}
-          </Button>
+          {/* AI planning spends credits, so like the map lookups it's for signed-in travelers. */}
+          {user && (
+            <Button
+              variant="outline"
+              onClick={generateWithAi}
+              disabled={busy}
+              className="flex-1 sm:flex-none"
+            >
+              {loading ? <Loader2 className="animate-spin" /> : <Wand2 />}
+              {loading ? "Planning…" : "Plan around my interests"}
+            </Button>
+          )}
           <Button
             variant="ghost"
             size="icon"
-            onClick={tripActions.regenerateDemoItinerary}
+            onClick={() => {
+              tripActions.regenerateDemoItinerary();
+              toast("Reset to the demo plan", {
+                description: "Stops you added or edited were kept.",
+              });
+            }}
             disabled={busy}
             aria-label="Reset to the demo plan"
             title="Reset to the demo plan"
@@ -376,7 +385,14 @@ function ItineraryPage() {
                           <p className="eyebrow inline-flex items-center gap-1">
                             <TimeIcon time={item.time} /> {item.time}
                           </p>
-                          <p className="mt-0.5 text-sm leading-snug font-medium">{item.name}</p>
+                          <p className="mt-0.5 text-sm leading-snug font-medium">
+                            {item.name}
+                            {item.custom && (
+                              <span className="ml-2 inline-flex -translate-y-px items-center rounded-[5px] border border-border px-1.5 text-[10px] font-medium text-muted-foreground">
+                                Yours
+                              </span>
+                            )}
+                          </p>
                           <p className="text-xs text-muted-foreground">
                             {item.area}
                             {item.note ? ` · ${item.note}` : ""}
@@ -409,14 +425,10 @@ function ItineraryPage() {
                           )}
                         </div>
                         <div className="flex shrink-0 items-start gap-1">
-                          <CostChip item={item} />
-                          <button
-                            onClick={() => tripActions.removeItineraryItem(item.id)}
-                            className="grid size-6 place-items-center rounded-full text-muted-foreground opacity-60 transition hover:bg-muted hover:opacity-100"
-                            aria-label={`Remove ${item.name}`}
-                          >
-                            <X className="size-3.5" />
-                          </button>
+                          <span className="pt-1.5">
+                            <CostChip item={item} />
+                          </span>
+                          <ItemActions item={item} itinerary={itin} dayIndex={di} />
                         </div>
                       </li>
                     );
@@ -427,6 +439,9 @@ function ItineraryPage() {
                     </li>
                   )}
                 </ol>
+                <div className="px-5 pb-4">
+                  <AddItemButton dayIndex={di} itinerary={itin} />
+                </div>
               </section>
             ))
           )}
@@ -538,4 +553,11 @@ const TIME_ICONS = {
 function TimeIcon({ time }: { time: keyof typeof TIME_ICONS }) {
   const Icon = TIME_ICONS[time] ?? Sun;
   return <Icon className="size-3" aria-hidden />;
+}
+
+/** Toast detail when rebuilding a plan kept the traveler's own stops. */
+function keptNote(kept: number) {
+  return kept > 0
+    ? { description: `Kept ${kept} stop${kept === 1 ? "" : "s"} you added or edited.` }
+    : undefined;
 }
