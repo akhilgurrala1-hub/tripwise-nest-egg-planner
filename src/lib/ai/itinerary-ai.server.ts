@@ -45,8 +45,7 @@ export interface AiItineraryRequest {
 }
 
 export type AiItineraryResult =
-  | { ok: true; itinerary: AiItinerary }
-  | { ok: false; status: number; error: string };
+  { ok: true; itinerary: AiItinerary } | { ok: false; status: number; error: string };
 
 const INSTRUCTIONS = `You are Waypoint, a friendly travel planner focused on budget-friendly vacations, road trips and staycations, while still delighting luxury travelers.
 Create a realistic day-by-day itinerary. Each day has 4-5 items: a Morning stop, Lunch, an Afternoon stop, Dinner, and optionally an Evening item.
@@ -58,8 +57,18 @@ For a fly-away trip, Day 1 starts with the flight in; for a train or bus trip, w
 When weather is given, plan around it: put indoor sights on days with rain, snow or storms, save outdoor highlights for dry days, and mention the weather in a tip when it matters.`;
 
 function describeError(err: unknown): { status: number; error: string } {
-  const e = err as { statusCode?: number; status?: number; message?: string; cause?: unknown; responseBody?: string };
-  const status = e?.statusCode ?? e?.status ?? (e?.cause as { statusCode?: number } | undefined)?.statusCode ?? 500;
+  const e = err as {
+    statusCode?: number;
+    status?: number;
+    message?: string;
+    cause?: unknown;
+    responseBody?: string;
+  };
+  const status =
+    e?.statusCode ??
+    e?.status ??
+    (e?.cause as { statusCode?: number } | undefined)?.statusCode ??
+    500;
   let safe = "";
   try {
     const body = e?.responseBody ? JSON.parse(e.responseBody) : null;
@@ -67,10 +76,23 @@ function describeError(err: unknown): { status: number; error: string } {
   } catch {
     /* not JSON */
   }
-  if (status === 402) return { status, error: safe || "AI credits have run out. Add credits to keep generating itineraries." };
-  if (status === 429) return { status, error: "The AI planner is busy right now. Please wait a moment and try again." };
-  if (status === 403) return { status, error: safe || "AI planning isn't available for this workspace right now." };
-  return { status, error: safe || "The AI planner couldn't create an itinerary. Your demo plan is still available." };
+  if (status === 402)
+    return {
+      status,
+      error: safe || "AI credits have run out. Add credits to keep generating itineraries.",
+    };
+  if (status === 429)
+    return {
+      status,
+      error: "The AI planner is busy right now. Please wait a moment and try again.",
+    };
+  if (status === 403)
+    return { status, error: safe || "AI planning isn't available for this workspace right now." };
+  return {
+    status,
+    error:
+      safe || "The AI planner couldn't create an itinerary. Your demo plan is still available.",
+  };
 }
 
 export async function generateAiItinerary(req: AiItineraryRequest): Promise<AiItineraryResult> {
@@ -119,7 +141,11 @@ export async function generateAiItinerary(req: AiItineraryRequest): Promise<AiIt
     });
     const output = await result.output;
     if (!output || !Array.isArray(output.days) || output.days.length === 0) {
-      return { ok: false, status: 502, error: "The AI planner returned an empty plan. Your demo plan is still available." };
+      return {
+        ok: false,
+        status: 502,
+        error: "The AI planner returned an empty plan. Your demo plan is still available.",
+      };
     }
     return { ok: true, itinerary: output };
   } catch (err) {

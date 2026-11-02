@@ -27,9 +27,15 @@ export const Route = createFileRoute("/_authenticated/trips")({
   head: () => ({
     meta: [
       { title: "Saved trips — Waypoint" },
-      { name: "description", content: "Open, rename, copy and delete the trips saved to your Waypoint account." },
+      {
+        name: "description",
+        content: "Open, rename, copy and delete the trips saved to your Waypoint account.",
+      },
       { property: "og:title", content: "Saved trips — Waypoint" },
-      { property: "og:description", content: "All your planned trips and budgets, saved to your account." },
+      {
+        property: "og:description",
+        content: "All your planned trips and budgets, saved to your account.",
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],
@@ -74,7 +80,9 @@ function TripsPage() {
 
   const save = async () => {
     setSaving(true);
-    const res = trip.cloud ? await saveCurrentTrip() : await saveCurrentTripAsNew(newName.trim() || defaultTripName());
+    const res = trip.cloud
+      ? await saveCurrentTrip()
+      : await saveCurrentTripAsNew(newName.trim() || defaultTripName());
     setSaving(false);
     refresh();
     if (res.ok) {
@@ -85,7 +93,9 @@ function TripsPage() {
         action: {
           label: "Save as a copy",
           onClick: async () => {
-            const copy = await saveCurrentTripAsNew(`${trip.cloud?.name ?? defaultTripName()} (copy)`);
+            const copy = await saveCurrentTripAsNew(
+              `${trip.cloud?.name ?? defaultTripName()} (copy)`,
+            );
             refresh();
             if (copy.ok) toast.success("Saved as a new trip");
             else toast.error(copy.error);
@@ -96,7 +106,12 @@ function TripsPage() {
   };
 
   const open = (row: SavedTripRow) => {
-    const ok = tripActions.openSavedTrip(row.data, { id: row.id, revision: row.revision, name: row.name, savedAt: row.updated_at });
+    const ok = tripActions.openSavedTrip(row.data, {
+      id: row.id,
+      revision: row.revision,
+      name: row.name,
+      savedAt: row.updated_at,
+    });
     if (!ok) {
       toast.error("This trip was saved in a format this version can't open.");
       return;
@@ -114,10 +129,13 @@ function TripsPage() {
           {trip.cloud ? (
             <p className="mt-1 text-sm text-muted-foreground">
               Saved as <strong className="text-foreground">{trip.cloud.name}</strong> · last saved{" "}
-              {new Date(trip.cloud.savedAt).toLocaleString()}. Save again to keep your latest changes.
+              {new Date(trip.cloud.savedAt).toLocaleString()}. Save again to keep your latest
+              changes.
             </p>
           ) : (
-            <p className="mt-1 text-sm text-muted-foreground">Not saved yet. It's only on this device until you save it.</p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Not saved yet. It's only on this device until you save it.
+            </p>
           )}
           <div className="mt-4 flex flex-wrap gap-2">
             {!trip.cloud && (
@@ -154,7 +172,11 @@ function TripsPage() {
           <h2 className="font-display text-xl font-semibold">All trips ({active.length})</h2>
           {active.length === 0 && (
             <div className="surface-card p-6 text-center text-sm text-muted-foreground">
-              No saved trips yet. <Link to="/" className="font-semibold text-primary">Plan a trip</Link> and save it here.
+              No saved trips yet.{" "}
+              <Link to="/" className="font-semibold text-primary">
+                Plan a trip
+              </Link>{" "}
+              and save it here.
             </div>
           )}
           {active.map((row) => (
@@ -168,7 +190,10 @@ function TripsPage() {
               onDelete={() =>
                 run(() => setTripDeleted(row.id, true), "Trip deleted").then(() =>
                   toast.message(`“${row.name}” moved to recently deleted`, {
-                    action: { label: "Undo", onClick: () => run(() => setTripDeleted(row.id, false), "Trip restored") },
+                    action: {
+                      label: "Undo",
+                      onClick: () => run(() => setTripDeleted(row.id, false), "Trip restored"),
+                    },
                   }),
                 )
               }
@@ -178,15 +203,26 @@ function TripsPage() {
 
         {deleted.length > 0 && (
           <section className="space-y-3">
-            <h2 className="font-display text-lg font-semibold text-muted-foreground">Recently deleted</h2>
+            <h2 className="font-display text-lg font-semibold text-muted-foreground">
+              Recently deleted
+            </h2>
             {deleted.map((row) => (
-              <div key={row.id} className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-dashed border-border p-4">
+              <div
+                key={row.id}
+                className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-dashed border-border p-4"
+              >
                 <div className="min-w-0">
                   <p className="truncate font-semibold">{row.name}</p>
-                  <p className="text-xs text-muted-foreground">Deleted {new Date(row.deleted_at!).toLocaleDateString()}</p>
+                  <p className="text-xs text-muted-foreground">
+                    Deleted {new Date(row.deleted_at!).toLocaleDateString()}
+                  </p>
                 </div>
                 <div className="flex gap-2">
-                  <Button size="sm" variant="outline" onClick={() => run(() => setTripDeleted(row.id, false), "Trip restored")}>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => run(() => setTripDeleted(row.id, false), "Trip restored")}
+                  >
                     <RotateCcw /> Restore
                   </Button>
                   <Button
@@ -245,7 +281,13 @@ function TripRow({
               commit();
             }}
           >
-            <Input value={name} onChange={(e) => setName(e.target.value)} maxLength={120} autoFocus aria-label="New trip name" />
+            <Input
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              maxLength={120}
+              autoFocus
+              aria-label="New trip name"
+            />
             <Button type="submit" size="icon" variant="outline" aria-label="Save name">
               <Check />
             </Button>
@@ -269,19 +311,32 @@ function TripRow({
           </p>
         )}
         <p className="mt-0.5 text-xs text-muted-foreground">{summary(row)}</p>
-        <p className="text-xs text-muted-foreground">Updated {new Date(row.updated_at).toLocaleString()}</p>
+        <p className="text-xs text-muted-foreground">
+          Updated {new Date(row.updated_at).toLocaleString()}
+        </p>
       </div>
       <div className="flex flex-wrap gap-1.5">
         <Button size="sm" variant="ink" onClick={onOpen}>
           <FolderOpen /> Open
         </Button>
-        <Button size="sm" variant="outline" onClick={() => setEditing(true)} aria-label={`Rename ${row.name}`}>
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={() => setEditing(true)}
+          aria-label={`Rename ${row.name}`}
+        >
           <Pencil /> Rename
         </Button>
         <Button size="sm" variant="outline" onClick={onCopy} aria-label={`Copy ${row.name}`}>
           <Copy /> Copy
         </Button>
-        <Button size="sm" variant="ghost" className="text-destructive" onClick={onDelete} aria-label={`Delete ${row.name}`}>
+        <Button
+          size="sm"
+          variant="ghost"
+          className="text-destructive"
+          onClick={onDelete}
+          aria-label={`Delete ${row.name}`}
+        >
           <Trash2 /> Delete
         </Button>
       </div>

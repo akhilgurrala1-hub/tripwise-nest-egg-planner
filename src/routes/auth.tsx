@@ -10,13 +10,21 @@ import { supabase } from "@/integrations/supabase/client";
 import { safeRedirect, useAuth } from "@/lib/auth-context";
 
 export const Route = createFileRoute("/auth")({
-  validateSearch: (search: Record<string, unknown>) => ({ redirect: safeRedirect(search["redirect"]) }),
+  validateSearch: (search: Record<string, unknown>) => ({
+    redirect: safeRedirect(search["redirect"]),
+  }),
   head: () => ({
     meta: [
       { title: "Sign in — Waypoint" },
-      { name: "description", content: "Sign in or create a Waypoint account to see real places along your route." },
+      {
+        name: "description",
+        content: "Sign in or create a Waypoint account to see real places along your route.",
+      },
       { property: "og:title", content: "Sign in — Waypoint" },
-      { property: "og:description", content: "Create a free Waypoint account to unlock real routes and places." },
+      {
+        property: "og:description",
+        content: "Create a free Waypoint account to unlock real routes and places.",
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
@@ -94,14 +102,25 @@ function AuthPage() {
                 ? `We sent a confirmation link to ${email}. Open it to finish creating your account.`
                 : `If an account exists for ${email}, a password reset link is on its way.`}
             </p>
-            <Button variant="outline" className="mt-6 w-full" onClick={() => { setSent(""); setMode("signin"); }}>
+            <Button
+              variant="outline"
+              className="mt-6 w-full"
+              onClick={() => {
+                setSent("");
+                setMode("signin");
+              }}
+            >
               Back to sign in
             </Button>
           </>
         ) : (
           <>
             <h1 className="mt-4 font-display text-3xl font-semibold">
-              {mode === "signin" ? "Welcome back" : mode === "signup" ? "Create your account" : "Reset your password"}
+              {mode === "signin"
+                ? "Welcome back"
+                : mode === "signup"
+                  ? "Create your account"
+                  : "Reset your password"}
             </h1>
             <p className="mt-1 text-sm text-muted-foreground">
               {mode === "forgot"
@@ -126,7 +145,11 @@ function AuthPage() {
                   <div className="flex items-baseline justify-between">
                     <Label htmlFor="password">Password</Label>
                     {mode === "signin" && (
-                      <button type="button" onClick={() => setMode("forgot")} className="text-xs font-semibold text-primary">
+                      <button
+                        type="button"
+                        onClick={() => setMode("forgot")}
+                        className="text-xs font-semibold text-primary"
+                      >
                         Forgot password?
                       </button>
                     )}
@@ -145,7 +168,11 @@ function AuthPage() {
               )}
               <Button type="submit" variant="hero" className="w-full" disabled={busy}>
                 {busy && <Loader2 className="animate-spin" />}
-                {mode === "signin" ? "Sign in" : mode === "signup" ? "Create account" : "Send reset link"}
+                {mode === "signin"
+                  ? "Sign in"
+                  : mode === "signup"
+                    ? "Create account"
+                    : "Send reset link"}
               </Button>
             </form>
             <p className="mt-5 text-center text-sm text-muted-foreground">
@@ -172,7 +199,10 @@ function AuthPage() {
           </>
         )}
       </div>
-      <Link to="/" className="mt-4 text-center text-xs text-muted-foreground underline-offset-2 hover:underline">
+      <Link
+        to="/"
+        className="mt-4 text-center text-xs text-muted-foreground underline-offset-2 hover:underline"
+      >
         Keep planning without an account
       </Link>
     </div>

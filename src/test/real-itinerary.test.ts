@@ -3,7 +3,12 @@ import { describe, expect, it } from "vitest";
 import { buildRealItinerary, itineraryActivityCost, unpricedItems } from "@/lib/itinerary";
 import type { RealPlace } from "@/lib/places/types";
 
-const place = (id: string, kind: RealPlace["kind"], cost: number, source: RealPlace["costSource"] = "price-level"): RealPlace => ({
+const place = (
+  id: string,
+  kind: RealPlace["kind"],
+  cost: number,
+  source: RealPlace["costSource"] = "price-level",
+): RealPlace => ({
   placeId: id,
   name: `Place ${id}`,
   kind,
@@ -18,8 +23,17 @@ const place = (id: string, kind: RealPlace["kind"], cost: number, source: RealPl
   interests: [],
 });
 
-const sights = [place("s1", "sight", 0, "unknown"), place("s2", "sight", 0, "unknown"), place("s3", "sight", 20, "listed")];
-const restaurants = [place("r1", "restaurant", 12), place("r2", "restaurant", 25), place("r3", "restaurant", 50), place("r4", "restaurant", 12)];
+const sights = [
+  place("s1", "sight", 0, "unknown"),
+  place("s2", "sight", 0, "unknown"),
+  place("s3", "sight", 20, "listed"),
+];
+const restaurants = [
+  place("r1", "restaurant", 12),
+  place("r2", "restaurant", 25),
+  place("r3", "restaurant", 50),
+  place("r4", "restaurant", 12),
+];
 
 describe("itinerary from real places", () => {
   const itin = buildRealItinerary({
@@ -51,7 +65,15 @@ describe("itinerary from real places", () => {
   });
 
   it("starts a road trip with the drive instead of a sight", () => {
-    const road = buildRealItinerary({ sights, restaurants, destName: "Asheville", days: 1, startDate: "2026-11-01", interests: [], tripType: "road-trip" });
+    const road = buildRealItinerary({
+      sights,
+      restaurants,
+      destName: "Asheville",
+      days: 1,
+      startDate: "2026-11-01",
+      interests: [],
+      tripType: "road-trip",
+    });
     expect(road.days[0]!.items[0]!.kind).toBe("stop");
   });
 });

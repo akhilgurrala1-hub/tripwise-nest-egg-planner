@@ -1,6 +1,13 @@
 // Server-only: real sights and restaurants in a destination via the Google Maps connector.
 import type { Interest, TravelStyle } from "../demo-data";
-import { FOOD_TYPES, GatewayError, TYPE_INTERESTS, costFor, gatewayPost, type GPlace } from "./google-stops.server";
+import {
+  FOOD_TYPES,
+  GatewayError,
+  TYPE_INTERESTS,
+  costFor,
+  gatewayPost,
+  type GPlace,
+} from "./google-stops.server";
 import type { DestinationPlacesResult, RealPlace } from "./types";
 
 /** Each Text Search is billed per request: a fixed number of queries, one page each. */
@@ -59,7 +66,9 @@ function toRealPlace(p: Place, kind: RealPlace["kind"]): RealPlace | null {
     mapsUrl: p.googleMapsUri ?? null,
     costPerPerson: cost,
     costSource: source,
-    interests: Array.from(new Set(TYPE_INTERESTS.filter(([t]) => types.includes(t)).map(([, i]) => i))),
+    interests: Array.from(
+      new Set(TYPE_INTERESTS.filter(([t]) => types.includes(t)).map(([, i]) => i)),
+    ),
   };
 }
 
@@ -75,7 +84,10 @@ export async function findDestinationPlaces(input: {
 
   const sightQueries = [
     "top tourist attractions",
-    ...input.interests.map((i) => INTEREST_QUERY[i]).filter((q): q is string => !!q).slice(0, MAX_INTEREST_QUERIES),
+    ...input.interests
+      .map((i) => INTEREST_QUERY[i])
+      .filter((q): q is string => !!q)
+      .slice(0, MAX_INTEREST_QUERIES),
   ];
   const requests = [
     ...sightQueries.map((q) => ({
@@ -95,7 +107,12 @@ export async function findDestinationPlaces(input: {
 
   try {
     const results = await Promise.allSettled(
-      requests.map((r) => gatewayPost("/places/v1/places:searchText", r.body, FIELD_MASK, keys).then((data) => ({ r, data }))),
+      requests.map((r) =>
+        gatewayPost("/places/v1/places:searchText", r.body, FIELD_MASK, keys).then((data) => ({
+          r,
+          data,
+        })),
+      ),
     );
     const sights = new Map<string, RealPlace>();
     const restaurants = new Map<string, RealPlace>();
@@ -114,11 +131,21 @@ export async function findDestinationPlaces(input: {
       const failed = results.find((r): r is PromiseRejectedResult => r.status === "rejected");
       if (failed) {
         const e = failed.reason;
-        return { ok: false, error: e instanceof GatewayError ? e.message : "The map service couldn't find places." };
+        return {
+          ok: false,
+          error: e instanceof GatewayError ? e.message : "The map service couldn't find places.",
+        };
       }
-      return { ok: false, error: `No places found for "${input.destination}". Try a city and state.` };
+      return {
+        ok: false,
+        error: `No places found for "${input.destination}". Try a city and state.`,
+      };
     }
-    return { ok: true, sights: Array.from(sights.values()), restaurants: Array.from(restaurants.values()) };
+    return {
+      ok: true,
+      sights: Array.from(sights.values()),
+      restaurants: Array.from(restaurants.values()),
+    };
   } catch (err) {
     if (err instanceof GatewayError) return { ok: false, error: err.message };
     console.error("findDestinationPlaces failed", err);

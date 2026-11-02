@@ -53,10 +53,14 @@ export const Route = createFileRoute("/road-trip")({
       { title: "Road-trip discovery — Waypoint" },
       {
         name: "description",
-        content: "Find scenic viewpoints, food, parks and free stops along your route, with cost, detour time and budget impact.",
+        content:
+          "Find scenic viewpoints, food, parks and free stops along your route, with cost, detour time and budget impact.",
       },
       { property: "og:title", content: "Road-trip discovery — Waypoint" },
-      { property: "og:description", content: "Pick stops along your drive and watch your trip budget update instantly." },
+      {
+        property: "og:description",
+        content: "Pick stops along your drive and watch your trip budget update instantly.",
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
@@ -88,7 +92,11 @@ function RoadTripPage() {
   const { user, loading: authLoading } = useAuth();
   const realMode = !!user;
   const fetchRealStops = useServerFn(getRealStops);
-  const [search, setSearch] = useState<{ origin: string; destination: string; interests: Interest[] } | null>(null);
+  const [search, setSearch] = useState<{
+    origin: string;
+    destination: string;
+    interests: Interest[];
+  } | null>(null);
 
   const demo = useQuery({
     queryKey: ["route-stops", provider.id, rt.origin, rt.destination],
@@ -111,32 +119,43 @@ function RoadTripPage() {
   });
 
   const realResult = real.data;
-  const realOk = realResult?.ok === true ? (realResult as Extract<RealStopsResult, { ok: true }>) : null;
-  const realError = realResult && realResult.ok === false ? (realResult as { error: string }).error : null;
+  const realOk =
+    realResult?.ok === true ? (realResult as Extract<RealStopsResult, { ok: true }>) : null;
+  const realError =
+    realResult && realResult.ok === false ? (realResult as { error: string }).error : null;
   const stops: RouteStop[] = realMode ? (realOk?.stops ?? []) : (demo.data ?? []);
   // Exactly one of these states renders at a time.
-  const view: "auth-loading" | "demo" | "needs-search" | "loading" | "unavailable" | "empty" | "results" = authLoading
-    ? "auth-loading"
-    : !realMode
-      ? demo.isLoading
-        ? "loading"
-        : "demo"
-      : !search
-        ? "needs-search"
-        : real.isFetching
+  const view:
+    "auth-loading" | "demo" | "needs-search" | "loading" | "unavailable" | "empty" | "results" =
+    authLoading
+      ? "auth-loading"
+      : !realMode
+        ? demo.isLoading
           ? "loading"
-          : real.isError || realError
-            ? "unavailable"
-            : realOk && realOk.stops.length === 0
-              ? "empty"
-              : realOk
-                ? "results"
-                : "loading";
+          : "demo"
+        : !search
+          ? "needs-search"
+          : real.isFetching
+            ? "loading"
+            : real.isError || realError
+              ? "unavailable"
+              : realOk && realOk.stops.length === 0
+                ? "empty"
+                : realOk
+                  ? "results"
+                  : "loading";
   const canSearch = rt.origin.trim().length >= 2 && rt.destination.trim().length >= 2;
   const runSearch = () =>
-    setSearch({ origin: rt.origin.trim(), destination: rt.destination.trim(), interests: [...rt.interests].sort() });
+    setSearch({
+      origin: rt.origin.trim(),
+      destination: rt.destination.trim(),
+      interests: [...rt.interests].sort(),
+    });
   const scrollToStop = useCallback(
-    (id: string) => document.getElementById(`stop-${id}`)?.scrollIntoView({ behavior: "smooth", block: "center" }),
+    (id: string) =>
+      document
+        .getElementById(`stop-${id}`)
+        ?.scrollIntoView({ behavior: "smooth", block: "center" }),
     [],
   );
 
@@ -149,7 +168,9 @@ function RoadTripPage() {
 
   const toggleInterest = (id: Interest) =>
     tripActions.updateRoadTrip({
-      interests: rt.interests.includes(id) ? rt.interests.filter((i) => i !== id) : [...rt.interests, id],
+      interests: rt.interests.includes(id)
+        ? rt.interests.filter((i) => i !== id)
+        : [...rt.interests, id],
     });
 
   if (trip.setup.tripType !== "road-trip") return <NotARoadTrip />;
@@ -216,7 +237,9 @@ function RoadTripPage() {
               <div>
                 <div className="flex items-baseline justify-between">
                   <span className="text-sm font-bold">Max detour per stop</span>
-                  <span className="tabular text-sm font-semibold text-primary">{rt.maxDetourMinutes} min</span>
+                  <span className="tabular text-sm font-semibold text-primary">
+                    {rt.maxDetourMinutes} min
+                  </span>
                 </div>
                 <Slider
                   className="mt-4"
@@ -243,7 +266,9 @@ function RoadTripPage() {
                       onClick={() => toggleInterest(i.id)}
                       className={cn(
                         "rounded-full border px-3 py-1.5 text-xs font-semibold transition-all",
-                        active ? "border-primary bg-primary text-primary-foreground" : "border-border bg-card hover:border-primary/40",
+                        active
+                          ? "border-primary bg-primary text-primary-foreground"
+                          : "border-border bg-card hover:border-primary/40",
                       )}
                     >
                       {i.label}
@@ -253,14 +278,20 @@ function RoadTripPage() {
               </div>
             </div>
             {authLoading ? null : realMode ? (
-              <Button variant="hero" className="w-full" disabled={!canSearch || real.isFetching} onClick={runSearch}>
+              <Button
+                variant="hero"
+                className="w-full"
+                disabled={!canSearch || real.isFetching}
+                onClick={runSearch}
+              >
                 {real.isFetching ? <Loader2 className="animate-spin" /> : <Search />}
                 {real.isFetching ? "Looking along your route…" : "Find real stops"}
               </Button>
             ) : (
               <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-sunset-soft px-4 py-3 text-sm">
                 <p>
-                  <strong>You're seeing sample stops.</strong> Sign in to explore real places, routes and drive times.
+                  <strong>You're seeing sample stops.</strong> Sign in to explore real places,
+                  routes and drive times.
                 </p>
                 <Button asChild size="sm" variant="outline">
                   <Link to="/auth" search={{ redirect: "/road-trip" }}>
@@ -273,9 +304,11 @@ function RoadTripPage() {
 
           {view === "results" && realOk && (
             <p className="tabular text-sm text-muted-foreground">
-              Your route: <strong className="text-foreground">{realOk.route.distanceMiles} mi</strong>, about{" "}
+              Your route:{" "}
+              <strong className="text-foreground">{realOk.route.distanceMiles} mi</strong>, about{" "}
               <strong className="text-foreground">
-                {Math.floor(realOk.route.durationMinutes / 60)} h {realOk.route.durationMinutes % 60} min
+                {Math.floor(realOk.route.durationMinutes / 60)} h{" "}
+                {realOk.route.durationMinutes % 60} min
               </strong>{" "}
               of driving without stops.
             </p>
@@ -283,19 +316,31 @@ function RoadTripPage() {
 
           <section className="space-y-3" aria-live="polite">
             {view === "auth-loading" || view === "loading" ? (
-              <StateCard icon={<Loader2 className="size-5 animate-spin text-sunset" />} title="Looking along your route…">
+              <StateCard
+                icon={<Loader2 className="size-5 animate-spin text-sunset" />}
+                title="Looking along your route…"
+              >
                 Finding viewpoints, food and places worth the detour.
               </StateCard>
             ) : view === "needs-search" ? (
-              <StateCard icon={<Search className="size-5 text-primary" />} title="Where does the road take you?">
+              <StateCard
+                icon={<Search className="size-5 text-primary" />}
+                title="Where does the road take you?"
+              >
                 Add your start and destination above, then tap <strong>Find real stops</strong>.
               </StateCard>
             ) : view === "unavailable" ? (
-              <StateCard icon={<Flag className="size-5 text-destructive" />} title="We couldn't reach the map service">
+              <StateCard
+                icon={<Flag className="size-5 text-destructive" />}
+                title="We couldn't reach the map service"
+              >
                 {realError ?? "Please try again in a moment."} Your budget and saved stops are safe.
               </StateCard>
             ) : view === "empty" ? (
-              <StateCard icon={<MapPin className="size-5 text-muted-foreground" />} title="No stops found on this route">
+              <StateCard
+                icon={<MapPin className="size-5 text-muted-foreground" />}
+                title="No stops found on this route"
+              >
                 Try nearby cities, or add a few interests for more ideas.
               </StateCard>
             ) : (
@@ -319,14 +364,21 @@ function RoadTripPage() {
                   ))}
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  {visible.length} stop{visible.length === 1 ? "" : "s"} within {rt.maxDetourMinutes} min
-                  {hiddenByDetour > 0 ? ` · ${hiddenByDetour} longer detour${hiddenByDetour === 1 ? "" : "s"} hidden` : ""}.{" "}
+                  {visible.length} stop{visible.length === 1 ? "" : "s"} within{" "}
+                  {rt.maxDetourMinutes} min
+                  {hiddenByDetour > 0
+                    ? ` · ${hiddenByDetour} longer detour${hiddenByDetour === 1 ? "" : "s"} hidden`
+                    : ""}
+                  .{" "}
                   {view === "demo"
                     ? "Demonstration mode: stop types, times and prices are samples, not real businesses."
                     : "Places and drive times come from Google Maps. Costs are estimates — check before you go."}
                 </p>
                 {visible.length === 0 ? (
-                  <StateCard icon={<MapPin className="size-5 text-muted-foreground" />} title="Nothing matches yet">
+                  <StateCard
+                    icon={<MapPin className="size-5 text-muted-foreground" />}
+                    title="Nothing matches yet"
+                  >
                     Try another filter or allow a slightly longer detour.
                   </StateCard>
                 ) : (
@@ -365,18 +417,27 @@ function RoadTripPage() {
               </div>
               <div className="rounded-xl bg-ink-foreground/10 p-3">
                 <dt className="text-xs text-ink-foreground/70">Stop spend</dt>
-                <dd className="tabular text-lg font-bold">{formatMoney(stopsTotal, { cents: true })}</dd>
+                <dd className="tabular text-lg font-bold">
+                  {formatMoney(stopsTotal, { cents: true })}
+                </dd>
               </div>
               <div className="rounded-xl bg-ink-foreground/10 p-3">
                 <dt className="text-xs text-ink-foreground/70">Stop budget left</dt>
-                <dd className={cn("tabular text-lg font-bold", stopBudgetLeft < 0 && "text-sunset")}>
+                <dd
+                  className={cn("tabular text-lg font-bold", stopBudgetLeft < 0 && "text-sunset")}
+                >
                   {formatMoney(stopBudgetLeft, { cents: true })}
                 </dd>
               </div>
             </dl>
             <div className="mt-3 rounded-xl bg-ink-foreground/10 p-3 text-sm">
               <p className="text-xs text-ink-foreground/70">Whole-trip money remaining</p>
-              <p className={cn("tabular font-display text-2xl font-semibold", totals.overBudget && "text-sunset")}>
+              <p
+                className={cn(
+                  "tabular font-display text-2xl font-semibold",
+                  totals.overBudget && "text-sunset",
+                )}
+              >
                 {formatMoney(totals.remaining, { cents: true })}
               </p>
               <Link to="/budget" className="text-xs font-semibold underline underline-offset-2">
@@ -388,10 +449,20 @@ function RoadTripPage() {
           {realOk ? (
             <section className="surface-card p-4">
               <h2 className="mb-3 font-display text-lg font-semibold">Route map</h2>
-              <RealRouteMap route={realOk.route} stops={withinDetour} includedIds={includedIds} onSelect={scrollToStop} />
+              <RealRouteMap
+                route={realOk.route}
+                stops={withinDetour}
+                includedIds={includedIds}
+                onSelect={scrollToStop}
+              />
             </section>
           ) : (
-            <RouteMap origin={rt.origin} destination={rt.destination} stops={withinDetour} includedIds={includedIds} />
+            <RouteMap
+              origin={rt.origin}
+              destination={rt.destination}
+              stops={withinDetour}
+              includedIds={includedIds}
+            />
           )}
 
           {rt.includedStops.length > 0 && (
@@ -434,13 +505,20 @@ function StopCard({
   return (
     <article
       id={`stop-${stop.id}`}
-      className={cn("surface-card animate-rise overflow-hidden transition-all", included && "ring-2 ring-success/40")}
+      className={cn(
+        "surface-card animate-rise overflow-hidden transition-all",
+        included && "ring-2 ring-success/40",
+      )}
     >
       <div className="flex gap-3 p-4">
         <span
           className={cn(
             "grid size-11 shrink-0 place-items-center rounded-2xl",
-            stop.kind === "restaurant" ? "bg-sunset-soft text-sunset" : stop.costPerPerson === 0 ? "bg-success-soft text-success" : "bg-secondary text-primary",
+            stop.kind === "restaurant"
+              ? "bg-sunset-soft text-sunset"
+              : stop.costPerPerson === 0
+                ? "bg-success-soft text-success"
+                : "bg-secondary text-primary",
           )}
         >
           <Icon className="size-5" />
@@ -457,17 +535,24 @@ function StopCard({
                 <span className="inline-flex items-center gap-0.5 font-semibold text-foreground">
                   <Star className="size-3 fill-gold text-gold" /> {stop.rating.toFixed(1)}
                   {stop.ratingCount !== null && (
-                    <span className="font-normal text-muted-foreground">({stop.ratingCount.toLocaleString()})</span>
+                    <span className="font-normal text-muted-foreground">
+                      ({stop.ratingCount.toLocaleString()})
+                    </span>
                   )}
                 </span>
               )}
               {stop.address && <span className="truncate">{stop.address}</span>}
             </p>
           )}
-          <p className="mt-2 text-[11px] font-bold tracking-wider text-muted-foreground uppercase">Worth the detour?</p>
+          <p className="mt-2 text-[11px] font-bold tracking-wider text-muted-foreground uppercase">
+            Worth the detour?
+          </p>
           <ul className="mt-1 flex flex-wrap gap-1.5">
             {reasons.map((r) => (
-              <li key={r} className="inline-flex items-center gap-1 rounded-full bg-gold-soft px-2 py-0.5 text-[11px] font-semibold">
+              <li
+                key={r}
+                className="inline-flex items-center gap-1 rounded-full bg-gold-soft px-2 py-0.5 text-[11px] font-semibold"
+              >
                 <Sparkles className="size-3 text-sunset" /> {r}
               </li>
             ))}
@@ -493,22 +578,38 @@ function StopCard({
                 : `${formatMoney(stop.costPerPerson)}/pp × ${travelers}`}
             {driving && stop.extraMinutes > 0 ? " + fuel" : ""}
           </p>
-          {stop.costSource === "price-level" && <p className="text-[10px] text-muted-foreground">est. from $ level</p>}
-          {stop.costSource === "listed" && <p className="text-[10px] text-muted-foreground">listed price range</p>}
+          {stop.costSource === "price-level" && (
+            <p className="text-[10px] text-muted-foreground">est. from $ level</p>
+          )}
+          {stop.costSource === "listed" && (
+            <p className="text-[10px] text-muted-foreground">listed price range</p>
+          )}
         </div>
         <div className="border-x border-border p-3">
           <p className="text-muted-foreground">Extra drive</p>
           <p className="tabular inline-flex items-center gap-1 text-sm font-bold">
             <Clock className="size-3" /> +{stop.extraMinutes} min
           </p>
-          <p className="text-[10px] text-muted-foreground">{stop.isDemo ? "sample time" : "Google drive time"}</p>
+          <p className="text-[10px] text-muted-foreground">
+            {stop.isDemo ? "sample time" : "Google drive time"}
+          </p>
         </div>
         <div className="p-3">
           <p className="text-muted-foreground">{included ? "Trip remaining" : "Remaining after"}</p>
-          <p className={cn("tabular text-sm font-bold", remainingAfter < 0 ? "text-destructive" : "text-success")}>
+          <p
+            className={cn(
+              "tabular text-sm font-bold",
+              remainingAfter < 0 ? "text-destructive" : "text-success",
+            )}
+          >
             {formatMoney(remainingAfter)}
           </p>
-          <p className={cn("tabular text-[10px]", stopLeftAfter < 0 ? "text-destructive" : "text-muted-foreground")}>
+          <p
+            className={cn(
+              "tabular text-[10px]",
+              stopLeftAfter < 0 ? "text-destructive" : "text-muted-foreground",
+            )}
+          >
             stop budget {formatMoney(stopLeftAfter)}
           </p>
         </div>
@@ -569,7 +670,10 @@ function RouteMap({
         <DemoBadge label="Schematic" />
       </div>
       <div className="relative mt-4 ml-3 h-80">
-        <span className="absolute top-2 bottom-2 left-[7px] w-0.5 rounded-full bg-gradient-sunset" aria-hidden />
+        <span
+          className="absolute top-2 bottom-2 left-[7px] w-0.5 rounded-full bg-gradient-sunset"
+          aria-hidden
+        />
         <div className="absolute top-0 left-0 flex items-center gap-2">
           <span className="grid size-4 place-items-center rounded-full bg-primary text-primary-foreground">
             <MapPin className="size-2.5" />
@@ -582,7 +686,11 @@ function RouteMap({
             <button
               key={s.id}
               type="button"
-              onClick={() => document.getElementById(`stop-${s.id}`)?.scrollIntoView({ behavior: "smooth", block: "center" })}
+              onClick={() =>
+                document
+                  .getElementById(`stop-${s.id}`)
+                  ?.scrollIntoView({ behavior: "smooth", block: "center" })
+              }
               className="group absolute left-0 flex items-center gap-2"
               style={{ top: `calc(${s.position * 100}% - 6px)` }}
               title={s.name}
@@ -590,10 +698,16 @@ function RouteMap({
               <span
                 className={cn(
                   "ml-[2px] size-3 rounded-full border-2 transition-all",
-                  on ? "border-success bg-success" : "border-border bg-card group-hover:border-primary",
+                  on
+                    ? "border-success bg-success"
+                    : "border-border bg-card group-hover:border-primary",
                 )}
               />
-              {on && <span className="max-w-48 truncate text-[11px] font-semibold text-success">{s.name}</span>}
+              {on && (
+                <span className="max-w-48 truncate text-[11px] font-semibold text-success">
+                  {s.name}
+                </span>
+              )}
             </button>
           );
         })}
@@ -605,13 +719,22 @@ function RouteMap({
         </div>
       </div>
       <p className="mt-3 text-[11px] text-muted-foreground">
-        Not a map — a simple sketch of where sample stops fall along the drive. Sign in for a live map.
+        Not a map — a simple sketch of where sample stops fall along the drive. Sign in for a live
+        map.
       </p>
     </section>
   );
 }
 
-function StateCard({ icon, title, children }: { icon: React.ReactNode; title: string; children: React.ReactNode }) {
+function StateCard({
+  icon,
+  title,
+  children,
+}: {
+  icon: React.ReactNode;
+  title: string;
+  children: React.ReactNode;
+}) {
   return (
     <div className="surface-card flex flex-col items-center gap-2 px-6 py-10 text-center">
       <span className="grid size-11 place-items-center rounded-full bg-muted">{icon}</span>
@@ -630,16 +753,23 @@ function NotARoadTrip() {
       <PageHeader eyebrow="Road trip" title="Stops along the drive" />
       <div className="mx-auto mt-6 max-w-2xl px-4">
         <section className="surface-card p-6 text-center">
-          <p className="font-display text-xl font-semibold">Your trip is a {label.toLowerCase()}, not a road trip</p>
+          <p className="font-display text-xl font-semibold">
+            Your trip is a {label.toLowerCase()}, not a road trip
+          </p>
           <p className="mt-2 text-sm text-muted-foreground">
-            Route stops and detours are for road trips. Switch the trip type to plan stops, or head to your itinerary.
+            Route stops and detours are for road trips. Switch the trip type to plan stops, or head
+            to your itinerary.
           </p>
           <div className="mt-5 flex flex-wrap justify-center gap-2">
             <Button
               variant="hero"
               onClick={() => {
                 const [headline, ...details] = tripActions.setTripType("road-trip");
-                if (headline) toast.success(headline, details.length ? { description: details.join(" ") } : undefined);
+                if (headline)
+                  toast.success(
+                    headline,
+                    details.length ? { description: details.join(" ") } : undefined,
+                  );
               }}
             >
               Make it a road trip

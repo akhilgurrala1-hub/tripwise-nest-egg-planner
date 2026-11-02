@@ -20,5 +20,4 @@ export interface RealPlace {
 }
 
 export type DestinationPlacesResult =
-  | { ok: true; sights: RealPlace[]; restaurants: RealPlace[] }
-  | { ok: false; error: string };
+  { ok: true; sights: RealPlace[]; restaurants: RealPlace[] } | { ok: false; error: string };

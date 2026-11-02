@@ -3,10 +3,20 @@ import { AlertTriangle, Check, Lock, RotateCcw, ShieldCheck } from "lucide-react
 import type { ReactNode } from "react";
 import { toast } from "sonner";
 
-import { CATEGORY_COLOR_VAR, CATEGORY_ICONS, NumberField, PriceSourceBadge } from "@/components/app/bits";
+import {
+  CATEGORY_COLOR_VAR,
+  CATEGORY_ICONS,
+  NumberField,
+  PriceSourceBadge,
+} from "@/components/app/bits";
 import { LivePricesPanel } from "@/components/app/LivePricesPanel";
 import { PageHeader } from "@/components/app/TripHeader";
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
@@ -30,9 +40,16 @@ export const Route = createFileRoute("/budget")({
   head: () => ({
     meta: [
       { title: "Budget calculator — Waypoint" },
-      { name: "description", content: "Edit hotels, gas, tolls, parking, transportation, meals, snacks, water, taxes and activities with live budget math." },
+      {
+        name: "description",
+        content:
+          "Edit hotels, gas, tolls, parking, transportation, meals, snacks, water, taxes and activities with live budget math.",
+      },
       { property: "og:title", content: "Budget calculator — Waypoint" },
-      { property: "og:description", content: "A smart, editable trip budget with a protected emergency fund." },
+      {
+        property: "og:description",
+        content: "A smart, editable trip budget with a protected emergency fund.",
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
@@ -71,7 +88,11 @@ function BudgetPage() {
                 />
               </div>
               <dl className="grid grid-cols-2 gap-3 text-sm">
-                <Stat label="Protected reserve" value={formatMoney(totals.emergencyFund)} tone="shield" />
+                <Stat
+                  label="Protected reserve"
+                  value={formatMoney(totals.emergencyFund)}
+                  tone="shield"
+                />
                 <Stat label="Spending money" value={formatMoney(totals.spendable)} />
                 <Stat label="Planned so far" value={formatMoney(totals.planned)} />
                 <Stat
@@ -84,8 +105,13 @@ function BudgetPage() {
             <div className="mt-5">
               <div className="h-2.5 overflow-hidden rounded-full bg-muted">
                 <div
-                  className={cn("h-full rounded-full transition-all", totals.overBudget ? "bg-destructive" : "bg-gradient-sunset")}
-                  style={{ width: `${totals.percentUsed === null ? (totals.planned > 0 ? 100 : 0) : Math.min(100, totals.percentUsed)}%` }}
+                  className={cn(
+                    "h-full rounded-full transition-all",
+                    totals.overBudget ? "bg-destructive" : "bg-gradient-sunset",
+                  )}
+                  style={{
+                    width: `${totals.percentUsed === null ? (totals.planned > 0 ? 100 : 0) : Math.min(100, totals.percentUsed)}%`,
+                  }}
                 />
               </div>
               <p className="tabular mt-1.5 text-xs text-muted-foreground">
@@ -114,9 +140,11 @@ function BudgetPage() {
               ))}
             </Accordion>
             <p className="mt-3 text-xs text-muted-foreground">
-              Amounts marked “Estimate” use demo prices for {shape.days} day{shape.days > 1 ? "s" : ""}, {shape.nights} night
-              {shape.nights === 1 ? "" : "s"} and {shape.travelers} traveler{shape.travelers > 1 ? "s" : ""}. Open a
-              category to tune the inputs or type your own amount.
+              Amounts marked “Estimate” use demo prices for {shape.days} day
+              {shape.days > 1 ? "s" : ""}, {shape.nights} night
+              {shape.nights === 1 ? "" : "s"} and {shape.travelers} traveler
+              {shape.travelers > 1 ? "s" : ""}. Open a category to tune the inputs or type your own
+              amount.
             </p>
           </section>
         </div>
@@ -134,12 +162,17 @@ function BudgetPage() {
             </div>
             <h2 className="mt-4 font-display text-2xl font-semibold">Emergency reserve</h2>
             <p className="mt-1 text-sm text-ink-foreground/75">
-              A little extra set aside for peace of mind. It never counts as spending money — it's there for flat tires, urgent care or a surprise night's stay.
+              A little extra set aside for peace of mind. It never counts as spending money — it's
+              there for flat tires, urgent care or a surprise night's stay.
             </p>
-            <p className="tabular mt-4 font-display text-4xl font-semibold">{formatMoney(totals.emergencyFund)}</p>
+            <p className="tabular mt-4 font-display text-4xl font-semibold">
+              {formatMoney(totals.emergencyFund)}
+            </p>
             <p className="text-xs text-ink-foreground/70">
-              {trip.setup.totalBudget > 0 ? Math.round((totals.emergencyFund / trip.setup.totalBudget) * 100) : 0}% of
-              your total budget
+              {trip.setup.totalBudget > 0
+                ? Math.round((totals.emergencyFund / trip.setup.totalBudget) * 100)
+                : 0}
+              % of your total budget
             </p>
             <Slider
               className="mt-5"
@@ -164,7 +197,15 @@ function BudgetPage() {
   );
 }
 
-function Stat({ label, value, tone }: { label: string; value: string; tone?: "shield" | "success" | "danger" }) {
+function Stat({
+  label,
+  value,
+  tone,
+}: {
+  label: string;
+  value: string;
+  tone?: "shield" | "success" | "danger";
+}) {
   return (
     <div className="rounded-xl bg-muted/70 px-3 py-2.5">
       <dt className="text-xs text-muted-foreground">{label}</dt>
@@ -190,7 +231,10 @@ function CategoryRow({ cat }: { cat: Category }) {
   const amount = totals.categories[cat];
   const share = totals.planned > 0 ? (amount / totals.planned) * 100 : 0;
   const i = trip.inputs;
-  const set = <K extends keyof BudgetInputs>(k: K) => (v: number) => tripActions.setInput(k, v as BudgetInputs[K]);
+  const set =
+    <K extends keyof BudgetInputs>(k: K) =>
+    (v: number) =>
+      tripActions.setInput(k, v as BudgetInputs[K]);
 
   const driving = isDrivingMode(i.transportMode);
   const modeLabel = TRANSPORT_MODES.find((m) => m.id === i.transportMode)?.label ?? "";
@@ -201,32 +245,69 @@ function CategoryRow({ cat }: { cat: Category }) {
       formula = `(${formatMoney(i.cruisePerNight)} fare + ${formatMoney(i.gratuitiesPerNight)} tips) × ${shape.travelers} × ${shape.nights} nights + ${formatMoney(i.portFeesPerPerson)} port fees each`;
       fields = (
         <>
-          <InputCell label="Cruise fare, per person per night" value={i.cruisePerNight} onChange={set("cruisePerNight")} prefix="$" step={10} />
-          <InputCell label="Gratuities, per person per night" value={i.gratuitiesPerNight} onChange={set("gratuitiesPerNight")} prefix="$" />
-          <InputCell label="Port fees & taxes, per person" value={i.portFeesPerPerson} onChange={set("portFeesPerPerson")} prefix="$" step={10} />
+          <InputCell
+            label="Cruise fare, per person per night"
+            value={i.cruisePerNight}
+            onChange={set("cruisePerNight")}
+            prefix="$"
+            step={10}
+          />
+          <InputCell
+            label="Gratuities, per person per night"
+            value={i.gratuitiesPerNight}
+            onChange={set("gratuitiesPerNight")}
+            prefix="$"
+          />
+          <InputCell
+            label="Port fees & taxes, per person"
+            value={i.portFeesPerPerson}
+            onChange={set("portFeesPerPerson")}
+            prefix="$"
+            step={10}
+          />
           <p className="col-span-full text-xs text-muted-foreground">
-            Your cabin and main dining are in the fare, so hotel nights stay at $0 and Meals covers only specialty dining and food
-            ashore.
+            Your cabin and main dining are in the fare, so hotel nights stay at $0 and Meals covers
+            only specialty dining and food ashore.
           </p>
         </>
       );
       break;
     case "transportation": {
-      const fareMode = i.transportMode === "flight" || i.transportMode === "train" || i.transportMode === "bus";
+      const fareMode =
+        i.transportMode === "flight" || i.transportMode === "train" || i.transportMode === "bus";
       const parts: string[] = [];
       if (fareMode) parts.push(`${formatMoney(i.farePerPerson)} fare × ${shape.travelers}`);
-      if (i.transportMode === "rental-car") parts.push(`${formatMoney(i.rentalPerDay)} rental × ${shape.days} days`);
-      if (i.localTransitPerDay > 0) parts.push(`${formatMoney(i.localTransitPerDay)} local rides × ${shape.days} days`);
+      if (i.transportMode === "rental-car")
+        parts.push(`${formatMoney(i.rentalPerDay)} rental × ${shape.days} days`);
+      if (i.localTransitPerDay > 0)
+        parts.push(`${formatMoney(i.localTransitPerDay)} local rides × ${shape.days} days`);
       formula = parts.length ? parts.join(" + ") : `${modeLabel} · no fares or rentals`;
       fields = (
         <>
           {fareMode && (
-            <InputCell label={`${modeLabel} fare, per person (round trip)`} value={i.farePerPerson} onChange={set("farePerPerson")} prefix="$" step={5} />
+            <InputCell
+              label={`${modeLabel} fare, per person (round trip)`}
+              value={i.farePerPerson}
+              onChange={set("farePerPerson")}
+              prefix="$"
+              step={5}
+            />
           )}
           {i.transportMode === "rental-car" && (
-            <InputCell label="Rental, per day" value={i.rentalPerDay} onChange={set("rentalPerDay")} prefix="$" step={5} />
+            <InputCell
+              label="Rental, per day"
+              value={i.rentalPerDay}
+              onChange={set("rentalPerDay")}
+              prefix="$"
+              step={5}
+            />
           )}
-          <InputCell label="Rideshare & transit, per day (group)" value={i.localTransitPerDay} onChange={set("localTransitPerDay")} prefix="$" />
+          <InputCell
+            label="Rideshare & transit, per day (group)"
+            value={i.localTransitPerDay}
+            onChange={set("localTransitPerDay")}
+            prefix="$"
+          />
         </>
       );
       break;
@@ -237,9 +318,22 @@ function CategoryRow({ cat }: { cat: Category }) {
         : `Not driving (${modeLabel.toLowerCase()})`;
       fields = driving ? (
         <>
-          <InputCell label="Round-trip miles" value={i.roundTripMiles} onChange={set("roundTripMiles")} suffix="mi" step={10} />
+          <InputCell
+            label="Round-trip miles"
+            value={i.roundTripMiles}
+            onChange={set("roundTripMiles")}
+            suffix="mi"
+            step={10}
+          />
           <InputCell label="Fuel economy" value={i.mpg} onChange={set("mpg")} suffix="mpg" />
-          <InputCell label="Gas price" value={i.gasPrice} onChange={set("gasPrice")} prefix="$" suffix="/gal" step={0.05} />
+          <InputCell
+            label="Gas price"
+            value={i.gasPrice}
+            onChange={set("gasPrice")}
+            prefix="$"
+            suffix="/gal"
+            step={0.05}
+          />
         </>
       ) : (
         <NotDriving />
@@ -247,15 +341,38 @@ function CategoryRow({ cat }: { cat: Category }) {
       break;
     case "food":
       formula = `${formatMoney(i.foodPerPersonDay)} × ${shape.travelers} people × ${shape.days} days`;
-      fields = <InputCell label="Per person, per day" value={i.foodPerPersonDay} onChange={set("foodPerPersonDay")} prefix="$" />;
+      fields = (
+        <InputCell
+          label="Per person, per day"
+          value={i.foodPerPersonDay}
+          onChange={set("foodPerPersonDay")}
+          prefix="$"
+        />
+      );
       break;
     case "snacks":
       formula = `${formatMoney(i.snacksPerPersonDay, { cents: true })} × ${shape.travelers} people × ${shape.days} days`;
-      fields = <InputCell label="Per person, per day" value={i.snacksPerPersonDay} onChange={set("snacksPerPersonDay")} prefix="$" step={0.5} />;
+      fields = (
+        <InputCell
+          label="Per person, per day"
+          value={i.snacksPerPersonDay}
+          onChange={set("snacksPerPersonDay")}
+          prefix="$"
+          step={0.5}
+        />
+      );
       break;
     case "water":
       formula = `${formatMoney(i.waterPerPersonDay, { cents: true })} × ${shape.travelers} people × ${shape.days} days`;
-      fields = <InputCell label="Per person, per day" value={i.waterPerPersonDay} onChange={set("waterPerPersonDay")} prefix="$" step={0.5} />;
+      fields = (
+        <InputCell
+          label="Per person, per day"
+          value={i.waterPerPersonDay}
+          onChange={set("waterPerPersonDay")}
+          prefix="$"
+          step={0.5}
+        />
+      );
       break;
     case "accommodations":
       formula =
@@ -264,18 +381,35 @@ function CategoryRow({ cat }: { cat: Category }) {
           : `${formatMoney(i.nightlyRate)} × ${i.rooms} room${i.rooms === 1 ? "" : "s"} × ${shape.nights} nights`;
       fields = (
         <>
-          <InputCell label="Nightly rate" value={i.nightlyRate} onChange={set("nightlyRate")} prefix="$" step={5} />
+          <InputCell
+            label="Nightly rate"
+            value={i.nightlyRate}
+            onChange={set("nightlyRate")}
+            prefix="$"
+            step={5}
+          />
           <InputCell label="Rooms" value={i.rooms} onChange={set("rooms")} />
         </>
       );
       break;
     case "parking":
       formula = `${formatMoney(i.parkingPerDay)} × ${shape.days} days`;
-      fields = <InputCell label="Per day" value={i.parkingPerDay} onChange={set("parkingPerDay")} prefix="$" />;
+      fields = (
+        <InputCell
+          label="Per day"
+          value={i.parkingPerDay}
+          onChange={set("parkingPerDay")}
+          prefix="$"
+        />
+      );
       break;
     case "tolls":
       formula = driving ? "Total for the route" : `Not driving (${modeLabel.toLowerCase()})`;
-      fields = driving ? <InputCell label="Total tolls" value={i.tolls} onChange={set("tolls")} prefix="$" /> : <NotDriving />;
+      fields = driving ? (
+        <InputCell label="Total tolls" value={i.tolls} onChange={set("tolls")} prefix="$" />
+      ) : (
+        <NotDriving />
+      );
       break;
     case "stops":
       formula = `${trip.roadTrip.includedStops.length} stop${trip.roadTrip.includedStops.length === 1 ? "" : "s"} · entry + detour fuel`;
@@ -288,7 +422,9 @@ function CategoryRow({ cat }: { cat: Category }) {
               {trip.roadTrip.includedStops.map((s) => (
                 <li key={s.id} className="flex justify-between gap-2">
                   <span className="truncate">{s.name}</span>
-                  <span className="tabular font-semibold">{formatMoney(stopCost(s, shape.travelers, i), { cents: true })}</span>
+                  <span className="tabular font-semibold">
+                    {formatMoney(stopCost(s, shape.travelers, i), { cents: true })}
+                  </span>
                 </li>
               ))}
             </ul>
@@ -301,20 +437,39 @@ function CategoryRow({ cat }: { cat: Category }) {
       break;
     case "taxes":
       formula = `${i.taxRatePct}% of hotels, meals, snacks & activities`;
-      fields = <InputCell label="Tax rate" value={i.taxRatePct} onChange={set("taxRatePct")} suffix="%" step={0.5} />;
+      fields = (
+        <InputCell
+          label="Tax rate"
+          value={i.taxRatePct}
+          onChange={set("taxRatePct")}
+          suffix="%"
+          step={0.5}
+        />
+      );
       break;
     case "activities": {
       const fromItinerary = itineraryActivityCost(trip.itinerary, shape.travelers);
       formula = `${formatMoney(i.activitiesPerPerson)} × ${shape.travelers} people`;
       fields = (
         <>
-          <InputCell label="Per person, whole trip" value={i.activitiesPerPerson} onChange={set("activitiesPerPerson")} prefix="$" step={5} />
+          <InputCell
+            label="Per person, whole trip"
+            value={i.activitiesPerPerson}
+            onChange={set("activitiesPerPerson")}
+            prefix="$"
+            step={5}
+          />
           {trip.itinerary && (
             <div className="col-span-full flex items-center justify-between gap-2 rounded-xl bg-secondary px-3 py-2 text-xs">
               <span>
-                Your itinerary's sightseeing: <strong className="tabular">{formatMoney(fromItinerary)}</strong>
+                Your itinerary's sightseeing:{" "}
+                <strong className="tabular">{formatMoney(fromItinerary)}</strong>
               </span>
-              <Button size="sm" variant="outline" onClick={() => tripActions.setOverride("activities", fromItinerary)}>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => tripActions.setOverride("activities", fromItinerary)}
+              >
                 Use this
               </Button>
             </div>
@@ -352,11 +507,17 @@ function CategoryRow({ cat }: { cat: Category }) {
                 <Badge variant="secondary">Estimate</Badge>
               )}
             </div>
-            <p className="truncate text-xs font-normal text-muted-foreground">{isCustom ? "Your amount" : formula}</p>
+            <p className="truncate text-xs font-normal text-muted-foreground">
+              {isCustom ? "Your amount" : formula}
+            </p>
           </div>
           <div className="mr-1 text-right">
-            <p className="tabular font-bold">{formatMoney(amount, { cents: amount % 1 !== 0 && amount < 100 })}</p>
-            <p className="tabular text-[11px] font-normal text-muted-foreground">{Math.round(share)}%</p>
+            <p className="tabular font-bold">
+              {formatMoney(amount, { cents: amount % 1 !== 0 && amount < 100 })}
+            </p>
+            <p className="tabular text-[11px] font-normal text-muted-foreground">
+              {Math.round(share)}%
+            </p>
           </div>
         </div>
       </AccordionTrigger>
@@ -365,7 +526,9 @@ function CategoryRow({ cat }: { cat: Category }) {
         {canOverride && (
           <div className="mt-4 flex flex-wrap items-end gap-3 border-t border-dashed border-border pt-4">
             <div className="min-w-40 flex-1">
-              <p className="mb-1 text-xs font-semibold text-muted-foreground">Or set your own total</p>
+              <p className="mb-1 text-xs font-semibold text-muted-foreground">
+                Or set your own total
+              </p>
               <NumberField
                 aria-label={`${CATEGORY_LABELS[cat]} custom amount`}
                 prefix="$"
@@ -411,8 +574,8 @@ function InputCell(props: {
 function NotDriving() {
   return (
     <p className="col-span-full text-sm text-muted-foreground">
-      Not needed for this travel method. Switch to "My car" or "Rental car" above to estimate it, or set your own total
-      below.
+      Not needed for this travel method. Switch to "My car" or "Rental car" above to estimate it, or
+      set your own total below.
     </p>
   );
 }
@@ -424,8 +587,10 @@ function CutPlan() {
       <div className="flex gap-2.5 text-sm text-destructive">
         <AlertTriangle className="mt-0.5 size-4 shrink-0" />
         <p>
-          <strong>Your plan is {formatMoney(cuts.gap, { cents: true })} more than your spending money.</strong> No worries — your
-          reserve stays untouched. Here's a smarter way to spend less:
+          <strong>
+            Your plan is {formatMoney(cuts.gap, { cents: true })} more than your spending money.
+          </strong>{" "}
+          No worries — your reserve stays untouched. Here's a smarter way to spend less:
         </p>
       </div>
       <ul className="mt-3 space-y-2">
@@ -464,8 +629,13 @@ function CutPlan() {
                   size="sm"
                   variant="outline"
                   onClick={() => {
-                    tripActions.setOverride(s.category, Math.round((s.current - s.cut) * 100) / 100);
-                    toast.success(`${CATEGORY_LABELS[s.category]} trimmed by ${formatMoney(s.cut, { cents: true })}`);
+                    tripActions.setOverride(
+                      s.category,
+                      Math.round((s.current - s.cut) * 100) / 100,
+                    );
+                    toast.success(
+                      `${CATEGORY_LABELS[s.category]} trimmed by ${formatMoney(s.cut, { cents: true })}`,
+                    );
                   }}
                 >
                   Apply
@@ -499,11 +669,17 @@ function TripTypeSwitcher() {
                 onClick={() => {
                   if (active) return;
                   const [headline, ...details] = tripActions.setTripType(t.id);
-                  if (headline) toast.success(headline, details.length ? { description: details.join(" ") } : undefined);
+                  if (headline)
+                    toast.success(
+                      headline,
+                      details.length ? { description: details.join(" ") } : undefined,
+                    );
                 }}
                 className={cn(
                   "min-h-11 rounded-full border px-4 py-2 text-sm font-semibold transition-all",
-                  active ? "border-primary bg-primary text-primary-foreground" : "border-border bg-card hover:border-primary/40",
+                  active
+                    ? "border-primary bg-primary text-primary-foreground"
+                    : "border-border bg-card hover:border-primary/40",
                 )}
               >
                 {t.label}
@@ -526,7 +702,9 @@ function TripTypeSwitcher() {
                   onClick={() => tripActions.setTransportMode(m.id)}
                   className={cn(
                     "min-h-11 rounded-full border px-4 py-2 text-sm font-semibold transition-all",
-                    active ? "border-secondary-foreground/20 bg-secondary text-foreground" : "border-border bg-card hover:border-primary/40",
+                    active
+                      ? "border-secondary-foreground/20 bg-secondary text-foreground"
+                      : "border-border bg-card hover:border-primary/40",
                   )}
                 >
                   {m.label}

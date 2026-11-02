@@ -120,12 +120,17 @@ export interface BudgetTotals {
 const clampNum = (n: number) => (Number.isFinite(n) && n > 0 ? n : 0);
 /** Whole cents, immune to binary float noise like 1.005 * 100 = 100.49999… */
 export const toCents = (n: number) => Math.round(Number((clampNum(n) * 100).toPrecision(12)));
-const signedCents = (n: number) => (Number.isFinite(n) ? Math.round(Number((n * 100).toPrecision(12))) : 0);
+const signedCents = (n: number) =>
+  Number.isFinite(n) ? Math.round(Number((n * 100).toPrecision(12))) : 0;
 export const roundMoney = (n: number) => signedCents(n) / 100;
 
 export function tripShape(startDate: string, endDate: string, travelers: number): TripShape {
   const days = inclusiveDays(startDate, endDate) ?? 1;
-  return { travelers: Math.max(1, Math.round(travelers) || 1), days, nights: Math.max(0, days - 1) };
+  return {
+    travelers: Math.max(1, Math.round(travelers) || 1),
+    days,
+    nights: Math.max(0, days - 1),
+  };
 }
 
 /**
@@ -150,13 +155,19 @@ export function estimateCategories(
   const fareModes: TransportMode[] = ["flight", "train", "bus"];
   const gallons = driving && inputs.mpg > 0 ? clampNum(inputs.roundTripMiles) / inputs.mpg : 0;
 
-  const fares = fareModes.includes(inputs.transportMode) ? toCents(inputs.farePerPerson) * trip.travelers : 0;
-  const rental = inputs.transportMode === "rental-car" ? toCents(inputs.rentalPerDay) * trip.days : 0;
+  const fares = fareModes.includes(inputs.transportMode)
+    ? toCents(inputs.farePerPerson) * trip.travelers
+    : 0;
+  const rental =
+    inputs.transportMode === "rental-car" ? toCents(inputs.rentalPerDay) * trip.days : 0;
   set("transportation", fares + rental + toCents(inputs.localTransitPerDay) * trip.days);
   set("gas", toCents(gallons * clampNum(inputs.gasPrice)));
   set("tolls", driving ? toCents(inputs.tolls) : 0);
   set("parking", toCents(inputs.parkingPerDay) * trip.days);
-  set("accommodations", toCents(inputs.nightlyRate) * Math.max(0, Math.round(inputs.rooms)) * trip.nights);
+  set(
+    "accommodations",
+    toCents(inputs.nightlyRate) * Math.max(0, Math.round(inputs.rooms)) * trip.nights,
+  );
   set("food", toCents(inputs.foodPerPersonDay) * trip.travelers * trip.days);
   set("snacks", toCents(inputs.snacksPerPersonDay) * trip.travelers * trip.days);
   set("water", toCents(inputs.waterPerPersonDay) * trip.travelers * trip.days);
@@ -164,14 +175,19 @@ export function estimateCategories(
   set("stops", toCents(stopsTotal));
   set(
     "cruise",
-    (toCents(inputs.cruisePerNight) + toCents(inputs.gratuitiesPerNight)) * trip.travelers * trip.nights +
+    (toCents(inputs.cruisePerNight) + toCents(inputs.gratuitiesPerNight)) *
+      trip.travelers *
+      trip.nights +
       toCents(inputs.portFeesPerPerson) * trip.travelers,
   );
 
   const taxBase = TAXABLE.reduce((s, c) => s + (eff[c] ?? 0), 0);
   set("taxes", Math.round((clampNum(inputs.taxRatePct) / 100) * taxBase));
 
-  const cushionBase = CATEGORIES.filter((c) => c !== "misc" && c !== "stops").reduce((s, c) => s + (eff[c] ?? 0), 0);
+  const cushionBase = CATEGORIES.filter((c) => c !== "misc" && c !== "stops").reduce(
+    (s, c) => s + (eff[c] ?? 0),
+    0,
+  );
   set("misc", Math.round((clampNum(inputs.miscPct) / 100) * cushionBase));
 
   const dollars = (m: Partial<Record<Category, number>>) =>
@@ -213,7 +229,9 @@ export function calculateBudget(
 
 /** Plain-language progress label shared by every page. */
 export function percentLabel(t: Pick<BudgetTotals, "percentUsed">): string {
-  return t.percentUsed === null ? "No spendable budget" : `${Math.round(t.percentUsed)}% of spendable money planned`;
+  return t.percentUsed === null
+    ? "No spendable budget"
+    : `${Math.round(t.percentUsed)}% of spendable money planned`;
 }
 
 // ---------- Defaults (example prices) ----------
@@ -232,7 +250,10 @@ export function modeDefaults(
   style: TravelStyle,
   mode: TransportMode,
   tripType: TripType = "road-trip",
-): Pick<BudgetInputs, "transportMode" | "farePerPerson" | "rentalPerDay" | "localTransitPerDay" | "parkingPerDay"> {
+): Pick<
+  BudgetInputs,
+  "transportMode" | "farePerPerson" | "rentalPerDay" | "localTransitPerDay" | "parkingPerDay"
+> {
   const driving = isDrivingMode(mode);
   const cruise = tripType === "cruise";
   return {
@@ -260,7 +281,10 @@ export function defaultInputs(
     mpg: 28,
     gasPrice: dest.gasPrice,
     // Main dining is part of a cruise fare; destinations without cruise data get a quarter of the usual food budget.
-    foodPerPersonDay: cruise && !dest.cruisePerNight ? Math.round(dest.foodPerPersonDay[style] * 0.25) : dest.foodPerPersonDay[style],
+    foodPerPersonDay:
+      cruise && !dest.cruisePerNight
+        ? Math.round(dest.foodPerPersonDay[style] * 0.25)
+        : dest.foodPerPersonDay[style],
     snacksPerPersonDay: SNACKS_PER_PERSON_DAY[style],
     waterPerPersonDay: style === "luxury" ? 8 : style === "comfort" ? 5 : 3,
     // A cruise cabin replaces hotel nights.
@@ -294,7 +318,8 @@ export function stopCost(stop: StopCostInput, travelers: number, inputs: BudgetI
   const entry = clampNum(stop.costPerPerson) * Math.max(1, travelers);
   const driving = isDrivingMode(inputs.transportMode);
   const detourMiles = (clampNum(stop.extraMinutes) / 60) * DETOUR_SAMPLE_MPH;
-  const fuel = driving && inputs.mpg > 0 ? (detourMiles / inputs.mpg) * clampNum(inputs.gasPrice) : 0;
+  const fuel =
+    driving && inputs.mpg > 0 ? (detourMiles / inputs.mpg) * clampNum(inputs.gasPrice) : 0;
   return roundMoney(entry + fuel);
 }
 
@@ -352,14 +377,22 @@ export function reductionPlan(
     if (!share || current <= 0) continue;
 
     // Lowering a category also lowers the tax and cushion computed from it.
-    const multiplier = (1 + (TAXABLE.includes(cat) ? taxRate : 0)) * (cat === "stops" ? 1 : 1 + cushion);
+    const multiplier =
+      (1 + (TAXABLE.includes(cat) ? taxRate : 0)) * (cat === "stops" ? 1 : 1 + cushion);
     const maxCut = roundMoney(current * share);
     const needed = Math.ceil((gap / multiplier) * 100) / 100;
     let cut = Math.min(maxCut, needed);
 
     const savesFor = (c: number) => {
       if (cat === "stops") return roundMoney(c);
-      const after = calculateBudget(inputs, trip, totalBudget, emergencyFund, { ...overrides, [cat]: current - c }, stopsTotal);
+      const after = calculateBudget(
+        inputs,
+        trip,
+        totalBudget,
+        emergencyFund,
+        { ...overrides, [cat]: current - c },
+        stopsTotal,
+      );
       return roundMoney(base.planned - after.planned);
     };
     let saves = savesFor(cut);
@@ -368,7 +401,13 @@ export function reductionPlan(
       cut = roundMoney(cut + 0.01);
       saves = savesFor(cut);
     }
-    suggestions.push({ category: cat, current, cut: roundMoney(cut), saves, closesGap: saves >= gap });
+    suggestions.push({
+      category: cat,
+      current,
+      cut: roundMoney(cut),
+      saves,
+      closesGap: saves >= gap,
+    });
   }
 
   suggestions.sort((a, b) => Number(b.closesGap) - Number(a.closesGap) || b.saves - a.saves);
@@ -404,15 +443,20 @@ export interface SavingTip {
   replacesCustom: boolean;
 }
 
-const SAVING_COPY: Record<SavingId, { title: string; detail: (dest: DemoDestination) => string; assumption: string }> = {
+const SAVING_COPY: Record<
+  SavingId,
+  { title: string; detail: (dest: DemoDestination) => string; assumption: string }
+> = {
   picnic: {
     title: "Pack picnic lunches",
     detail: () => "Swap one restaurant meal a day for groceries — meals budget drops 30%.",
-    assumption: "Lowers your daily meal budget. Restaurant picks in your itinerary stay as they are.",
+    assumption:
+      "Lowers your daily meal budget. Restaurant picks in your itinerary stay as they are.",
   },
   snacks: {
     title: "Stock up at a grocery store",
-    detail: () => "Buy snacks in bulk before you leave instead of at gas stations — about half off.",
+    detail: () =>
+      "Buy snacks in bulk before you leave instead of at gas stations — about half off.",
     assumption: "Halves your daily snack budget.",
   },
   refill: {
@@ -431,7 +475,8 @@ const SAVING_COPY: Record<SavingId, { title: string; detail: (dest: DemoDestinat
   fares: {
     title: "Travel midweek",
     detail: () => "Tuesday–Wednesday departures are often cheaper — about 15% off fares (example).",
-    assumption: "Assumes you can move your travel days to midweek. Your dates in Waypoint aren't changed.",
+    assumption:
+      "Assumes you can move your travel days to midweek. Your dates in Waypoint aren't changed.",
   },
   parking: {
     title: "Park once & walk",
@@ -446,11 +491,13 @@ const SAVING_COPY: Record<SavingId, { title: string; detail: (dest: DemoDestinat
   "free-days": {
     title: "Mix in free attractions",
     detail: () => "Trade a paid activity for parks, free museum days and markets — about 25% off.",
-    assumption: "Lowers your activities budget. Swap paid stops in your itinerary yourself to match.",
+    assumption:
+      "Lowers your activities budget. Swap paid stops in your itinerary yourself to match.",
   },
   cabin: {
     title: "Book an inside cabin",
-    detail: () => "An inside cabin is often about 25% cheaper than an ocean view for the same sailing (example).",
+    detail: () =>
+      "An inside cabin is often about 25% cheaper than an ocean view for the same sailing (example).",
     assumption: "Lowers your cruise fare per night by 25%. Port fees and gratuities stay the same.",
   },
   "fuel-rewards": {
@@ -460,10 +507,26 @@ const SAVING_COPY: Record<SavingId, { title: string; detail: (dest: DemoDestinat
   },
 };
 
-const SAVING_ORDER: SavingId[] = ["cabin", "picnic", "snacks", "refill", "lodging", "fares", "parking", "tolls", "free-days", "fuel-rewards"];
+const SAVING_ORDER: SavingId[] = [
+  "cabin",
+  "picnic",
+  "snacks",
+  "refill",
+  "lodging",
+  "fares",
+  "parking",
+  "tolls",
+  "free-days",
+  "fuel-rewards",
+];
 
 /** Inputs and overrides after applying a saving: the input changes plus clearing that category's custom total. */
-export function withSaving(id: SavingId, inputs: BudgetInputs, overrides: Overrides, dest: DemoDestination) {
+export function withSaving(
+  id: SavingId,
+  inputs: BudgetInputs,
+  overrides: Overrides,
+  dest: DemoDestination,
+) {
   const cat = SAVING_CATEGORY[id];
   const nextOverrides = { ...overrides };
   delete nextOverrides[cat];
@@ -510,7 +573,11 @@ export function savingsOpportunities(
 }
 
 /** Input changes for applying a saving. The matching category override is cleared. */
-export function applySaving(id: SavingId, inputs: BudgetInputs, dest: DemoDestination): Partial<BudgetInputs> {
+export function applySaving(
+  id: SavingId,
+  inputs: BudgetInputs,
+  dest: DemoDestination,
+): Partial<BudgetInputs> {
   switch (id) {
     case "picnic":
       return { foodPerPersonDay: roundMoney(inputs.foodPerPersonDay * 0.7) };
