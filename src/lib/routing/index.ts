@@ -38,7 +38,8 @@ export function whyItMatches(stop: RouteStop, interests: Interest[], travelers: 
   if (stop.costPerPerson === 0) reasons.push("Free — keeps your budget intact");
   if (stop.tags.includes("hidden-gem")) reasons.push("Off the beaten path");
   if (stop.extraMinutes <= 10) reasons.push("Quick detour");
-  if (travelers >= 3 && stop.tags.includes("family")) reasons.push("Works well for groups & families");
+  if (travelers >= 3 && stop.tags.includes("family"))
+    reasons.push("Works well for groups & families");
   if (reasons.length === 0) reasons.push("A good break to stretch your legs");
   return reasons.slice(0, 3);
 }

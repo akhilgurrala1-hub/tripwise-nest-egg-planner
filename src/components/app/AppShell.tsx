@@ -1,6 +1,18 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
-import { Compass, LayoutDashboard, LogOut, Map, Monitor, Moon, Route as RouteIcon, Sun, UserRound, Wallet, type LucideIcon } from "lucide-react";
+import {
+  Compass,
+  LayoutDashboard,
+  LogOut,
+  Map,
+  Monitor,
+  Moon,
+  Route as RouteIcon,
+  Sun,
+  UserRound,
+  Wallet,
+  type LucideIcon,
+} from "lucide-react";
 import type { ReactNode } from "react";
 
 import { PriceSourceBadge } from "./bits";
@@ -19,7 +31,11 @@ import { useAuth } from "@/lib/auth-context";
 import { useTheme, type ThemePref } from "@/lib/theme";
 import { useTrip } from "@/lib/trip-store";
 
-const NAV: { to: "/" | "/budget" | "/road-trip" | "/itinerary" | "/dashboard"; label: string; icon: LucideIcon }[] = [
+const NAV: {
+  to: "/" | "/budget" | "/road-trip" | "/itinerary" | "/dashboard";
+  label: string;
+  icon: LucideIcon;
+}[] = [
   { to: "/", label: "Plan", icon: Compass },
   { to: "/budget", label: "Budget", icon: Wallet },
   { to: "/road-trip", label: "Road trip", icon: RouteIcon },
@@ -39,7 +55,9 @@ export function AppShell({ children }: { children: ReactNode }) {
             <span className="grid size-8 place-items-center rounded-full bg-gradient-sunset text-sunset-foreground shadow-glow">
               <Compass className="size-4" />
             </span>
-            <span className="font-display text-xl font-semibold tracking-tight text-foreground">Waypoint</span>
+            <span className="font-display text-xl font-semibold tracking-tight text-foreground">
+              Waypoint
+            </span>
           </Link>
           <nav className="hidden items-center gap-1 md:flex">
             {nav.map((item) => (
@@ -64,8 +82,16 @@ export function AppShell({ children }: { children: ReactNode }) {
 
       <main className="pb-28 md:pb-16">{children}</main>
 
-      <nav className="glass pb-safe fixed inset-x-0 bottom-0 z-40 border-t border-border/70 md:hidden" aria-label="Main">
-        <div className={cn("mx-auto grid max-w-lg px-1 pt-1.5", nav.length === 5 ? "grid-cols-5" : "grid-cols-4")}>
+      <nav
+        className="glass pb-safe fixed inset-x-0 bottom-0 z-40 border-t border-border/70 md:hidden"
+        aria-label="Main"
+      >
+        <div
+          className={cn(
+            "mx-auto grid max-w-lg px-1 pt-1.5",
+            nav.length === 5 ? "grid-cols-5" : "grid-cols-4",
+          )}
+        >
           {nav.map(({ to, label, icon: Icon }) => (
             <Link
               key={to}
@@ -83,7 +109,9 @@ export function AppShell({ children }: { children: ReactNode }) {
                   >
                     <Icon className="size-5" />
                   </span>
-                  <span className={isActive ? "text-primary" : "text-muted-foreground"}>{label}</span>
+                  <span className={isActive ? "text-primary" : "text-muted-foreground"}>
+                    {label}
+                  </span>
                 </>
               )}
             </Link>
@@ -125,7 +153,9 @@ function AccountButton() {
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-56">
-        <DropdownMenuLabel className="truncate text-xs font-normal text-muted-foreground">{user.email}</DropdownMenuLabel>
+        <DropdownMenuLabel className="truncate text-xs font-normal text-muted-foreground">
+          {user.email}
+        </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={signOut}>
           <LogOut className="size-4" /> Sign out
@@ -153,7 +183,11 @@ function ThemeToggle() {
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-40">
         {THEME_OPTIONS.map(({ id, label, icon: Icon }) => (
-          <DropdownMenuItem key={id} onClick={() => setPref(id)} className={cn(pref === id && "font-semibold text-primary")}>
+          <DropdownMenuItem
+            key={id}
+            onClick={() => setPref(id)}
+            className={cn(pref === id && "font-semibold text-primary")}
+          >
             <Icon className="size-4" /> {label}
           </DropdownMenuItem>
         ))}

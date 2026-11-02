@@ -37,7 +37,10 @@ export function LivePricesPanel({ className }: { className?: string }) {
   });
   const connected = status.data;
   const anyConnected =
-    !!connected && ((connected.gas && isDrivingMode(trip.inputs.transportMode)) || (connected.hotels && !noHotel) || (flying && connected.flights));
+    !!connected &&
+    ((connected.gas && isDrivingMode(trip.inputs.transportMode)) ||
+      (connected.hotels && !noHotel) ||
+      (flying && connected.flights));
   const notConnected = connected
     ? [
         !connected.hotels && !noHotel && "hotels",
@@ -49,8 +52,12 @@ export function LivePricesPanel({ className }: { className?: string }) {
   const stale = ageHours > 24;
   const tripChanged =
     !!live &&
-    ((live.hotels && (live.hotels.checkIn !== trip.setup.startDate || live.hotels.checkOut !== trip.setup.endDate)) ||
-      (live.flights && (live.flights.departDate !== trip.setup.startDate || live.flights.returnDate !== trip.setup.endDate)));
+    ((live.hotels &&
+      (live.hotels.checkIn !== trip.setup.startDate ||
+        live.hotels.checkOut !== trip.setup.endDate)) ||
+      (live.flights &&
+        (live.flights.departDate !== trip.setup.startDate ||
+          live.flights.returnDate !== trip.setup.endDate)));
   const [loading, setLoading] = useState(false);
   const [destAirport, setDestAirport] = useState("");
 
@@ -93,7 +100,8 @@ export function LivePricesPanel({ className }: { className?: string }) {
         <div className="min-w-0">
           <h2 className="font-display text-xl font-semibold">Live prices</h2>
           <p className="text-sm text-muted-foreground">
-            Hotel and flight prices from Google, gas from the U.S. Energy Information Administration's weekly survey.
+            Hotel and flight prices from Google, gas from the U.S. Energy Information
+            Administration's weekly survey.
           </p>
         </div>
         {user && connected && !anyConnected ? null : user ? (
@@ -112,8 +120,8 @@ export function LivePricesPanel({ className }: { className?: string }) {
 
       {user && connected && !anyConnected && (
         <p className="mt-3 rounded-xl bg-muted px-3 py-2 text-xs leading-snug text-muted-foreground">
-          Live hotel, flight and gas prices need a price-data connection that isn't set up for this app yet, so these
-          amounts stay demo estimates. Weather and places are already live.
+          Live hotel, flight and gas prices need a price-data connection that isn't set up for this
+          app yet, so these amounts stay demo estimates. Weather and places are already live.
         </p>
       )}
       {user && anyConnected && notConnected.length > 0 && (
@@ -132,20 +140,31 @@ export function LivePricesPanel({ className }: { className?: string }) {
       {user && flying && anyConnected && (
         <div className="mt-3 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
           <span>
-            Flying from <strong className="text-foreground">{prefs?.home_airport || "your start city"}</strong>.
+            Flying from{" "}
+            <strong className="text-foreground">{prefs?.home_airport || "your start city"}</strong>.
           </span>
           <label className="inline-flex items-center gap-1.5">
             Destination airport (optional)
             <Input
               value={destAirport}
-              onChange={(e) => setDestAirport(e.target.value.toUpperCase().replace(/[^A-Z]/g, "").slice(0, 3))}
+              onChange={(e) =>
+                setDestAirport(
+                  e.target.value
+                    .toUpperCase()
+                    .replace(/[^A-Z]/g, "")
+                    .slice(0, 3),
+                )
+              }
               placeholder="e.g. AVL"
               className="h-8 w-20"
               aria-label="Destination airport code"
             />
           </label>
           {!prefs?.home_airport && (
-            <Link to="/profile" className="font-semibold text-primary underline-offset-2 hover:underline">
+            <Link
+              to="/profile"
+              className="font-semibold text-primary underline-offset-2 hover:underline"
+            >
               Set your home airport
             </Link>
           )}
@@ -157,35 +176,68 @@ export function LivePricesPanel({ className }: { className?: string }) {
           <Quote
             icon={Fuel}
             label="Gas"
-            value={live.gas ? `${formatMoney(live.gas.price, { cents: true })}/gal` : "Not available"}
-            sub={live.gas ? `${live.gas.areaLabel} regular · week of ${live.gas.period}` : undefined}
+            value={
+              live.gas ? `${formatMoney(live.gas.price, { cents: true })}/gal` : "Not available"
+            }
+            sub={
+              live.gas ? `${live.gas.areaLabel} regular · week of ${live.gas.period}` : undefined
+            }
           />
           <Quote
             icon={Hotel}
             label="Hotel, per night"
             value={
-              cruise ? "Cabin in cruise fare" : live.hotels ? formatMoney(live.hotels.nightly) : shape.nights === 0 ? "No overnight stay" : "Not available"
+              cruise
+                ? "Cabin in cruise fare"
+                : live.hotels
+                  ? formatMoney(live.hotels.nightly)
+                  : shape.nights === 0
+                    ? "No overnight stay"
+                    : "Not available"
             }
             sub={live.hotels ? `${live.hotels.pickLabel} · before taxes` : undefined}
           />
           <Quote
             icon={Plane}
             label="Flight, per person"
-            value={live.flights ? formatMoney(live.flights.perPerson) : flying ? "Not available" : "Not flying"}
-            sub={live.flights ? `${live.flights.originAirport} ⇄ ${live.flights.destinationAirport} · cheapest round trip` : undefined}
+            value={
+              live.flights
+                ? formatMoney(live.flights.perPerson)
+                : flying
+                  ? "Not available"
+                  : "Not flying"
+            }
+            sub={
+              live.flights
+                ? `${live.flights.originAirport} ⇄ ${live.flights.destinationAirport} · cheapest round trip`
+                : undefined
+            }
           />
           <p className="text-xs text-muted-foreground sm:col-span-3">
-            Checked {new Date(live.fetchedAt).toLocaleString()}. Prices change often and are confirmed only when you book.
+            Checked {new Date(live.fetchedAt).toLocaleString()}. Prices change often and are
+            confirmed only when you book.
           </p>
         </div>
       ) : (
-        <p className="mt-3 text-xs text-muted-foreground">Until you check, gas, hotel and fare amounts are demo estimates.</p>
+        <p className="mt-3 text-xs text-muted-foreground">
+          Until you check, gas, hotel and fare amounts are demo estimates.
+        </p>
       )}
     </section>
   );
 }
 
-function Quote({ icon: Icon, label, value, sub }: { icon: typeof Fuel; label: string; value: string; sub?: string | undefined }) {
+function Quote({
+  icon: Icon,
+  label,
+  value,
+  sub,
+}: {
+  icon: typeof Fuel;
+  label: string;
+  value: string;
+  sub?: string | undefined;
+}) {
   return (
     <div className="rounded-2xl border border-border bg-background/60 p-3">
       <p className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground">

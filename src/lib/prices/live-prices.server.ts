@@ -43,10 +43,17 @@ async function getJson(url: string, label: string): Promise<Record<string, unkno
   }
   if (!res.ok || typeof body["error"] === "string") {
     // Never log the request URL: it carries the API key.
-    console.error(`${label} failed [${res.status}]: ${String(body["error"] ?? text).slice(0, 300)}`);
-    if (res.status === 401 || res.status === 403) throw new PriceError(`${label}: the API key was rejected.`);
-    if (res.status === 429) throw new PriceError(`${label}: the monthly search allowance is used up or busy.`);
-    if (typeof body["error"] === "string" && /hasn't returned any results/i.test(body["error"] as string)) {
+    console.error(
+      `${label} failed [${res.status}]: ${String(body["error"] ?? text).slice(0, 300)}`,
+    );
+    if (res.status === 401 || res.status === 403)
+      throw new PriceError(`${label}: the API key was rejected.`);
+    if (res.status === 429)
+      throw new PriceError(`${label}: the monthly search allowance is used up or busy.`);
+    if (
+      typeof body["error"] === "string" &&
+      /hasn't returned any results/i.test(body["error"] as string)
+    ) {
       throw new PriceError(`${label}: no results for these dates and places.`);
     }
     throw new PriceError(`${label}: the price service didn't respond.`);
@@ -73,9 +80,11 @@ async function gasQuote(place: string, key: string): Promise<GasQuote> {
   u.searchParams.append("sort[0][direction]", "desc");
   u.searchParams.set("length", "1");
   const body = await getJson(u.toString(), "Gas prices");
-  const row = ((body["response"] as { data?: { period: string; value: string }[] } | undefined)?.data ?? [])[0];
+  const row = ((body["response"] as { data?: { period: string; value: string }[] } | undefined)
+    ?.data ?? [])[0];
   const price = Number(row?.value);
-  if (!row || !Number.isFinite(price) || price <= 0) throw new PriceError("Gas prices: no recent survey found.");
+  if (!row || !Number.isFinite(price) || price <= 0)
+    throw new PriceError("Gas prices: no recent survey found.");
   return { price: Math.round(price * 100) / 100, areaLabel: area.label, period: row.period };
 }
 
@@ -105,7 +114,8 @@ async function hotelQuote(req: LivePricesRequest, key: string): Promise<HotelQuo
   const body = await getJson(serpUrl(params, key), "Hotel prices");
   const options: HotelOption[] = ((body["properties"] as SerpHotel[] | undefined) ?? [])
     .map((p) => {
-      const nightly = p.rate_per_night?.extracted_before_taxes_fees ?? p.rate_per_night?.extracted_lowest ?? 0;
+      const nightly =
+        p.rate_per_night?.extracted_before_taxes_fees ?? p.rate_per_night?.extracted_lowest ?? 0;
       return {
         name: p.name ?? "",
         hotelClass: p.extracted_hotel_class ?? null,
@@ -124,12 +134,25 @@ async function hotelQuote(req: LivePricesRequest, key: string): Promise<HotelQuo
   const searchUrl = `https://www.google.com/travel/hotels/${encodeURIComponent(req.destination)}?q=${encodeURIComponent(
     `hotels in ${req.destination}`,
   )}&dates=${req.startDate},${req.endDate}`;
-  return { checkIn: req.startDate, checkOut: req.endDate, nightly: pick.nightly, pickLabel: pick.label, options, searchUrl };
+  return {
+    checkIn: req.startDate,
+    checkOut: req.endDate,
+    nightly: pick.nightly,
+    pickLabel: pick.label,
+    options,
+    searchUrl,
+  };
 }
 
 async function airportFor(place: string, key: string): Promise<string | null> {
-  const body = await getJson(serpUrl({ engine: "google_flights_autocomplete", q: place, gl: "us", hl: "en" }, key), "Airport lookup");
-  const s = (body["suggestions"] as { type?: string; id?: string; airports?: { id?: string }[] }[] | undefined)?.[0];
+  const body = await getJson(
+    serpUrl({ engine: "google_flights_autocomplete", q: place, gl: "us", hl: "en" }, key),
+    "Airport lookup",
+  );
+  const s = (
+    body["suggestions"] as
+      { type?: string; id?: string; airports?: { id?: string }[] }[] | undefined
+  )?.[0];
   if (!s) return null;
   if (s.type === "airport" && s.id && /^[A-Z]{3}$/.test(s.id)) return s.id;
   return s.airports?.find((a) => a.id && /^[A-Z]{3}$/.test(a.id))?.id ?? null;
@@ -138,7 +161,11 @@ async function airportFor(place: string, key: string): Promise<string | null> {
 interface SerpFlightGroup {
   price?: number;
   total_duration?: number;
-  flights?: { airline?: string; departure_airport?: { time?: string }; arrival_airport?: { time?: string } }[];
+  flights?: {
+    airline?: string;
+    departure_airport?: { time?: string };
+    arrival_airport?: { time?: string };
+  }[];
 }
 
 async function flightQuote(req: LivePricesRequest, key: string): Promise<FlightQuote> {
@@ -146,8 +173,12 @@ async function flightQuote(req: LivePricesRequest, key: string): Promise<FlightQ
     req.originAirport || airportFor(req.origin, key),
     req.destinationAirport || airportFor(req.destination, key),
   ]);
-  if (!from || !to) throw new PriceError("Flight prices: couldn't find an airport for your start or destination. Add your home airport in your profile.");
-  if (from === to) throw new PriceError("Flight prices: your start and destination use the same airport.");
+  if (!from || !to)
+    throw new PriceError(
+      "Flight prices: couldn't find an airport for your start or destination. Add your home airport in your profile.",
+    );
+  if (from === to)
+    throw new PriceError("Flight prices: your start and destination use the same airport.");
   const body = await getJson(
     serpUrl(
       {
@@ -166,7 +197,10 @@ async function flightQuote(req: LivePricesRequest, key: string): Promise<FlightQ
     ),
     "Flight prices",
   );
-  const groups = [...((body["best_flights"] as SerpFlightGroup[]) ?? []), ...((body["other_flights"] as SerpFlightGroup[]) ?? [])];
+  const groups = [
+    ...((body["best_flights"] as SerpFlightGroup[]) ?? []),
+    ...((body["other_flights"] as SerpFlightGroup[]) ?? []),
+  ];
   const options: FlightOption[] = groups
     .filter((g) => typeof g.price === "number" && g.price > 0 && g.flights?.length)
     .map((g) => ({
@@ -179,7 +213,8 @@ async function flightQuote(req: LivePricesRequest, key: string): Promise<FlightQ
     }))
     .sort((a, b) => a.perPerson - b.perPerson)
     .slice(0, 8);
-  if (options.length === 0) throw new PriceError("Flight prices: no round trips listed for these dates.");
+  if (options.length === 0)
+    throw new PriceError("Flight prices: no round trips listed for these dates.");
   const insights = body["price_insights"] as { typical_price_range?: [number, number] } | undefined;
   const range = insights?.typical_price_range;
   return {
@@ -188,13 +223,18 @@ async function flightQuote(req: LivePricesRequest, key: string): Promise<FlightQ
     departDate: req.startDate,
     returnDate: req.endDate,
     perPerson: options[0]!.perPerson,
-    typicalRange: range ? [perPersonFare(range[0], req.travelers), perPersonFare(range[1], req.travelers)] : null,
+    typicalRange: range
+      ? [perPersonFare(range[0], req.travelers), perPersonFare(range[1], req.travelers)]
+      : null,
     options,
-    bookingUrl: ((body["search_metadata"] as { google_flights_url?: string } | undefined)?.google_flights_url) ?? null,
+    bookingUrl:
+      (body["search_metadata"] as { google_flights_url?: string } | undefined)
+        ?.google_flights_url ?? null,
   };
 }
 
-const reason = (r: PromiseRejectedResult) => (r.reason instanceof PriceError ? r.reason.message : "A price service didn't respond.");
+const reason = (r: PromiseRejectedResult) =>
+  r.reason instanceof PriceError ? r.reason.message : "A price service didn't respond.";
 
 export async function fetchLivePrices(req: LivePricesRequest): Promise<LivePricesResult> {
   const serp = process.env["SERPAPI_API_KEY"];
@@ -210,7 +250,11 @@ export async function fetchLivePrices(req: LivePricesRequest): Promise<LivePrice
       : serp
         ? hotelQuote(req, serp)
         : missing("Hotel prices"),
-    req.includeFlights ? (serp ? flightQuote(req, serp) : missing("Flight prices")) : Promise.resolve(null),
+    req.includeFlights
+      ? serp
+        ? flightQuote(req, serp)
+        : missing("Flight prices")
+      : Promise.resolve(null),
   ]);
   for (const r of [gas, hotels, flights]) if (r.status === "rejected") notes.push(reason(r));
   const prices = {
@@ -220,6 +264,7 @@ export async function fetchLivePrices(req: LivePricesRequest): Promise<LivePrice
     flights: flights.status === "fulfilled" ? flights.value : null,
     notes,
   };
-  if (!prices.gas && !prices.hotels && !prices.flights) return { ok: false, error: notes[0] ?? "Live prices are unavailable right now." };
+  if (!prices.gas && !prices.hotels && !prices.flights)
+    return { ok: false, error: notes[0] ?? "Live prices are unavailable right now." };
   return { ok: true, prices };
 }

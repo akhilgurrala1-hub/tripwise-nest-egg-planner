@@ -77,8 +77,18 @@ export function RealRouteMap({
           strokeWeight: 5,
           strokeOpacity: 0.9,
         });
-        const start = new g.maps.Marker({ position: route.start, map: map.current, label: "A", title: "Start" });
-        const end = new g.maps.Marker({ position: route.end, map: map.current, label: "B", title: "Destination" });
+        const start = new g.maps.Marker({
+          position: route.start,
+          map: map.current,
+          label: "A",
+          title: "Start",
+        });
+        const end = new g.maps.Marker({
+          position: route.end,
+          map: map.current,
+          label: "B",
+          title: "Destination",
+        });
         overlays.current = [line, start, end];
         const bounds = new g.maps.LatLngBounds();
         path.forEach((p: unknown) => bounds.extend(p));
@@ -126,7 +136,9 @@ export function RealRouteMap({
       <div ref={el} className="absolute inset-0" />
       {status !== "ready" && (
         <div className="absolute inset-0 grid place-items-center p-4 text-center text-xs text-muted-foreground">
-          {status === "loading" ? "Loading map…" : "The map couldn't load here. Stops and drive times below still work."}
+          {status === "loading"
+            ? "Loading map…"
+            : "The map couldn't load here. Stops and drive times below still work."}
         </div>
       )}
     </div>

@@ -15,7 +15,15 @@ export function formatDateRange(start: string, end: string) {
   }
 }
 
-export function PageHeader({ eyebrow, title, children }: { eyebrow: string; title: string; children?: ReactNode }) {
+export function PageHeader({
+  eyebrow,
+  title,
+  children,
+}: {
+  eyebrow: string;
+  title: string;
+  children?: ReactNode;
+}) {
   const { trip, dest, shape } = useTrip();
   return (
     <div className="mx-auto max-w-6xl px-4 pt-6 sm:pt-8">
@@ -33,10 +41,13 @@ export function PageHeader({ eyebrow, title, children }: { eyebrow: string; titl
       )}
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <p className="text-xs font-semibold tracking-[0.16em] text-muted-foreground uppercase">{eyebrow}</p>
+          <p className="text-xs font-semibold tracking-[0.16em] text-muted-foreground uppercase">
+            {eyebrow}
+          </p>
           <h1 className="font-display text-3xl font-semibold sm:text-4xl">{title}</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            {dest.name} · {formatDateRange(trip.setup.startDate, trip.setup.endDate)} · {shape.travelers} traveler
+            {dest.name} · {formatDateRange(trip.setup.startDate, trip.setup.endDate)} ·{" "}
+            {shape.travelers} traveler
             {shape.travelers > 1 ? "s" : ""}
           </p>
         </div>

@@ -75,8 +75,8 @@ function ResetPassword() {
           </form>
         ) : (
           <p className="mt-2 text-sm text-muted-foreground">
-            Open this page from the reset link in your email. Links expire after a while — request a new one from the
-            sign-in page if needed.
+            Open this page from the reset link in your email. Links expire after a while — request a
+            new one from the sign-in page if needed.
           </p>
         )}
       </div>

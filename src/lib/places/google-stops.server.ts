@@ -31,8 +31,27 @@ const INTEREST_QUERIES: Partial<Record<Interest, QuerySpec>> = {
   food: { text: "bakery", kind: "restaurant" },
 };
 
-export const FOOD_TYPES = ["restaurant", "cafe", "bakery", "food", "meal_takeaway", "bar", "brewery", "winery", "coffee_shop"];
-const FAMILY_TYPES = ["amusement_park", "zoo", "aquarium", "playground", "park", "museum", "water_park", "childrens_camp"];
+export const FOOD_TYPES = [
+  "restaurant",
+  "cafe",
+  "bakery",
+  "food",
+  "meal_takeaway",
+  "bar",
+  "brewery",
+  "winery",
+  "coffee_shop",
+];
+const FAMILY_TYPES = [
+  "amusement_park",
+  "zoo",
+  "aquarium",
+  "playground",
+  "park",
+  "museum",
+  "water_park",
+  "childrens_camp",
+];
 export const TYPE_INTERESTS: [string, Interest][] = [
   ["park", "nature"],
   ["scenic_spot", "nature"],
@@ -99,7 +118,12 @@ export class GatewayError extends Error {
   }
 }
 
-export async function gatewayPost(path: string, body: unknown, fieldMask: string, keys: { lovable: string; maps: string }) {
+export async function gatewayPost(
+  path: string,
+  body: unknown,
+  fieldMask: string,
+  keys: { lovable: string; maps: string },
+) {
   const res = await fetch(`${GATEWAY_URL}${path}`, {
     method: "POST",
     headers: {
@@ -115,12 +139,19 @@ export async function gatewayPost(path: string, body: unknown, fieldMask: string
     console.error(`Maps gateway ${path} failed [${res.status}]: ${text}`);
     if (res.status === 403) {
       if (text.includes("API_KEY_HTTP_REFERRER_BLOCKED"))
-        throw new GatewayError(403, "The map service key is restricted to websites. Set its application restriction to None or IP addresses.");
+        throw new GatewayError(
+          403,
+          "The map service key is restricted to websites. Set its application restriction to None or IP addresses.",
+        );
       if (text.includes("API_KEY_SERVICE_BLOCKED"))
-        throw new GatewayError(403, "The map service key doesn't allow this API. Add Routes API and Places API (New) to its allowed APIs.");
+        throw new GatewayError(
+          403,
+          "The map service key doesn't allow this API. Add Routes API and Places API (New) to its allowed APIs.",
+        );
       throw new GatewayError(403, "The map service denied the request.");
     }
-    if (res.status === 429) throw new GatewayError(429, "The map service is busy. Please try again in a minute.");
+    if (res.status === 429)
+      throw new GatewayError(429, "The map service is busy. Please try again in a minute.");
     throw new GatewayError(res.status, "The map service couldn't complete the request.");
   }
   return res.json();
@@ -150,7 +181,12 @@ export function costFor(p: GPlace): { cost: number; source: CostSource } {
   return { cost: 0, source: "unknown" };
 }
 
-function toStop(p: GPlace, legs: GLeg[] | undefined, spec: QuerySpec, routeSeconds: number): RouteStop | null {
+function toStop(
+  p: GPlace,
+  legs: GLeg[] | undefined,
+  spec: QuerySpec,
+  routeSeconds: number,
+): RouteStop | null {
   const name = p.displayName?.text;
   if (!name || !p.location) return null;
   const types = p.types ?? [];
@@ -169,9 +205,12 @@ function toStop(p: GPlace, legs: GLeg[] | undefined, spec: QuerySpec, routeSecon
   if (isFood) tags.add("food");
   else tags.add("sightseeing");
   if (p.goodForChildren || FAMILY_TYPES.some((t) => types.includes(t))) tags.add("family");
-  if ((p.rating ?? 0) >= 4.5 && (p.userRatingCount ?? 0) > 0 && (p.userRatingCount ?? 0) < 500) tags.add("hidden-gem");
+  if ((p.rating ?? 0) >= 4.5 && (p.userRatingCount ?? 0) > 0 && (p.userRatingCount ?? 0) < 500)
+    tags.add("hidden-gem");
 
-  const interests = Array.from(new Set(TYPE_INTERESTS.filter(([t]) => types.includes(t)).map(([, i]) => i)));
+  const interests = Array.from(
+    new Set(TYPE_INTERESTS.filter(([t]) => types.includes(t)).map(([, i]) => i)),
+  );
 
   return {
     id: `g-${p.id}`,
@@ -233,7 +272,10 @@ export async function findRealStops(input: {
     const start = route?.legs?.[0]?.startLocation?.latLng;
     const end = route?.legs?.[route?.legs?.length - 1]?.endLocation?.latLng;
     if (!polyline || routeSeconds === null || !start || !end) {
-      return { ok: false, error: "Couldn't find a driving route between those places. Try a city and state." };
+      return {
+        ok: false,
+        error: "Couldn't find a driving route between those places. Try a city and state.",
+      };
     }
 
     const queries = buildQueries(input.interests);
@@ -278,13 +320,18 @@ export async function findRealStops(input: {
       const places: GPlace[] = r.value.data?.places ?? [];
       const summaries: { legs?: GLeg[] }[] = r.value.data?.routingSummaries ?? [];
       const candidates = places
-        .map((p, i) => (stops.has(`g-${p.id}`) ? null : toStop(p, summaries[i]?.legs, r.value.q, routeSeconds)))
+        .map((p, i) =>
+          stops.has(`g-${p.id}`) ? null : toStop(p, summaries[i]?.legs, r.value.q, routeSeconds),
+        )
         .filter((x): x is RouteStop => x !== null);
       for (const stop of spreadAlongRoute(candidates, KEEP_PER_QUERY)) stops.set(stop.id, stop);
     }
     if (stops.size === 0 && firstError) {
       const e = firstError.reason;
-      return { ok: false, error: e instanceof GatewayError ? e.message : "The map service couldn't find stops." };
+      return {
+        ok: false,
+        error: e instanceof GatewayError ? e.message : "The map service couldn't find stops.",
+      };
     }
 
     return {

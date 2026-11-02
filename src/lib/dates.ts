@@ -12,7 +12,9 @@ export function isIsoDate(value: string): boolean {
   const mo = Number(m[2]);
   const d = Number(m[3]);
   const dt = new Date(Date.UTC(y, mo - 1, d));
-  return dt.getUTCFullYear() === y && dt.getUTCMonth() === mo - 1 && dt.getUTCDate() === d && y >= 2000;
+  return (
+    dt.getUTCFullYear() === y && dt.getUTCMonth() === mo - 1 && dt.getUTCDate() === d && y >= 2000
+  );
 }
 
 function toUtc(iso: string): number {

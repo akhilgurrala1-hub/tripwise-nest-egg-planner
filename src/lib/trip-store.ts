@@ -191,7 +191,10 @@ export function migrate(raw: unknown): TripState | null {
 }
 
 /** Destination to use after switching trip type, and why it changed (empty when it didn't). */
-export function destinationForTripType(setup: TripSetup, tripType: TripType): { destinationId: string; reason: string } {
+export function destinationForTripType(
+  setup: TripSetup,
+  tripType: TripType,
+): { destinationId: string; reason: string } {
   const { destinationId } = setup;
   if (destinationId === CUSTOM_DESTINATION_ID) return { destinationId, reason: "" };
   if (tripType === "staycation") {
@@ -361,7 +364,11 @@ export const tripActions = {
   setTotalBudget(totalBudget: number) {
     setState((s) => {
       const t = Math.max(0, totalBudget);
-      return { ...s, setup: { ...s.setup, totalBudget: t }, emergencyFund: Math.min(s.emergencyFund, t) };
+      return {
+        ...s,
+        setup: { ...s.setup, totalBudget: t },
+        emergencyFund: Math.min(s.emergencyFund, t),
+      };
     });
   },
   setEmergencyFund(amount: number) {
@@ -375,7 +382,8 @@ export const tripActions = {
       const dest = getDestination(s.setup.destinationId, s.setup.customDestination);
       const allowed = modeForTripType(s.setup.tripType, mode);
       const overrides = { ...s.overrides };
-      for (const c of ["transportation", "gas", "tolls", "parking"] as Category[]) delete overrides[c];
+      for (const c of ["transportation", "gas", "tolls", "parking"] as Category[])
+        delete overrides[c];
       return {
         ...s,
         setup: { ...s.setup, transportMode: allowed },
@@ -394,15 +402,25 @@ export const tripActions = {
     const info = tripTypeInfo(tripType);
     const { destinationId, reason } = destinationForTripType(s.setup, tripType);
     const transportMode = modeForTripType(tripType, s.setup.transportMode);
-    const setup: TripSetup = { ...s.setup, tripType, destinationId, transportMode, emergencyFund: s.emergencyFund };
+    const setup: TripSetup = {
+      ...s.setup,
+      tripType,
+      destinationId,
+      transportMode,
+      emergencyFund: s.emergencyFund,
+    };
     const fresh = buildTrip(setup);
     const changes = [
       ...(reason ? [reason] : []),
       transportMode !== s.setup.transportMode
         ? `Travel switched to ${transportMode === "rental-car" ? "a rental car" : transportMode === "car" ? "your car" : `${transportMode}`}.`
         : "",
-      tripType === "cruise" ? "Your cabin and main meals are now part of the cruise fare, so hotel nights are $0." : "",
-      s.setup.tripType === "road-trip" && s.roadTrip.includedStops.length > 0 ? "Road-trip stops were removed." : "",
+      tripType === "cruise"
+        ? "Your cabin and main meals are now part of the cruise fare, so hotel nights are $0."
+        : "",
+      s.setup.tripType === "road-trip" && s.roadTrip.includedStops.length > 0
+        ? "Road-trip stops were removed."
+        : "",
       Object.keys(s.overrides).length > 0 || Object.keys(s.appliedSavings).length > 0
         ? "Custom amounts and applied savings were reset for the new trip type."
         : "",
@@ -476,7 +494,10 @@ export const tripActions = {
             ...s,
             itinerary: {
               ...s.itinerary,
-              days: s.itinerary.days.map((d) => ({ ...d, items: d.items.filter((i) => i.id !== itemId) })),
+              days: s.itinerary.days.map((d) => ({
+                ...d,
+                items: d.items.filter((i) => i.id !== itemId),
+              })),
             },
           }
         : s,
@@ -517,9 +538,24 @@ export function useTrip() {
       stopsTotal,
     );
     const applied = Object.keys(trip.appliedSavings) as SavingId[];
-    const savings = savingsOpportunities(trip.inputs, shape, trip.overrides, stopsTotal, dest, applied);
-    const potentialSavings = Math.round(savings.reduce((s, t) => s + t.totalSavings * 100, 0)) / 100;
-    const cuts = reductionPlan(trip.inputs, shape, trip.setup.totalBudget, trip.emergencyFund, trip.overrides, stopsTotal);
+    const savings = savingsOpportunities(
+      trip.inputs,
+      shape,
+      trip.overrides,
+      stopsTotal,
+      dest,
+      applied,
+    );
+    const potentialSavings =
+      Math.round(savings.reduce((s, t) => s + t.totalSavings * 100, 0)) / 100;
+    const cuts = reductionPlan(
+      trip.inputs,
+      shape,
+      trip.setup.totalBudget,
+      trip.emergencyFund,
+      trip.overrides,
+      stopsTotal,
+    );
     return { trip, dest, shape, totals, savings, applied, potentialSavings, cuts, stopsTotal };
   }, [trip]);
 }

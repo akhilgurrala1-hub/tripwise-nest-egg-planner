@@ -59,8 +59,11 @@ export const CATEGORY_COLOR_VAR: Record<Category, string> = {
 export function PriceSourceBadge({ className }: { className?: string }) {
   const { trip } = useTrip();
   const live = liveCategories(trip.inputs, trip.overrides, trip.live);
-  if (live.length === 0) return <DemoBadge label="Demo prices" {...(className ? { className } : {})} />;
-  const names = live.map((c) => (c === "accommodations" ? "hotel" : c === "transportation" ? "flights" : c));
+  if (live.length === 0)
+    return <DemoBadge label="Demo prices" {...(className ? { className } : {})} />;
+  const names = live.map((c) =>
+    c === "accommodations" ? "hotel" : c === "transportation" ? "flights" : c,
+  );
   return (
     <Badge variant="success" className={className}>
       <span className="size-1.5 rounded-full bg-success" />
@@ -69,7 +72,13 @@ export function PriceSourceBadge({ className }: { className?: string }) {
   );
 }
 
-export function DemoBadge({ label = "Demo data", className }: { label?: string; className?: string }) {
+export function DemoBadge({
+  label = "Demo data",
+  className,
+}: {
+  label?: string;
+  className?: string;
+}) {
   return (
     <Badge variant="demo" className={className}>
       <FlaskConical />
@@ -130,18 +139,33 @@ export function NumberField({
           if (e.target.value !== "" && Number.isFinite(n)) onChange(Math.max(min, n));
           if (e.target.value === "") onChange(0);
         }}
-        className={cn("tabular w-full min-w-0 bg-transparent text-base font-semibold outline-none", inputClassName)}
+        className={cn(
+          "tabular w-full min-w-0 bg-transparent text-base font-semibold outline-none",
+          inputClassName,
+        )}
       />
       {suffix && <span className="whitespace-nowrap text-sm text-muted-foreground">{suffix}</span>}
     </div>
   );
 }
 
-export function SectionTitle({ eyebrow, title, action }: { eyebrow?: string; title: string; action?: ReactNode }) {
+export function SectionTitle({
+  eyebrow,
+  title,
+  action,
+}: {
+  eyebrow?: string;
+  title: string;
+  action?: ReactNode;
+}) {
   return (
     <div className="mb-4 flex items-end justify-between gap-3">
       <div>
-        {eyebrow && <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">{eyebrow}</p>}
+        {eyebrow && (
+          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+            {eyebrow}
+          </p>
+        )}
         <h2 className="font-display text-2xl font-semibold text-foreground">{title}</h2>
       </div>
       {action}

@@ -1,5 +1,18 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { ArrowRight, Car, Check, Home, MapPin, Minus, Plane, Plus, Ship, Sparkles, TrainFront, type LucideIcon } from "lucide-react";
+import {
+  ArrowRight,
+  Car,
+  Check,
+  Home,
+  MapPin,
+  Minus,
+  Plane,
+  Plus,
+  Ship,
+  Sparkles,
+  TrainFront,
+  type LucideIcon,
+} from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 
@@ -9,7 +22,13 @@ import { PlaceInput } from "@/components/app/PlaceInput";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { calculateBudget, defaultEmergencyFund, defaultInputs, formatMoney, tripShape } from "@/lib/budget";
+import {
+  calculateBudget,
+  defaultEmergencyFund,
+  defaultInputs,
+  formatMoney,
+  tripShape,
+} from "@/lib/budget";
 import {
   CUSTOM_DESTINATION_ID,
   DESTINATIONS,
@@ -31,12 +50,14 @@ export const Route = createFileRoute("/")({
       { title: "Waypoint — Plan your next trip on any budget" },
       {
         name: "description",
-        content: "Pick a destination, dates, travelers and budget. Waypoint builds a smart budget and itinerary for road trips, getaways and staycations.",
+        content:
+          "Pick a destination, dates, travelers and budget. Waypoint builds a smart budget and itinerary for road trips, getaways and staycations.",
       },
       { property: "og:title", content: "Waypoint — Plan your next trip on any budget" },
       {
         property: "og:description",
-        content: "Smart budgets, a protected emergency fund and personalized itineraries for road trips, getaways and staycations.",
+        content:
+          "Smart budgets, a protected emergency fund and personalized itineraries for road trips, getaways and staycations.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -74,9 +95,12 @@ function Welcome() {
         : shape.days > MAX_DAYS
           ? `Trips up to ${MAX_DAYS} days for now`
           : "";
-  const reserveError = form.emergencyFund > form.totalBudget ? "Reserve can't be more than your total budget" : "";
+  const reserveError =
+    form.emergencyFund > form.totalBudget ? "Reserve can't be more than your total budget" : "";
   const destError =
-    form.destinationId === CUSTOM_DESTINATION_ID && !form.customDestination.trim() ? "Type a destination" : "";
+    form.destinationId === CUSTOM_DESTINATION_ID && !form.customDestination.trim()
+      ? "Type a destination"
+      : "";
 
   const suggested = useMemo(() => {
     const dest = getDestination(form.destinationId, form.customDestination);
@@ -90,24 +114,46 @@ function Welcome() {
     return reserveTouched.current
       ? Math.ceil((totals.planned + form.emergencyFund) / 50) * 50
       : Math.ceil(totals.planned / 0.9 / 50) * 50;
-  }, [form.destinationId, form.customDestination, form.style, form.tripType, form.travelers, form.transportMode, form.emergencyFund, shape]);
+  }, [
+    form.destinationId,
+    form.customDestination,
+    form.style,
+    form.tripType,
+    form.travelers,
+    form.transportMode,
+    form.emergencyFund,
+    shape,
+  ]);
 
   const setBudget = (totalBudget: number) =>
-    update(reserveTouched.current ? { totalBudget } : { totalBudget, emergencyFund: defaultEmergencyFund(totalBudget) });
+    update(
+      reserveTouched.current
+        ? { totalBudget }
+        : { totalBudget, emergencyFund: defaultEmergencyFund(totalBudget) },
+    );
 
   // Only destinations that suit the chosen trip type ("Somewhere else" is always offered).
-  const orderedDestinations = useMemo(() => DESTINATIONS.filter((d) => d.bestFor.includes(form.tripType)), [form.tripType]);
+  const orderedDestinations = useMemo(
+    () => DESTINATIONS.filter((d) => d.bestFor.includes(form.tripType)),
+    [form.tripType],
+  );
   const typeInfo = tripTypeInfo(form.tripType);
   const modes = TRANSPORT_MODES.filter((m) => typeInfo.modes.includes(m.id));
 
   const setTripType = (tripType: TripType) => {
     const { destinationId } = destinationForTripType(form, tripType);
-    update({ tripType, destinationId, transportMode: modeForTripType(tripType, form.transportMode) });
+    update({
+      tripType,
+      destinationId,
+      transportMode: modeForTripType(tripType, form.transportMode),
+    });
   };
 
   const toggleInterest = (id: (typeof INTERESTS)[number]["id"]) =>
     update({
-      interests: form.interests.includes(id) ? form.interests.filter((i) => i !== id) : [...form.interests, id],
+      interests: form.interests.includes(id)
+        ? form.interests.filter((i) => i !== id)
+        : [...form.interests, id],
     });
 
   const submit = (e: React.FormEvent) => {
@@ -148,7 +194,8 @@ function Welcome() {
               <em className="font-medium">smart budgets.</em>
             </h1>
             <p className="mt-3 max-w-sm text-sm text-on-image/85 sm:text-base">
-              Road trips, getaways and staycations — planned to the dollar, with a safety net built in.
+              Road trips, getaways and staycations — planned to the dollar, with a safety net built
+              in.
             </p>
           </div>
         </div>
@@ -161,7 +208,9 @@ function Welcome() {
       >
         <div className="flex items-center justify-between gap-3">
           <div>
-            <p className="text-xs font-semibold tracking-[0.16em] text-muted-foreground uppercase">Plan a trip</p>
+            <p className="text-xs font-semibold tracking-[0.16em] text-muted-foreground uppercase">
+              Plan a trip
+            </p>
             <h2 className="font-display text-3xl font-semibold">Your adventure starts here.</h2>
           </div>
           <DemoBadge />
@@ -173,7 +222,11 @@ function Welcome() {
             {TRIP_TYPES.map((t) => {
               const Icon = TRIP_ICONS[t.id];
               return (
-                <ChoiceCard key={t.id} active={form.tripType === t.id} onClick={() => setTripType(t.id)}>
+                <ChoiceCard
+                  key={t.id}
+                  active={form.tripType === t.id}
+                  onClick={() => setTripType(t.id)}
+                >
                   <Icon className="mb-1 size-5 text-sunset" aria-hidden />
                   <span className="text-sm font-bold">{t.label}</span>
                   <span className="text-[11px] leading-tight text-muted-foreground">{t.blurb}</span>
@@ -183,7 +236,9 @@ function Welcome() {
           </div>
           {modes.length > 1 && (
             <div className="mt-3">
-              <p className="mb-2 text-xs font-semibold text-muted-foreground">{typeInfo.modeQuestion}</p>
+              <p className="mb-2 text-xs font-semibold text-muted-foreground">
+                {typeInfo.modeQuestion}
+              </p>
               <div className="flex flex-wrap gap-2">
                 {modes.map((m) => {
                   const active = form.transportMode === m.id;
@@ -195,7 +250,9 @@ function Welcome() {
                       onClick={() => update({ transportMode: m.id })}
                       className={cn(
                         "min-h-11 rounded-full border px-4 py-2 text-sm font-semibold transition-all",
-                        active ? "border-primary bg-primary text-primary-foreground" : "border-border bg-card text-foreground hover:border-primary/40",
+                        active
+                          ? "border-primary bg-primary text-primary-foreground"
+                          : "border-border bg-card text-foreground hover:border-primary/40",
                       )}
                     >
                       {m.label}
@@ -209,7 +266,13 @@ function Welcome() {
 
         {/* Destination */}
         <Field
-          label={form.tripType === "cruise" ? "Which cruise?" : form.tripType === "staycation" ? "Where's home base?" : "Where are you going?"}
+          label={
+            form.tripType === "cruise"
+              ? "Which cruise?"
+              : form.tripType === "staycation"
+                ? "Where's home base?"
+                : "Where are you going?"
+          }
           hint="Example places with demo prices"
         >
           <div className="-mx-4 flex snap-x gap-3 overflow-x-auto px-4 pb-2 sm:mx-0 sm:grid sm:grid-cols-2 sm:overflow-visible sm:px-0">
@@ -222,7 +285,9 @@ function Welcome() {
                   onClick={() => update({ destinationId: d.id })}
                   className={cn(
                     "relative w-56 shrink-0 snap-start rounded-2xl border p-4 text-left transition-all sm:w-auto",
-                    active ? "border-primary bg-card shadow-lift ring-2 ring-primary/20" : "border-border bg-card/60 hover:bg-card",
+                    active
+                      ? "border-primary bg-card shadow-lift ring-2 ring-primary/20"
+                      : "border-border bg-card/60 hover:bg-card",
                   )}
                 >
                   {active && (
@@ -230,8 +295,12 @@ function Welcome() {
                       <Check className="size-3" />
                     </span>
                   )}
-                  <p className="text-[11px] font-semibold tracking-wider text-muted-foreground uppercase">{d.region}</p>
-                  <p className="mt-0.5 font-display text-lg leading-tight font-semibold">{d.name}</p>
+                  <p className="text-[11px] font-semibold tracking-wider text-muted-foreground uppercase">
+                    {d.region}
+                  </p>
+                  <p className="mt-0.5 font-display text-lg leading-tight font-semibold">
+                    {d.name}
+                  </p>
                   <p className="mt-1 text-xs text-muted-foreground">{d.tagline}</p>
                   <p className="tabular mt-2 text-xs font-semibold text-primary">
                     {d.cruisePerNight
@@ -248,12 +317,16 @@ function Welcome() {
               onClick={() => update({ destinationId: CUSTOM_DESTINATION_ID })}
               className={cn(
                 "w-56 shrink-0 snap-start rounded-2xl border border-dashed p-4 text-left transition-all sm:w-auto",
-                form.destinationId === CUSTOM_DESTINATION_ID ? "border-primary bg-card ring-2 ring-primary/20" : "border-input bg-transparent hover:bg-card/60",
+                form.destinationId === CUSTOM_DESTINATION_ID
+                  ? "border-primary bg-card ring-2 ring-primary/20"
+                  : "border-input bg-transparent hover:bg-card/60",
               )}
             >
               <MapPin className="size-5 text-sunset" />
               <p className="mt-1 font-display text-lg font-semibold">Somewhere else</p>
-              <p className="text-xs text-muted-foreground">Search any real place — live weather & places, demo prices.</p>
+              <p className="text-xs text-muted-foreground">
+                Search any real place — live weather & places, demo prices.
+              </p>
             </button>
           </div>
           {form.destinationId === CUSTOM_DESTINATION_ID && (
@@ -261,7 +334,11 @@ function Welcome() {
               <PlaceInput
                 autoFocus
                 aria-label="Destination"
-                placeholder={form.tripType === "cruise" ? "Departure port, e.g. Galveston, TX" : "e.g. Chattanooga, TN"}
+                placeholder={
+                  form.tripType === "cruise"
+                    ? "Departure port, e.g. Galveston, TX"
+                    : "e.g. Chattanooga, TN"
+                }
                 value={form.customDestination}
                 onChange={(v) => update({ customDestination: v })}
                 className="h-11 rounded-xl bg-card"
@@ -270,12 +347,16 @@ function Welcome() {
           )}
           <div className="mt-3">
             <Label htmlFor="origin" className="text-xs text-muted-foreground">
-              {form.tripType === "staycation" ? "Your home city (for live weather & places)" : "Starting from (optional)"}
+              {form.tripType === "staycation"
+                ? "Your home city (for live weather & places)"
+                : "Starting from (optional)"}
             </Label>
             <div className="mt-1">
               <PlaceInput
                 id="origin"
-                placeholder={form.tripType === "staycation" ? "Your city — we'll plan around it" : "Your city"}
+                placeholder={
+                  form.tripType === "staycation" ? "Your city — we'll plan around it" : "Your city"
+                }
                 value={form.origin}
                 onChange={(v) => update({ origin: v })}
                 className="h-11 rounded-xl bg-card"
@@ -306,7 +387,8 @@ function Welcome() {
             </div>
             {!dateError && (
               <p className="mt-1.5 text-xs text-muted-foreground">
-                {shape.days} day{shape.days > 1 ? "s" : ""} · {shape.nights} night{shape.nights === 1 ? "" : "s"}
+                {shape.days} day{shape.days > 1 ? "s" : ""} · {shape.nights} night
+                {shape.nights === 1 ? "" : "s"}
               </p>
             )}
           </Field>
@@ -341,7 +423,12 @@ function Welcome() {
         <Field label="Travel style">
           <div className="grid grid-cols-3 gap-2">
             {TRAVEL_STYLES.map((s) => (
-              <ChoiceCard key={s.id} active={form.style === s.id} onClick={() => update({ style: s.id })} tone={s.id === "luxury" ? "gold" : "default"}>
+              <ChoiceCard
+                key={s.id}
+                active={form.style === s.id}
+                onClick={() => update({ style: s.id })}
+                tone={s.id === "luxury" ? "gold" : "default"}
+              >
                 <span className="text-sm font-bold">{s.label}</span>
                 <span className="text-[11px] leading-tight text-muted-foreground">{s.blurb}</span>
               </ChoiceCard>
@@ -362,7 +449,9 @@ function Welcome() {
                   onClick={() => toggleInterest(i.id)}
                   className={cn(
                     "rounded-full border px-3.5 py-2 text-sm font-semibold transition-all",
-                    active ? "border-primary bg-primary text-primary-foreground" : "border-border bg-card text-foreground hover:border-primary/40",
+                    active
+                      ? "border-primary bg-primary text-primary-foreground"
+                      : "border-border bg-card text-foreground hover:border-primary/40",
                   )}
                 >
                   {i.label}
@@ -391,7 +480,9 @@ function Welcome() {
                 onClick={() => setBudget(p)}
                 className={cn(
                   "tabular rounded-full border px-3 py-1.5 text-xs font-semibold transition-colors",
-                  form.totalBudget === p ? "border-primary bg-secondary" : "border-border bg-card hover:bg-secondary",
+                  form.totalBudget === p
+                    ? "border-primary bg-secondary"
+                    : "border-border bg-card hover:bg-secondary",
                 )}
               >
                 {formatMoney(p)}
@@ -409,7 +500,11 @@ function Welcome() {
           </div>
         </Field>
 
-        <Field label="How much should stay protected?" hint="A little extra set aside for peace of mind" error={reserveError}>
+        <Field
+          label="How much should stay protected?"
+          hint="A little extra set aside for peace of mind"
+          error={reserveError}
+        >
           <NumberField
             aria-label="Emergency reserve"
             prefix="$"
@@ -421,7 +516,8 @@ function Welcome() {
             }}
           />
           <p className="tabular mt-1.5 text-xs text-muted-foreground">
-            That leaves {formatMoney(Math.max(0, form.totalBudget - form.emergencyFund))} to spend on the trip itself.
+            That leaves {formatMoney(Math.max(0, form.totalBudget - form.emergencyFund))} to spend
+            on the trip itself.
           </p>
         </Field>
 
@@ -429,8 +525,8 @@ function Welcome() {
           Plan my trip <ArrowRight />
         </Button>
         <p className="text-center text-xs text-muted-foreground">
-          Weather is live. Sign in for real places and routes. Prices are demo estimates until you check live prices. No
-          bookings or payments.
+          Weather is live. Sign in for real places and routes. Prices are demo estimates until you
+          check live prices. No bookings or payments.
         </p>
       </form>
     </div>

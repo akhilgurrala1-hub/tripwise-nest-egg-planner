@@ -1,6 +1,22 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { format } from "date-fns";
-import { Car, Coffee, ExternalLink, Landmark, Lightbulb, Loader2, MapPin, Moon, RotateCcw, Sparkles, Star, Sun, Sunrise, UtensilsCrossed, X } from "lucide-react";
+import {
+  Car,
+  Coffee,
+  ExternalLink,
+  Landmark,
+  Lightbulb,
+  Loader2,
+  MapPin,
+  Moon,
+  RotateCcw,
+  Sparkles,
+  Star,
+  Sun,
+  Sunrise,
+  UtensilsCrossed,
+  X,
+} from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -14,7 +30,15 @@ import { usePreferences } from "@/lib/account";
 import { useAuth } from "@/lib/auth-context";
 import { formatMoney, stopCost } from "@/lib/budget";
 import { INTERESTS, TRAVEL_STYLES, TRIP_TYPES } from "@/lib/demo-data";
-import { addDays, buildRealItinerary, itineraryActivityCost, unpricedItems, type ItemKind, type ItineraryItem, type Itinerary } from "@/lib/itinerary";
+import {
+  addDays,
+  buildRealItinerary,
+  itineraryActivityCost,
+  unpricedItems,
+  type ItemKind,
+  type ItineraryItem,
+  type Itinerary,
+} from "@/lib/itinerary";
 import { destinationQuery } from "@/lib/live/place";
 import { useTripWeather } from "@/lib/live/use-live";
 import { isWetDay } from "@/lib/live/weather";
@@ -27,9 +51,17 @@ export const Route = createFileRoute("/itinerary")({
   head: () => ({
     meta: [
       { title: "Your itinerary — Waypoint" },
-      { name: "description", content: "A personalized day-by-day plan with sightseeing stops, restaurants and estimated costs." },
+      {
+        name: "description",
+        content:
+          "A personalized day-by-day plan with sightseeing stops, restaurants and estimated costs.",
+      },
       { property: "og:title", content: "Your itinerary — Waypoint" },
-      { property: "og:description", content: "Day-by-day sightseeing, restaurants and stops matched to your interests and budget." },
+      {
+        property: "og:description",
+        content:
+          "Day-by-day sightseeing, restaurants and stops matched to your interests and budget.",
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
@@ -37,7 +69,11 @@ export const Route = createFileRoute("/itinerary")({
   component: ItineraryPage,
 });
 
-const KIND_ICON: Record<ItemKind, typeof Landmark> = { sight: Landmark, restaurant: UtensilsCrossed, stop: Car };
+const KIND_ICON: Record<ItemKind, typeof Landmark> = {
+  sight: Landmark,
+  restaurant: UtensilsCrossed,
+  stop: Car,
+};
 
 /** Map lookups are billed, so identical searches in one session reuse the first answer. */
 const placesCache = new Map<string, DestinationPlacesResult>();
@@ -54,14 +90,17 @@ function ItineraryPage() {
   const itin = trip.itinerary;
   const activityCost = itineraryActivityCost(itin, shape.travelers);
   const mealCost = itin
-    ? itin.days.flatMap((d) => d.items).filter((i) => i.kind === "restaurant").reduce((s, i) => s + i.costPerPerson, 0) *
-      shape.travelers
+    ? itin.days
+        .flatMap((d) => d.items)
+        .filter((i) => i.kind === "restaurant")
+        .reduce((s, i) => s + i.costPerPerson, 0) * shape.travelers
     : 0;
 
   const generateWithAi = async () => {
     setLoading(true);
     try {
-      const label = (list: { id: string; label: string }[], id: string) => list.find((x) => x.id === id)?.label ?? id;
+      const label = (list: { id: string; label: string }[], id: string) =>
+        list.find((x) => x.id === id)?.label ?? id;
       const res = await createAiItinerary({
         data: {
           destination: place,
@@ -111,7 +150,11 @@ function ItineraryPage() {
   };
 
   const useRealPlaces = async () => {
-    const request = { destination: place, interests: trip.setup.interests, style: trip.setup.style };
+    const request = {
+      destination: place,
+      interests: trip.setup.interests,
+      style: trip.setup.style,
+    };
     const key = JSON.stringify(request);
     setLoadingReal(true);
     try {
@@ -149,7 +192,12 @@ function ItineraryPage() {
       <PageHeader eyebrow="Itinerary" title="Your trip, day by day">
         <div className="flex w-full flex-wrap gap-2 sm:w-auto">
           {user ? (
-            <Button variant="ink" onClick={useRealPlaces} disabled={busy} className="flex-1 sm:flex-none">
+            <Button
+              variant="ink"
+              onClick={useRealPlaces}
+              disabled={busy}
+              className="flex-1 sm:flex-none"
+            >
               {loadingReal ? <Loader2 className="animate-spin" /> : <MapPin />}
               {loadingReal ? "Finding places…" : "Use real places"}
             </Button>
@@ -160,7 +208,12 @@ function ItineraryPage() {
               </Link>
             </Button>
           )}
-          <Button variant="hero" onClick={generateWithAi} disabled={busy} className="flex-1 sm:flex-none">
+          <Button
+            variant="hero"
+            onClick={generateWithAi}
+            disabled={busy}
+            className="flex-1 sm:flex-none"
+          >
             {loading ? <Loader2 className="animate-spin" /> : <Sparkles />}
             {loading ? "Planning…" : "Personalize with AI"}
           </Button>
@@ -195,10 +248,15 @@ function ItineraryPage() {
             <section className="surface-card overflow-hidden">
               <header className="flex items-center justify-between gap-3 border-b border-border bg-gradient-sand px-5 py-4">
                 <div>
-                  <p className="text-xs font-semibold tracking-wider text-muted-foreground uppercase">On the drive</p>
+                  <p className="text-xs font-semibold tracking-wider text-muted-foreground uppercase">
+                    On the drive
+                  </p>
                   <h2 className="font-display text-xl font-semibold">Road-trip stops</h2>
                 </div>
-                <Link to="/road-trip" className="text-xs font-semibold text-primary underline-offset-2 hover:underline">
+                <Link
+                  to="/road-trip"
+                  className="text-xs font-semibold text-primary underline-offset-2 hover:underline"
+                >
                   Find more
                 </Link>
               </header>
@@ -210,7 +268,9 @@ function ItineraryPage() {
                     </span>
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-sm font-bold">{s.name}</p>
-                      <p className="text-xs text-muted-foreground">+{s.extraMinutes} min detour (sample)</p>
+                      <p className="text-xs text-muted-foreground">
+                        +{s.extraMinutes} min detour (sample)
+                      </p>
                     </div>
                     <span className="tabular rounded-full bg-muted px-2 py-0.5 text-xs font-bold">
                       {formatMoney(stopCost(s, shape.travelers, trip.inputs), { cents: true })}
@@ -246,10 +306,15 @@ function ItineraryPage() {
                     <p className="text-xs font-semibold tracking-wider text-muted-foreground uppercase">
                       {safeFormat(day.date)}
                     </p>
-                    <h2 className="line-clamp-2 font-display text-xl leading-tight font-semibold">{day.title}</h2>
+                    <h2 className="line-clamp-2 font-display text-xl leading-tight font-semibold">
+                      {day.title}
+                    </h2>
                   </div>
                   {weather.byDate.get(day.date) && (
-                    <WeatherChip day={weather.byDate.get(day.date)!} className="hidden shrink-0 sm:inline-flex" />
+                    <WeatherChip
+                      day={weather.byDate.get(day.date)!}
+                      className="hidden shrink-0 sm:inline-flex"
+                    />
                   )}
                 </header>
                 {weather.byDate.get(day.date) && (
@@ -262,8 +327,10 @@ function ItineraryPage() {
                   if (!w || !isWetDay(w)) return null;
                   return (
                     <p className="border-b border-border bg-shield-soft px-5 py-2 text-xs">
-                      {w.label} {w.source === "forecast" ? "in the forecast" : "is common on this date"} — have an indoor
-                      backup (a museum, market or long lunch) ready for outdoor stops.
+                      {w.label}{" "}
+                      {w.source === "forecast" ? "in the forecast" : "is common on this date"} —
+                      have an indoor backup (a museum, market or long lunch) ready for outdoor
+                      stops.
                     </p>
                   );
                 })()}
@@ -273,7 +340,10 @@ function ItineraryPage() {
                     return (
                       <li key={item.id} className="group relative flex gap-3 py-3">
                         {idx < day.items.length - 1 && (
-                          <span className="absolute top-12 bottom-0 left-[19px] w-px bg-border" aria-hidden />
+                          <span
+                            className="absolute top-12 bottom-0 left-[19px] w-px bg-border"
+                            aria-hidden
+                          />
                         )}
                         <span
                           className={cn(
@@ -300,9 +370,12 @@ function ItineraryPage() {
                             <p className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
                               {item.rating ? (
                                 <span className="tabular inline-flex items-center gap-1 font-semibold">
-                                  <Star className="size-3 fill-current text-gold" aria-hidden /> {item.rating.toFixed(1)}
+                                  <Star className="size-3 fill-current text-gold" aria-hidden />{" "}
+                                  {item.rating.toFixed(1)}
                                   {item.ratingCount ? (
-                                    <span className="font-normal text-muted-foreground">({item.ratingCount.toLocaleString()} reviews)</span>
+                                    <span className="font-normal text-muted-foreground">
+                                      ({item.ratingCount.toLocaleString()} reviews)
+                                    </span>
                                   ) : null}
                                 </span>
                               ) : null}
@@ -313,7 +386,8 @@ function ItineraryPage() {
                                   rel="noopener noreferrer"
                                   className="inline-flex items-center gap-1 font-semibold text-primary underline-offset-2 hover:underline"
                                 >
-                                  Open in Google Maps <ExternalLink className="size-3" aria-hidden />
+                                  Open in Google Maps{" "}
+                                  <ExternalLink className="size-3" aria-hidden />
                                 </a>
                               )}
                             </p>
@@ -332,7 +406,11 @@ function ItineraryPage() {
                       </li>
                     );
                   })}
-                  {day.items.length === 0 && <li className="py-3 text-sm text-muted-foreground">Free day — wander as you like.</li>}
+                  {day.items.length === 0 && (
+                    <li className="py-3 text-sm text-muted-foreground">
+                      Free day — wander as you like.
+                    </li>
+                  )}
                 </ol>
               </section>
             ))
@@ -343,14 +421,22 @@ function ItineraryPage() {
           <section className="surface-card p-5">
             <h2 className="font-display text-xl font-semibold">Plan costs</h2>
             <dl className="mt-3 space-y-2 text-sm">
-              <Row label={`Sightseeing (${shape.travelers} people)`} value={formatMoney(activityCost)} />
-              <Row label="Activities budget" value={formatMoney(totals.categories.activities)} muted />
+              <Row
+                label={`Sightseeing (${shape.travelers} people)`}
+                value={formatMoney(activityCost)}
+              />
+              <Row
+                label="Activities budget"
+                value={formatMoney(totals.categories.activities)}
+                muted
+              />
               <Row label="Restaurant picks" value={formatMoney(mealCost)} />
               <Row label="Food budget" value={formatMoney(totals.categories.food)} muted />
             </dl>
             {unpriced > 0 && (
               <p className="mt-3 rounded-xl bg-muted px-3 py-2 text-xs leading-snug text-muted-foreground">
-                {unpriced} {unpriced === 1 ? "place doesn't" : "places don't"} publish prices, so {unpriced === 1 ? "it isn't" : "they aren't"} counted above. Check before you go.
+                {unpriced} {unpriced === 1 ? "place doesn't" : "places don't"} publish prices, so{" "}
+                {unpriced === 1 ? "it isn't" : "they aren't"} counted above. Check before you go.
               </p>
             )}
             <Button
@@ -363,7 +449,10 @@ function ItineraryPage() {
             >
               Use sightseeing total in budget
             </Button>
-            <Link to="/budget" className="mt-2 block text-center text-xs font-semibold text-primary underline-offset-2 hover:underline">
+            <Link
+              to="/budget"
+              className="mt-2 block text-center text-xs font-semibold text-primary underline-offset-2 hover:underline"
+            >
               Open budget calculator
             </Link>
           </section>
@@ -390,10 +479,18 @@ function ItineraryPage() {
 
 function CostChip({ item }: { item: ItineraryItem }) {
   if (item.costSource === "unknown") {
-    return <span className="rounded-full bg-muted px-2 py-0.5 text-xs font-semibold text-muted-foreground">Price not listed</span>;
+    return (
+      <span className="rounded-full bg-muted px-2 py-0.5 text-xs font-semibold text-muted-foreground">
+        Price not listed
+      </span>
+    );
   }
   if (item.costPerPerson === 0) {
-    return <span className="rounded-full bg-success-soft px-2 py-0.5 text-xs font-bold text-success">Free</span>;
+    return (
+      <span className="rounded-full bg-success-soft px-2 py-0.5 text-xs font-bold text-success">
+        Free
+      </span>
+    );
   }
   const approx = item.costSource === "price-level" ? "~" : "";
   return (
@@ -409,7 +506,9 @@ function CostChip({ item }: { item: ItineraryItem }) {
 
 function Row({ label, value, muted }: { label: string; value: string; muted?: boolean }) {
   return (
-    <div className={cn("flex items-center justify-between gap-2", muted && "text-muted-foreground")}>
+    <div
+      className={cn("flex items-center justify-between gap-2", muted && "text-muted-foreground")}
+    >
       <dt>{label}</dt>
       <dd className="tabular font-bold">{value}</dd>
     </div>
@@ -421,7 +520,13 @@ function safeFormat(iso: string) {
   return Number.isNaN(d.getTime()) ? iso : format(d, "EEEE, MMM d");
 }
 
-const TIME_ICONS = { Morning: Sunrise, Lunch: Coffee, Afternoon: Sun, Dinner: UtensilsCrossed, Evening: Moon } as const;
+const TIME_ICONS = {
+  Morning: Sunrise,
+  Lunch: Coffee,
+  Afternoon: Sun,
+  Dinner: UtensilsCrossed,
+  Evening: Moon,
+} as const;
 
 function TimeIcon({ time }: { time: keyof typeof TIME_ICONS }) {
   const Icon = TIME_ICONS[time] ?? Sun;

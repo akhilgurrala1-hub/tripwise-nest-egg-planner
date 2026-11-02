@@ -55,8 +55,7 @@ export interface RealRoute {
 }
 
 export type RealStopsResult =
-  | { ok: true; route: RealRoute; stops: RouteStop[] }
-  | { ok: false; error: string };
+  { ok: true; route: RealRoute; stops: RouteStop[] } | { ok: false; error: string };
 
 export interface RouteRequest {
   origin: string;

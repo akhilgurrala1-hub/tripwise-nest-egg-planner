@@ -76,12 +76,23 @@ function percentile(sorted: number[], p: number): number {
  * cheaper quarter of the market, comfort the middle, luxury the upper fifth
  * (4-star and up when available).
  */
-export function pickNightly(options: HotelOption[], style: TravelStyle): { nightly: number; label: string } {
-  const all = options.map((o) => o.nightly).filter((n) => n > 0).sort((a, b) => a - b);
+export function pickNightly(
+  options: HotelOption[],
+  style: TravelStyle,
+): { nightly: number; label: string } {
+  const all = options
+    .map((o) => o.nightly)
+    .filter((n) => n > 0)
+    .sort((a, b) => a - b);
   if (all.length === 0) return { nightly: 0, label: "No prices listed" };
-  if (style === "budget") return { nightly: percentile(all, 0.25), label: "Lower-priced quarter of listed hotels" };
-  if (style === "comfort") return { nightly: percentile(all, 0.5), label: "Middle of listed hotel prices" };
-  const upscale = options.filter((o) => (o.hotelClass ?? 0) >= 4 && o.nightly > 0).map((o) => o.nightly).sort((a, b) => a - b);
+  if (style === "budget")
+    return { nightly: percentile(all, 0.25), label: "Lower-priced quarter of listed hotels" };
+  if (style === "comfort")
+    return { nightly: percentile(all, 0.5), label: "Middle of listed hotel prices" };
+  const upscale = options
+    .filter((o) => (o.hotelClass ?? 0) >= 4 && o.nightly > 0)
+    .map((o) => o.nightly)
+    .sort((a, b) => a - b);
   return upscale.length
     ? { nightly: percentile(upscale, 0.5), label: "Typical 4- and 5-star rate" }
     : { nightly: percentile(all, 0.8), label: "Upper fifth of listed hotel prices" };
@@ -108,20 +119,67 @@ const REGION_STATES: [string, string, string[]][] = [
   ["R1X", "New England", ["CT", "ME", "NH", "RI", "VT"]],
   ["R1Y", "Central Atlantic", ["DE", "DC", "MD", "NJ", "PA"]],
   ["R1Z", "Lower Atlantic", ["GA", "NC", "SC", "VA", "WV"]],
-  ["R20", "Midwest", ["IL", "IN", "IA", "KS", "KY", "MI", "MO", "NE", "ND", "SD", "OK", "TN", "WI"]],
+  [
+    "R20",
+    "Midwest",
+    ["IL", "IN", "IA", "KS", "KY", "MI", "MO", "NE", "ND", "SD", "OK", "TN", "WI"],
+  ],
   ["R30", "Gulf Coast", ["AL", "AR", "LA", "MS", "NM"]],
   ["R40", "Rocky Mountain", ["ID", "MT", "UT", "WY"]],
   ["R5XCA", "West Coast (except California)", ["AK", "AZ", "HI", "NV", "OR"]],
 ];
 export const STATE_NAMES: Record<string, string> = {
-  alabama: "AL", alaska: "AK", arizona: "AZ", arkansas: "AR", california: "CA", colorado: "CO", connecticut: "CT",
-  delaware: "DE", "district of columbia": "DC", florida: "FL", georgia: "GA", hawaii: "HI", idaho: "ID", illinois: "IL",
-  indiana: "IN", iowa: "IA", kansas: "KS", kentucky: "KY", louisiana: "LA", maine: "ME", maryland: "MD",
-  massachusetts: "MA", michigan: "MI", minnesota: "MN", mississippi: "MS", missouri: "MO", montana: "MT",
-  nebraska: "NE", nevada: "NV", "new hampshire": "NH", "new jersey": "NJ", "new mexico": "NM", "new york": "NY",
-  "north carolina": "NC", "north dakota": "ND", ohio: "OH", oklahoma: "OK", oregon: "OR", pennsylvania: "PA",
-  "rhode island": "RI", "south carolina": "SC", "south dakota": "SD", tennessee: "TN", texas: "TX", utah: "UT",
-  vermont: "VT", virginia: "VA", washington: "WA", "west virginia": "WV", wisconsin: "WI", wyoming: "WY",
+  alabama: "AL",
+  alaska: "AK",
+  arizona: "AZ",
+  arkansas: "AR",
+  california: "CA",
+  colorado: "CO",
+  connecticut: "CT",
+  delaware: "DE",
+  "district of columbia": "DC",
+  florida: "FL",
+  georgia: "GA",
+  hawaii: "HI",
+  idaho: "ID",
+  illinois: "IL",
+  indiana: "IN",
+  iowa: "IA",
+  kansas: "KS",
+  kentucky: "KY",
+  louisiana: "LA",
+  maine: "ME",
+  maryland: "MD",
+  massachusetts: "MA",
+  michigan: "MI",
+  minnesota: "MN",
+  mississippi: "MS",
+  missouri: "MO",
+  montana: "MT",
+  nebraska: "NE",
+  nevada: "NV",
+  "new hampshire": "NH",
+  "new jersey": "NJ",
+  "new mexico": "NM",
+  "new york": "NY",
+  "north carolina": "NC",
+  "north dakota": "ND",
+  ohio: "OH",
+  oklahoma: "OK",
+  oregon: "OR",
+  pennsylvania: "PA",
+  "rhode island": "RI",
+  "south carolina": "SC",
+  "south dakota": "SD",
+  tennessee: "TN",
+  texas: "TX",
+  utah: "UT",
+  vermont: "VT",
+  virginia: "VA",
+  washington: "WA",
+  "west virginia": "WV",
+  wisconsin: "WI",
+  wyoming: "WY",
 };
 
 /** First U.S. state mentioned in free text ("Austin, TX", "Southern Utah", "Alabama & Florida"). */

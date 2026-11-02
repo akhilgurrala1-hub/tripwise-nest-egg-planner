@@ -3,7 +3,17 @@ import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
-const INTEREST_IDS = ["nature", "food", "history", "beaches", "arts", "adventure", "family", "nightlife", "shopping"] as const;
+const INTEREST_IDS = [
+  "nature",
+  "food",
+  "history",
+  "beaches",
+  "arts",
+  "adventure",
+  "family",
+  "nightlife",
+  "shopping",
+] as const;
 
 const inputSchema = z.object({
   destination: z.string().trim().min(2).max(160),

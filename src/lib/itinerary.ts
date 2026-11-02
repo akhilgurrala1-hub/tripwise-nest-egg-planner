@@ -40,10 +40,22 @@ export { addDays } from "./dates";
 
 /** First stop on day one, by how the trip is taken (staycations start at home). */
 const ARRIVAL: Partial<Record<TripType, { name: string; note: string }>> = {
-  "road-trip": { name: "Scenic drive & roadside stop", note: "Stretch, refuel and grab a photo — fuel is in your gas budget." },
-  flight: { name: "Fly in & check in", note: "Your fare is in Transportation; leave time for the airport transfer." },
-  rail: { name: "Ride in by train or bus", note: "Your ticket is in Transportation — pack snacks for the ride." },
-  cruise: { name: "Board the ship", note: "Check-in, muster drill and sail-away — cabin and main dining are in your fare." },
+  "road-trip": {
+    name: "Scenic drive & roadside stop",
+    note: "Stretch, refuel and grab a photo — fuel is in your gas budget.",
+  },
+  flight: {
+    name: "Fly in & check in",
+    note: "Your fare is in Transportation; leave time for the airport transfer.",
+  },
+  rail: {
+    name: "Ride in by train or bus",
+    note: "Your ticket is in Transportation — pack snacks for the ride.",
+  },
+  cruise: {
+    name: "Board the ship",
+    note: "Check-in, muster drill and sail-away — cabin and main dining are in your fare.",
+  },
 };
 
 const TIERS: Record<TravelStyle, { lunch: number[]; dinner: number[] }> = {
@@ -83,7 +95,9 @@ export function generateDemoItinerary(opts: {
   const dinners = byTier(TIERS[style].dinner);
 
   const daySights = sights.filter((x) => !x.evening);
-  const eveningSights = sights.filter((x) => x.evening && x.interests.some((i) => interests.includes(i)));
+  const eveningSights = sights.filter(
+    (x) => x.evening && x.interests.some((i) => interests.includes(i)),
+  );
   const out: ItineraryDay[] = [];
   let si = 0;
   let ei = 0;
@@ -107,28 +121,71 @@ export function generateDemoItinerary(opts: {
         time: "Morning",
         kind: "stop",
         name: arrival.name,
-        area: tripType === "cruise" ? `Port of ${dest.port ?? dest.name}` : `On the way to ${dest.name}`,
+        area:
+          tripType === "cruise"
+            ? `Port of ${dest.port ?? dest.name}`
+            : `On the way to ${dest.name}`,
         note: arrival.note,
         costPerPerson: 0,
       });
     } else {
       const m = nextSight();
-      items.push({ id: id("am"), time: "Morning", kind: "sight", name: m.name, area: m.area, note: m.note, costPerPerson: m.costPerPerson });
+      items.push({
+        id: id("am"),
+        time: "Morning",
+        kind: "sight",
+        name: m.name,
+        area: m.area,
+        note: m.note,
+        costPerPerson: m.costPerPerson,
+      });
     }
 
     const l = lunches[d % lunches.length]!;
-    items.push({ id: id("lunch"), time: "Lunch", kind: "restaurant", name: l.name, area: l.cuisine, note: tierNote(l.tier), costPerPerson: l.costPerPerson });
+    items.push({
+      id: id("lunch"),
+      time: "Lunch",
+      kind: "restaurant",
+      name: l.name,
+      area: l.cuisine,
+      note: tierNote(l.tier),
+      costPerPerson: l.costPerPerson,
+    });
 
     const a = nextSight();
-    items.push({ id: id("pm"), time: "Afternoon", kind: "sight", name: a.name, area: a.area, note: a.note, costPerPerson: a.costPerPerson });
+    items.push({
+      id: id("pm"),
+      time: "Afternoon",
+      kind: "sight",
+      name: a.name,
+      area: a.area,
+      note: a.note,
+      costPerPerson: a.costPerPerson,
+    });
 
     const dn = dinners[(d + 1) % dinners.length]!;
-    items.push({ id: id("dinner"), time: "Dinner", kind: "restaurant", name: dn.name, area: dn.cuisine, note: tierNote(dn.tier), costPerPerson: dn.costPerPerson });
+    items.push({
+      id: id("dinner"),
+      time: "Dinner",
+      kind: "restaurant",
+      name: dn.name,
+      area: dn.cuisine,
+      note: tierNote(dn.tier),
+      costPerPerson: dn.costPerPerson,
+    });
 
     const ev = eveningSights[ei];
     if (ev && d < days - 1) {
       ei++;
-      items.push({ id: id("eve"), time: "Evening", kind: "sight", name: ev.name, area: ev.area, note: ev.note, costPerPerson: ev.costPerPerson });
+      items.push({
+        id: id("eve"),
+        time: "Evening",
+        kind: "sight",
+        name: ev.name,
+        area: ev.area,
+        note: ev.note,
+        costPerPerson: ev.costPerPerson,
+      });
     }
 
     out.push({
@@ -165,7 +222,11 @@ export function generateDemoItinerary(opts: {
 }
 
 function tierNote(tier: 1 | 2 | 3) {
-  return tier === 1 ? "$ · Casual & affordable" : tier === 2 ? "$$ · Sit-down favorite" : "$$$ · Special occasion";
+  return tier === 1
+    ? "$ · Casual & affordable"
+    : tier === 2
+      ? "$$ · Sit-down favorite"
+      : "$$$ · Special occasion";
 }
 
 /** Planned per-person spend on sightseeing (excludes meals, which live in the food budget). */
@@ -216,8 +277,12 @@ export function buildRealItinerary(opts: {
   tripType: TripType;
 }): Itinerary {
   const { destName, days, startDate, interests, tripType } = opts;
-  const sights = [...opts.sights].sort((a, b) => placeScore(b, interests) - placeScore(a, interests));
-  const byScore = [...opts.restaurants].sort((a, b) => placeScore(b, interests) - placeScore(a, interests));
+  const sights = [...opts.sights].sort(
+    (a, b) => placeScore(b, interests) - placeScore(a, interests),
+  );
+  const byScore = [...opts.restaurants].sort(
+    (a, b) => placeScore(b, interests) - placeScore(a, interests),
+  );
   // Cheaper half for lunch, pricier half for dinner; fall back to whatever is left.
   const byCost = [...byScore].sort((a, b) => a.costPerPerson - b.costPerPerson);
   const half = Math.ceil(byCost.length / 2);
@@ -268,11 +333,18 @@ export function buildRealItinerary(opts: {
     const a = take(sights);
     items.push(a ? placeItem(a, id("pm"), "Afternoon") : open(id("pm"), "Afternoon", "sight"));
     const dn = take(dinnerPool, lunchPool);
-    items.push(dn ? placeItem(dn, id("dinner"), "Dinner") : open(id("dinner"), "Dinner", "restaurant"));
+    items.push(
+      dn ? placeItem(dn, id("dinner"), "Dinner") : open(id("dinner"), "Dinner", "restaurant"),
+    );
     out.push({
       day: d + 1,
       date: addDays(startDate, d),
-      title: d === 0 ? "Arrive & settle in" : d === days - 1 && days > 1 ? "Last look & head home" : `Explore ${destName}`,
+      title:
+        d === 0
+          ? "Arrive & settle in"
+          : d === days - 1 && days > 1
+            ? "Last look & head home"
+            : `Explore ${destName}`,
       items,
     });
   }
@@ -290,5 +362,6 @@ export function buildRealItinerary(opts: {
 /** Items whose price isn't published, so the budget can't include them. */
 export function unpricedItems(itin: Itinerary | null): number {
   if (!itin) return 0;
-  return itin.days.flatMap((d) => d.items).filter((i) => i.costSource === "unknown" && i.placeId).length;
+  return itin.days.flatMap((d) => d.items).filter((i) => i.costSource === "unknown" && i.placeId)
+    .length;
 }

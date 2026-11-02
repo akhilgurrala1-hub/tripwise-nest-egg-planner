@@ -8,7 +8,8 @@ export const THEME_BOOT_SCRIPT = `(function(){try{var p=localStorage.getItem("${
 
 function apply(pref: ThemePref) {
   const dark =
-    pref === "dark" || (pref === "system" && window.matchMedia("(prefers-color-scheme: dark)").matches);
+    pref === "dark" ||
+    (pref === "system" && window.matchMedia("(prefers-color-scheme: dark)").matches);
   document.documentElement.classList.toggle("dark", dark);
 }
 
