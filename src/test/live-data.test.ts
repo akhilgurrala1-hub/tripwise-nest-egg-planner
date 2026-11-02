@@ -238,3 +238,10 @@ describe("price sources", () => {
     expect(liveCategories(inputs, {}, null)).toEqual([]);
   });
 });
+
+describe("separate trip types", () => {
+  it("searches a cruise's port of call, not its departure label", async () => {
+    const { getDestination: get } = await import("@/lib/demo-data");
+    expect(destinationQuery(get("caribbean-cruise"))).toBe("Nassau, Bahamas");
+  });
+});

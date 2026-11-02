@@ -10,7 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { CATEGORIES, CATEGORY_LABELS, SAVING_TITLES, formatMoney } from "@/lib/budget";
 import { useAuth } from "@/lib/auth-context";
-import { TRAVEL_STYLES, TRIP_TYPES, isDrivingMode } from "@/lib/demo-data";
+import { TRAVEL_STYLES, TRIP_TYPES } from "@/lib/demo-data";
 import { liveCategories } from "@/lib/live/sources";
 import { tripActions, useTrip } from "@/lib/trip-store";
 import { cn } from "@/lib/utils";
@@ -283,13 +283,13 @@ type StepTo = "/" | "/budget" | "/road-trip" | "/itinerary" | "/trips" | "/auth"
 function NextSteps() {
   const { trip } = useTrip();
   const { user } = useAuth();
-  const driving = isDrivingMode(trip.inputs.transportMode);
+  const roadTrip = trip.setup.tripType === "road-trip";
   const live = liveCategories(trip.inputs, trip.overrides, trip.live).length > 0;
   const realPlan = trip.itinerary?.source === "google" || trip.itinerary?.source === "ai";
   const steps: { title: string; done: boolean; to: StepTo; cta: string }[] = [
     { title: "Plan your trip", done: !trip.isSample, to: "/", cta: "Start planning" },
     { title: "Check live prices", done: live, to: "/budget", cta: "Open budget" },
-    ...(driving
+    ...(roadTrip
       ? [{ title: "Pick stops on the drive", done: trip.roadTrip.includedStops.length > 0, to: "/road-trip" as const, cta: "Plan route" }]
       : []),
     {
@@ -331,7 +331,7 @@ function NextSteps() {
           </Button>
         )}
       </div>
-      <ol className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-5">
+      <ol className={cn("mt-4 grid gap-2 sm:grid-cols-2", steps.length === 5 ? "lg:grid-cols-5" : "lg:grid-cols-4")}>
         {steps.map((s, i) => (
           <li key={s.title}>
             {s.to === "/auth" ? (

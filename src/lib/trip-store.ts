@@ -17,7 +17,12 @@ import {
   type SavingId,
 } from "./budget";
 import {
+  CUSTOM_DESTINATION_ID,
+  DESTINATIONS,
   getDestination,
+  modeForTripType,
+  tripTypeInfo,
+  upgradeTripType,
   type Interest,
   type TransportMode,
   type TravelStyle,
@@ -61,7 +66,7 @@ export interface CloudLink {
 }
 
 export interface TripState {
-  version: 3;
+  version: 4;
   isSample: boolean;
   setup: TripSetup;
   inputs: BudgetInputs;
@@ -92,11 +97,12 @@ function defaultRoadTrip(setup: TripSetup, destName: string): RoadTripPlan {
   };
 }
 
-export function buildTrip(setup: TripSetup, isSample = false): TripState {
+export function buildTrip(input: TripSetup, isSample = false): TripState {
+  const setup = { ...input, transportMode: modeForTripType(input.tripType, input.transportMode) };
   const dest = getDestination(setup.destinationId, setup.customDestination);
   const shape = tripShape(setup.startDate, setup.endDate, setup.travelers);
   return {
-    version: 3,
+    version: 4,
     isSample,
     setup,
     inputs: defaultInputs(dest, setup.style, setup.tripType, setup.travelers, setup.transportMode),
@@ -135,22 +141,42 @@ export function sampleSetup(): TripSetup {
   };
 }
 
-/** Upgrade trips saved by earlier versions of the app (also used for trips loaded from an account). */
+/** Inputs added after a trip was saved get their "not used" values. */
+const NEW_INPUT_DEFAULTS = { cruisePerNight: 0, portFeesPerPerson: 0, gratuitiesPerNight: 0 };
+
+/**
+ * Upgrade trips saved by earlier versions of the app (also used for trips loaded from an account).
+ * v4 split trips into separate types: old "Getaway" trips become fly-away, train & bus or road trips
+ * by how they travel.
+ */
 export function migrate(raw: unknown): TripState | null {
   const s = raw as Partial<TripState> & { version?: number };
   if (!s || !s.setup || !s.inputs) return null;
-  if (s.version === 3) return { ...(s as TripState), live: s.live ?? null, cloud: s.cloud ?? null };
-  if (s.version === 2) return { ...(s as unknown as TripState), version: 3, live: null, cloud: null };
+  if (s.version === 4) return { ...(s as TripState), live: s.live ?? null, cloud: s.cloud ?? null };
+  if (s.version === 2 || s.version === 3) {
+    const old = s as unknown as TripState;
+    const mode = old.inputs.transportMode ?? old.setup.transportMode ?? "car";
+    const tripType = upgradeTripType(old.setup.tripType, mode);
+    return {
+      ...old,
+      version: 4,
+      setup: { ...old.setup, tripType, transportMode: mode },
+      inputs: { ...NEW_INPUT_DEFAULTS, ...old.inputs },
+      live: (s.version === 3 ? old.live : null) ?? null,
+      cloud: (s.version === 3 ? old.cloud : null) ?? null,
+    };
+  }
   if (s.version !== 1) return null;
   const setup: TripSetup = {
     ...(s.setup as TripSetup),
+    tripType: upgradeTripType(s.setup.tripType, "car"),
     transportMode: "car",
     emergencyFund: s.emergencyFund ?? defaultEmergencyFund(s.setup.totalBudget),
   };
   const dest = getDestination(setup.destinationId, setup.customDestination);
   const fresh = defaultInputs(dest, setup.style, setup.tripType, setup.travelers, "car");
   return {
-    version: 3,
+    version: 4,
     isSample: !!s.isSample,
     setup,
     inputs: { ...fresh, ...s.inputs, transportMode: "car" },
@@ -161,6 +187,25 @@ export function migrate(raw: unknown): TripState | null {
     roadTrip: defaultRoadTrip(setup, dest.name),
     live: null,
     cloud: null,
+  };
+}
+
+/** Destination to use after switching trip type, and why it changed (empty when it didn't). */
+export function destinationForTripType(setup: TripSetup, tripType: TripType): { destinationId: string; reason: string } {
+  const { destinationId } = setup;
+  if (destinationId === CUSTOM_DESTINATION_ID) return { destinationId, reason: "" };
+  if (tripType === "staycation") {
+    return destinationId === "hometown"
+      ? { destinationId, reason: "" }
+      : { destinationId: "hometown", reason: "A staycation is planned around your home city." };
+  }
+  const current = DESTINATIONS.find((d) => d.id === destinationId);
+  if (current?.bestFor.includes(tripType)) return { destinationId, reason: "" };
+  const next = DESTINATIONS.find((d) => d.bestFor.includes(tripType)) ?? DESTINATIONS[0]!;
+  const label = tripTypeInfo(tripType).label.toLowerCase();
+  return {
+    destinationId: next.id,
+    reason: `${current?.name ?? "That destination"} isn't a ${label} destination, so we picked ${next.name}.`,
   };
 }
 
@@ -291,7 +336,7 @@ export const tripActions = {
         delete overrides.gas;
         delete appliedSavings["fuel-rewards"];
       }
-      if (prices.hotels && prices.hotels.nightly > 0) {
+      if (prices.hotels && prices.hotels.nightly > 0 && s.setup.tripType !== "cruise") {
         inputs.nightlyRate = prices.hotels.nightly;
         delete overrides.accommodations;
         delete appliedSavings.lodging;
@@ -328,15 +373,47 @@ export const tripActions = {
   setTransportMode(mode: TransportMode) {
     setState((s) => {
       const dest = getDestination(s.setup.destinationId, s.setup.customDestination);
+      const allowed = modeForTripType(s.setup.tripType, mode);
       const overrides = { ...s.overrides };
       for (const c of ["transportation", "gas", "tolls", "parking"] as Category[]) delete overrides[c];
       return {
         ...s,
-        setup: { ...s.setup, transportMode: mode },
-        inputs: { ...s.inputs, ...modeDefaults(dest, s.setup.style, mode) },
+        setup: { ...s.setup, transportMode: allowed },
+        inputs: { ...s.inputs, ...modeDefaults(dest, s.setup.style, allowed, s.setup.tripType) },
         overrides,
       };
     });
+  },
+  /**
+   * Switch to another trip type. The budget is re-estimated for that kind of trip
+   * (dates, travelers, budget, reserve and interests are kept). Returns what changed, in plain words.
+   */
+  setTripType(tripType: TripType): string[] {
+    const s = getSnapshot();
+    if (s.setup.tripType === tripType) return [];
+    const info = tripTypeInfo(tripType);
+    const { destinationId, reason } = destinationForTripType(s.setup, tripType);
+    const transportMode = modeForTripType(tripType, s.setup.transportMode);
+    const setup: TripSetup = { ...s.setup, tripType, destinationId, transportMode, emergencyFund: s.emergencyFund };
+    const fresh = buildTrip(setup);
+    const changes = [
+      ...(reason ? [reason] : []),
+      transportMode !== s.setup.transportMode
+        ? `Travel switched to ${transportMode === "rental-car" ? "a rental car" : transportMode === "car" ? "your car" : `${transportMode}`}.`
+        : "",
+      tripType === "cruise" ? "Your cabin and main meals are now part of the cruise fare, so hotel nights are $0." : "",
+      s.setup.tripType === "road-trip" && s.roadTrip.includedStops.length > 0 ? "Road-trip stops were removed." : "",
+      Object.keys(s.overrides).length > 0 || Object.keys(s.appliedSavings).length > 0
+        ? "Custom amounts and applied savings were reset for the new trip type."
+        : "",
+      s.live ? "Check live prices again for this trip type." : "",
+    ].filter(Boolean);
+    setState(() => ({
+      ...fresh,
+      isSample: false,
+      cloud: s.cloud,
+    }));
+    return [`Now planning a ${info.label.toLowerCase()}.`, ...changes];
   },
   setOverride(cat: Category, value: number | undefined) {
     setState((s) => {

@@ -53,6 +53,8 @@ Create a realistic day-by-day itinerary. Each day has 4-5 items: a Morning stop,
 Use "restaurant" for meals, "sight" for attractions, "stop" for drive breaks. Prefer well-known, real places when you are confident; otherwise describe a type of place (e.g. "Local farmers market").
 costPerPerson is an estimated USD amount per person (0 for free). Keep sightseeing spend near the activity budget and meals near the food budget.
 Only place weekday-specific events (markets, weekly shows) on a day whose weekday matches. Put after-dark activities in the Evening. Keep notes under 90 characters. Give 2-4 short money-saving or practical tips.
+For a cruise: Day 1 is boarding at the departure port and the last day is disembarking; meals in the main dining room and buffet are included (costPerPerson 0); fill port days with shore excursions and sea days with onboard activities.
+For a fly-away trip, Day 1 starts with the flight in; for a train or bus trip, with the ride in. Only road trips get "stop" items for drive breaks.
 When weather is given, plan around it: put indoor sights on days with rain, snow or storms, save outdoor highlights for dry days, and mention the weather in a tip when it matters.`;
 
 function describeError(err: unknown): { status: number; error: string } {

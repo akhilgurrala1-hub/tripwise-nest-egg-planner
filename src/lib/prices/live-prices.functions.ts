@@ -15,6 +15,7 @@ const inputSchema = z
     rooms: z.number().int().min(1).max(10),
     style: z.enum(["budget", "comfort", "luxury"]),
     includeFlights: z.boolean(),
+    includeHotels: z.boolean().default(true),
     originAirport: z.string().regex(/^([A-Z]{3})?$/),
     destinationAirport: z.string().regex(/^([A-Z]{3})?$/),
   })

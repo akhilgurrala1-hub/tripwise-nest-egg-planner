@@ -24,6 +24,9 @@ export function LivePricesPanel({ className }: { className?: string }) {
   const { trip, dest, shape } = useTrip();
   const live = trip.live;
   const flying = trip.inputs.transportMode === "flight";
+  const cruise = trip.setup.tripType === "cruise";
+  // A cruise cabin replaces hotels; a staycation at home has no hotel unless the traveler set a nightly rate.
+  const noHotel = cruise || (trip.setup.tripType === "staycation" && trip.inputs.nightlyRate === 0);
   const fetchPrices = useServerFn(getLivePrices);
   const fetchStatus = useServerFn(getLivePriceStatus);
   const status = useQuery({
@@ -33,10 +36,11 @@ export function LivePricesPanel({ className }: { className?: string }) {
     staleTime: 10 * 60 * 1000,
   });
   const connected = status.data;
-  const anyConnected = !!connected && (connected.gas || connected.hotels || (flying && connected.flights));
+  const anyConnected =
+    !!connected && ((connected.gas && isDrivingMode(trip.inputs.transportMode)) || (connected.hotels && !noHotel) || (flying && connected.flights));
   const notConnected = connected
     ? [
-        !connected.hotels && "hotels",
+        !connected.hotels && !noHotel && "hotels",
         flying && !connected.flights && "flights",
         !connected.gas && isDrivingMode(trip.inputs.transportMode) && "gas",
       ].filter((x): x is string => !!x)
@@ -55,7 +59,8 @@ export function LivePricesPanel({ className }: { className?: string }) {
     try {
       const res = await fetchPrices({
         data: {
-          destination: destinationQuery(dest, trip.setup.origin, prefs?.home_city),
+          // Cruises fly or drive to the departure port; everything else searches the destination.
+          destination: dest.port ?? destinationQuery(dest, trip.setup.origin, prefs?.home_city),
           origin: trip.setup.origin || prefs?.home_city || "",
           startDate: trip.setup.startDate,
           endDate: trip.setup.endDate,
@@ -63,6 +68,7 @@ export function LivePricesPanel({ className }: { className?: string }) {
           rooms: Math.max(1, trip.inputs.rooms),
           style: trip.setup.style,
           includeFlights: flying,
+          includeHotels: !noHotel,
           originAirport: prefs?.home_airport ?? "",
           destinationAirport: /^[A-Z]{3}$/.test(destAirport) ? destAirport : "",
         },
@@ -157,7 +163,9 @@ export function LivePricesPanel({ className }: { className?: string }) {
           <Quote
             icon={Hotel}
             label="Hotel, per night"
-            value={live.hotels ? formatMoney(live.hotels.nightly) : shape.nights === 0 ? "No overnight stay" : "Not available"}
+            value={
+              cruise ? "Cabin in cruise fare" : live.hotels ? formatMoney(live.hotels.nightly) : shape.nights === 0 ? "No overnight stay" : "Not available"
+            }
             sub={live.hotels ? `${live.hotels.pickLabel} · before taxes` : undefined}
           />
           <Quote

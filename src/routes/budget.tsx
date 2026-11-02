@@ -11,8 +11,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import {
-  CATEGORIES,
   CATEGORY_LABELS,
+  categoriesFor,
   OVERRIDABLE,
   formatMoney,
   percentLabel,
@@ -20,7 +20,7 @@ import {
   type BudgetInputs,
   type Category,
 } from "@/lib/budget";
-import { TRANSPORT_MODES, isDrivingMode } from "@/lib/demo-data";
+import { TRANSPORT_MODES, TRIP_TYPES, isDrivingMode, tripTypeInfo } from "@/lib/demo-data";
 import { itineraryActivityCost } from "@/lib/itinerary";
 import { categorySource } from "@/lib/live/sources";
 import { tripActions, useTrip } from "@/lib/trip-store";
@@ -107,30 +107,9 @@ function BudgetPage() {
                 </Button>
               )}
             </div>
-            <div className="mb-4">
-              <p className="mb-2 text-sm font-bold">How are you getting there?</p>
-              <div className="flex flex-wrap gap-2">
-                {TRANSPORT_MODES.map((m) => {
-                  const active = trip.inputs.transportMode === m.id;
-                  return (
-                    <button
-                      key={m.id}
-                      type="button"
-                      aria-pressed={active}
-                      onClick={() => tripActions.setTransportMode(m.id)}
-                      className={cn(
-                        "rounded-full border px-3.5 py-2 text-sm font-semibold transition-all",
-                        active ? "border-primary bg-primary text-primary-foreground" : "border-border bg-card hover:border-primary/40",
-                      )}
-                    >
-                      {m.label}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
+            <TripTypeSwitcher />
             <Accordion type="multiple" className="space-y-2.5">
-              {CATEGORIES.map((cat) => (
+              {categoriesFor(trip.setup.tripType, trip.inputs.transportMode).map((cat) => (
                 <CategoryRow key={cat} cat={cat} />
               ))}
             </Accordion>
@@ -218,6 +197,20 @@ function CategoryRow({ cat }: { cat: Category }) {
   let fields: ReactNode = null;
   let formula = "";
   switch (cat) {
+    case "cruise":
+      formula = `(${formatMoney(i.cruisePerNight)} fare + ${formatMoney(i.gratuitiesPerNight)} tips) × ${shape.travelers} × ${shape.nights} nights + ${formatMoney(i.portFeesPerPerson)} port fees each`;
+      fields = (
+        <>
+          <InputCell label="Cruise fare, per person per night" value={i.cruisePerNight} onChange={set("cruisePerNight")} prefix="$" step={10} />
+          <InputCell label="Gratuities, per person per night" value={i.gratuitiesPerNight} onChange={set("gratuitiesPerNight")} prefix="$" />
+          <InputCell label="Port fees & taxes, per person" value={i.portFeesPerPerson} onChange={set("portFeesPerPerson")} prefix="$" step={10} />
+          <p className="col-span-full text-xs text-muted-foreground">
+            Your cabin and main dining are in the fare, so hotel nights stay at $0 and Meals covers only specialty dining and food
+            ashore.
+          </p>
+        </>
+      );
+      break;
     case "transportation": {
       const fareMode = i.transportMode === "flight" || i.transportMode === "train" || i.transportMode === "bus";
       const parts: string[] = [];
@@ -265,7 +258,10 @@ function CategoryRow({ cat }: { cat: Category }) {
       fields = <InputCell label="Per person, per day" value={i.waterPerPersonDay} onChange={set("waterPerPersonDay")} prefix="$" step={0.5} />;
       break;
     case "accommodations":
-      formula = `${formatMoney(i.nightlyRate)} × ${i.rooms} room${i.rooms === 1 ? "" : "s"} × ${shape.nights} nights`;
+      formula =
+        trip.setup.tripType === "cruise" && i.nightlyRate === 0
+          ? "Your cabin is in the cruise fare — add a pre-cruise hotel night here if you need one"
+          : `${formatMoney(i.nightlyRate)} × ${i.rooms} room${i.rooms === 1 ? "" : "s"} × ${shape.nights} nights`;
       fields = (
         <>
           <InputCell label="Nightly rate" value={i.nightlyRate} onChange={set("nightlyRate")} prefix="$" step={5} />
@@ -479,6 +475,67 @@ function CutPlan() {
           );
         })}
       </ul>
+    </div>
+  );
+}
+
+/** Separate trip categories: switching re-estimates the budget for that kind of trip and says what changed. */
+function TripTypeSwitcher() {
+  const { trip } = useTrip();
+  const info = tripTypeInfo(trip.setup.tripType);
+  const modes = TRANSPORT_MODES.filter((m) => info.modes.includes(m.id));
+  return (
+    <div className="mb-4 space-y-3">
+      <div>
+        <p className="mb-2 text-sm font-bold">Trip type</p>
+        <div className="flex flex-wrap gap-2" role="group" aria-label="Trip type">
+          {TRIP_TYPES.map((t) => {
+            const active = trip.setup.tripType === t.id;
+            return (
+              <button
+                key={t.id}
+                type="button"
+                aria-pressed={active}
+                onClick={() => {
+                  if (active) return;
+                  const [headline, ...details] = tripActions.setTripType(t.id);
+                  if (headline) toast.success(headline, details.length ? { description: details.join(" ") } : undefined);
+                }}
+                className={cn(
+                  "min-h-11 rounded-full border px-4 py-2 text-sm font-semibold transition-all",
+                  active ? "border-primary bg-primary text-primary-foreground" : "border-border bg-card hover:border-primary/40",
+                )}
+              >
+                {t.label}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+      {modes.length > 1 && (
+        <div>
+          <p className="mb-2 text-sm font-bold">{info.modeQuestion}</p>
+          <div className="flex flex-wrap gap-2">
+            {modes.map((m) => {
+              const active = trip.inputs.transportMode === m.id;
+              return (
+                <button
+                  key={m.id}
+                  type="button"
+                  aria-pressed={active}
+                  onClick={() => tripActions.setTransportMode(m.id)}
+                  className={cn(
+                    "min-h-11 rounded-full border px-4 py-2 text-sm font-semibold transition-all",
+                    active ? "border-secondary-foreground/20 bg-secondary text-foreground" : "border-border bg-card hover:border-primary/40",
+                  )}
+                >
+                  {m.label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

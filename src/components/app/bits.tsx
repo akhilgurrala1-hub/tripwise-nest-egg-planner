@@ -12,6 +12,7 @@ import {
   Ticket,
   UtensilsCrossed,
   FlaskConical,
+  Ship,
   type LucideIcon,
 } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
@@ -23,6 +24,7 @@ import { useTrip } from "@/lib/trip-store";
 import { cn } from "@/lib/utils";
 
 export const CATEGORY_ICONS: Record<Category, LucideIcon> = {
+  cruise: Ship,
   transportation: Bus,
   snacks: Cookie,
   stops: MapPinned,
@@ -38,6 +40,7 @@ export const CATEGORY_ICONS: Record<Category, LucideIcon> = {
 };
 
 export const CATEGORY_COLOR_VAR: Record<Category, string> = {
+  cruise: "var(--cat-cruise)",
   transportation: "var(--cat-transportation)",
   snacks: "var(--cat-snacks)",
   stops: "var(--cat-stops)",

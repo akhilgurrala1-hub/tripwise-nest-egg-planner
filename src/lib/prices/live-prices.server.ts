@@ -24,6 +24,8 @@ export interface LivePricesRequest {
   rooms: number;
   style: TravelStyle;
   includeFlights: boolean;
+  /** False on cruises (the cabin replaces hotels) and staycations at home */
+  includeHotels: boolean;
   originAirport: string;
   destinationAirport: string;
 }
@@ -203,7 +205,7 @@ export async function fetchLivePrices(req: LivePricesRequest): Promise<LivePrice
 
   const [gas, hotels, flights] = await Promise.allSettled([
     eia ? gasQuote(req.destination, eia) : missing("Gas prices"),
-    req.endDate <= req.startDate
+    req.endDate <= req.startDate || !req.includeHotels
       ? Promise.resolve(null)
       : serp
         ? hotelQuote(req, serp)

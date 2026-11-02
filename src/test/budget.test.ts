@@ -31,6 +31,9 @@ const car: BudgetInputs = {
   activitiesPerPerson: 50,
   taxRatePct: 10,
   miscPct: 5,
+  cruisePerNight: 0,
+  portFeesPerPerson: 0,
+  gratuitiesPerNight: 0,
 };
 // 3 days, 2 nights, 2 travelers
 const trip = tripShape("2026-11-01", "2026-11-03", 2);
@@ -178,7 +181,7 @@ describe("demo itinerary scheduling", () => {
         startDate: "2026-11-01",
         interests: ["nature", "arts", "nightlife", "history", "family"],
         style: "comfort",
-        tripType: "budget-vacation",
+        tripType: "flight",
       });
       const eveningNames = new Set(dest.sights.filter((s) => s.evening).map((s) => s.name));
       const seen = new Set<string>();

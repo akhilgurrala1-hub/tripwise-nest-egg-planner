@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { ArrowRight, Check, Minus, Plus, Sparkles, MapPin } from "lucide-react";
+import { ArrowRight, Car, Check, Home, MapPin, Minus, Plane, Plus, Ship, Sparkles, TrainFront, type LucideIcon } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 
@@ -18,9 +18,11 @@ import {
   TRAVEL_STYLES,
   TRIP_TYPES,
   getDestination,
+  modeForTripType,
+  tripTypeInfo,
   type TripType,
 } from "@/lib/demo-data";
-import { tripActions, useTrip, type TripSetup } from "@/lib/trip-store";
+import { destinationForTripType, tripActions, useTrip, type TripSetup } from "@/lib/trip-store";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/")({
@@ -93,22 +95,14 @@ function Welcome() {
   const setBudget = (totalBudget: number) =>
     update(reserveTouched.current ? { totalBudget } : { totalBudget, emergencyFund: defaultEmergencyFund(totalBudget) });
 
-  const orderedDestinations = useMemo(
-    () =>
-      [...DESTINATIONS].sort(
-        (a, b) => Number(b.bestFor.includes(form.tripType)) - Number(a.bestFor.includes(form.tripType)),
-      ),
-    [form.tripType],
-  );
+  // Only destinations that suit the chosen trip type ("Somewhere else" is always offered).
+  const orderedDestinations = useMemo(() => DESTINATIONS.filter((d) => d.bestFor.includes(form.tripType)), [form.tripType]);
+  const typeInfo = tripTypeInfo(form.tripType);
+  const modes = TRANSPORT_MODES.filter((m) => typeInfo.modes.includes(m.id));
 
   const setTripType = (tripType: TripType) => {
-    const current = DESTINATIONS.find((d) => d.id === form.destinationId);
-    let destinationId = form.destinationId;
-    if (tripType === "staycation" && form.destinationId !== CUSTOM_DESTINATION_ID) destinationId = "hometown";
-    else if (current && !current.bestFor.includes(tripType)) {
-      destinationId = DESTINATIONS.find((d) => d.bestFor.includes(tripType))?.id ?? destinationId;
-    }
-    update({ tripType, destinationId });
+    const { destinationId } = destinationForTripType(form, tripType);
+    update({ tripType, destinationId, transportMode: modeForTripType(tripType, form.transportMode) });
   };
 
   const toggleInterest = (id: (typeof INTERESTS)[number]["id"]) =>
@@ -173,8 +167,51 @@ function Welcome() {
           <DemoBadge />
         </div>
 
+        {/* Trip type */}
+        <Field label="What kind of trip?">
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-5">
+            {TRIP_TYPES.map((t) => {
+              const Icon = TRIP_ICONS[t.id];
+              return (
+                <ChoiceCard key={t.id} active={form.tripType === t.id} onClick={() => setTripType(t.id)}>
+                  <Icon className="mb-1 size-5 text-sunset" aria-hidden />
+                  <span className="text-sm font-bold">{t.label}</span>
+                  <span className="text-[11px] leading-tight text-muted-foreground">{t.blurb}</span>
+                </ChoiceCard>
+              );
+            })}
+          </div>
+          {modes.length > 1 && (
+            <div className="mt-3">
+              <p className="mb-2 text-xs font-semibold text-muted-foreground">{typeInfo.modeQuestion}</p>
+              <div className="flex flex-wrap gap-2">
+                {modes.map((m) => {
+                  const active = form.transportMode === m.id;
+                  return (
+                    <button
+                      key={m.id}
+                      type="button"
+                      aria-pressed={active}
+                      onClick={() => update({ transportMode: m.id })}
+                      className={cn(
+                        "min-h-11 rounded-full border px-4 py-2 text-sm font-semibold transition-all",
+                        active ? "border-primary bg-primary text-primary-foreground" : "border-border bg-card text-foreground hover:border-primary/40",
+                      )}
+                    >
+                      {m.label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+        </Field>
+
         {/* Destination */}
-        <Field label="Where are you going?" hint="Example places with demo prices">
+        <Field
+          label={form.tripType === "cruise" ? "Which cruise?" : form.tripType === "staycation" ? "Where's home base?" : "Where are you going?"}
+          hint="Example places with demo prices"
+        >
           <div className="-mx-4 flex snap-x gap-3 overflow-x-auto px-4 pb-2 sm:mx-0 sm:grid sm:grid-cols-2 sm:overflow-visible sm:px-0">
             {orderedDestinations.map((d) => {
               const active = form.destinationId === d.id;
@@ -197,7 +234,11 @@ function Welcome() {
                   <p className="mt-0.5 font-display text-lg leading-tight font-semibold">{d.name}</p>
                   <p className="mt-1 text-xs text-muted-foreground">{d.tagline}</p>
                   <p className="tabular mt-2 text-xs font-semibold text-primary">
-                    {d.nightly.budget === 0 ? "No lodging needed" : `from ${formatMoney(d.nightly.budget)}/night`}
+                    {d.cruisePerNight
+                      ? `from ${formatMoney(d.cruisePerNight.budget)}/person/night`
+                      : d.nightly.budget === 0
+                        ? "No lodging needed"
+                        : `from ${formatMoney(d.nightly.budget)}/night`}
                   </p>
                 </button>
               );
@@ -220,7 +261,7 @@ function Welcome() {
               <PlaceInput
                 autoFocus
                 aria-label="Destination"
-                placeholder="e.g. Chattanooga, TN"
+                placeholder={form.tripType === "cruise" ? "Departure port, e.g. Galveston, TX" : "e.g. Chattanooga, TN"}
                 value={form.customDestination}
                 onChange={(v) => update({ customDestination: v })}
                 className="h-11 rounded-xl bg-card"
@@ -229,7 +270,7 @@ function Welcome() {
           )}
           <div className="mt-3">
             <Label htmlFor="origin" className="text-xs text-muted-foreground">
-              Starting from (optional)
+              {form.tripType === "staycation" ? "Your home city (for live weather & places)" : "Starting from (optional)"}
             </Label>
             <div className="mt-1">
               <PlaceInput
@@ -295,41 +336,6 @@ function Welcome() {
             </div>
           </Field>
         </div>
-
-        {/* Trip type */}
-        <Field label="What kind of trip?">
-          <div className="grid grid-cols-3 gap-2">
-            {TRIP_TYPES.map((t) => (
-              <ChoiceCard key={t.id} active={form.tripType === t.id} onClick={() => setTripType(t.id)}>
-                <span className="text-sm font-bold">{t.label}</span>
-                <span className="text-[11px] leading-tight text-muted-foreground">{t.blurb}</span>
-              </ChoiceCard>
-            ))}
-          </div>
-        </Field>
-
-        {/* Transportation */}
-        <Field label="How are you getting there?">
-          <div className="flex flex-wrap gap-2">
-            {TRANSPORT_MODES.map((m) => {
-              const active = form.transportMode === m.id;
-              return (
-                <button
-                  key={m.id}
-                  type="button"
-                  aria-pressed={active}
-                  onClick={() => update({ transportMode: m.id })}
-                  className={cn(
-                    "rounded-full border px-3.5 py-2 text-sm font-semibold transition-all",
-                    active ? "border-primary bg-primary text-primary-foreground" : "border-border bg-card text-foreground hover:border-primary/40",
-                  )}
-                >
-                  {m.label}
-                </button>
-              );
-            })}
-          </div>
-        </Field>
 
         {/* Style */}
         <Field label="Travel style">
@@ -483,3 +489,11 @@ function ChoiceCard({
     </button>
   );
 }
+
+const TRIP_ICONS: Record<TripType, LucideIcon> = {
+  "road-trip": Car,
+  flight: Plane,
+  cruise: Ship,
+  rail: TrainFront,
+  staycation: Home,
+};
