@@ -113,7 +113,7 @@ const REGION_STATES: [string, string, string[]][] = [
   ["R40", "Rocky Mountain", ["ID", "MT", "UT", "WY"]],
   ["R5XCA", "West Coast (except California)", ["AK", "AZ", "HI", "NV", "OR"]],
 ];
-const STATE_NAMES: Record<string, string> = {
+export const STATE_NAMES: Record<string, string> = {
   alabama: "AL", alaska: "AK", arizona: "AZ", arkansas: "AR", california: "CA", colorado: "CO", connecticut: "CT",
   delaware: "DE", "district of columbia": "DC", florida: "FL", georgia: "GA", hawaii: "HI", idaho: "ID", illinois: "IL",
   indiana: "IN", iowa: "IA", kansas: "KS", kentucky: "KY", louisiana: "LA", maine: "ME", maryland: "MD",

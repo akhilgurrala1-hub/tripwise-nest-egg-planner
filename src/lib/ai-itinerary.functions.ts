@@ -13,6 +13,8 @@ const inputSchema = z.object({
   interests: z.array(z.string().max(40)).max(12),
   activityBudgetPerPerson: z.number().min(0).max(100000),
   foodBudgetPerPersonDay: z.number().min(0).max(10000),
+  /** Real weather per trip day, e.g. "Day 2: Rain, high 58°F, 80% chance of rain (forecast)" */
+  weather: z.array(z.string().max(120)).max(14).default([]),
 });
 
 export const createAiItinerary = createServerFn({ method: "POST" })

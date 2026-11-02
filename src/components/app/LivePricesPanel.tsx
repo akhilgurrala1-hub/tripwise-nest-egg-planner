@@ -1,4 +1,5 @@
 import { Link } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { BadgeCheck, Fuel, Hotel, Loader2, Plane, RefreshCw } from "lucide-react";
 import { useState } from "react";
@@ -9,32 +10,52 @@ import { Input } from "@/components/ui/input";
 import { usePreferences } from "@/lib/account";
 import { useAuth } from "@/lib/auth-context";
 import { formatMoney } from "@/lib/budget";
-import type { DemoDestination } from "@/lib/demo-data";
-import { getLivePrices } from "@/lib/prices/live-prices.functions";
+import { destinationQuery } from "@/lib/live/place";
+import { getLivePriceStatus, getLivePrices } from "@/lib/prices/live-prices.functions";
 import { tripActions, useTrip } from "@/lib/trip-store";
+import { isDrivingMode } from "@/lib/demo-data";
 import { cn } from "@/lib/utils";
 
-/** What to search hotels for: generic region labels add nothing useful to the query. */
-export function destinationQuery(dest: DemoDestination): string {
-  return ["Custom destination", "Staycation"].includes(dest.region) ? dest.name : `${dest.name}, ${dest.region}`;
-}
+export { destinationQuery } from "@/lib/live/place";
 
 export function LivePricesPanel({ className }: { className?: string }) {
   const { user } = useAuth();
   const prefs = usePreferences();
   const { trip, dest, shape } = useTrip();
-  const fetchPrices = useServerFn(getLivePrices);
-  const [loading, setLoading] = useState(false);
-  const [destAirport, setDestAirport] = useState("");
   const live = trip.live;
   const flying = trip.inputs.transportMode === "flight";
+  const fetchPrices = useServerFn(getLivePrices);
+  const fetchStatus = useServerFn(getLivePriceStatus);
+  const status = useQuery({
+    queryKey: ["live", "price-status", user?.id],
+    queryFn: () => fetchStatus(),
+    enabled: !!user,
+    staleTime: 10 * 60 * 1000,
+  });
+  const connected = status.data;
+  const anyConnected = !!connected && (connected.gas || connected.hotels || (flying && connected.flights));
+  const notConnected = connected
+    ? [
+        !connected.hotels && "hotels",
+        flying && !connected.flights && "flights",
+        !connected.gas && isDrivingMode(trip.inputs.transportMode) && "gas",
+      ].filter((x): x is string => !!x)
+    : [];
+  const ageHours = live ? (Date.now() - new Date(live.fetchedAt).getTime()) / 3_600_000 : 0;
+  const stale = ageHours > 24;
+  const tripChanged =
+    !!live &&
+    ((live.hotels && (live.hotels.checkIn !== trip.setup.startDate || live.hotels.checkOut !== trip.setup.endDate)) ||
+      (live.flights && (live.flights.departDate !== trip.setup.startDate || live.flights.returnDate !== trip.setup.endDate)));
+  const [loading, setLoading] = useState(false);
+  const [destAirport, setDestAirport] = useState("");
 
   const run = async () => {
     setLoading(true);
     try {
       const res = await fetchPrices({
         data: {
-          destination: destinationQuery(dest),
+          destination: destinationQuery(dest, trip.setup.origin, prefs?.home_city),
           origin: trip.setup.origin || prefs?.home_city || "",
           startDate: trip.setup.startDate,
           endDate: trip.setup.endDate,
@@ -69,8 +90,8 @@ export function LivePricesPanel({ className }: { className?: string }) {
             Hotel and flight prices from Google, gas from the U.S. Energy Information Administration's weekly survey.
           </p>
         </div>
-        {user ? (
-          <Button variant="ink" onClick={run} disabled={loading}>
+        {user && connected && !anyConnected ? null : user ? (
+          <Button variant="ink" onClick={run} disabled={loading || status.isPending}>
             {loading ? <Loader2 className="animate-spin" /> : live ? <RefreshCw /> : <BadgeCheck />}
             {loading ? "Checking prices…" : live ? "Refresh prices" : "Get live prices"}
           </Button>
@@ -83,7 +104,26 @@ export function LivePricesPanel({ className }: { className?: string }) {
         )}
       </div>
 
-      {user && flying && (
+      {user && connected && !anyConnected && (
+        <p className="mt-3 rounded-xl bg-muted px-3 py-2 text-xs leading-snug text-muted-foreground">
+          Live hotel, flight and gas prices need a price-data connection that isn't set up for this app yet, so these
+          amounts stay demo estimates. Weather and places are already live.
+        </p>
+      )}
+      {user && anyConnected && notConnected.length > 0 && (
+        <p className="mt-3 text-xs text-muted-foreground">
+          Not connected yet: {notConnected.join(", ")} — those amounts stay demo estimates.
+        </p>
+      )}
+      {live && (stale || tripChanged) && (
+        <p className="mt-3 rounded-xl bg-sunset-soft px-3 py-2 text-xs font-semibold">
+          {tripChanged
+            ? "Your dates changed since these prices were checked — refresh to price the new dates."
+            : `These prices were checked ${Math.round(ageHours / 24)} day${Math.round(ageHours / 24) === 1 ? "" : "s"} ago — refresh for today's rates.`}
+        </p>
+      )}
+
+      {user && flying && anyConnected && (
         <div className="mt-3 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
           <span>
             Flying from <strong className="text-foreground">{prefs?.home_airport || "your start city"}</strong>.
@@ -137,7 +177,7 @@ export function LivePricesPanel({ className }: { className?: string }) {
   );
 }
 
-function Quote({ icon: Icon, label, value, sub }: { icon: typeof Fuel; label: string; value: string; sub?: string }) {
+function Quote({ icon: Icon, label, value, sub }: { icon: typeof Fuel; label: string; value: string; sub?: string | undefined }) {
   return (
     <div className="rounded-2xl border border-border bg-background/60 p-3">
       <p className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground">

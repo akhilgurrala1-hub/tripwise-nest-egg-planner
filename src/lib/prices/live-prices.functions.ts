@@ -28,3 +28,12 @@ export const getLivePrices = createServerFn({ method: "POST" })
     const { fetchLivePrices } = await import("./live-prices.server");
     return fetchLivePrices(data);
   });
+
+/** Which live price sources have keys configured, so the UI never offers a search that can't run. */
+export const getLivePriceStatus = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async () => ({
+    gas: !!process.env["EIA_API_KEY"],
+    hotels: !!process.env["SERPAPI_API_KEY"],
+    flights: !!process.env["SERPAPI_API_KEY"],
+  }));

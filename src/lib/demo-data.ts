@@ -89,11 +89,14 @@ export interface DemoDestination {
   activitiesPerPerson: Tiered;
   sights: DemoSight[];
   restaurants: DemoRestaurant[];
+  /** A real town at the heart of the area, used for live weather. Prices above stay demo data. */
+  anchor?: { name: string; lat: number; lon: number };
 }
 
 export const DESTINATIONS: DemoDestination[] = [
   {
     id: "blue-ridge",
+    anchor: { name: "Asheville, NC", lat: 35.5951, lon: -82.5515 },
     name: "Blue Ridge Mountains",
     region: "North Carolina",
     tagline: "Scenic parkway drives & mountain towns",
@@ -126,6 +129,7 @@ export const DESTINATIONS: DemoDestination[] = [
   },
   {
     id: "gulf-coast",
+    anchor: { name: "Gulf Shores, AL", lat: 30.246, lon: -87.7008 },
     name: "Emerald Gulf Coast",
     region: "Alabama & Florida",
     tagline: "White sand beaches without the big price tag",
@@ -158,6 +162,7 @@ export const DESTINATIONS: DemoDestination[] = [
   },
   {
     id: "red-rock",
+    anchor: { name: "Moab, UT", lat: 38.5733, lon: -109.5498 },
     name: "Red Rock Canyons",
     region: "Southern Utah",
     tagline: "Arches, canyons & star-filled skies",
@@ -190,6 +195,7 @@ export const DESTINATIONS: DemoDestination[] = [
   },
   {
     id: "historic-coast",
+    anchor: { name: "Savannah, GA", lat: 32.0809, lon: -81.0912 },
     name: "Historic Lowcountry",
     region: "Georgia & South Carolina",
     tagline: "Oak-lined squares, porches & Southern kitchens",
@@ -222,6 +228,7 @@ export const DESTINATIONS: DemoDestination[] = [
   },
   {
     id: "pacific-coast",
+    anchor: { name: "Big Sur, CA", lat: 36.2704, lon: -121.8081 },
     name: "Pacific Coast Highway",
     region: "Central California",
     tagline: "Cliffside curves, redwoods & ocean views",
@@ -290,8 +297,11 @@ export const CUSTOM_DESTINATION_ID = "custom";
 
 /** Generic template used when the traveler types a destination we don't have demo data for. */
 export function buildCustomDestination(name: string): DemoDestination {
-  const base = DESTINATIONS[0]!;
+  // The template's anchor town is a real place elsewhere: never let a custom destination inherit it.
+  const { anchor: _anchor, ...base } = DESTINATIONS[0]!;
   const label = name.trim() || "Your destination";
+  // "Chattanooga, TN" → "Chattanooga" for example venue names.
+  const short = label.split(",")[0]!.trim() || label;
   return {
     ...base,
     id: CUSTOM_DESTINATION_ID,
@@ -306,10 +316,10 @@ export function buildCustomDestination(name: string): DemoDestination {
     taxRatePct: 12,
     fares: { flight: 300, train: 140, bus: 90 },
     sights: [
-      { name: `${label} Old Town Walk`, area: "City center", costPerPerson: 0, interests: ["history", "arts", "shopping"], note: "Self-guided stroll" },
-      { name: `${label} Regional Park`, area: "Outskirts", costPerPerson: 5, interests: ["nature", "family", "adventure"], note: "Trails & picnic areas" },
-      { name: `${label} History Museum`, area: "Museum row", costPerPerson: 15, interests: ["history", "family"], note: "Allow 2 hours" },
-      { name: `${label} Waterfront`, area: "Harbor or riverfront", costPerPerson: 0, interests: ["beaches", "nightlife", "food"], note: "Great at sunset" },
+      { name: `${short} Old Town Walk`, area: "City center", costPerPerson: 0, interests: ["history", "arts", "shopping"], note: "Self-guided stroll" },
+      { name: `${short} Regional Park`, area: "Outskirts", costPerPerson: 5, interests: ["nature", "family", "adventure"], note: "Trails & picnic areas" },
+      { name: `${short} History Museum`, area: "Museum row", costPerPerson: 15, interests: ["history", "family"], note: "Allow 2 hours" },
+      { name: `${short} Waterfront`, area: "Harbor or riverfront", costPerPerson: 0, interests: ["beaches", "nightlife", "food"], note: "Great at sunset" },
       { name: "Local Live Music Venue", area: "Entertainment district", costPerPerson: 20, interests: ["arts", "nightlife"], note: "Check the weekly lineup", evening: true },
       { name: "Guided Adventure Outing", area: "Nearby", costPerPerson: 65, interests: ["adventure"], note: "Half-day tour" },
     ],

@@ -18,6 +18,8 @@ import { useEffect, useState, type ReactNode } from "react";
 
 import { Badge } from "@/components/ui/badge";
 import type { Category } from "@/lib/budget";
+import { liveCategories } from "@/lib/live/sources";
+import { useTrip } from "@/lib/trip-store";
 import { cn } from "@/lib/utils";
 
 export const CATEGORY_ICONS: Record<Category, LucideIcon> = {
@@ -49,6 +51,20 @@ export const CATEGORY_COLOR_VAR: Record<Category, string> = {
   activities: "var(--cat-activities)",
   misc: "var(--cat-misc)",
 };
+
+/** "Demo prices" until live prices feed the budget, then says how much of it is live. */
+export function PriceSourceBadge({ className }: { className?: string }) {
+  const { trip } = useTrip();
+  const live = liveCategories(trip.inputs, trip.overrides, trip.live);
+  if (live.length === 0) return <DemoBadge label="Demo prices" {...(className ? { className } : {})} />;
+  const names = live.map((c) => (c === "accommodations" ? "hotel" : c === "transportation" ? "flights" : c));
+  return (
+    <Badge variant="success" className={className}>
+      <span className="size-1.5 rounded-full bg-success" />
+      Live {names.join(" & ")} · rest demo
+    </Badge>
+  );
+}
 
 export function DemoBadge({ label = "Demo data", className }: { label?: string; className?: string }) {
   return (

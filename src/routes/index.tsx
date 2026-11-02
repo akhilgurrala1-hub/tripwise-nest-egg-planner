@@ -5,6 +5,7 @@ import { toast } from "sonner";
 
 import heroImg from "@/assets/hero-roadtrip.jpg";
 import { DemoBadge, NumberField } from "@/components/app/bits";
+import { PlaceInput } from "@/components/app/PlaceInput";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -211,31 +212,34 @@ function Welcome() {
             >
               <MapPin className="size-5 text-sunset" />
               <p className="mt-1 font-display text-lg font-semibold">Somewhere else</p>
-              <p className="text-xs text-muted-foreground">Type any place — we'll estimate with generic demo prices.</p>
+              <p className="text-xs text-muted-foreground">Search any real place — live weather & places, demo prices.</p>
             </button>
           </div>
           {form.destinationId === CUSTOM_DESTINATION_ID && (
-            <Input
-              autoFocus
-              placeholder="e.g. Chattanooga, TN"
-              value={form.customDestination}
-              onChange={(e) => update({ customDestination: e.target.value })}
-              className="mt-3 h-11 rounded-xl bg-card"
-              maxLength={80}
-            />
+            <div className="mt-3">
+              <PlaceInput
+                autoFocus
+                aria-label="Destination"
+                placeholder="e.g. Chattanooga, TN"
+                value={form.customDestination}
+                onChange={(v) => update({ customDestination: v })}
+                className="h-11 rounded-xl bg-card"
+              />
+            </div>
           )}
           <div className="mt-3">
             <Label htmlFor="origin" className="text-xs text-muted-foreground">
               Starting from (optional)
             </Label>
-            <Input
-              id="origin"
-              placeholder="Your city"
-              value={form.origin}
-              onChange={(e) => update({ origin: e.target.value })}
-              className="mt-1 h-11 rounded-xl bg-card"
-              maxLength={80}
-            />
+            <div className="mt-1">
+              <PlaceInput
+                id="origin"
+                placeholder={form.tripType === "staycation" ? "Your city — we'll plan around it" : "Your city"}
+                value={form.origin}
+                onChange={(v) => update({ origin: v })}
+                className="h-11 rounded-xl bg-card"
+              />
+            </div>
           </div>
         </Field>
 
@@ -419,7 +423,8 @@ function Welcome() {
           Plan my trip <ArrowRight />
         </Button>
         <p className="text-center text-xs text-muted-foreground">
-          Prices and places are demonstrations until live travel data is connected. No bookings or payments.
+          Weather is live. Sign in for real places and routes. Prices are demo estimates until you check live prices. No
+          bookings or payments.
         </p>
       </form>
     </div>

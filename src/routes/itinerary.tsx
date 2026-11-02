@@ -5,14 +5,19 @@ import { useState } from "react";
 import { toast } from "sonner";
 
 import { DemoBadge } from "@/components/app/bits";
+import { WeatherChip } from "@/components/app/Weather";
 import { PageHeader } from "@/components/app/TripHeader";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { createAiItinerary } from "@/lib/ai-itinerary.functions";
+import { usePreferences } from "@/lib/account";
 import { useAuth } from "@/lib/auth-context";
 import { formatMoney, stopCost } from "@/lib/budget";
 import { INTERESTS, TRAVEL_STYLES, TRIP_TYPES } from "@/lib/demo-data";
 import { addDays, buildRealItinerary, itineraryActivityCost, unpricedItems, type ItemKind, type ItineraryItem, type Itinerary } from "@/lib/itinerary";
+import { destinationQuery } from "@/lib/live/place";
+import { useTripWeather } from "@/lib/live/use-live";
+import { isWetDay } from "@/lib/live/weather";
 import { getDestinationPlaces } from "@/lib/places/destination-places.functions";
 import type { DestinationPlacesResult } from "@/lib/places/types";
 import { tripActions, useTrip } from "@/lib/trip-store";
@@ -40,6 +45,9 @@ const placesCache = new Map<string, DestinationPlacesResult>();
 function ItineraryPage() {
   const { trip, dest, shape, totals } = useTrip();
   const { user } = useAuth();
+  const prefs = usePreferences();
+  const weather = useTripWeather();
+  const place = destinationQuery(dest, trip.setup.origin, prefs?.home_city);
   const [loading, setLoading] = useState(false);
   const [loadingReal, setLoadingReal] = useState(false);
   const busy = loading || loadingReal;
@@ -56,8 +64,8 @@ function ItineraryPage() {
       const label = (list: { id: string; label: string }[], id: string) => list.find((x) => x.id === id)?.label ?? id;
       const res = await createAiItinerary({
         data: {
-          destination: dest.name,
-          region: dest.region,
+          destination: place,
+          region: "",
           origin: trip.setup.origin,
           tripType: label(TRIP_TYPES, trip.setup.tripType),
           style: label(TRAVEL_STYLES, trip.setup.style),
@@ -67,6 +75,12 @@ function ItineraryPage() {
           interests: trip.setup.interests.map((i) => label(INTERESTS, i)),
           activityBudgetPerPerson: totals.categories.activities / shape.travelers,
           foodBudgetPerPersonDay: totals.categories.food / shape.travelers / shape.days,
+          weather: Array.from({ length: Math.min(14, shape.days) }, (_, i) => {
+            const w = weather.byDate.get(addDays(trip.setup.startDate, i));
+            if (!w) return "";
+            const rain = w.precipChance !== null ? `, ${w.precipChance}% chance of rain` : "";
+            return `Day ${i + 1}: ${w.label}, high ${w.highF}°F, low ${w.lowF}°F${rain} (${w.source === "forecast" ? "forecast" : "typical for the date"})`;
+          }).filter(Boolean),
         },
       });
       if (!res.ok) {
@@ -97,8 +111,7 @@ function ItineraryPage() {
   };
 
   const useRealPlaces = async () => {
-    const destination = dest.region ? `${dest.name}, ${dest.region}` : dest.name;
-    const request = { destination, interests: trip.setup.interests, style: trip.setup.style };
+    const request = { destination: place, interests: trip.setup.interests, style: trip.setup.style };
     const key = JSON.stringify(request);
     setLoadingReal(true);
     try {
@@ -229,13 +242,31 @@ function ItineraryPage() {
                   <span className="grid size-11 shrink-0 place-items-center rounded-2xl bg-gradient-ink font-display text-lg font-semibold text-ink-foreground">
                     {day.day}
                   </span>
-                  <div className="min-w-0">
+                  <div className="min-w-0 flex-1">
                     <p className="text-xs font-semibold tracking-wider text-muted-foreground uppercase">
                       {safeFormat(day.date)}
                     </p>
                     <h2 className="line-clamp-2 font-display text-xl leading-tight font-semibold">{day.title}</h2>
                   </div>
+                  {weather.byDate.get(day.date) && (
+                    <WeatherChip day={weather.byDate.get(day.date)!} className="hidden shrink-0 sm:inline-flex" />
+                  )}
                 </header>
+                {weather.byDate.get(day.date) && (
+                  <div className="flex flex-wrap items-center gap-2 border-b border-border px-5 py-2 sm:hidden">
+                    <WeatherChip day={weather.byDate.get(day.date)!} />
+                  </div>
+                )}
+                {(() => {
+                  const w = weather.byDate.get(day.date);
+                  if (!w || !isWetDay(w)) return null;
+                  return (
+                    <p className="border-b border-border bg-shield-soft px-5 py-2 text-xs">
+                      {w.label} {w.source === "forecast" ? "in the forecast" : "is common on this date"} — have an indoor
+                      backup (a museum, market or long lunch) ready for outdoor stops.
+                    </p>
+                  );
+                })()}
                 <ol className="relative px-5 py-3">
                   {day.items.map((item, idx) => {
                     const Icon = KIND_ICON[item.kind] ?? Landmark;

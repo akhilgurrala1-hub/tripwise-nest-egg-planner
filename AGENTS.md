@@ -10,7 +10,7 @@
 <!-- LOVABLE:END -->
 
 ## Project rules
-- Trip state lives in a client store (`src/lib/trip-store.ts`) persisted to localStorage; trips are not saved to accounts yet, so every page must keep working signed out.
+- Trip state lives in a client store (`src/lib/trip-store.ts`) persisted to localStorage; signed-in users can also save trips to their account (`src/lib/account.ts`), but every page must keep working signed out.
 - All budget math is pure functions in `src/lib/budget.ts` with tests in `src/test/budget.test.ts`; UI must never compute totals itself so rules stay testable.
 - The emergency reserve is carved out of the total budget before spendable money is computed and is never reduced by over-spending.
 - Road-trip stops are excluded from taxes and the misc cushion so a stop's budget impact equals its cost exactly; over-budget cut suggestions are verified by recomputing the budget, not by estimates.
@@ -23,3 +23,6 @@
 - No real bookings or payments are implemented.
 - Theming: all colors are semantic tokens in `src/styles.css` with `:root` (light) and `.dark` values; text on photos uses `on-image`, text on deep hero cards uses `ink-foreground` (never `primary-foreground`, which flips in dark mode). The theme class is set by an inline head script before paint to avoid flashes.
 - Never compute dates at module scope: edge runtimes freeze the clock at 1970 during module load. Sample trips are built lazily in `trip-store.ts`.
+- Live data lives in `src/lib/live/`. Weather (Open-Meteo forecast within 16 days, last year's same dates beyond that, labeled "typical") and place autocomplete (Open-Meteo geocoding) are free and keyless, so they run client-side for everyone; never call them during SSR. Each demo destination has a real `anchor` town for weather; custom destinations never inherit it.
+- Searches (places, hotels, AI) use `destinationQuery()` from `src/lib/live/place.ts` so generic labels like "Custom destination" or "Staycation" never reach a search; a staycation searches the traveler's home city.
+- A budget category is labeled "Live price" only while its input still equals the fetched price (`src/lib/live/sources.ts`); `PriceSourceBadge` shows what is live. The live-prices panel asks `getLivePriceStatus` which keys exist and never offers a search that can't run.

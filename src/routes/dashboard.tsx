@@ -1,14 +1,17 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowRight, Check, Lock, PiggyBank, ShieldCheck, TrendingDown, Undo2, Wallet } from "lucide-react";
+import { ArrowRight, Check, CircleDashed, Lock, PiggyBank, ShieldCheck, TrendingDown, Undo2, Wallet } from "lucide-react";
 import { Cell, Pie, PieChart, ResponsiveContainer } from "recharts";
 import { toast } from "sonner";
 
-import { CATEGORY_COLOR_VAR, CATEGORY_ICONS, DemoBadge } from "@/components/app/bits";
+import { CATEGORY_COLOR_VAR, CATEGORY_ICONS, PriceSourceBadge } from "@/components/app/bits";
+import { WeatherCard } from "@/components/app/Weather";
 import { PageHeader } from "@/components/app/TripHeader";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { CATEGORIES, CATEGORY_LABELS, SAVING_TITLES, formatMoney } from "@/lib/budget";
-import { TRAVEL_STYLES, TRIP_TYPES } from "@/lib/demo-data";
+import { useAuth } from "@/lib/auth-context";
+import { TRAVEL_STYLES, TRIP_TYPES, isDrivingMode } from "@/lib/demo-data";
+import { liveCategories } from "@/lib/live/sources";
 import { tripActions, useTrip } from "@/lib/trip-store";
 import { cn } from "@/lib/utils";
 
@@ -91,6 +94,8 @@ function Dashboard() {
           </div>
         </section>
 
+        <NextSteps />
+
         {/* Stats */}
         <section className="grid grid-cols-2 gap-3 lg:grid-cols-4">
           <StatCard icon={Wallet} label="Total planned" value={formatMoney(totals.planned)} sub={`${shape.days} days · ${shape.travelers} travelers`} />
@@ -110,7 +115,7 @@ function Dashboard() {
           <section className="surface-card p-5">
             <div className="flex items-center justify-between">
               <h2 className="font-display text-2xl font-semibold">Where it goes</h2>
-              <DemoBadge label="Demo prices" />
+              <PriceSourceBadge />
             </div>
             <div className="mt-2 grid items-center gap-4 sm:grid-cols-[180px_1fr]">
               <div className="relative mx-auto size-44">
@@ -207,6 +212,8 @@ function Dashboard() {
           </section>
         </div>
 
+        <WeatherCard />
+
         <section className="grid gap-3 sm:grid-cols-2">
           <QuickLink to="/itinerary" title="View itinerary" sub="Day-by-day stops & restaurants" />
           <QuickLink to="/" title="Plan a different trip" sub="Change destination, dates or budget" />
@@ -267,5 +274,96 @@ function QuickLink({ to, title, sub }: { to: "/itinerary" | "/"; title: string; 
       </div>
       <ArrowRight className="size-5 text-primary transition group-hover:translate-x-1" />
     </Link>
+  );
+}
+
+type StepTo = "/" | "/budget" | "/road-trip" | "/itinerary" | "/trips" | "/auth";
+
+/** The planning flow in order, with what's done and the one thing to do next. */
+function NextSteps() {
+  const { trip } = useTrip();
+  const { user } = useAuth();
+  const driving = isDrivingMode(trip.inputs.transportMode);
+  const live = liveCategories(trip.inputs, trip.overrides, trip.live).length > 0;
+  const realPlan = trip.itinerary?.source === "google" || trip.itinerary?.source === "ai";
+  const steps: { title: string; done: boolean; to: StepTo; cta: string }[] = [
+    { title: "Plan your trip", done: !trip.isSample, to: "/", cta: "Start planning" },
+    { title: "Check live prices", done: live, to: "/budget", cta: "Open budget" },
+    ...(driving
+      ? [{ title: "Pick stops on the drive", done: trip.roadTrip.includedStops.length > 0, to: "/road-trip" as const, cta: "Plan route" }]
+      : []),
+    {
+      title: user ? "Build your itinerary from real places" : "Build your itinerary",
+      done: realPlan,
+      to: "/itinerary",
+      cta: "Open itinerary",
+    },
+    {
+      title: "Save it to your account",
+      done: !!trip.cloud,
+      to: user ? "/trips" : "/auth",
+      cta: user ? "Save trip" : "Sign in to save",
+    },
+  ];
+  const next = steps.find((s) => !s.done);
+  const doneCount = steps.filter((s) => s.done).length;
+
+  return (
+    <section className="surface-card p-5">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h2 className="font-display text-xl font-semibold">Your planning checklist</h2>
+          <p className="text-sm text-muted-foreground">
+            {next ? `${doneCount} of ${steps.length} done · next: ${next.title.toLowerCase()}` : "All set — have a great trip!"}
+          </p>
+        </div>
+        {next && (
+          <Button asChild variant="hero" size="sm">
+            {next.to === "/auth" ? (
+              <Link to="/auth" search={{ redirect: "/trips" }}>
+                {next.cta} <ArrowRight />
+              </Link>
+            ) : (
+              <Link to={next.to}>
+                {next.cta} <ArrowRight />
+              </Link>
+            )}
+          </Button>
+        )}
+      </div>
+      <ol className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-5">
+        {steps.map((s, i) => (
+          <li key={s.title}>
+            {s.to === "/auth" ? (
+              <Link to="/auth" search={{ redirect: "/trips" }} className={stepClass(s.done, s === next)}>
+                <StepMark done={s.done} n={i + 1} /> <span className="min-w-0">{s.title}</span>
+              </Link>
+            ) : (
+              <Link to={s.to} className={stepClass(s.done, s === next)}>
+                <StepMark done={s.done} n={i + 1} /> <span className="min-w-0">{s.title}</span>
+              </Link>
+            )}
+          </li>
+        ))}
+      </ol>
+    </section>
+  );
+}
+
+function stepClass(done: boolean, current: boolean) {
+  return cn(
+    "flex min-h-11 items-center gap-2.5 rounded-2xl border px-3 py-2 text-sm font-semibold transition hover:shadow-soft",
+    done ? "border-success/25 bg-success-soft text-success" : current ? "border-primary bg-card ring-2 ring-primary/20" : "border-border bg-background/60",
+  );
+}
+
+function StepMark({ done, n }: { done: boolean; n: number }) {
+  return done ? (
+    <Check className="size-4 shrink-0" aria-label="Done" />
+  ) : (
+    <span className="relative grid size-5 shrink-0 place-items-center">
+      <CircleDashed className="absolute size-5 text-muted-foreground" aria-hidden />
+      <span className="text-[10px] font-bold">{n}</span>
+    </span>
   );
 }

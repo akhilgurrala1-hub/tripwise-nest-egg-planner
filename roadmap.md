@@ -17,6 +17,13 @@
 - [ ] P4 Itinerary editing: add, edit, swap, reorder, undo remove
 - [ ] Tests + browser checks (two tabs, delayed AI, mobile, both themes)
 
+## Live data & flow (done)
+- [x] Live weather per trip day (forecast + typical beyond 16 days), weather-aware AI itineraries and rainy-day hints
+- [x] Real place autocomplete for destinations and starting city
+- [x] Live prices panel on the Budget page, per-category "Live price" labels, stale/date-changed warnings, connection status
+- [x] Dashboard planning checklist (plan → live prices → stops → itinerary → save)
+- [x] Fixed custom/staycation destinations being searched as "X, Custom destination"
+
 ## Later (waiting on decisions or credentials)
 - [ ] AI that learns preferences from past trips — after saved trips
 - [ ] Credit card & membership perks (Chase Sapphire, Priority Pass lounges, Costco Travel) — needs: which cards/memberships first; perk terms need a maintained source

@@ -3,7 +3,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { Compass, LayoutDashboard, LogOut, Map, Monitor, Moon, Route as RouteIcon, Sun, UserRound, Wallet, type LucideIcon } from "lucide-react";
 import type { ReactNode } from "react";
 
-import { DemoBadge } from "./bits";
+import { PriceSourceBadge } from "./bits";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
@@ -51,7 +51,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             ))}
           </nav>
           <div className="flex items-center gap-2">
-            <DemoBadge label="Demo prices" className="hidden lg:inline-flex" />
+            <PriceSourceBadge className="hidden lg:inline-flex" />
             <ThemeToggle />
             <AccountButton />
           </div>

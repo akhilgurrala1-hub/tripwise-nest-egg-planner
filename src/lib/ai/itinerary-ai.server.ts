@@ -41,6 +41,7 @@ export interface AiItineraryRequest {
   interests: string[];
   activityBudgetPerPerson: number;
   foodBudgetPerPersonDay: number;
+  weather: string[];
 }
 
 export type AiItineraryResult =
@@ -51,7 +52,8 @@ const INSTRUCTIONS = `You are Waypoint, a friendly travel planner focused on bud
 Create a realistic day-by-day itinerary. Each day has 4-5 items: a Morning stop, Lunch, an Afternoon stop, Dinner, and optionally an Evening item.
 Use "restaurant" for meals, "sight" for attractions, "stop" for drive breaks. Prefer well-known, real places when you are confident; otherwise describe a type of place (e.g. "Local farmers market").
 costPerPerson is an estimated USD amount per person (0 for free). Keep sightseeing spend near the activity budget and meals near the food budget.
-Only place weekday-specific events (markets, weekly shows) on a day whose weekday matches. Put after-dark activities in the Evening. Keep notes under 90 characters. Give 2-4 short money-saving or practical tips.`;
+Only place weekday-specific events (markets, weekly shows) on a day whose weekday matches. Put after-dark activities in the Evening. Keep notes under 90 characters. Give 2-4 short money-saving or practical tips.
+When weather is given, plan around it: put indoor sights on days with rain, snow or storms, save outdoor highlights for dry days, and mention the weather in a tip when it matters.`;
 
 function describeError(err: unknown): { status: number; error: string } {
   const e = err as { statusCode?: number; status?: number; message?: string; cause?: unknown; responseBody?: string };
@@ -82,7 +84,7 @@ export async function generateAiItinerary(req: AiItineraryRequest): Promise<AiIt
   });
 
   const prompt = [
-    `Destination: ${req.destination} (${req.region})`,
+    `Destination: ${req.destination}${req.region ? ` (${req.region})` : ""}`,
     `Starting from: ${req.origin || "not specified"}`,
     `Trip type: ${req.tripType}; travel style: ${req.style}`,
     `Length: ${req.days} day(s); travelers: ${req.travelers}`,
@@ -94,6 +96,7 @@ export async function generateAiItinerary(req: AiItineraryRequest): Promise<AiIt
     `Interests: ${req.interests.join(", ") || "a bit of everything"}`,
     `Sightseeing budget per person for the whole trip: $${Math.round(req.activityBudgetPerPerson)}`,
     `Food budget per person per day: $${Math.round(req.foodBudgetPerPersonDay)}`,
+    ...(req.weather.length ? [`Weather (real data):\n${req.weather.join("\n")}`] : []),
   ].join("\n");
 
   try {

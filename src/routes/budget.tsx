@@ -3,7 +3,8 @@ import { AlertTriangle, Check, Lock, RotateCcw, ShieldCheck } from "lucide-react
 import type { ReactNode } from "react";
 import { toast } from "sonner";
 
-import { CATEGORY_COLOR_VAR, CATEGORY_ICONS, DemoBadge, NumberField } from "@/components/app/bits";
+import { CATEGORY_COLOR_VAR, CATEGORY_ICONS, NumberField, PriceSourceBadge } from "@/components/app/bits";
+import { LivePricesPanel } from "@/components/app/LivePricesPanel";
 import { PageHeader } from "@/components/app/TripHeader";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Badge } from "@/components/ui/badge";
@@ -21,6 +22,7 @@ import {
 } from "@/lib/budget";
 import { TRANSPORT_MODES, isDrivingMode } from "@/lib/demo-data";
 import { itineraryActivityCost } from "@/lib/itinerary";
+import { categorySource } from "@/lib/live/sources";
 import { tripActions, useTrip } from "@/lib/trip-store";
 import { cn } from "@/lib/utils";
 
@@ -46,7 +48,7 @@ function BudgetPage() {
   return (
     <div>
       <PageHeader eyebrow="Budget" title="Let's make the most of your budget">
-        <DemoBadge label="Demo estimates" />
+        <PriceSourceBadge />
       </PageHeader>
 
       <div className="mx-auto mt-6 grid max-w-6xl grid-cols-1 gap-6 px-4 lg:grid-cols-[minmax(0,1fr)_360px]">
@@ -93,6 +95,8 @@ function BudgetPage() {
             {totals.overBudget && <CutPlan />}
           </section>
 
+          <LivePricesPanel />
+
           {/* Categories */}
           <section>
             <div className="mb-3 flex items-center justify-between">
@@ -131,7 +135,7 @@ function BudgetPage() {
               ))}
             </Accordion>
             <p className="mt-3 text-xs text-muted-foreground">
-              These are estimates from demo prices for {shape.days} day{shape.days > 1 ? "s" : ""}, {shape.nights} night
+              Amounts marked “Estimate” use demo prices for {shape.days} day{shape.days > 1 ? "s" : ""}, {shape.nights} night
               {shape.nights === 1 ? "" : "s"} and {shape.travelers} traveler{shape.travelers > 1 ? "s" : ""}. Open a
               category to tune the inputs or type your own amount.
             </p>
@@ -203,6 +207,7 @@ function CategoryRow({ cat }: { cat: Category }) {
   const { trip, totals, shape } = useTrip();
   const Icon = CATEGORY_ICONS[cat];
   const isCustom = trip.overrides[cat] !== undefined;
+  const source = categorySource(cat, trip.inputs, trip.overrides, trip.live);
   const amount = totals.categories[cat];
   const share = totals.planned > 0 ? (amount / totals.planned) * 100 : 0;
   const i = trip.inputs;
@@ -343,7 +348,13 @@ function CategoryRow({ cat }: { cat: Category }) {
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2">
               <span className="truncate font-bold">{CATEGORY_LABELS[cat]}</span>
-              {isCustom ? <Badge variant="gold">Your amount</Badge> : <Badge variant="secondary">Estimate</Badge>}
+              {source === "custom" ? (
+                <Badge variant="gold">Your amount</Badge>
+              ) : source === "live" ? (
+                <Badge variant="success">Live price</Badge>
+              ) : (
+                <Badge variant="secondary">Estimate</Badge>
+              )}
             </div>
             <p className="truncate text-xs font-normal text-muted-foreground">{isCustom ? "Your amount" : formula}</p>
           </div>
