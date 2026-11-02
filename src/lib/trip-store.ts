@@ -28,7 +28,18 @@ import {
   type TravelStyle,
   type TripType,
 } from "./demo-data";
-import { addDays, generateDemoItinerary, type Itinerary } from "./itinerary";
+import { addDays, generateDemoItinerary, type Itinerary, type ItineraryItem } from "./itinerary";
+import {
+  addItem,
+  keepCustomItems,
+  moveItem,
+  moveItemToDay,
+  removeItem,
+  restoreItem,
+  updateItem,
+  type ItemPatch,
+  type RemovedItem,
+} from "./itinerary-edit";
 import type { LivePrices } from "./prices/live";
 import type { RouteStop } from "./routing/types";
 
@@ -467,8 +478,15 @@ export const tripActions = {
       return { ...s, inputs: { ...s.inputs, ...prev }, appliedSavings };
     });
   },
-  setItinerary(itinerary: Itinerary | null) {
-    setState((s) => ({ ...s, itinerary }));
+  /** Replace the plan. The traveler's own stops are carried over; returns how many were kept. */
+  setItinerary(itinerary: Itinerary | null): number {
+    if (!itinerary) {
+      setState((s) => ({ ...s, itinerary: null }));
+      return 0;
+    }
+    const { itinerary: merged, kept } = keepCustomItems(getSnapshot().itinerary, itinerary);
+    setState((s) => ({ ...s, itinerary: merged }));
+    return kept;
   },
   regenerateDemoItinerary() {
     setState((s) => {
@@ -476,31 +494,47 @@ export const tripActions = {
       const shape = tripShape(s.setup.startDate, s.setup.endDate, s.setup.travelers);
       return {
         ...s,
-        itinerary: generateDemoItinerary({
-          dest,
-          days: shape.days,
-          startDate: s.setup.startDate,
-          interests: s.setup.interests,
-          style: s.setup.style,
-          tripType: s.setup.tripType,
-        }),
+        itinerary: keepCustomItems(
+          s.itinerary,
+          generateDemoItinerary({
+            dest,
+            days: shape.days,
+            startDate: s.setup.startDate,
+            interests: s.setup.interests,
+            style: s.setup.style,
+            tripType: s.setup.tripType,
+          }),
+        ).itinerary,
       };
     });
   },
-  removeItineraryItem(itemId: string) {
+  /** Remove an item; returns what was removed so the caller can offer Undo. */
+  removeItineraryItem(itemId: string): RemovedItem | null {
+    const s0 = getSnapshot();
+    if (!s0.itinerary) return null;
+    const { itinerary, removed } = removeItem(s0.itinerary, itemId);
+    if (removed) setState((s) => ({ ...s, itinerary }));
+    return removed;
+  },
+  restoreItineraryItem(removed: RemovedItem) {
+    setState((s) => (s.itinerary ? { ...s, itinerary: restoreItem(s.itinerary, removed) } : s));
+  },
+  addItineraryItem(dayIndex: number, item: Omit<ItineraryItem, "id">) {
+    setState((s) => (s.itinerary ? { ...s, itinerary: addItem(s.itinerary, dayIndex, item) } : s));
+  },
+  updateItineraryItem(itemId: string, patch: ItemPatch) {
     setState((s) =>
-      s.itinerary
-        ? {
-            ...s,
-            itinerary: {
-              ...s.itinerary,
-              days: s.itinerary.days.map((d) => ({
-                ...d,
-                items: d.items.filter((i) => i.id !== itemId),
-              })),
-            },
-          }
-        : s,
+      s.itinerary ? { ...s, itinerary: updateItem(s.itinerary, itemId, patch) } : s,
+    );
+  },
+  moveItineraryItem(itemId: string, direction: -1 | 1) {
+    setState((s) =>
+      s.itinerary ? { ...s, itinerary: moveItem(s.itinerary, itemId, direction) } : s,
+    );
+  },
+  moveItineraryItemToDay(itemId: string, toDay: number) {
+    setState((s) =>
+      s.itinerary ? { ...s, itinerary: moveItemToDay(s.itinerary, itemId, toDay) } : s,
     );
   },
   resetToEstimates() {

@@ -34,9 +34,14 @@ export function useAuth() {
   return useContext(AuthContext);
 }
 
-/** Only same-origin paths are allowed as post-sign-in destinations. */
+/**
+ * Only same-site paths are allowed after sign-in. Rejects protocol-relative tricks
+ * ("//x", "/\\x" — browsers read a backslash as a slash) and control characters.
+ */
 export function safeRedirect(value: unknown): string | undefined {
-  return typeof value === "string" && value.startsWith("/") && !value.startsWith("//")
-    ? value
-    : undefined;
+  if (typeof value !== "string" || value.length > 512) return undefined;
+  if (!value.startsWith("/") || value.startsWith("//") || value.startsWith("/\\")) return undefined;
+  // eslint-disable-next-line no-control-regex
+  if (/[\\\u0000-\u001f\u007f]/.test(value)) return undefined;
+  return value;
 }

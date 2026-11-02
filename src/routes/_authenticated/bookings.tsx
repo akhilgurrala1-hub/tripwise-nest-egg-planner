@@ -369,9 +369,9 @@ function BookingCard({ b, onChange }: { b: BookingRow; onChange: () => void }) {
         </form>
       </div>
       <div className="flex flex-wrap gap-1.5">
-        {b.url && (
+        {safeExternalUrl(b.url) && (
           <Button asChild size="sm" variant="ink">
-            <a href={b.url} target="_blank" rel="noopener noreferrer">
+            <a href={safeExternalUrl(b.url)} target="_blank" rel="noopener noreferrer">
               Open site <ExternalLink />
             </a>
           </Button>
@@ -415,4 +415,14 @@ function BookingCard({ b, onChange }: { b: BookingRow; onChange: () => void }) {
       </div>
     </div>
   );
+}
+
+/** Stored links are only rendered when they are plain web links (never javascript: or data: URLs). */
+function safeExternalUrl(url: string): string | undefined {
+  try {
+    const u = new URL(url);
+    return u.protocol === "https:" || u.protocol === "http:" ? u.toString() : undefined;
+  } catch {
+    return undefined;
+  }
 }

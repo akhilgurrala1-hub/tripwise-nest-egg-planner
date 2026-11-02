@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 
+import { safeRedirect } from "@/lib/auth-context";
 import { defaultInputs } from "@/lib/budget";
 import { DESTINATIONS, buildCustomDestination, getDestination } from "@/lib/demo-data";
 import { parseGeocode, splitQuery } from "@/lib/live/geocode";
@@ -243,5 +244,23 @@ describe("separate trip types", () => {
   it("searches a cruise's port of call, not its departure label", async () => {
     const { getDestination: get } = await import("@/lib/demo-data");
     expect(destinationQuery(get("caribbean-cruise"))).toBe("Nassau, Bahamas");
+  });
+});
+
+describe("sign-in redirects", () => {
+  it("allows same-site paths only", () => {
+    expect(safeRedirect("/itinerary")).toBe("/itinerary");
+    expect(safeRedirect("/trips?x=1")).toBe("/trips?x=1");
+    for (const bad of [
+      "//evil.com",
+      "/\\evil.com",
+      "/\\\\evil.com",
+      "https://evil.com",
+      "evil.com",
+      "/a\nb",
+      42,
+      undefined,
+    ])
+      expect(safeRedirect(bad)).toBeUndefined();
   });
 });

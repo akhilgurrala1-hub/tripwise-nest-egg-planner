@@ -15,7 +15,7 @@
 - [ ] P3 Saved trips in accounts (create, list, open, rename, duplicate, recoverable delete, save status, conflict detection)
 - [ ] P3 Verify sign-in flow and live maps signed in
 - [ ] P4 Dark-mode contrast, 44px touch targets, responsive check
-- [ ] P4 Itinerary editing: add, edit, swap, reorder, undo remove
+- [x] P4 Itinerary editing: add, edit, swap, reorder, undo remove
 - [ ] Tests + browser checks (two tabs, delayed AI, mobile, both themes)
 
 ## Live data & flow (done)
@@ -26,6 +26,11 @@
 - [x] Dashboard planning checklist (plan → live prices → stops → itinerary → save)
 - [x] Separate trip types: road trip, fly-away, cruise (fare, gratuities, port fees), train & bus, staycation
 - [x] Fixed custom/staycation destinations being searched as "X, Custom destination"
+
+## Hardening (done)
+- [x] CI on every PR and push to main: type check, lint, tests, build
+- [x] AI itinerary requires sign-in (spends credits); stricter sign-in redirect check; booking links limited to http(s)
+- [x] Removed unused chart library (recharts)
 
 ## Later (waiting on decisions or credentials)
 
