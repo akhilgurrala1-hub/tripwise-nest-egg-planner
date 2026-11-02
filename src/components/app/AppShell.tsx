@@ -18,7 +18,7 @@ import {
 } from "lucide-react";
 import type { ReactNode } from "react";
 
-import { LogoMark } from "./Intro";
+import { Logo } from "./Logo";
 import { useActiveIndicator } from "./motion";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -60,11 +60,8 @@ export function AppShell({ children }: { children: ReactNode }) {
     <div className="min-h-screen bg-background">
       <header className="glass sticky top-0 z-40 border-b border-border">
         <div className="mx-auto flex h-14 max-w-6xl items-center justify-between gap-4 px-4">
-          <Link to="/" className="flex items-center gap-2 rounded-md" aria-label="Waypoint home">
-            <LogoMark className="size-6 text-foreground" />
-            <span className="text-[15px] font-semibold tracking-tight text-foreground">
-              Waypoint
-            </span>
+          <Link to="/" className="flex items-center rounded-md" aria-label="Waypoint home">
+            <Logo />
           </Link>
           <nav className="hidden md:block" aria-label="Main">
             <div ref={desk.ref} className="relative flex items-center gap-0.5">
