@@ -77,7 +77,7 @@ function BookingsPage() {
     <div>
       <PageHeader eyebrow="Bookings" title="Reserve your trip" />
       <div className="mx-auto mt-6 max-w-5xl space-y-6 px-4">
-        <p className="rounded-2xl bg-gold-soft px-4 py-3 text-sm leading-snug">
+        <p className="rounded-2xl bg-muted px-4 py-3 text-sm leading-snug">
           You reserve and pay on the hotel's, airline's or rental company's own site. Waypoint never
           takes payment. Add each reservation here and save its confirmation number so everything
           stays in one place.
@@ -86,7 +86,7 @@ function BookingsPage() {
         <LivePricesPanel />
 
         <section className="surface-card p-5">
-          <h2 className="flex items-center gap-2 font-display text-xl font-semibold">
+          <h2 className="flex items-center gap-2 text-[15px] font-semibold">
             <Hotel className="size-5" /> Hotels
           </h2>
           {live?.hotels ? (
@@ -121,7 +121,7 @@ function BookingsPage() {
                           </span>
                         ) : null}
                       </p>
-                      <p className="tabular mt-1 text-sm font-bold">
+                      <p className="tabular mt-1 text-sm font-semibold">
                         {formatMoney(h.nightly)}/night
                         {h.totalWithTaxes ? (
                           <span className="font-normal text-muted-foreground">
@@ -175,7 +175,7 @@ function BookingsPage() {
         </section>
 
         <section className="surface-card p-5">
-          <h2 className="flex items-center gap-2 font-display text-xl font-semibold">
+          <h2 className="flex items-center gap-2 text-[15px] font-semibold">
             <Plane className="size-5" /> Flights
           </h2>
           {live?.flights ? (
@@ -202,7 +202,7 @@ function BookingsPage() {
                         {Math.floor(f.durationMinutes / 60)} h {f.durationMinutes % 60} min outbound
                       </p>
                     </div>
-                    <span className="tabular font-bold">{formatMoney(f.perPerson)}</span>
+                    <span className="tabular font-semibold">{formatMoney(f.perPerson)}</span>
                     <Button
                       size="sm"
                       variant="outline"
@@ -241,7 +241,7 @@ function BookingsPage() {
         </section>
 
         <section className="surface-card p-5">
-          <h2 className="flex items-center gap-2 font-display text-xl font-semibold">
+          <h2 className="flex items-center gap-2 text-[15px] font-semibold">
             <Car className="size-5" /> Rental cars
           </h2>
           <p className="text-sm text-muted-foreground">
@@ -281,7 +281,7 @@ function BookingsPage() {
         </section>
 
         <section className="space-y-3">
-          <h2 className="font-display text-xl font-semibold">My bookings ({bookings.length})</h2>
+          <h2 className="text-[15px] font-semibold">My bookings ({bookings.length})</h2>
           {bookings.length === 0 && (
             <p className="surface-card p-5 text-sm text-muted-foreground">
               Nothing tracked yet. Tap Track on a hotel, flight or rental above.

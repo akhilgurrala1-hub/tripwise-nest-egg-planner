@@ -11,7 +11,6 @@ import {
   Receipt,
   Ticket,
   UtensilsCrossed,
-  FlaskConical,
   Ship,
   type LucideIcon,
 } from "lucide-react";
@@ -65,7 +64,7 @@ export function PriceSourceBadge({ className }: { className?: string }) {
     c === "accommodations" ? "hotel" : c === "transportation" ? "flights" : c,
   );
   return (
-    <Badge variant="success" className={className}>
+    <Badge variant="secondary" className={className}>
       <span className="size-1.5 rounded-full bg-success" />
       Live {names.join(" & ")} · rest demo
     </Badge>
@@ -81,7 +80,7 @@ export function DemoBadge({
 }) {
   return (
     <Badge variant="demo" className={className}>
-      <FlaskConical />
+      <span className="size-1.5 rounded-full bg-muted-foreground/50" />
       {label}
     </Badge>
   );
@@ -120,7 +119,7 @@ export function NumberField({
   return (
     <div
       className={cn(
-        "flex h-11 items-center gap-1 rounded-xl border border-input bg-card px-3 transition-colors focus-within:border-primary focus-within:ring-2 focus-within:ring-ring/30",
+        "flex h-11 items-center gap-1.5 rounded-lg border border-input bg-card px-3 transition-[border-color,box-shadow] duration-150 hover:border-muted-foreground/40 focus-within:border-primary focus-within:ring-3 focus-within:ring-primary/15",
         className,
       )}
     >
@@ -140,7 +139,7 @@ export function NumberField({
           if (e.target.value === "") onChange(0);
         }}
         className={cn(
-          "tabular w-full min-w-0 bg-transparent text-base font-semibold outline-none",
+          "tabular w-full min-w-0 bg-transparent text-[15px] font-medium outline-none",
           inputClassName,
         )}
       />
@@ -161,12 +160,8 @@ export function SectionTitle({
   return (
     <div className="mb-4 flex items-end justify-between gap-3">
       <div>
-        {eyebrow && (
-          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-            {eyebrow}
-          </p>
-        )}
-        <h2 className="font-display text-2xl font-semibold text-foreground">{title}</h2>
+        {eyebrow && <p className="eyebrow">{eyebrow}</p>}
+        <h2 className="text-lg font-semibold text-foreground">{title}</h2>
       </div>
       {action}
     </div>

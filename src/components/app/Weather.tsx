@@ -44,19 +44,19 @@ export function WeatherChip({ day, className }: { day: DayWeather; className?: s
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1.5 rounded-full border border-border bg-background/70 px-2.5 py-1 text-xs font-semibold",
+        "inline-flex h-7 items-center gap-1.5 rounded-md border border-border bg-card px-2 text-xs font-medium",
         className,
       )}
       title={
         day.source === "forecast" ? "Live forecast" : "Typical: what this date was like last year"
       }
     >
-      <Icon className="size-3.5 text-sunset" />
+      <Icon className="size-3.5" strokeWidth={1.8} />
       <span className="tabular">
         {day.highF}° / {day.lowF}°
       </span>
       {day.precipChance !== null && day.precipChance >= 20 && (
-        <span className="tabular inline-flex items-center gap-0.5 text-shield">
+        <span className="tabular inline-flex items-center gap-0.5 text-primary">
           <Umbrella className="size-3" />
           {day.precipChance}%
         </span>
@@ -79,15 +79,19 @@ export function WeatherCard({ className }: { className?: string }) {
     <section className={cn("surface-card p-5", className)}>
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div className="min-w-0">
-          <h2 className="font-display text-2xl font-semibold">Weather</h2>
+          <h2 className="text-[15px] font-semibold">Weather</h2>
           <p className="text-sm text-muted-foreground">
             {w.status === "ready" && days.length > 0
               ? `${w.placeLabel} · ${summarize(days)}`
               : w.placeLabel || "Your destination"}
           </p>
         </div>
-        <span className="inline-flex items-center gap-1.5 rounded-full bg-success-soft px-2.5 py-1 text-xs font-semibold text-success">
-          <span className="size-1.5 rounded-full bg-success" /> Live data
+        <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
+          <span className="relative flex size-1.5">
+            <span className="absolute inline-flex size-full animate-ping rounded-full bg-success opacity-50" />
+            <span className="relative inline-flex size-1.5 rounded-full bg-success" />
+          </span>
+          Live
         </span>
       </div>
 
@@ -142,13 +146,17 @@ export function WeatherCard({ className }: { className?: string }) {
                       day: "numeric",
                     })}
                   </p>
-                  <Icon className="mx-auto my-1.5 size-6 text-sunset" aria-hidden />
+                  <Icon
+                    className="mx-auto my-2 size-5 text-foreground/80"
+                    strokeWidth={1.6}
+                    aria-hidden
+                  />
                   <p className="text-[11px] leading-tight">{d.label}</p>
-                  <p className="tabular mt-1 text-sm font-bold">
+                  <p className="tabular mt-1 text-sm font-medium">
                     {d.highF}° <span className="font-normal text-muted-foreground">{d.lowF}°</span>
                   </p>
                   {d.precipChance !== null && (
-                    <p className="tabular text-[11px] text-shield">
+                    <p className="tabular text-[11px] text-primary">
                       <Umbrella className="inline size-3" /> {d.precipChance}%
                     </p>
                   )}
@@ -160,8 +168,8 @@ export function WeatherCard({ className }: { className?: string }) {
             })}
           </ol>
           {wet.length > 0 && (
-            <p className="mt-3 rounded-xl bg-shield-soft px-3 py-2 text-xs text-foreground">
-              <Umbrella className="mr-1 inline size-3.5 text-shield" />
+            <p className="mt-3 text-xs text-foreground">
+              <Umbrella className="mr-1 inline size-3.5 -translate-y-px text-primary" />
               Wet weather is likely on{" "}
               {wet.map((d) => formatCalendarDate(d.date, { weekday: "long" })).join(", ")} — keep an
               indoor plan for those days.

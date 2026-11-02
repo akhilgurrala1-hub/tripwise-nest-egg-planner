@@ -1,8 +1,9 @@
 import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
-import { Compass, Loader2, MailCheck } from "lucide-react";
+import { Loader2, MailCheck } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
+import { LogoMark } from "@/components/app/Intro";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -81,13 +82,11 @@ function AuthPage() {
   return (
     <div className="mx-auto flex max-w-md flex-col px-4 pt-10">
       <div className="surface-card animate-rise p-6">
-        <span className="grid size-11 place-items-center rounded-full bg-gradient-sunset text-sunset-foreground shadow-glow">
-          <Compass className="size-5" />
-        </span>
+        <LogoMark className="size-8 text-foreground" />
 
         {user ? (
           <>
-            <h1 className="mt-4 font-display text-3xl font-semibold">You're signed in</h1>
+            <h1 className="mt-4 text-2xl font-semibold tracking-tight">You're signed in</h1>
             <p className="mt-1 text-sm text-muted-foreground">{user.email}</p>
             <Button className="mt-6 w-full" onClick={goNext}>
               Continue
@@ -96,7 +95,7 @@ function AuthPage() {
         ) : sent ? (
           <>
             <MailCheck className="mt-4 size-8 text-success" />
-            <h1 className="mt-2 font-display text-3xl font-semibold">Check your email</h1>
+            <h1 className="mt-2 text-2xl font-semibold tracking-tight">Check your email</h1>
             <p className="mt-1 text-sm text-muted-foreground">
               {sent === "confirm"
                 ? `We sent a confirmation link to ${email}. Open it to finish creating your account.`
@@ -115,7 +114,7 @@ function AuthPage() {
           </>
         ) : (
           <>
-            <h1 className="mt-4 font-display text-3xl font-semibold">
+            <h1 className="mt-4 text-2xl font-semibold tracking-tight">
               {mode === "signin"
                 ? "Welcome back"
                 : mode === "signup"

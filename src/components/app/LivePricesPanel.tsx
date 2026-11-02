@@ -98,19 +98,19 @@ export function LivePricesPanel({ className }: { className?: string }) {
     <section className={cn("surface-card p-5", className)}>
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
-          <h2 className="font-display text-xl font-semibold">Live prices</h2>
-          <p className="text-sm text-muted-foreground">
+          <h2 className="text-[15px] font-semibold">Live prices</h2>
+          <p className="mt-0.5 text-[13px] text-muted-foreground">
             Hotel and flight prices from Google, gas from the U.S. Energy Information
             Administration's weekly survey.
           </p>
         </div>
         {user && connected && !anyConnected ? null : user ? (
-          <Button variant="ink" onClick={run} disabled={loading || status.isPending}>
+          <Button variant="outline" onClick={run} disabled={loading || status.isPending}>
             {loading ? <Loader2 className="animate-spin" /> : live ? <RefreshCw /> : <BadgeCheck />}
             {loading ? "Checking prices…" : live ? "Refresh prices" : "Get live prices"}
           </Button>
         ) : (
-          <Button asChild variant="ink">
+          <Button asChild variant="outline">
             <Link to="/auth" search={{ redirect: "/budget" }}>
               Sign in for live prices
             </Link>
@@ -119,7 +119,7 @@ export function LivePricesPanel({ className }: { className?: string }) {
       </div>
 
       {user && connected && !anyConnected && (
-        <p className="mt-3 rounded-xl bg-muted px-3 py-2 text-xs leading-snug text-muted-foreground">
+        <p className="mt-3 rounded-lg bg-muted px-3 py-2 text-xs leading-snug text-muted-foreground">
           Live hotel, flight and gas prices need a price-data connection that isn't set up for this
           app yet, so these amounts stay demo estimates. Weather and places are already live.
         </p>
@@ -130,7 +130,7 @@ export function LivePricesPanel({ className }: { className?: string }) {
         </p>
       )}
       {live && (stale || tripChanged) && (
-        <p className="mt-3 rounded-xl bg-sunset-soft px-3 py-2 text-xs font-semibold">
+        <p className="mt-3 rounded-lg border border-border px-3 py-2 text-xs">
           {tripChanged
             ? "Your dates changed since these prices were checked — refresh to price the new dates."
             : `These prices were checked ${Math.round(ageHours / 24)} day${Math.round(ageHours / 24) === 1 ? "" : "s"} ago — refresh for today's rates.`}
@@ -239,11 +239,11 @@ function Quote({
   sub?: string | undefined;
 }) {
   return (
-    <div className="rounded-2xl border border-border bg-background/60 p-3">
-      <p className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground">
+    <div className="rounded-lg border border-border p-3">
+      <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
         <Icon className="size-3.5" /> {label}
       </p>
-      <p className="tabular mt-1 text-lg font-bold">{value}</p>
+      <p className="tabular mt-1 text-base font-medium">{value}</p>
       {sub && <p className="text-xs leading-snug text-muted-foreground">{sub}</p>}
     </div>
   );

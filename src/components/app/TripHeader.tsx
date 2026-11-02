@@ -26,28 +26,29 @@ export function PageHeader({
 }) {
   const { trip, dest, shape } = useTrip();
   return (
-    <div className="mx-auto max-w-6xl px-4 pt-6 sm:pt-8">
+    <div className="mx-auto max-w-6xl px-4 pt-8 sm:pt-10">
       {trip.isSample && (
-        <div className="mb-5 flex items-start gap-2.5 rounded-2xl border border-demo/20 bg-demo-soft px-4 py-3 text-sm">
-          <Info className="mt-0.5 size-4 shrink-0 text-demo" />
-          <p>
-            You're viewing a <strong>sample trip</strong>.{" "}
-            <Link to="/" className="font-semibold text-primary underline underline-offset-2">
+        <p className="mb-6 flex items-center gap-2 text-[13px] text-muted-foreground">
+          <Info className="size-3.5 shrink-0" />
+          <span>
+            You're looking at a sample trip.{" "}
+            <Link
+              to="/"
+              className="font-medium text-foreground underline decoration-border underline-offset-4 hover:decoration-foreground"
+            >
               Plan your own
-            </Link>{" "}
-            to personalize everything.
-          </p>
-        </div>
+            </Link>
+          </span>
+        </p>
       )}
       <div className="flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <p className="text-xs font-semibold tracking-[0.16em] text-muted-foreground uppercase">
-            {eyebrow}
-          </p>
-          <h1 className="font-display text-3xl font-semibold sm:text-4xl">{title}</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            {dest.name} · {formatDateRange(trip.setup.startDate, trip.setup.endDate)} ·{" "}
-            {shape.travelers} traveler
+        <div className="min-w-0">
+          <p className="eyebrow">{eyebrow}</p>
+          <h1 className="mt-1 text-[28px] leading-tight font-semibold sm:text-[32px]">{title}</h1>
+          <p className="mt-1.5 text-sm text-muted-foreground">
+            {dest.name} <span className="px-1 text-border">/</span>{" "}
+            {formatDateRange(trip.setup.startDate, trip.setup.endDate)}{" "}
+            <span className="px-1 text-border">/</span> {shape.travelers} traveler
             {shape.travelers > 1 ? "s" : ""}
           </p>
         </div>

@@ -10,7 +10,7 @@ import {
   MapPin,
   Moon,
   RotateCcw,
-  Sparkles,
+  Wand2,
   Star,
   Sun,
   Sunrise,
@@ -21,6 +21,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 
 import { DemoBadge } from "@/components/app/bits";
+import { stagger } from "@/components/app/motion";
 import { WeatherChip } from "@/components/app/Weather";
 import { PageHeader } from "@/components/app/TripHeader";
 import { Badge } from "@/components/ui/badge";
@@ -189,7 +190,7 @@ function ItineraryPage() {
 
   return (
     <div>
-      <PageHeader eyebrow="Itinerary" title="Your trip, day by day">
+      <PageHeader eyebrow="Itinerary" title="Day by day">
         <div className="flex w-full flex-wrap gap-2 sm:w-auto">
           {user ? (
             <Button
@@ -209,49 +210,58 @@ function ItineraryPage() {
             </Button>
           )}
           <Button
-            variant="hero"
+            variant="outline"
             onClick={generateWithAi}
             disabled={busy}
             className="flex-1 sm:flex-none"
           >
-            {loading ? <Loader2 className="animate-spin" /> : <Sparkles />}
-            {loading ? "Planning…" : "Personalize with AI"}
+            {loading ? <Loader2 className="animate-spin" /> : <Wand2 />}
+            {loading ? "Planning…" : "Plan around my interests"}
           </Button>
-          <Button variant="outline" onClick={tripActions.regenerateDemoItinerary} disabled={busy}>
-            <RotateCcw /> Demo plan
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={tripActions.regenerateDemoItinerary}
+            disabled={busy}
+            aria-label="Reset to the demo plan"
+            title="Reset to the demo plan"
+          >
+            <RotateCcw />
           </Button>
         </div>
       </PageHeader>
 
-      <div className="mx-auto mt-6 grid max-w-6xl grid-cols-1 gap-6 px-4 lg:grid-cols-[minmax(0,1fr)_320px]">
+      <div className="mx-auto mt-8 grid max-w-6xl grid-cols-1 gap-4 px-4 lg:grid-cols-[minmax(0,1fr)_320px]">
         <div className="min-w-0 space-y-4">
           {itin?.source === "google" ? (
-            <Badge variant="success" className="px-3 py-1 whitespace-normal">
-              <MapPin /> Real places from Google Maps · costs are estimates
+            <Badge variant="secondary" className="whitespace-normal">
+              <span className="size-1.5 rounded-full bg-success" /> Real places from Google Maps ·
+              costs are estimates
             </Badge>
           ) : itin?.source === "ai" ? (
-            <Badge variant="ai" className="px-3 py-1 whitespace-normal">
-              <Sparkles /> AI suggestion · places and prices are unverified estimates
+            <Badge variant="secondary" className="whitespace-normal">
+              <span className="size-1.5 rounded-full bg-primary" /> Suggested plan · places and
+              prices are unverified estimates
             </Badge>
           ) : (
-            <DemoBadge label="Demo itinerary · example places & prices" className="px-3 py-1" />
+            <DemoBadge label="Demo itinerary · example places & prices" />
           )}
 
           {loading && (
-            <div className="surface-card flex items-center gap-3 p-5 text-sm">
-              <Loader2 className="size-5 animate-spin text-sunset" />
+            <div className="surface-card animate-pop flex items-center gap-3 p-4 text-sm text-muted-foreground">
+              <Loader2 className="size-4 animate-spin text-muted-foreground" />
               Crafting a plan around your interests and budget — this can take up to a minute.
             </div>
           )}
 
           {trip.roadTrip.includedStops.length > 0 && (
             <section className="surface-card overflow-hidden">
-              <header className="flex items-center justify-between gap-3 border-b border-border bg-gradient-sand px-5 py-4">
+              <header className="flex items-center justify-between gap-3 border-b border-border px-5 py-3.5">
                 <div>
                   <p className="text-xs font-semibold tracking-wider text-muted-foreground uppercase">
                     On the drive
                   </p>
-                  <h2 className="font-display text-xl font-semibold">Road-trip stops</h2>
+                  <h2 className="text-[15px] font-semibold">Road-trip stops</h2>
                 </div>
                 <Link
                   to="/road-trip"
@@ -263,16 +273,16 @@ function ItineraryPage() {
               <ol className="px-5 py-2">
                 {trip.roadTrip.includedStops.map((s) => (
                   <li key={s.id} className="flex items-center gap-3 py-2.5">
-                    <span className="grid size-9 shrink-0 place-items-center rounded-full border border-success/25 bg-success-soft text-success">
+                    <span className="grid size-8 shrink-0 place-items-center rounded-lg border border-border text-foreground/80">
                       <Car className="size-4" />
                     </span>
                     <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-bold">{s.name}</p>
+                      <p className="truncate text-sm font-medium">{s.name}</p>
                       <p className="text-xs text-muted-foreground">
                         +{s.extraMinutes} min detour (sample)
                       </p>
                     </div>
-                    <span className="tabular rounded-full bg-muted px-2 py-0.5 text-xs font-bold">
+                    <span className="tabular text-xs font-medium">
                       {formatMoney(stopCost(s, shape.travelers, trip.inputs), { cents: true })}
                     </span>
                     <button
@@ -290,23 +300,27 @@ function ItineraryPage() {
 
           {!itin || itin.days.length === 0 ? (
             <div className="surface-card p-8 text-center">
-              <p className="font-display text-xl font-semibold">No itinerary yet</p>
+              <p className="text-[15px] font-semibold">No itinerary yet</p>
               <Button className="mt-4" onClick={tripActions.regenerateDemoItinerary}>
                 Create demo plan
               </Button>
             </div>
           ) : (
-            itin.days.map((day) => (
-              <section key={day.day} className="surface-card animate-rise overflow-hidden">
-                <header className="flex items-center gap-3 border-b border-border bg-gradient-sand px-5 py-4">
-                  <span className="grid size-11 shrink-0 place-items-center rounded-2xl bg-gradient-ink font-display text-lg font-semibold text-ink-foreground">
+            itin.days.map((day, di) => (
+              <section
+                key={day.day}
+                className="surface-card animate-rise overflow-hidden"
+                style={stagger(di)}
+              >
+                <header className="flex items-center gap-3 border-b border-border px-5 py-3.5">
+                  <span className="tabular grid size-9 shrink-0 place-items-center rounded-lg border border-border font-mono text-[13px] text-muted-foreground">
                     {day.day}
                   </span>
                   <div className="min-w-0 flex-1">
                     <p className="text-xs font-semibold tracking-wider text-muted-foreground uppercase">
                       {safeFormat(day.date)}
                     </p>
-                    <h2 className="line-clamp-2 font-display text-xl leading-tight font-semibold">
+                    <h2 className="line-clamp-2 text-[15px] leading-tight font-semibold">
                       {day.title}
                     </h2>
                   </div>
@@ -341,27 +355,27 @@ function ItineraryPage() {
                       <li key={item.id} className="group relative flex gap-3 py-3">
                         {idx < day.items.length - 1 && (
                           <span
-                            className="absolute top-12 bottom-0 left-[19px] w-px bg-border"
+                            className="absolute top-11 bottom-0 left-[15px] w-px bg-border"
                             aria-hidden
                           />
                         )}
                         <span
                           className={cn(
-                            "relative grid size-10 shrink-0 place-items-center rounded-full border",
+                            "relative grid size-8 shrink-0 place-items-center rounded-full border bg-card",
                             item.kind === "restaurant"
-                              ? "border-sunset/30 bg-sunset-soft text-sunset"
+                              ? "border-border text-foreground/80"
                               : item.kind === "stop"
-                                ? "border-shield/20 bg-shield-soft text-shield"
-                                : "border-success/25 bg-success-soft text-success",
+                                ? "border-border text-muted-foreground"
+                                : "border-border text-foreground/80",
                           )}
                         >
-                          <Icon className="size-4" />
+                          <Icon className="size-3.5" strokeWidth={1.8} />
                         </span>
                         <div className="min-w-0 flex-1">
-                          <p className="inline-flex items-center gap-1 text-[11px] font-bold tracking-wider text-muted-foreground uppercase">
+                          <p className="eyebrow inline-flex items-center gap-1">
                             <TimeIcon time={item.time} /> {item.time}
                           </p>
-                          <p className="font-bold leading-snug">{item.name}</p>
+                          <p className="mt-0.5 text-sm leading-snug font-medium">{item.name}</p>
                           <p className="text-xs text-muted-foreground">
                             {item.area}
                             {item.note ? ` · ${item.note}` : ""}
@@ -419,7 +433,7 @@ function ItineraryPage() {
 
         <aside className="space-y-4 lg:sticky lg:top-20 lg:self-start">
           <section className="surface-card p-5">
-            <h2 className="font-display text-xl font-semibold">Plan costs</h2>
+            <h2 className="text-[15px] font-semibold">Plan costs</h2>
             <dl className="mt-3 space-y-2 text-sm">
               <Row
                 label={`Sightseeing (${shape.travelers} people)`}
@@ -458,9 +472,9 @@ function ItineraryPage() {
           </section>
 
           {itin && itin.tips.length > 0 && (
-            <section className="rounded-3xl bg-gold-soft p-5">
-              <h2 className="flex items-center gap-2 font-display text-lg font-semibold">
-                <Lightbulb className="size-4 text-sunset" /> Trip tips
+            <section className="surface-card p-5">
+              <h2 className="flex items-center gap-2 text-[15px] font-semibold">
+                <Lightbulb className="size-4" strokeWidth={1.8} /> Tips
               </h2>
               <ul className="mt-2 space-y-2 text-sm">
                 {itin.tips.map((t, i) => (
@@ -479,23 +493,15 @@ function ItineraryPage() {
 
 function CostChip({ item }: { item: ItineraryItem }) {
   if (item.costSource === "unknown") {
-    return (
-      <span className="rounded-full bg-muted px-2 py-0.5 text-xs font-semibold text-muted-foreground">
-        Price not listed
-      </span>
-    );
+    return <span className="text-xs text-muted-foreground">Price not listed</span>;
   }
   if (item.costPerPerson === 0) {
-    return (
-      <span className="rounded-full bg-success-soft px-2 py-0.5 text-xs font-bold text-success">
-        Free
-      </span>
-    );
+    return <span className="text-xs font-medium text-success">Free</span>;
   }
   const approx = item.costSource === "price-level" ? "~" : "";
   return (
     <span
-      className="tabular rounded-full bg-muted px-2 py-0.5 text-xs font-bold text-foreground"
+      className="tabular text-xs font-medium text-foreground"
       title={item.costSource === "price-level" ? "Estimated from the listing's $ level" : undefined}
     >
       {approx}
@@ -510,7 +516,7 @@ function Row({ label, value, muted }: { label: string; value: string; muted?: bo
       className={cn("flex items-center justify-between gap-2", muted && "text-muted-foreground")}
     >
       <dt>{label}</dt>
-      <dd className="tabular font-bold">{value}</dd>
+      <dd className="tabular font-medium">{value}</dd>
     </div>
   );
 }
