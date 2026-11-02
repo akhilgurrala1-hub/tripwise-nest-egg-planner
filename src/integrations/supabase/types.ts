@@ -14,6 +14,99 @@ export type Database = {
   }
   public: {
     Tables: {
+      bookings: {
+        Row: {
+          confirmation_code: string
+          created_at: string
+          end_date: string | null
+          id: string
+          kind: string
+          notes: string
+          price: number | null
+          provider: string
+          start_date: string | null
+          status: string
+          title: string
+          trip_id: string | null
+          updated_at: string
+          url: string
+          user_id: string
+        }
+        Insert: {
+          confirmation_code?: string
+          created_at?: string
+          end_date?: string | null
+          id?: string
+          kind: string
+          notes?: string
+          price?: number | null
+          provider?: string
+          start_date?: string | null
+          status?: string
+          title: string
+          trip_id?: string | null
+          updated_at?: string
+          url?: string
+          user_id?: string
+        }
+        Update: {
+          confirmation_code?: string
+          created_at?: string
+          end_date?: string | null
+          id?: string
+          kind?: string
+          notes?: string
+          price?: number | null
+          provider?: string
+          start_date?: string | null
+          status?: string
+          title?: string
+          trip_id?: string | null
+          updated_at?: string
+          url?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      traveler_preferences: {
+        Row: {
+          created_at: string
+          home_airport: string
+          home_city: string
+          interests: string[]
+          memberships: string[]
+          transport_mode: string
+          travel_style: string
+          travelers: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          home_airport?: string
+          home_city?: string
+          interests?: string[]
+          memberships?: string[]
+          transport_mode?: string
+          travel_style?: string
+          travelers?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Update: {
+          created_at?: string
+          home_airport?: string
+          home_city?: string
+          interests?: string[]
+          memberships?: string[]
+          transport_mode?: string
+          travel_style?: string
+          travelers?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       trips: {
         Row: {
           created_at: string
