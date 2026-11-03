@@ -12,6 +12,8 @@ import {
   CATEGORY_LABELS,
   categoriesFor,
   coveredLabels,
+  transportParts,
+  type BudgetInputs,
   formatMoney,
   type BudgetTotals,
   type TripShape,
@@ -33,6 +35,7 @@ export function TripPreview({
   destLabel,
   shape,
   totals,
+  inputs,
   distance,
   formId,
   className,
@@ -44,6 +47,8 @@ export function TripPreview({
   destLabel: string;
   shape: TripShape;
   totals: BudgetTotals;
+  /** The inputs behind `totals`, to show what Transportation is made of */
+  inputs?: BudgetInputs;
   distance: string | null;
   className?: string;
 }) {
@@ -151,16 +156,34 @@ export function TripPreview({
                 : `${formatMoney(-left)} over your ${formatMoney(spendable)}. Try Savvy or fewer nights`}
           </p>
           <ul className="mt-3 space-y-1.5 text-xs">
-            {top.map(({ c, v }) => (
-              <li key={c} className="flex items-center gap-2">
-                <span
-                  className="size-2 rounded-full"
-                  style={{ background: CATEGORY_COLOR_VAR[c] }}
-                />
-                <span className="flex-1 truncate">{CATEGORY_LABELS[c]}</span>
-                <span className="tabular font-medium">{formatMoney(v)}</span>
-              </li>
-            ))}
+            {top.map(({ c, v }) => {
+              const parts = c === "transportation" && inputs ? transportParts(inputs, shape) : [];
+              return (
+                <li key={c}>
+                  <span className="flex items-center gap-2">
+                    <span
+                      className="size-2 rounded-full"
+                      style={{ background: CATEGORY_COLOR_VAR[c] }}
+                    />
+                    <span className="flex-1 truncate">{CATEGORY_LABELS[c]}</span>
+                    <span className="tabular font-medium">{formatMoney(v)}</span>
+                  </span>
+                  {parts.length > 1 ||
+                  (parts.length === 1 && parts[0]!.label !== CATEGORY_LABELS[c]) ? (
+                    <ul className="mt-1 space-y-0.5 pl-4 text-muted-foreground">
+                      {parts.map((p) => (
+                        <li key={p.key} className="flex gap-2">
+                          <span className="min-w-0 flex-1 truncate">
+                            {p.label} · {p.detail}
+                          </span>
+                          <span className="tabular">{formatMoney(p.amount)}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : null}
+                </li>
+              );
+            })}
           </ul>
         </div>
         <Button type="submit" form={formId} variant="go" size="lg" className="mt-5 w-full">

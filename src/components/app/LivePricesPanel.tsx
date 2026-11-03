@@ -27,7 +27,11 @@ export function LivePricesPanel({ className }: { className?: string }) {
   const flying = trip.inputs.transportMode === "flight";
   const cruise = trip.setup.tripType === "cruise";
   // A cruise cabin replaces hotels; a staycation at home has no hotel unless the traveler set a nightly rate.
-  const noHotel = cruise || (trip.setup.tripType === "staycation" && trip.inputs.nightlyRate === 0);
+  // No hotel search when there's nowhere to pay for: a cruise cabin, home, or a place they already have.
+  const noHotel =
+    cruise ||
+    !!trip.setup.coverage?.lodging ||
+    (trip.setup.tripType === "staycation" && trip.inputs.nightlyRate === 0);
   const fetchPrices = useServerFn(getLivePrices);
   const fetchStatus = useServerFn(getLivePriceStatus);
   const hydrated = useHydrated();
@@ -97,7 +101,7 @@ export function LivePricesPanel({ className }: { className?: string }) {
   };
 
   return (
-    <section className={cn("surface-card p-5", className)}>
+    <section id="live-prices" className={cn("surface-card scroll-mt-24 p-5", className)}>
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
           <h2 className="text-[15px] font-semibold">Live prices</h2>

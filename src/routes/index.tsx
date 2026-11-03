@@ -166,28 +166,23 @@ function Welcome() {
       : "";
 
   const dest = destinationFor(effective);
+  const estimateInputs = useMemo(
+    () =>
+      applyCoverage(
+        defaultInputs(dest, form.style, form.tripType, form.travelers, form.transportMode),
+        form.coverage,
+      ),
+    [dest, form.style, form.tripType, form.travelers, form.transportMode, form.coverage],
+  );
   const estimate = useMemo(
     () =>
       calculateBudget(
-        applyCoverage(
-          defaultInputs(dest, form.style, form.tripType, form.travelers, form.transportMode),
-          form.coverage,
-        ),
+        estimateInputs,
         shape,
         form.totalBudget,
         Math.min(form.emergencyFund, form.totalBudget),
       ),
-    [
-      dest,
-      form.style,
-      form.tripType,
-      form.travelers,
-      form.transportMode,
-      form.coverage,
-      form.totalBudget,
-      form.emergencyFund,
-      shape,
-    ],
+    [estimateInputs, form.totalBudget, form.emergencyFund, shape],
   );
   const suggested = suggestedBudget(
     effective,
@@ -533,6 +528,7 @@ function Welcome() {
               destLabel={destLabel}
               shape={shape}
               totals={estimate}
+              inputs={estimateInputs}
               distance={distance}
               formId="plan-form"
             />

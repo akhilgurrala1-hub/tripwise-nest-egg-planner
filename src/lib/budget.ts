@@ -37,7 +37,7 @@ export const CATEGORY_LABELS: Record<Category, string> = {
   activities: "Activities",
   stops: "Road-trip stops",
   taxes: "Taxes & fees",
-  misc: "Miscellaneous",
+  misc: "Price buffer",
 };
 
 /** Categories the traveler can type a custom total for. Road-trip stops are driven by the stops they pick. */
@@ -129,6 +129,63 @@ export function applyCoverage(inputs: BudgetInputs, c?: TripCoverage | null): Bu
     ...(c.localTransport ? { localTransitPerDay: 0 } : {}),
     ...(c.transfer !== undefined ? { transferRoundTrip: roundMoney(clampNum(c.transfer)) } : {}),
   };
+}
+
+export interface CostPart {
+  key: "fares" | "rental" | "local" | "transfer";
+  label: string;
+  /** How it's worked out, e.g. "$300 × 2 round trips" */
+  detail: string;
+  amount: number;
+}
+
+/**
+ * What Transportation is made of, in plain lines ("Flights · $300 × 2 round
+ * trips", "Ride to the airport · there and back"), so a total is never a mystery.
+ * Amounts add up to the Transportation estimate.
+ */
+export function transportParts(inputs: BudgetInputs, trip: TripShape): CostPart[] {
+  const mode = inputs.transportMode;
+  const fareLabel =
+    mode === "flight"
+      ? "Flights"
+      : mode === "train"
+        ? "Train tickets"
+        : mode === "bus"
+          ? "Bus tickets"
+          : "";
+  const fare = roundMoney(clampNum(inputs.farePerPerson));
+  const parts: CostPart[] = [];
+  if (fareLabel && fare > 0)
+    parts.push({
+      key: "fares",
+      label: fareLabel,
+      detail: `${formatMoney(fare)} × ${trip.travelers} round trip${trip.travelers === 1 ? "" : "s"}`,
+      amount: roundMoney(fare * trip.travelers),
+    });
+  if (mode === "rental-car" && inputs.rentalPerDay > 0)
+    parts.push({
+      key: "rental",
+      label: "Rental car",
+      detail: `${formatMoney(inputs.rentalPerDay)} × ${trip.days} day${trip.days === 1 ? "" : "s"}`,
+      amount: roundMoney(clampNum(inputs.rentalPerDay) * trip.days),
+    });
+  if (inputs.localTransitPerDay > 0)
+    parts.push({
+      key: "local",
+      label: "Getting around there",
+      detail: `${formatMoney(inputs.localTransitPerDay)} a day × ${trip.days}`,
+      amount: roundMoney(clampNum(inputs.localTransitPerDay) * trip.days),
+    });
+  const transfer = roundMoney(clampNum(inputs.transferRoundTrip ?? 0));
+  if (transfer > 0)
+    parts.push({
+      key: "transfer",
+      label: mode === "flight" ? "Ride to the airport" : "Ride to the station",
+      detail: "There and back",
+      amount: transfer,
+    });
+  return parts;
 }
 
 /** Covered costs, in plain words ("a place to stay", "meals"), for summaries. */

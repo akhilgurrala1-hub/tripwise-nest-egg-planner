@@ -502,7 +502,12 @@ export const tripActions = {
         delete overrides.gas;
         delete appliedSavings["fuel-rewards"];
       }
-      if (prices.hotels && prices.hotels.nightly > 0 && s.setup.tripType !== "cruise") {
+      if (
+        prices.hotels &&
+        prices.hotels.nightly > 0 &&
+        s.setup.tripType !== "cruise" &&
+        !s.setup.coverage?.lodging
+      ) {
         inputs.nightlyRate = prices.hotels.nightly;
         delete overrides.accommodations;
         delete appliedSavings.lodging;
