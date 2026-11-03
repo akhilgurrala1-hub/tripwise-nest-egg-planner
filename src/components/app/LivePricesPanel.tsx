@@ -15,6 +15,7 @@ import { destinationQuery } from "@/lib/live/place";
 import { useHydrated } from "@/lib/live/use-live";
 import { getLivePriceStatus, getLivePrices } from "@/lib/prices/live-prices.functions";
 import { reusedNote } from "@/lib/prices/live";
+import { useTripAirports } from "@/lib/live/use-airports";
 import { addDays } from "@/lib/dates";
 import { tripActions, useTrip } from "@/lib/trip-store";
 import { isDrivingMode } from "@/lib/demo-data";
@@ -25,6 +26,7 @@ export { destinationQuery } from "@/lib/live/place";
 export function LivePricesPanel({ className }: { className?: string }) {
   const { user } = useAuth();
   const prefs = usePreferences();
+  const air = useTripAirports(prefs?.home_airport);
   const { trip, dest, shape, legs } = useTrip();
   const live = trip.live;
   const flying = trip.inputs.transportMode === "flight";
@@ -85,13 +87,15 @@ export function LivePricesPanel({ className }: { className?: string }) {
           style: trip.setup.style,
           includeFlights: flying,
           includeHotels: !noHotel,
-          originAirport: prefs?.home_airport ?? "",
-          destinationAirport: /^[A-Z]{3}$/.test(destAirport) ? destAirport : "",
+          // The airport table's codes (or the profile's home airport): no lookup that can miss.
+          originAirport: air.codes[0] ?? "",
+          destinationAirport: /^[A-Z]{3}$/.test(destAirport) ? destAirport : (air.codes[1] ?? ""),
           cabin: trip.setup.cabin ?? "economy",
           // Multi-city: each city's own nights, so every leg and stay is priced.
           cities:
             legs.length > 1
-              ? legs.map((l) => ({
+              ? legs.map((l, i) => ({
+                  airport: air.codes[i + 1] ?? "",
                   name: l.main
                     ? destinationQuery(dest, trip.setup.origin, prefs?.home_city)
                     : l.name,
@@ -165,10 +169,22 @@ export function LivePricesPanel({ className }: { className?: string }) {
         <div className="mt-3 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
           <span>
             Flying from{" "}
-            <strong className="text-foreground">{prefs?.home_airport || "your start city"}</strong>.
+            <strong className="text-foreground" title={air.airports[0]?.name}>
+              {air.codes[0] || prefs?.home_airport || "your start city"}
+            </strong>
+            {air.codes[1] && (
+              <>
+                {" "}
+                to{" "}
+                <strong className="text-foreground" title={air.airports[1]?.name}>
+                  {destAirport || air.codes[1]}
+                </strong>
+              </>
+            )}
+            .
           </span>
           <label className="inline-flex items-center gap-1.5">
-            Destination airport (optional)
+            {air.codes[1] ? "Use another airport" : "Destination airport (optional)"}
             <Input
               value={destAirport}
               onChange={(e) =>
@@ -179,7 +195,7 @@ export function LivePricesPanel({ className }: { className?: string }) {
                     .slice(0, 3),
                 )
               }
-              placeholder="e.g. AVL"
+              placeholder={air.codes[1] ?? "e.g. AVL"}
               className="h-8 w-20"
               aria-label="Destination airport code"
             />

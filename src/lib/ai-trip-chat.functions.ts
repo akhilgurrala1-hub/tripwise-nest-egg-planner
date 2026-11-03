@@ -60,6 +60,8 @@ const inputSchema = z.object({
   country: z.string().max(2).default(""),
   currency: z.string().max(3).default("USD"),
   nearby: z.array(z.string().max(120)).max(16).default([]),
+  /** Their nearest airport, from Waypoint's airport table */
+  homeAirport: z.string().max(160).default(""),
 });
 
 /** Signed-in only: every turn spends AI credits, so it is never callable anonymously. */

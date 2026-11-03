@@ -14,6 +14,8 @@ import { stagger } from "@/components/app/motion";
 import { formatDateRange } from "@/components/app/TripHeader";
 import { Button } from "@/components/ui/button";
 import { tripChat } from "@/lib/ai-trip-chat.functions";
+import { airportFor } from "@/lib/airports";
+import { useAirports } from "@/lib/live/use-airports";
 import { cleanChatAnswer } from "@/lib/ai-quality";
 import { coverageFromDraft, draftDates, missingFields, type TripDraft } from "@/lib/assistant";
 import type { GeoPoint } from "@/lib/catalog";
@@ -103,6 +105,8 @@ export function TripAssistant({
 }) {
   const { user, loading: authLoading } = useAuth();
   const { currency } = useLocale();
+  const airports = useAirports();
+  const homeAirport = airports && from ? airportFor(airports, from) : null;
   const { place } = useHomePlace();
   const [state, setState] = useState<Saved>({ turns: [], draft: null, pending: "" });
   const [text, setText] = useState("");
@@ -165,6 +169,12 @@ export function TripAssistant({
           country: place?.country ?? "",
           currency,
           nearby: nearbyLines(from, state.draft),
+          homeAirport: homeAirport
+            ? `${homeAirport.code} (${homeAirport.name})${homeAirport.miles >= 5 ? `, ${homeAirport.miles} miles away` : ""}`.slice(
+                0,
+                160,
+              )
+            : "",
         },
       });
       if (!res.ok) {

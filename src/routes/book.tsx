@@ -34,6 +34,7 @@ import {
 } from "@/lib/booking";
 import { formatMoney } from "@/lib/budget";
 import { tripActions, useTrip } from "@/lib/trip-store";
+import { useTripAirports } from "@/lib/live/use-airports";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/book")({
@@ -70,7 +71,8 @@ const EMPTY: BookingRecord = { status: "todo", confirmation: "", price: null };
 function BookPage() {
   const { trip, dest, shape, totals } = useTrip();
   const prefs = usePreferences();
-  const items = bookingPlan(trip, dest, shape, totals, prefs?.home_city ?? "");
+  const air = useTripAirports(prefs?.home_airport);
+  const items = bookingPlan(trip, dest, shape, totals, prefs?.home_city ?? "", air.codes);
   const progress = bookingProgress(items, trip.bookings);
   const pct = progress.total > 0 ? progress.booked / progress.total : 0;
 

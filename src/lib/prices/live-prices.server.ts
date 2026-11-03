@@ -41,7 +41,7 @@ export interface LivePricesRequest {
   /** Flight cabin (economy when unset) */
   cabin?: "economy" | "premium" | "business" | "first";
   /** Multi-city: every city in order with its check-in and check-out dates */
-  cities?: { name: string; checkIn: string; checkOut: string }[];
+  cities?: { name: string; checkIn: string; checkOut: string; airport?: string }[];
 }
 
 /** Google Flights' travel_class codes. */
@@ -379,7 +379,7 @@ async function multiCityFlights(
     places.map((p, i) =>
       i === 0 || i === places.length - 1
         ? req.originAirport || airportFor(p, key, cache)
-        : airportFor(p, key, cache),
+        : cities[i - 1]?.airport || airportFor(p, key, cache),
     ),
   );
   if (airports.some((a) => !a))
