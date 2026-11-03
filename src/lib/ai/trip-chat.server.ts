@@ -42,6 +42,10 @@ export const tripDraftSchema = z.object({
   }),
   /** Round trip from where they start (dorm, home) to the airport or station, whole group, USD */
   transferCost: z.number().nullable(),
+  /** Multi-city: every city in the order visited with its nights; empty for a one-place trip */
+  cities: z.array(z.object({ name: z.string(), nights: z.number() })),
+  /** Flight cabin; null when not flying */
+  cabin: z.enum(["economy", "premium", "business", "first"]).nullable(),
 });
 
 export const tripChatSchema = z.object({
@@ -74,6 +78,9 @@ export type TripChatResult =
 
 const INSTRUCTIONS = `You are Waypoint's trip assistant. Help the traveler shape one trip, then hand it to the planner.
 You need: a destination, dates (a start date plus an end date or a number of nights), and how many people. Also useful: trip type (road-trip, flight = fly-away, cruise, rail = train & bus, staycation), travel style (budget = savvy, comfort, luxury), a total budget in USD, and interests.
+Several cities (multi-city trips): when the traveler visits more than one place, list EVERY city in "cities" in the order they visit, each with whole nights (at least 1) that add up to the trip's nights, and put the first city in "destination". Never drop, merge or reorder a city they named. If they didn't say how long in each, split the nights sensibly and say so. Without an end date, nights = the sum of the cities' nights. For a one-place trip, cities = []. Trips can be up to 14 days; if they ask for longer, say so and plan the first 14 days. When ready, the reply names every city with its nights (e.g. "Rome 3 nights, Florence 2, Venice 2").
+Flights: cabin = "economy" unless they ask for premium economy ("premium"), business or first; null when not flying.
+Budget: totalBudget only when the traveler gives a number (never lower than what they said); otherwise null, and Waypoint works it out from the trip's real costs. Never invent one.
 Each turn:
 - Return the full "trip" with everything known so far, carrying over earlier answers. Use null for anything not decided. Never invent a budget, dates or traveler count the traveler hasn't implied.
 - If destination, dates and travelers are all known, set ready=true, give a one- or two-sentence summary in "reply", and ask nothing more (questions = []).

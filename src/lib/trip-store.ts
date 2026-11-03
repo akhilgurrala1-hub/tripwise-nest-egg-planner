@@ -6,6 +6,7 @@ import {
   calculateBudget,
   defaultEmergencyFund,
   defaultInputs,
+  formatMoney,
   modeDefaults,
   reductionPlan,
   SAVING_CATEGORY,
@@ -23,6 +24,8 @@ import {
   CUSTOM_DESTINATION_ID,
   DESTINATIONS,
   destinationFor,
+  travelPoint,
+  type Cabin,
   modeForTripType,
   tripTypeInfo,
   upgradeTripType,
@@ -31,11 +34,12 @@ import {
   type TravelStyle,
   type TripType,
 } from "./demo-data";
+import { citySchedule, cleanCities, routeLabel, type CityLeg, type TripCity } from "./multi-city";
 import { recommendDestinations } from "./recommend";
 import {
   addDays,
   fitToCoverage,
-  generateDemoItinerary,
+  generateTripItinerary,
   type Itinerary,
   type ItineraryItem,
 } from "./itinerary";
@@ -73,6 +77,15 @@ export interface TripSetup {
   destinationPoint?: GeoPoint | null;
   /** What they don't pay for (staying with family...) and getting to the airport; see applyCoverage */
   coverage?: TripCoverage | null;
+  /** Multi-city: the cities after the destination, in order, with nights in each */
+  cities?: TripCity[] | null;
+  /** Flight cabin (economy when unset); fares scale with it */
+  cabin?: Cabin | null;
+  /**
+   * The budget was chosen by Waypoint, not typed by the traveler: it follows the
+   * trip's costs (new cities, cabin, trip type) until the traveler sets their own.
+   */
+  budgetAuto?: boolean;
 }
 
 export interface RoadTripPlan {
@@ -153,13 +166,14 @@ export function buildTrip(input: TripSetup, isSample = false, id?: string): Trip
     emergencyFund: Math.min(Math.max(0, setup.emergencyFund), setup.totalBudget),
     appliedSavings: {},
     itinerary: fitToCoverage(
-      generateDemoItinerary({
+      generateTripItinerary({
         dest,
         days: shape.days,
         startDate: setup.startDate,
         interests: setup.interests,
         style: setup.style,
         tripType: setup.tripType,
+        legs: tripLegs(setup),
       }),
       setup.coverage,
     ),
@@ -167,6 +181,85 @@ export function buildTrip(input: TripSetup, isSample = false, id?: string): Trip
     live: null,
     cloud: null,
     bookings: {},
+  };
+}
+
+/**
+ * The cities of a trip in order with their nights and travel days (one entry for
+ * a single-destination trip). Cruises and staycations are always one place.
+ */
+export function tripLegs(setup: TripSetup): CityLeg[] {
+  const dest = destinationFor(setup);
+  const shape = tripShape(setup.startDate, setup.endDate, setup.travelers);
+  const single = setup.tripType === "cruise" || setup.tripType === "staycation";
+  return citySchedule(
+    shape.nights,
+    { name: dest.name, point: travelPoint(dest, setup.destinationPoint) },
+    single ? [] : cleanCities(setup.cities),
+  );
+}
+
+/** Round a needed amount up to a tidy budget. */
+const tidy = (n: number) => Math.ceil(n / 50) * 50;
+
+/** Planned spending for a trip's current inputs (custom amounts and stops included). */
+function plannedNow(s: TripState): number {
+  const shape = tripShape(s.setup.startDate, s.setup.endDate, s.setup.travelers);
+  return calculateBudget(s.inputs, shape, 0, 0, s.overrides, stopsTotalFor(s)).planned;
+}
+
+/**
+ * Keep a Waypoint-chosen budget covering the trip. "set" re-fits it (the trip's
+ * shape changed: cities, cabin, trip type, travel); "raise" only ever raises it
+ * (a real price or a custom amount came in), so savings still show as money left.
+ * A budget the traveler typed is never touched.
+ */
+function rebudget(s: TripState, mode: "set" | "raise"): TripState {
+  if (!s.setup.budgetAuto) return s;
+  const planned = plannedNow(s);
+  const reserveFollows = s.emergencyFund === defaultEmergencyFund(s.setup.totalBudget);
+  let total = reserveFollows ? tidy(planned / 0.9) : tidy(planned + s.emergencyFund);
+  if (mode === "raise" && s.setup.totalBudget >= planned + s.emergencyFund) return s;
+  if (mode === "raise") total = Math.max(total, s.setup.totalBudget);
+  const emergencyFund = reserveFollows ? defaultEmergencyFund(total) : s.emergencyFund;
+  return { ...s, setup: { ...s.setup, totalBudget: total, emergencyFund }, emergencyFund };
+}
+
+/**
+ * The budget a new trip starts with. Waypoint picks it from the trip's estimated
+ * costs plus an emergency fund, unless the traveler gave one that covers the trip.
+ * A trip never starts over budget: a budget that's too small is raised to what the
+ * trip needs, and `note` says so in plain words.
+ */
+export function fitBudget(setup: TripSetup): { setup: TripSetup; note: string | null } {
+  const chosenReserve =
+    setup.emergencyFund > 0 && setup.emergencyFund !== defaultEmergencyFund(setup.totalBudget)
+      ? setup.emergencyFund
+      : undefined;
+  const need = suggestedBudget(setup, chosenReserve);
+  const auto = (totalBudget: number): TripSetup => ({
+    ...setup,
+    totalBudget,
+    emergencyFund: chosenReserve ?? defaultEmergencyFund(totalBudget),
+    budgetAuto: true,
+  });
+  if (setup.budgetAuto || !(setup.totalBudget > 0)) return { setup: auto(need), note: null };
+  const dest = destinationFor(setup);
+  const shape = tripShape(setup.startDate, setup.endDate, setup.travelers);
+  const planned = calculateBudget(
+    applyCoverage(
+      defaultInputs(dest, setup.style, setup.tripType, setup.travelers, setup.transportMode),
+      setup.coverage,
+    ),
+    shape,
+    0,
+    0,
+  ).planned;
+  if (planned + setup.emergencyFund <= setup.totalBudget) return { setup, note: null };
+  const fixed = auto(Math.max(need, tidy(planned + (chosenReserve ?? 0))));
+  return {
+    setup: fixed,
+    note: `${formatMoney(setup.totalBudget)} doesn't cover this trip, so the budget is set to ${formatMoney(fixed.totalBudget)}: about what it costs, plus an emergency fund. You can change it on the Budget page, and Ways to spend less shows where to save.`,
   };
 }
 
@@ -336,13 +429,14 @@ function repairDates(trip: TripState): TripState {
   return {
     ...trip,
     setup,
-    itinerary: generateDemoItinerary({
+    itinerary: generateTripItinerary({
       dest,
       days,
       startDate: start,
       interests: setup.interests,
       style: setup.style,
       tripType: setup.tripType,
+      legs: tripLegs(setup),
     }),
   };
 }
@@ -450,8 +544,30 @@ export function currentTrip(): TripState {
 }
 
 export const tripActions = {
-  startTrip(setup: TripSetup) {
-    setState(() => buildTrip(setup));
+  /**
+   * Start a new trip. Its budget is fitted to the trip first (see fitBudget), so it
+   * never starts over budget; returns a note when the traveler's budget was raised.
+   */
+  startTrip(setup: TripSetup): string | null {
+    const fitted = fitBudget(setup);
+    setState(() => buildTrip(fitted.setup));
+    return fitted.note;
+  },
+  /** Fly in another cabin: fares follow, and so does a budget Waypoint chose. */
+  setCabin(cabin: Cabin) {
+    setState((s) => {
+      const setup = { ...s.setup, cabin };
+      const dest = destinationFor(setup);
+      const overrides = { ...s.overrides };
+      if (s.inputs.transportMode === "flight") delete overrides.transportation;
+      const inputs =
+        s.inputs.transportMode === "flight"
+          ? { ...s.inputs, farePerPerson: dest.fares.flight }
+          : s.inputs;
+      const appliedSavings = { ...s.appliedSavings };
+      delete appliedSavings.fares;
+      return rebudget({ ...s, setup, inputs, overrides, appliedSavings, live: s.live }, "set");
+    });
   },
   /**
    * Start the untouched sample trip from where the traveler is, headed somewhere
@@ -526,7 +642,7 @@ export const tripActions = {
         delete overrides.transportation;
         delete appliedSavings.fares;
       }
-      return { ...s, inputs, overrides, appliedSavings, live: prices };
+      return rebudget({ ...s, inputs, overrides, appliedSavings, live: prices }, "raise");
     });
   },
   /** Real driving distance from the map service, as a round trip. */
@@ -535,7 +651,7 @@ export const tripActions = {
       if (s.inputs.roundTripMiles === roundTripMiles) return s;
       const overrides = { ...s.overrides };
       delete overrides.gas;
-      return { ...s, inputs: { ...s.inputs, roundTripMiles }, overrides };
+      return rebudget({ ...s, inputs: { ...s.inputs, roundTripMiles }, overrides }, "raise");
     });
   },
   setTotalBudget(totalBudget: number) {
@@ -543,16 +659,25 @@ export const tripActions = {
       const t = Math.max(0, totalBudget);
       return {
         ...s,
-        setup: { ...s.setup, totalBudget: t },
+        // The traveler's own number from now on: Waypoint stops adjusting it.
+        setup: { ...s.setup, totalBudget: t, budgetAuto: false },
         emergencyFund: Math.min(s.emergencyFund, t),
       };
     });
   },
   setEmergencyFund(amount: number) {
-    setState((s) => ({ ...s, emergencyFund: Math.max(0, Math.min(amount, s.setup.totalBudget)) }));
+    setState((s) => {
+      if (s.setup.budgetAuto) {
+        // A Waypoint-chosen budget grows or shrinks with the reserve, so spending money stays covered.
+        const fund = Math.max(0, amount);
+        const totalBudget = tidy(plannedNow(s) + fund);
+        return { ...s, emergencyFund: fund, setup: { ...s.setup, totalBudget } };
+      }
+      return { ...s, emergencyFund: Math.max(0, Math.min(amount, s.setup.totalBudget)) };
+    });
   },
   setInput<K extends keyof BudgetInputs>(key: K, value: BudgetInputs[K]) {
-    setState((s) => ({ ...s, inputs: { ...s.inputs, [key]: value } }));
+    setState((s) => rebudget({ ...s, inputs: { ...s.inputs, [key]: value } }, "raise"));
   },
   setTransportMode(mode: TransportMode) {
     setState((s) => {
@@ -561,15 +686,18 @@ export const tripActions = {
       const overrides = { ...s.overrides };
       for (const c of ["transportation", "gas", "tolls", "parking"] as Category[])
         delete overrides[c];
-      return {
-        ...s,
-        setup: { ...s.setup, transportMode: allowed },
-        inputs: applyCoverage(
-          { ...s.inputs, ...modeDefaults(dest, s.setup.style, allowed, s.setup.tripType) },
-          s.setup.coverage,
-        ),
-        overrides,
-      };
+      return rebudget(
+        {
+          ...s,
+          setup: { ...s.setup, transportMode: allowed },
+          inputs: applyCoverage(
+            { ...s.inputs, ...modeDefaults(dest, s.setup.style, allowed, s.setup.tripType) },
+            s.setup.coverage,
+          ),
+          overrides,
+        },
+        "set",
+      );
     });
   },
   /**
@@ -589,7 +717,7 @@ export const tripActions = {
       transportMode,
       emergencyFund: s.emergencyFund,
     };
-    const fresh = buildTrip(setup);
+    const fresh = buildTrip(s.setup.budgetAuto ? fitBudget(setup).setup : setup);
     const changes = [
       ...(reason ? [reason] : []),
       transportMode !== s.setup.transportMode
@@ -619,7 +747,7 @@ export const tripActions = {
       const overrides = { ...s.overrides };
       if (value === undefined) delete overrides[cat];
       else overrides[cat] = Math.max(0, value);
-      return { ...s, overrides };
+      return rebudget({ ...s, overrides }, "raise");
     });
   },
   applySaving(id: SavingId) {
@@ -676,13 +804,14 @@ export const tripActions = {
         itinerary: keepCustomItems(
           s.itinerary,
           fitToCoverage(
-            generateDemoItinerary({
+            generateTripItinerary({
               dest,
               days: shape.days,
               startDate: s.setup.startDate,
               interests: s.setup.interests,
               style: s.setup.style,
               tripType: s.setup.tripType,
+              legs: tripLegs(s.setup),
             }),
             s.setup.coverage,
           ),
@@ -731,7 +860,7 @@ export const tripActions = {
       const includedStops = exists
         ? s.roadTrip.includedStops.filter((x) => x.id !== stop.id)
         : [...s.roadTrip.includedStops, stop].sort((a, b) => a.position - b.position);
-      return { ...s, roadTrip: { ...s.roadTrip, includedStops } };
+      return rebudget({ ...s, roadTrip: { ...s.roadTrip, includedStops } }, "raise");
     });
   },
   /** Record progress on one booking checklist item. */
@@ -782,7 +911,22 @@ function derive(trip: TripState) {
     trip.overrides,
     stopsTotal,
   );
-  return { trip, dest, shape, totals, savings, applied, potentialSavings, cuts, stopsTotal };
+  const legs = tripLegs(trip.setup);
+  /** What to call the trip: the destination, or the route of a multi-city trip */
+  const place = legs.length > 1 ? routeLabel(legs) : dest.name;
+  return {
+    trip,
+    dest,
+    shape,
+    totals,
+    savings,
+    applied,
+    potentialSavings,
+    cuts,
+    stopsTotal,
+    legs,
+    place,
+  };
 }
 
 export type TripView = ReturnType<typeof derive>;

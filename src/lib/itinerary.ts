@@ -1,6 +1,13 @@
 import { cleanAiPlan } from "./ai-quality";
 import { addDays } from "./dates";
-import type { DemoDestination, Interest, TravelStyle, TripType } from "./demo-data";
+import {
+  buildCustomDestination,
+  type DemoDestination,
+  type Interest,
+  type TravelStyle,
+  type TripType,
+} from "./demo-data";
+import type { CityLeg } from "./multi-city";
 import type { PlaceSource, RealPlace } from "./places/types";
 import type { CostSource } from "./routing/types";
 
@@ -269,6 +276,92 @@ export function generateDemoItinerary(opts: {
           : "A balanced mix of free and paid experiences.",
     ],
   };
+}
+
+const shortName = (name: string) => name.split(",")[0]!.trim() || name;
+
+/**
+ * Join one plan per city into the whole trip's plan: each city's days in order,
+ * renumbered and dated, with a travel stop to start each new city and day titles
+ * that name the city. Pure, so example, real-places and AI plans join the same way.
+ */
+export function stitchCityPlans(
+  legs: readonly CityLeg[],
+  parts: readonly Itinerary[],
+  totalDays: number,
+  startDate: string,
+  source: Itinerary["source"],
+  tips: string[] = [],
+): Itinerary {
+  const days: ItineraryDay[] = [];
+  legs.forEach((leg, i) => {
+    const city = shortName(leg.name);
+    (parts[i]?.days ?? []).slice(0, leg.days).forEach((d, j) => {
+      const index = leg.arriveDay + j;
+      if (index >= totalDays) return;
+      const lastOfTrip = index === totalDays - 1 && totalDays > 1;
+      let items = d.items.map((it) => ({ ...it, id: `c${i + 1}-${it.id}` }));
+      if (i > 0 && j === 0) {
+        const prev = shortName(legs[i - 1]!.name);
+        items = [
+          {
+            id: `c${i + 1}-travel`,
+            time: "Morning",
+            kind: "stop",
+            name: `Travel to ${city}`,
+            area: `From ${prev}`,
+            note: "Between cities. The fare is in your transportation budget.",
+            costPerPerson: 0,
+          },
+          ...items.filter((it) => it.time !== "Morning" && it.kind !== "stop"),
+        ];
+      }
+      days.push({
+        ...d,
+        day: index + 1,
+        date: addDays(startDate, index),
+        items,
+        title: lastOfTrip
+          ? `Last look at ${city} & head home`
+          : i > 0 && j === 0
+            ? `Travel to ${city}`
+            : index === 0
+              ? `Arrive in ${city}`
+              : `Explore ${city}`,
+      });
+    });
+  });
+  const merged = [...new Set([...tips, ...parts.flatMap((p) => p.tips)])].slice(0, 6);
+  return { source, days, tips: merged };
+}
+
+/**
+ * The example plan for a whole trip. One city: the usual plan. Several cities: a
+ * plan per city for its own days (the first city uses the destination's ideas,
+ * the others generic ones), joined in order, with a travel day into each new city.
+ */
+export function generateTripItinerary(opts: {
+  dest: DemoDestination;
+  days: number;
+  startDate: string;
+  interests: Interest[];
+  style: TravelStyle;
+  tripType: TripType;
+  legs?: readonly CityLeg[] | null;
+}): Itinerary {
+  const legs = opts.legs ?? [];
+  if (legs.length < 2) return generateDemoItinerary(opts);
+  const parts = legs.map((leg) =>
+    generateDemoItinerary({
+      ...opts,
+      dest: leg.main ? opts.dest : buildCustomDestination(leg.name),
+      days: leg.days,
+      startDate: addDays(opts.startDate, leg.arriveDay),
+    }),
+  );
+  return stitchCityPlans(legs, parts, opts.days, opts.startDate, "demo", [
+    `${legs.length} cities: ${legs.map((l) => shortName(l.name)).join(", ")}. Each move between cities gets its own travel day.`,
+  ]);
 }
 
 function tierNote(tier: 1 | 2 | 3) {

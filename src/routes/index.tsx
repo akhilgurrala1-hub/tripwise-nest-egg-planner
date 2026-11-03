@@ -14,6 +14,9 @@ import { StylePicker } from "@/components/app/plan/StylePicker";
 import { TripAssistant } from "@/components/app/plan/TripAssistant";
 import { TripPreview } from "@/components/app/plan/TripPreview";
 import { TripTypePicker } from "@/components/app/TripTypePicker";
+import { CabinPicker } from "@/components/app/plan/CabinPicker";
+import { CitiesEditor } from "@/components/app/plan/CitiesEditor";
+import { citySchedule, routeLabel } from "@/lib/multi-city";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -74,8 +77,6 @@ export const Route = createFileRoute("/")({
   component: Welcome,
 });
 
-const BUDGET_PRESETS = [500, 1000, 2500, 5000];
-
 function Welcome() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -86,11 +87,15 @@ function Welcome() {
   const [form, setForm] = useState<TripSetup>(trip.setup);
   const touched = useRef(false);
   const reserveTouched = useRef(false);
+  // Waypoint picks the budget from the trip's costs until the traveler types their own.
+  const [budgetOwn, setBudgetOwn] = useState(!trip.isSample && !trip.setup.budgetAuto);
 
   // Pick up a saved (or personalized sample) trip until the traveler starts editing.
   useEffect(() => {
-    if (!touched.current) setForm(trip.setup);
-  }, [trip.setup]);
+    if (touched.current) return;
+    setForm(trip.setup);
+    setBudgetOwn(!trip.isSample && !trip.setup.budgetAuto);
+  }, [trip.setup, trip.isSample]);
 
   const update = (patch: Partial<TripSetup>) => {
     touched.current = true;
@@ -107,7 +112,7 @@ function Welcome() {
   const originPoint: GeoPoint | null =
     form.originPoint ??
     (originGeo.data?.[0] ? { lat: originGeo.data[0].lat, lon: originGeo.data[0].lon } : null);
-  const effective: TripSetup = { ...form, originPoint };
+  const located: TripSetup = { ...form, originPoint };
   const typedMatch = form.originPoint
     ? null
     : originGeo.data
@@ -146,16 +151,23 @@ function Welcome() {
     if (!isIsoDate(startDate) || length === null) return update({ startDate });
     update({ startDate, endDate: addDays(startDate, length - 1) });
   };
+  const suggested = suggestedBudget(
+    located,
+    reserveTouched.current ? form.emergencyFund : undefined,
+  );
+  // The budget the trip starts with: the traveler's own, or the one that covers its costs.
+  const totalBudget = budgetOwn ? form.totalBudget : suggested;
+  const emergencyFund =
+    budgetOwn || reserveTouched.current ? form.emergencyFund : defaultEmergencyFund(totalBudget);
+  const effective: TripSetup = { ...located, totalBudget, emergencyFund, budgetAuto: !budgetOwn };
   const reserveError =
-    form.emergencyFund > form.totalBudget
-      ? "The emergency fund can't be more than your total budget"
-      : "";
+    emergencyFund > totalBudget ? "The emergency fund can't be more than your total budget" : "";
   const destError =
     form.destinationId === CUSTOM_DESTINATION_ID && !form.customDestination.trim()
       ? "Type a destination"
       : "";
 
-  const dest = destinationFor(effective);
+  const dest = destinationFor(located);
   const estimateInputs = useMemo(
     () =>
       applyCoverage(
@@ -165,26 +177,18 @@ function Welcome() {
     [dest, form.style, form.tripType, form.travelers, form.transportMode, form.coverage],
   );
   const estimate = useMemo(
-    () =>
-      calculateBudget(
-        estimateInputs,
-        shape,
-        form.totalBudget,
-        Math.min(form.emergencyFund, form.totalBudget),
-      ),
-    [estimateInputs, form.totalBudget, form.emergencyFund, shape],
-  );
-  const suggested = suggestedBudget(
-    effective,
-    reserveTouched.current ? form.emergencyFund : undefined,
+    () => calculateBudget(estimateInputs, shape, totalBudget, Math.min(emergencyFund, totalBudget)),
+    [estimateInputs, totalBudget, emergencyFund, shape],
   );
 
-  const setBudget = (totalBudget: number) =>
+  const setBudget = (next: number) => {
+    setBudgetOwn(true);
     update(
       reserveTouched.current
-        ? { totalBudget }
-        : { totalBudget, emergencyFund: defaultEmergencyFund(totalBudget) },
+        ? { totalBudget: next }
+        : { totalBudget: next, emergencyFund: defaultEmergencyFund(next) },
     );
+  };
 
   const setTripType = (tripType: TripType) => {
     const { destinationId } = destinationForTripType(effective, tripType);
@@ -202,24 +206,40 @@ function Welcome() {
         : [...form.interests, id],
     });
 
-  /** A typed destination's real location, for distances (best effort, never blocks). */
-  const locateCustom = async (setup: TripSetup): Promise<TripSetup> => {
-    if (setup.destinationId !== CUSTOM_DESTINATION_ID || setup.destinationPoint) return setup;
+  /** Where a typed place is, for distances and fares (best effort, never blocks). */
+  const locate = async (name: string): Promise<GeoPoint | null> => {
     try {
       const found = await Promise.race([
-        queryClient.fetchQuery(geocodeQuery(setup.customDestination)),
+        queryClient.fetchQuery(geocodeQuery(name)),
         new Promise<never>((_, rej) => setTimeout(() => rej(new Error("slow")), 2500)),
       ]);
-      const p = found[0];
-      return p ? { ...setup, destinationPoint: { lat: p.lat, lon: p.lon } } : setup;
+      return found[0] ? { lat: found[0].lat, lon: found[0].lon } : null;
     } catch {
-      return setup;
+      return null;
     }
   };
 
+  /** Look up a typed destination and every other city, so costs use real distances. */
+  const locateAll = async (setup: TripSetup): Promise<TripSetup> => {
+    const [destinationPoint, cities] = await Promise.all([
+      setup.destinationId === CUSTOM_DESTINATION_ID && !setup.destinationPoint
+        ? locate(setup.customDestination)
+        : Promise.resolve(setup.destinationPoint ?? null),
+      Promise.all(
+        (setup.cities ?? []).map(async (c) => ({
+          ...c,
+          point: c.point ?? (c.name.trim() ? await locate(c.name) : null),
+        })),
+      ),
+    ]);
+    return { ...setup, destinationPoint, cities: cities.filter((c) => c.name.trim()) };
+  };
+
   const start = async (setup: TripSetup) => {
-    tripActions.startTrip(await locateCustom(setup));
-    toast.success("Your trip plan is ready");
+    // The budget is fitted after the places are found, so real distances never push it negative.
+    const note = tripActions.startTrip(await locateAll(setup));
+    if (note) toast.message("Budget set to cover your trip", { description: note, duration: 9000 });
+    else toast.success("Your trip plan is ready");
     navigate({ to: "/dashboard" });
   };
 
@@ -232,7 +252,7 @@ function Welcome() {
         ? [destError, "Destination"]
         : reserveError
           ? [reserveError, "Emergency fund"]
-          : form.totalBudget <= 0
+          : totalBudget <= 0
             ? ["Add a total budget to continue", "Total budget"]
             : null;
     if (problem) {
@@ -251,6 +271,9 @@ function Welcome() {
     form.destinationId === CUSTOM_DESTINATION_ID
       ? form.customDestination.trim() || "Somewhere else"
       : dest.name;
+  // A multi-city trip is shown as its route ("Rome → Florence → Venice").
+  const planLegs = citySchedule(shape.nights, { name: destLabel, point: null }, form.cities);
+  const routeText = planLegs.length > 1 ? routeLabel(planLegs) : destLabel;
   const to = travelPoint(dest, form.destinationPoint);
   const miles = originPoint && to ? roadMiles(originPoint, to) : null;
   const distance =
@@ -295,6 +318,7 @@ function Welcome() {
                 touched.current = true;
                 destPicked.current = true;
                 reserveTouched.current = false;
+                setBudgetOwn(!next.budgetAuto);
                 setForm(next);
                 toast("Filled in below. Adjust anything, then plan the trip.");
                 document.getElementById("plan-steps")?.scrollIntoView({ behavior: "smooth" });
@@ -319,6 +343,9 @@ function Welcome() {
                 from={form.origin.split(",")[0]?.trim() || "Home"}
                 to={destLabel}
               />
+              {form.transportMode === "flight" && (
+                <CabinPicker value={form.cabin} onChange={(cabin) => update({ cabin })} />
+              )}
             </Section>
 
             <Section
@@ -362,6 +389,14 @@ function Welcome() {
                   }}
                 />
               </div>
+              {form.tripType !== "cruise" && form.tripType !== "staycation" && (
+                <CitiesEditor
+                  mainName={destLabel}
+                  totalNights={shape.nights}
+                  cities={form.cities ?? []}
+                  onChange={(cities) => update({ cities })}
+                />
+              )}
             </Section>
 
             <Section step="03" title="When & who" style={stagger(3)}>
@@ -461,36 +496,42 @@ function Welcome() {
                   <NumberField
                     aria-label="Total budget"
                     prefix="$"
-                    value={form.totalBudget}
+                    value={totalBudget}
                     onChange={setBudget}
                     step={50}
                     className="mt-1.5 h-12"
                     inputClassName="text-xl"
                   />
-                  <div className="mt-2 flex flex-wrap gap-1.5">
-                    {BUDGET_PRESETS.map((p) => (
+                  {!budgetOwn ? (
+                    <p className="mt-2 text-xs text-muted-foreground">
+                      Set from this trip's costs, about {formatMoney(estimate.planned)}, plus an
+                      emergency fund. It follows the trip as you change it. Type your own anytime.
+                    </p>
+                  ) : estimate.planned + emergencyFund > totalBudget ? (
+                    <p className="mt-2 text-xs text-destructive">
+                      Less than this trip is likely to cost (about {formatMoney(estimate.planned)}).
+                      It'll be raised to cover the trip.{" "}
                       <button
-                        key={p}
                         type="button"
-                        onClick={() => setBudget(p)}
-                        className={cn(
-                          "tabular h-7 rounded-md border px-2 text-xs font-medium transition-colors active:scale-[0.97]",
-                          form.totalBudget === p
-                            ? "border-foreground text-foreground"
-                            : "border-border text-muted-foreground hover:text-foreground",
-                        )}
+                        onClick={() => setBudgetOwn(false)}
+                        className="font-medium text-primary underline-offset-2 hover:underline"
                       >
-                        {formatMoney(p)}
+                        Use {formatMoney(suggested)}
                       </button>
-                    ))}
-                    <button
-                      type="button"
-                      onClick={() => setBudget(suggested)}
-                      className="tabular h-7 rounded-md px-2 text-xs font-medium text-primary transition-colors hover:bg-accent active:scale-[0.97]"
-                    >
-                      Suggested {formatMoney(suggested)}
-                    </button>
-                  </div>
+                    </p>
+                  ) : (
+                    <p className="mt-2 text-xs text-muted-foreground">
+                      Your budget. This trip is likely to cost about {formatMoney(estimate.planned)}
+                      .{" "}
+                      <button
+                        type="button"
+                        onClick={() => setBudgetOwn(false)}
+                        className="font-medium text-primary underline-offset-2 hover:underline"
+                      >
+                        Use the suggested {formatMoney(suggested)}
+                      </button>
+                    </p>
+                  )}
                 </div>
                 <div>
                   <Label className="text-[13px] font-normal text-muted-foreground">
@@ -500,7 +541,7 @@ function Welcome() {
                     aria-label="Emergency fund"
                     prefix="$"
                     step={25}
-                    value={form.emergencyFund}
+                    value={emergencyFund}
                     className="mt-1.5 h-12"
                     inputClassName="text-xl"
                     onChange={(n) => {
@@ -520,7 +561,7 @@ function Welcome() {
             <TripPreview
               form={effective}
               dest={dest}
-              destLabel={destLabel}
+              destLabel={routeText}
               shape={shape}
               totals={estimate}
               inputs={estimateInputs}
@@ -535,7 +576,7 @@ function Welcome() {
       <div className="sticky bottom-[calc(4.5rem+env(safe-area-inset-bottom))] z-20 mt-6 md:bottom-4 lg:hidden">
         <div className="flex items-center justify-between gap-3 rounded-xl border border-border bg-card p-2 pl-4 shadow-lift">
           <div className="min-w-0 text-sm">
-            <p className="truncate font-medium">{destLabel}</p>
+            <p className="truncate font-medium">{routeText}</p>
             <p className="tabular truncate text-xs text-muted-foreground">
               {tripTypeInfo(form.tripType).label} ·{" "}
               {shape.days === 1 ? "day trip" : `${shape.days} days`}

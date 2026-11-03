@@ -14,6 +14,7 @@ import {
 } from "./demo-data";
 import { addDays, isIsoDate, MAX_TRIP_DAYS } from "./dates";
 import { defaultEmergencyFund, MAX_TRAVELERS, type TripCoverage } from "./budget";
+import { MAX_CITIES, type TripCity } from "./multi-city";
 import { suggestedBudget, type TripSetup } from "./trip-store";
 
 export type { TripDraft };
@@ -50,7 +51,12 @@ export type DraftField = "destination" | "dates" | "travelers";
 /** What still has to be decided before the draft can become a trip. */
 export function missingFields(draft: TripDraft | null, today: string): DraftField[] {
   const out: DraftField[] = [];
-  if (!draft?.destination?.trim() && draft?.tripType !== "staycation") out.push("destination");
+  if (
+    !draft?.destination?.trim() &&
+    !draft?.cities?.some((c) => c.name?.trim()) &&
+    draft?.tripType !== "staycation"
+  )
+    out.push("destination");
   if (!draftDates(draft, today)) out.push("dates");
   if (!draft?.travelers || draft.travelers < 1) out.push("travelers");
   return out;
@@ -66,6 +72,12 @@ export function draftDates(
   let end = draft?.endDate ?? "";
   if (!isIsoDate(end) && draft?.nights !== null && draft?.nights !== undefined)
     end = addDays(start, Math.max(0, Math.round(draft.nights)));
+  // A multi-city trip without an end date lasts as long as its cities add up to.
+  const cityNights = (draft?.cities ?? []).reduce(
+    (t, c) => t + Math.max(1, Math.round(Number(c?.nights) || 1)),
+    0,
+  );
+  if (!isIsoDate(end) && (draft?.cities?.length ?? 0) > 1) end = addDays(start, cityNights);
   if (!isIsoDate(end) || end < start) return null;
   const maxEnd = addDays(start, MAX_TRIP_DAYS - 1);
   return { startDate: start, endDate: end > maxEnd ? maxEnd : end };
@@ -100,10 +112,31 @@ export function coverageFromDraft(draft: TripDraft): TripCoverage | null {
   return Object.keys(coverage).length ? coverage : null;
 }
 
+/**
+ * The cities of a multi-city draft: the first is the destination, the rest come
+ * after it in order (a repeat of the destination's name is dropped).
+ */
+export function draftCities(draft: TripDraft): { first: string; more: TripCity[] } {
+  const list = (draft.cities ?? [])
+    .map((c) => ({
+      name: String(c?.name ?? "").trim(),
+      nights: Math.max(1, Math.round(Number(c?.nights) || 1)),
+    }))
+    .filter((c) => c.name);
+  const named = draft.destination?.trim() ?? "";
+  if (list.length < 2) return { first: named || list[0]?.name || "", more: [] };
+  const first = named || list[0]!.name;
+  const rest = city(list[0]!.name) === city(first) ? list.slice(1) : list;
+  return {
+    first,
+    more: rest.filter((c) => city(c.name) !== city(first)).slice(0, MAX_CITIES - 1),
+  };
+}
+
 /** A trip setup from the draft, starting from `base` for anything the draft doesn't say. */
 export function setupFromDraft(draft: TripDraft, base: TripSetup, today: string): TripSetup {
   const dates = draftDates(draft, today);
-  const named = draft.destination?.trim() ?? "";
+  const { first: named, more } = draftCities(draft);
   let tripType: TripType = draft.tripType ?? base.tripType;
   let destinationId = base.destinationId;
   let customDestination = base.customDestination;
@@ -141,10 +174,17 @@ export function setupFromDraft(draft: TripDraft, base: TripSetup, today: string)
     interests: draft.interests.length ? draft.interests : base.interests,
     ...(dates ?? { startDate: base.startDate, endDate: base.endDate }),
     coverage: coverageFromDraft(draft),
+    cities: tripType === "cruise" || tripType === "staycation" ? [] : more,
+    cabin: draft.cabin ?? base.cabin ?? null,
   };
-  const totalBudget =
-    draft.totalBudget && draft.totalBudget > 0
-      ? Math.round(draft.totalBudget)
-      : suggestedBudget(next);
-  return { ...next, totalBudget, emergencyFund: defaultEmergencyFund(totalBudget) };
+  // The traveler's number when they gave one; otherwise Waypoint picks it from the
+  // trip's costs (and keeps it covering the trip, see fitBudget in trip-store).
+  const stated = draft.totalBudget && draft.totalBudget > 0 ? Math.round(draft.totalBudget) : 0;
+  const totalBudget = stated || suggestedBudget(next);
+  return {
+    ...next,
+    totalBudget,
+    emergencyFund: defaultEmergencyFund(totalBudget),
+    budgetAuto: !stated,
+  };
 }

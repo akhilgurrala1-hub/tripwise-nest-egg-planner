@@ -282,6 +282,17 @@ export function cleanChatAnswer(a: ChatAnswer): ChatAnswer {
         activities: !!t.covered?.activities,
         localTransport: !!t.covered?.localTransport,
       },
+      // Every city the traveler named, in order, with whole nights (at least one).
+      cities: (Array.isArray(t.cities) ? t.cities : [])
+        .map((c) => ({
+          name: clip(String(c?.name ?? ""), 120),
+          nights: Math.min(30, Math.max(1, Math.round(Number(c?.nights) || 1))),
+        }))
+        .filter((c) => c.name)
+        .slice(0, 8),
+      cabin: (["economy", "premium", "business", "first"] as const).includes(t.cabin as "economy")
+        ? t.cabin
+        : null,
       // A round trip to the airport or station: never negative, never absurd.
       transferCost:
         t.transferCost === null || t.transferCost === undefined || !Number.isFinite(t.transferCost)

@@ -52,7 +52,7 @@ const SAVINGS_SHOWN = 5;
 
 /** A small colored square with an icon, for card titles. */
 function Dashboard() {
-  const { trip, dest, totals, savings, applied, potentialSavings, shape } = useTrip();
+  const { trip, dest, place, legs, totals, savings, applied, potentialSavings, shape } = useTrip();
   const [showAllSavings, setShowAllSavings] = useState(false);
   const style = TRAVEL_STYLES.find((s) => s.id === trip.setup.style);
 
@@ -67,7 +67,9 @@ function Dashboard() {
   const flightsConnected = !!priceStatus.data?.flights;
   // Transportation's parts only add up while it isn't a custom total.
   const parts =
-    trip.overrides.transportation === undefined ? transportParts(trip.inputs, shape) : [];
+    trip.overrides.transportation === undefined
+      ? transportParts(trip.inputs, shape, legs.length)
+      : [];
   const breakdown = CATEGORIES.map((c) => ({ cat: c, value: totals.categories[c] }))
     .filter((d) => d.value > 0)
     .sort((a, b) => b.value - a.value);
@@ -79,7 +81,7 @@ function Dashboard() {
     <div>
       <PageHeader
         eyebrow={`Overview · ${style?.label ?? ""} style`}
-        title={dest.name}
+        title={place}
         sampleBanner="card"
       >
         {!trip.isSample && <ShareTripButton />}

@@ -23,7 +23,7 @@ import { recommendDestinations } from "@/lib/recommend";
 import { useAuth } from "@/lib/auth-context";
 import { coveredLabels, formatMoney } from "@/lib/budget";
 import { todayIso } from "@/lib/dates";
-import { tripTypeInfo } from "@/lib/demo-data";
+import { cabinInfo, tripTypeInfo } from "@/lib/demo-data";
 import { cn } from "@/lib/utils";
 
 type Turn =
@@ -424,7 +424,12 @@ function DraftSummary({ draft, today }: { draft: TripDraft; today: string }) {
     {
       key: "where",
       label: "Where",
-      value: draft.tripType === "staycation" ? "Home" : draft.destination,
+      value:
+        draft.tripType === "staycation"
+          ? "Home"
+          : (draft.cities?.length ?? 0) > 1
+            ? draft.cities.map((c) => `${c.name.split(",")[0]} ${c.nights}n`).join(" → ")
+            : draft.destination,
     },
     {
       key: "when",
@@ -443,10 +448,14 @@ function DraftSummary({ draft, today }: { draft: TripDraft; today: string }) {
       label: "Trip",
       value: draft.tripType ? tripTypeInfo(draft.tripType).label : null,
     },
+    ...(draft.cabin && draft.cabin !== "economy"
+      ? [{ key: "cabin", label: "Cabin", value: cabinInfo(draft.cabin).label }]
+      : []),
     {
       key: "budget",
       label: "Budget",
-      value: draft.totalBudget ? formatMoney(draft.totalBudget) : null,
+      // Without a number from the traveler, Waypoint works it out from the trip's costs.
+      value: draft.totalBudget ? formatMoney(draft.totalBudget) : "Worked out for you",
     },
     // Only shown once the assistant has worked them out: nothing to fill in otherwise.
     ...(() => {

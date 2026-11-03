@@ -38,7 +38,14 @@ export interface LivePricesRequest {
   includeHotels: boolean;
   originAirport: string;
   destinationAirport: string;
+  /** Flight cabin (economy when unset) */
+  cabin?: "economy" | "premium" | "business" | "first";
+  /** Multi-city: every city in order with its check-in and check-out dates */
+  cities?: { name: string; checkIn: string; checkOut: string }[];
 }
+
+/** Google Flights' travel_class codes. */
+const TRAVEL_CLASS = { economy: 1, premium: 2, business: 3, first: 4 } as const;
 
 class PriceError extends Error {}
 
@@ -233,7 +240,9 @@ async function flightQuote(
     throw new PriceError("Flight prices: your start and destination use the same airport.");
   return cachedLookup(
     cache,
-    ["flights", from, to, req.startDate, req.endDate, req.travelers].join("|"),
+    ["flights", from, to, req.startDate, req.endDate, req.travelers, req.cabin ?? "economy"].join(
+      "|",
+    ),
     PRICE_TTL.flights,
     () => loadFlights(req, from, to, key),
   );
@@ -255,6 +264,7 @@ async function loadFlights(
         return_date: req.endDate,
         type: 1,
         adults: req.travelers,
+        travel_class: TRAVEL_CLASS[req.cabin ?? "economy"],
         currency: "USD",
         gl: "us",
         hl: "en",
@@ -299,6 +309,153 @@ async function loadFlights(
   };
 }
 
+/** The cheapest one-way flight for one leg of a multi-city trip, per person. */
+async function oneWayLeg(
+  from: string,
+  to: string,
+  date: string,
+  req: LivePricesRequest,
+  key: string,
+  cache: PriceCache,
+): Promise<Cached<{ from: string; to: string; date: string; option: FlightOption }>> {
+  return cachedLookup(
+    cache,
+    ["leg", from, to, date, req.travelers, req.cabin ?? "economy"].join("|"),
+    PRICE_TTL.flights,
+    async () => {
+      const body = await getJson(
+        serpUrl(
+          {
+            engine: "google_flights",
+            departure_id: from,
+            arrival_id: to,
+            outbound_date: date,
+            type: 2,
+            adults: req.travelers,
+            travel_class: TRAVEL_CLASS[req.cabin ?? "economy"],
+            currency: "USD",
+            gl: "us",
+            hl: "en",
+          },
+          key,
+        ),
+        "Flight prices",
+      );
+      const groups = [
+        ...((body["best_flights"] as SerpFlightGroup[]) ?? []),
+        ...((body["other_flights"] as SerpFlightGroup[]) ?? []),
+      ].filter((g) => typeof g.price === "number" && g.price > 0 && g.flights?.length);
+      const best = groups.sort((a, b) => a.price! - b.price!)[0];
+      if (!best) throw new PriceError(`Flight prices: no flights listed from ${from} to ${to}.`);
+      return {
+        from,
+        to,
+        date,
+        option: {
+          airlines: Array.from(new Set(best.flights!.map((f) => f.airline ?? "").filter(Boolean))),
+          stops: best.flights!.length - 1,
+          durationMinutes: best.total_duration ?? 0,
+          departs: best.flights![0]!.departure_airport?.time ?? "",
+          arrives: best.flights![best.flights!.length - 1]!.arrival_airport?.time ?? "",
+          perPerson: perPersonFare(best.price!, req.travelers),
+        },
+      };
+    },
+  );
+}
+
+/**
+ * Multi-city flights: each leg (home → city → city → home) priced as a one-way
+ * flight on the day the traveler moves on, added up per person.
+ */
+async function multiCityFlights(
+  req: LivePricesRequest,
+  key: string,
+  cache: PriceCache,
+): Promise<Cached<FlightQuote>> {
+  const cities = req.cities ?? [];
+  const places = [req.origin, ...cities.map((c) => c.name), req.origin];
+  const airports = await Promise.all(
+    places.map((p, i) =>
+      i === 0 || i === places.length - 1
+        ? req.originAirport || airportFor(p, key, cache)
+        : airportFor(p, key, cache),
+    ),
+  );
+  if (airports.some((a) => !a))
+    throw new PriceError(
+      "Flight prices: couldn't find an airport for one of the cities. Add your home airport in your profile.",
+    );
+  const dates = [cities[0]!.checkIn, ...cities.slice(1).map((c) => c.checkIn), req.endDate];
+  const legs = await Promise.all(
+    airports
+      .slice(0, -1)
+      .map((a, i) => [a!, airports[i + 1]!, dates[i]!] as const)
+      .filter(([a, b]) => a !== b)
+      .map(([a, b, d]) => oneWayLeg(a, b, d, req, key, cache)),
+  );
+  const perPerson = Math.round(legs.reduce((t, l) => t + l.value.option.perPerson, 0) * 100) / 100;
+  return {
+    value: {
+      originAirport: airports[0]!,
+      destinationAirport: airports[1]!,
+      departDate: req.startDate,
+      returnDate: req.endDate,
+      perPerson,
+      typicalRange: null,
+      options: legs.map((l) => l.value.option),
+      bookingUrl: null,
+      legs: legs.map((l) => ({
+        from: l.value.from,
+        to: l.value.to,
+        date: l.value.date,
+        perPerson: l.value.option.perPerson,
+      })),
+    },
+    savedAt: Math.min(...legs.map((l) => l.savedAt)),
+    hit: legs.every((l) => l.hit),
+  };
+}
+
+/** Multi-city hotels: each city's own nights, averaged into one nightly rate by nights. */
+async function multiCityHotels(
+  req: LivePricesRequest,
+  key: string,
+  cache: PriceCache,
+): Promise<Cached<HotelQuote>> {
+  const stays = (req.cities ?? []).filter((c) => c.checkOut > c.checkIn);
+  const quotes = await Promise.all(
+    stays.map((c) =>
+      hotelQuote(
+        { ...req, destination: c.name, startDate: c.checkIn, endDate: c.checkOut },
+        key,
+        cache,
+      ),
+    ),
+  );
+  const nights = (c: { checkIn: string; checkOut: string }) =>
+    Math.max(1, Math.round((Date.parse(c.checkOut) - Date.parse(c.checkIn)) / 86_400_000));
+  const totalNights = stays.reduce((t, c) => t + nights(c), 0);
+  const nightly =
+    Math.round(
+      (quotes.reduce((t, q, i) => t + q.value.nightly * nights(stays[i]!), 0) /
+        Math.max(1, totalNights)) *
+        100,
+    ) / 100;
+  return {
+    value: {
+      checkIn: req.startDate,
+      checkOut: req.endDate,
+      nightly,
+      pickLabel: `Average across ${stays.length} cities, by nights`,
+      options: quotes.flatMap((q) => q.value.options.slice(0, 4)),
+      searchUrl: quotes[0]?.value.searchUrl ?? "",
+    },
+    savedAt: Math.min(...quotes.map((q) => q.savedAt)),
+    hit: quotes.every((q) => q.hit),
+  };
+}
+
 const reason = (r: PromiseRejectedResult) =>
   r.reason instanceof PriceError ? r.reason.message : "A price service didn't respond.";
 
@@ -317,11 +474,15 @@ export async function fetchLivePrices(
     req.endDate <= req.startDate || !req.includeHotels
       ? Promise.resolve(null)
       : serp
-        ? hotelQuote(req, serp, cache)
+        ? (req.cities?.length ?? 0) > 1
+          ? multiCityHotels(req, serp, cache)
+          : hotelQuote(req, serp, cache)
         : missing("Hotel prices"),
     req.includeFlights
       ? serp
-        ? flightQuote(req, serp, cache)
+        ? (req.cities?.length ?? 0) > 1
+          ? multiCityFlights(req, serp, cache)
+          : flightQuote(req, serp, cache)
         : missing("Flight prices")
       : Promise.resolve(null),
   ]);
