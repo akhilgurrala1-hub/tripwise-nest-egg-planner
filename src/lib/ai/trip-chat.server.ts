@@ -2,10 +2,10 @@ import { createOpenAI } from "@ai-sdk/openai";
 import { Output, streamText } from "ai";
 import { z } from "zod";
 
+import { modelFor, reasoningOptions } from "./models.server";
 import { createLovableAiGatewayRunIdFetch } from "./run-id.server";
 
 const GATEWAY_URL = "https://ai.gateway.lovable.dev/v1";
-const MODEL = "openai/gpt-6-astra";
 const SERVER_TIMEOUT_MS = 50_000;
 
 export const TRIP_TYPE_IDS = ["road-trip", "flight", "cruise", "rail", "staycation"] as const;
@@ -114,19 +114,11 @@ export async function runTripChat(
     const abortSignal = requestSignal(clientSignal);
     const result = streamText({
       ...(abortSignal ? { abortSignal } : {}),
-      model: provider.responses(MODEL),
+      model: provider.responses(modelFor("chat")),
       instructions: `${INSTRUCTIONS}\n\n${context}`,
       messages: req.messages,
       output: Output.object({ schema: tripChatSchema }),
-      providerOptions: {
-        openai: {
-          forceReasoning: true,
-          reasoningEffort: "low",
-          reasoningSummary: "auto",
-          store: false,
-          include: ["reasoning.encrypted_content"],
-        },
-      },
+      providerOptions: reasoningOptions("chat"),
     });
     const answer = await result.output;
     if (!answer)

@@ -60,6 +60,8 @@ export interface SegmentOption<V extends string> {
   icon?: ReactNode;
   /** Color for the icon while selected (defaults to the primary accent) */
   accent?: string;
+  /** Full name for assistive tech when the visible label is shortened */
+  ariaLabel?: string;
 }
 
 /**
@@ -120,6 +122,7 @@ export function Segmented<V extends string>({
             type="button"
             role="radio"
             aria-checked={active}
+            {...(o.ariaLabel ? { "aria-label": o.ariaLabel } : {})}
             data-active={active}
             onClick={() => onChange(o.value)}
             className={cn(

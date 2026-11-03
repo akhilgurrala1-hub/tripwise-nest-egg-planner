@@ -1,8 +1,11 @@
-import { CalendarHeart } from "lucide-react";
+import { CalendarHeart, ExternalLink, Footprints, ShieldCheck } from "lucide-react";
 
 import { formatCalendarDate } from "@/lib/dates";
 import type { DemoDestination } from "@/lib/demo-data";
-import { useDestinationSummary, useTripHolidays } from "@/lib/live/use-open-data";
+import { destinationQuery } from "@/lib/live/place";
+import type { GuideTip } from "@/lib/live/travel-guide";
+import { useDestinationSummary, useTravelGuide, useTripHolidays } from "@/lib/live/use-open-data";
+import { destinationReviewLinks } from "@/lib/reviews";
 import { cn } from "@/lib/utils";
 
 /**
@@ -72,6 +75,8 @@ export function DestinationCard({
 }) {
   const holidays = useTripHolidays();
   const summary = useDestinationSummary(dest, origin);
+  const guide = useTravelGuide();
+  const reviews = destinationReviewLinks(destinationQuery(dest, origin));
   return (
     <section className={cn("surface-card p-5", className)}>
       <h2 className="text-[15px] font-semibold">About {dest.name}</h2>
@@ -85,7 +90,64 @@ export function DestinationCard({
         </p>
       )}
       <HolidayList holidays={holidays} className="mt-4" />
+      {guide.data && guide.data.tips.length > 0 && (
+        <TravelerTips tips={guide.data.tips} url={guide.data.url} className="mt-4" />
+      )}
+      {reviews.length > 0 && (
+        <p className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-1 border-t border-border pt-3 text-xs">
+          <span className="text-muted-foreground">What travelers say:</span>
+          {reviews.map((l) => (
+            <a
+              key={l.site}
+              href={l.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1 font-semibold text-primary underline-offset-2 hover:underline"
+            >
+              {l.label} <ExternalLink className="size-3" aria-hidden />
+            </a>
+          ))}
+        </p>
+      )}
     </section>
+  );
+}
+
+const TIP_ICON = { "Stay safe": ShieldCheck, "Get around": Footprints } as const;
+
+/** Practical advice from the travel guide, credited with a link to the full guide. */
+function TravelerTips({
+  tips,
+  url,
+  className,
+}: {
+  tips: GuideTip[];
+  url: string;
+  className?: string;
+}) {
+  return (
+    <div className={cn("animate-pop space-y-2.5", className)}>
+      {tips.map((t) => {
+        const Icon = TIP_ICON[t.topic];
+        return (
+          <div key={t.topic} className="flex gap-2.5">
+            <Icon className="mt-0.5 size-4 shrink-0 text-primary" aria-hidden />
+            <p className="text-[13px] leading-relaxed text-muted-foreground">
+              <span className="font-semibold text-foreground">{t.topic}.</span> {t.text}
+            </p>
+          </div>
+        );
+      })}
+      <a
+        href={url}
+        target="_blank"
+        rel="noopener noreferrer"
+        title="Wikivoyage travel guide"
+        className="inline-block text-xs font-medium text-primary underline-offset-2 hover:underline"
+      >
+        Read the full travel guide
+      </a>
+    </div>
   );
 }
 

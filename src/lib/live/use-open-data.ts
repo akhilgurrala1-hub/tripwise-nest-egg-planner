@@ -4,6 +4,7 @@ import type { GeoPoint } from "../catalog";
 import type { DemoDestination } from "../demo-data";
 import { useTrip } from "../trip-store";
 import { fetchHolidays, fetchPlaceSummary, holidaysBetween } from "./open-data";
+import { fetchTravelGuide } from "./travel-guide";
 import { useHomePlace } from "./use-home";
 import { geocodeQuery, useHydrated } from "./use-live";
 
@@ -26,6 +27,31 @@ export function useDestinationSummary(dest: DemoDestination, origin: string) {
     enabled: hydrated && q.length >= 2,
     staleTime: 7 * 24 * 60 * 60 * 1000,
     retry: 1,
+  });
+}
+
+/** The travel-guide lookup for a destination, shared by the Overview and the planner (cached). */
+export function travelGuideQuery(dest: DemoDestination, origin: string, country: string | null) {
+  const q = wikiQuery(dest, origin).trim();
+  const near = dest.anchor?.name ?? dest.name;
+  return {
+    queryKey: ["live", "travel-guide", q.toLowerCase(), country ?? ""],
+    queryFn: ({ signal }: { signal: AbortSignal }) =>
+      fetchTravelGuide(q, near, country ?? "US", signal),
+    staleTime: 7 * 24 * 60 * 60 * 1000,
+    retry: 1,
+  };
+}
+
+/** Wikivoyage's listings and practical tips for the trip's destination (free). */
+export function useTravelGuide() {
+  const { trip, dest } = useTrip();
+  const hydrated = useHydrated();
+  const country = useTripCountry();
+  const q = wikiQuery(dest, trip.setup.origin).trim();
+  return useQuery({
+    ...travelGuideQuery(dest, trip.setup.origin, country),
+    enabled: hydrated && q.length >= 2,
   });
 }
 

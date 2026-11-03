@@ -17,8 +17,10 @@ const inputSchema = z.object({
   foodBudgetPerPersonDay: z.number().min(0).max(10000),
   /** Real weather per trip day, e.g. "Day 2: Rain, high 58°F, 80% chance of rain (forecast)" */
   weather: z.array(z.string().max(120)).max(14).default([]),
-  /** Real nearby places ("Name (what it is)") so the plan uses places that exist */
-  places: z.array(z.string().max(140)).max(40).default([]),
+  /** Real places ("Name (what it is): description; price; hours") so the plan uses places that exist */
+  places: z.array(z.string().max(260)).max(40).default([]),
+  /** Practical advice from the travel guide ("Stay safe: ...", "Get around: ...") */
+  guide: z.array(z.string().max(360)).max(4).default([]),
   /** Public holidays and other dates to know */
   notes: z.array(z.string().max(160)).max(10).default([]),
   /** When refining: what the traveler wants changed, and the current plan */

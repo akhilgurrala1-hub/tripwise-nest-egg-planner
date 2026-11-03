@@ -103,9 +103,9 @@ function ItineraryPage() {
                   <DropdownMenuItem onClick={planner.planWithOpenData}>
                     <MapPin className="size-4" />
                     <span>
-                      Landmarks & restaurants
+                      Travel guide picks
                       <span className="block text-xs text-muted-foreground">
-                        Wikipedia and OpenStreetMap
+                        Wikivoyage, Wikipedia and OpenStreetMap
                       </span>
                     </span>
                   </DropdownMenuItem>
@@ -145,13 +145,13 @@ function ItineraryPage() {
             size="icon"
             onClick={() => {
               tripActions.regenerateDemoItinerary();
-              toast("Reset to the demo plan", {
+              toast("Reset to the example plan", {
                 description: "Stops you added or edited were kept.",
               });
             }}
             disabled={planner.busy}
-            aria-label="Reset to the demo plan"
-            title="Reset to the demo plan"
+            aria-label="Reset to the example plan"
+            title="Reset to the example plan"
           >
             <RotateCcw />
           </Button>
@@ -184,7 +184,7 @@ function ItineraryPage() {
                 {planner.job === "ai"
                   ? "Planning around your interests, budget and weather. This can take up to a minute."
                   : planner.job === "open"
-                    ? "Looking up landmarks on Wikipedia and restaurants on OpenStreetMap…"
+                    ? "Reading the travel guide and looking up landmarks and restaurants…"
                     : "Finding well-reviewed places near your destination…"}{" "}
                 Your current plan stays until the new one is ready.
               </p>
@@ -200,7 +200,7 @@ function ItineraryPage() {
             <div className="surface-card p-8 text-center">
               <p className="text-[15px] font-semibold">No itinerary yet</p>
               <Button className="mt-4" onClick={tripActions.regenerateDemoItinerary}>
-                Create demo plan
+                Create example plan
               </Button>
             </div>
           ) : (
@@ -246,7 +246,7 @@ function ItineraryPage() {
 function PlanSourceBadge({ source }: { source: "demo" | "ai" | "google" | "open" }) {
   if (source === "open")
     return (
-      <SourceNote label="Real places from Wikipedia and OpenStreetMap. Prices aren't listed." />
+      <SourceNote label="Real places from the Wikivoyage travel guide, Wikipedia and OpenStreetMap. Some prices aren't listed." />
     );
   if (source === "google")
     return <SourceNote label="Real places from Google Maps. Costs are estimates." />;

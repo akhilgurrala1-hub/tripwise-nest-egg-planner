@@ -1,6 +1,8 @@
 import {
+  BookOpen,
   CalendarHeart,
   Car,
+  Clock,
   Coffee,
   ExternalLink,
   Landmark,
@@ -18,7 +20,10 @@ import { WeatherChip } from "@/components/app/Weather";
 import { formatMoney } from "@/lib/budget";
 import { formatCalendarDate } from "@/lib/dates";
 import type { Itinerary, ItineraryDay, ItineraryItem, ItemKind, SlotTime } from "@/lib/itinerary";
+import { destinationQuery } from "@/lib/live/place";
 import { isWetDay, type DayWeather } from "@/lib/live/weather";
+import { placeReviewLinks } from "@/lib/reviews";
+import { useTrip } from "@/lib/trip-store";
 
 const KIND_ICON: Record<ItemKind, LucideIcon> = {
   sight: Landmark,
@@ -139,30 +144,48 @@ function ItemRow({
           {item.area}
           {item.note ? ` · ${item.note}` : ""}
         </p>
-        {(item.rating || item.mapsUrl) && (
-          <p className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
-            {item.rating ? (
-              <span className="tabular inline-flex items-center gap-1 font-semibold">
-                <Star className="size-3 fill-current text-gold" aria-hidden />{" "}
-                {item.rating.toFixed(1)}
-                {item.ratingCount ? (
-                  <span className="font-normal text-muted-foreground">
-                    ({item.ratingCount.toLocaleString()} reviews)
-                  </span>
-                ) : null}
+        {(item.hours || item.source === "wikivoyage") && (
+          <p className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
+            {item.source === "wikivoyage" && (
+              <span className="inline-flex items-center gap-1 font-medium text-foreground/80">
+                <BookOpen className="size-3" aria-hidden /> Travel guide pick
               </span>
-            ) : null}
-            {item.mapsUrl && (
-              <a
-                href={item.mapsUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-1 font-semibold text-primary underline-offset-2 hover:underline"
-              >
-                Open in Google Maps <ExternalLink className="size-3" aria-hidden />
-              </a>
+            )}
+            {item.hours && (
+              <span className="inline-flex items-center gap-1">
+                <Clock className="size-3" aria-hidden /> {item.hours}
+              </span>
             )}
           </p>
+        )}
+        {item.placeId && !item.custom ? (
+          <PlaceLinks item={item} />
+        ) : (
+          (item.rating || item.mapsUrl) && (
+            <p className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
+              {item.rating ? (
+                <span className="tabular inline-flex items-center gap-1 font-semibold">
+                  <Star className="size-3 fill-current text-gold" aria-hidden />{" "}
+                  {item.rating.toFixed(1)}
+                  {item.ratingCount ? (
+                    <span className="font-normal text-muted-foreground">
+                      ({item.ratingCount.toLocaleString()} reviews)
+                    </span>
+                  ) : null}
+                </span>
+              ) : null}
+              {item.mapsUrl && (
+                <a
+                  href={item.mapsUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1 font-semibold text-primary underline-offset-2 hover:underline"
+                >
+                  Open in Google Maps <ExternalLink className="size-3" aria-hidden />
+                </a>
+              )}
+            </p>
+          )
         )}
       </div>
       <div className="flex shrink-0 items-start gap-1">
@@ -174,6 +197,40 @@ function ItemRow({
         </span>
       </div>
     </li>
+  );
+}
+
+/** A real place's rating, its map, and where to read what people say about it. */
+function PlaceLinks({ item }: { item: ItineraryItem }) {
+  const { trip, dest } = useTrip();
+  const near = destinationQuery(dest, trip.setup.origin);
+  const links = placeReviewLinks(item.name, near, item.mapsUrl);
+  return (
+    <p className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs print:hidden">
+      {item.rating ? (
+        <span className="tabular inline-flex items-center gap-1 font-semibold">
+          <Star className="size-3 fill-current text-gold" aria-hidden /> {item.rating.toFixed(1)}
+          {item.ratingCount ? (
+            <span className="font-normal text-muted-foreground">
+              ({item.ratingCount.toLocaleString()} reviews)
+            </span>
+          ) : null}
+        </span>
+      ) : null}
+      <span className="text-muted-foreground">Reviews:</span>
+      {links.map((l) => (
+        <a
+          key={l.site}
+          href={l.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label={`${l.label} for ${item.name}`}
+          className="inline-flex items-center gap-1 font-semibold text-primary underline-offset-2 hover:underline"
+        >
+          {l.label} <ExternalLink className="size-3" aria-hidden />
+        </a>
+      ))}
+    </p>
   );
 }
 
@@ -198,7 +255,13 @@ function CostChip({ item }: { item: ItineraryItem }) {
   return (
     <span
       className="tabular text-xs font-medium text-foreground"
-      title={item.costSource === "price-level" ? "Estimated from the listing's $ level" : undefined}
+      title={
+        item.priceText
+          ? `Listed price: ${item.priceText}`
+          : item.costSource === "price-level"
+            ? "Estimated from the listing's price level"
+            : undefined
+      }
     >
       {approx}
       {formatMoney(item.costPerPerson)}/pp

@@ -11,6 +11,6 @@ export function destinationQuery(dest: DemoDestination, origin = "", homeCity = 
   if (dest.port) return dest.anchor?.name ?? dest.name;
   // Suggested places search their real town ("Gatlinburg, TN"), not the area's name.
   if (dest.id.startsWith("place:") && dest.anchor) return dest.anchor.name;
-  if (dest.region === "Custom destination" || dest.region === "Staycation") return dest.name;
+  if (dest.id === "custom" || !dest.region || dest.region === "Staycation") return dest.name;
   return `${dest.name}, ${dest.region}`;
 }

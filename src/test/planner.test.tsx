@@ -32,6 +32,11 @@ vi.mock("@/lib/live/open-data", async (orig) => ({
   fetchRestaurants: async () => [],
   fetchHolidays: async () => [],
 }));
+// The travel guide has nothing for this place.
+vi.mock("@/lib/live/travel-guide", async (orig) => ({
+  ...(await orig<typeof import("@/lib/live/travel-guide")>()),
+  fetchTravelGuide: async () => null,
+}));
 vi.mock("sonner", () => ({
   toast: Object.assign(toasts.plain, { error: toasts.error, success: toasts.success }),
 }));

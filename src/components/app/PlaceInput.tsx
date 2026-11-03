@@ -4,7 +4,7 @@ import { useEffect, useId, useState } from "react";
 
 import { Input } from "@/components/ui/input";
 import type { GeoPlace } from "@/lib/live/geocode";
-import { geocodeQuery } from "@/lib/live/use-live";
+import { geocodeQuery, useDebouncedValue } from "@/lib/live/use-live";
 import { cn } from "@/lib/utils";
 
 /** Text input with real place suggestions (free Open-Meteo geocoding). Free text is still accepted. */
@@ -31,12 +31,7 @@ export function PlaceInput({
   const listId = useId();
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState(-1);
-  const [debounced, setDebounced] = useState(value);
-
-  useEffect(() => {
-    const t = setTimeout(() => setDebounced(value), 300);
-    return () => clearTimeout(t);
-  }, [value]);
+  const debounced = useDebouncedValue(value);
 
   const q = useQuery({ ...geocodeQuery(debounced), enabled: open && debounced.trim().length >= 2 });
   const options = (q.data ?? []).filter(

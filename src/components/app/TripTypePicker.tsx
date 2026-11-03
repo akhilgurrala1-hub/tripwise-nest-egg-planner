@@ -71,6 +71,7 @@ export function TripTypePicker({
             ),
             icon: <Icon className="size-[18px]" strokeWidth={1.7} />,
             accent: TRIP_COLOR[t.id],
+            ariaLabel: t.label,
           };
         })}
       />

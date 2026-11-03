@@ -200,7 +200,7 @@ const TEMPLATES: Template[] = [
 
 export const demoRouteProvider: RouteProvider = {
   id: "demo",
-  label: "Demo route data",
+  label: "Example route data",
   isDemo: true,
   async getRoute() {
     return { distanceMiles: null, durationMinutes: null, polyline: null };

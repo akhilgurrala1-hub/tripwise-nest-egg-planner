@@ -169,6 +169,7 @@ export function parseLandmarks(body: unknown, near: string): RealPlace[] {
       costPerPerson: 0,
       costSource: "unknown",
       interests,
+      source: "wikipedia",
       _dist: coords?.dist ?? Number(p["index"] ?? 0) * 100,
     });
   }
@@ -239,6 +240,8 @@ export function parseRestaurants(body: unknown, near: string): RealPlace[] {
       costPerPerson: 0,
       costSource: "unknown",
       interests: CUISINE_INTERESTS.find(([re]) => re.test(cuisine))?.[1] ?? ["food"],
+      ...(tags["opening_hours"] ? { hours: tags["opening_hours"].slice(0, 80) } : {}),
+      source: "osm",
     });
   }
   return out;
