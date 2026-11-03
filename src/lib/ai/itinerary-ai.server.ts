@@ -1,11 +1,14 @@
 import { createOpenAI } from "@ai-sdk/openai";
-import { Output, streamText } from "ai";
+import { Output, streamText, type ModelMessage } from "ai";
 import { z } from "zod";
 
+import { planProblems } from "../ai-quality";
+import { modelFor, reasoningOptions } from "./models.server";
 import { createLovableAiGatewayRunIdFetch } from "./run-id.server";
 
 const GATEWAY_URL = "https://ai.gateway.lovable.dev/v1";
-const MODEL = "openai/gpt-6-astra";
+/** A review pass only starts if the first answer came back within this, so both fit in the timeout. */
+const REPAIR_DEADLINE_MS = 40_000;
 
 export const aiItinerarySchema = z.object({
   days: z.array(
@@ -44,6 +47,8 @@ export interface AiItineraryRequest {
   weather: string[];
   /** Real places near the destination ("Name (what it is)"), to ground the plan */
   places: string[];
+  /** Practical advice from the travel guide */
+  guide: string[];
   /** Dates to know about, e.g. public holidays */
   notes: string[];
   /** The traveler's requested changes, when refining a plan */
@@ -103,8 +108,7 @@ function describeError(err: unknown): { status: number; error: string } {
     return { status, error: safe || "AI planning isn't available for this workspace right now." };
   return {
     status,
-    error:
-      safe || "The AI planner couldn't create an itinerary. Your demo plan is still available.",
+    error: safe || "The AI planner couldn't create an itinerary. Your current plan is unchanged.",
   };
 }
 
@@ -149,9 +153,10 @@ export async function generateAiItinerary(
     `Food budget per person per day: $${Math.round(req.foodBudgetPerPersonDay)}`,
     ...(req.weather.length ? [`Weather (real data):\n${req.weather.join("\n")}`] : []),
     ...(req.notes.length ? [`Dates to know:\n${req.notes.join("\n")}`] : []),
+    ...(req.guide.length ? [`Advice from travelers (Wikivoyage):\n${req.guide.join("\n")}`] : []),
     ...(req.places.length
       ? [
-          `Real places near the destination (Wikipedia and OpenStreetMap):\n${req.places.map((p) => `- ${p}`).join("\n")}`,
+          `Real places at the destination (from the Wikivoyage travel guide, Wikipedia and OpenStreetMap):\n${req.places.map((p) => `- ${p}`).join("\n")}`,
         ]
       : []),
     ...(req.instructions
@@ -162,31 +167,60 @@ export async function generateAiItinerary(
       : []),
   ].join("\n");
 
-  try {
-    const abortSignal = requestSignal(clientSignal);
+  const started = Date.now();
+  const abortSignal = requestSignal(clientSignal);
+  const model = provider.responses(modelFor("planner"));
+  const ask = async (messages: ModelMessage[]) => {
     const result = streamText({
       ...(abortSignal ? { abortSignal } : {}),
-      model: provider.responses(MODEL),
+      model,
       instructions: INSTRUCTIONS,
-      messages: [{ role: "user", content: prompt }],
+      messages,
       output: Output.object({ schema: aiItinerarySchema }),
-      providerOptions: {
-        openai: {
-          forceReasoning: true,
-          reasoningEffort: "low",
-          reasoningSummary: "auto",
-          store: false,
-          include: ["reasoning.encrypted_content"],
-        },
-      },
+      providerOptions: reasoningOptions("planner"),
     });
-    const output = await result.output;
+    return result.output;
+  };
+  const want = {
+    days: req.days,
+    activityBudgetPerPerson: req.activityBudgetPerPerson,
+    foodBudgetPerPersonDay: req.foodBudgetPerPersonDay,
+  };
+
+  try {
+    const first: ModelMessage[] = [{ role: "user", content: prompt }];
+    let output = await ask(first);
     if (!output || !Array.isArray(output.days) || output.days.length === 0) {
       return {
         ok: false,
         status: 502,
-        error: "The AI planner returned an empty plan. Your demo plan is still available.",
+        error: "The AI planner returned an empty plan. Your current plan is unchanged.",
       };
+    }
+    // One review pass, only when the plan has a clear problem and there's time left.
+    // It costs a second call, so ordinary good plans never pay for it.
+    const problems = planProblems(output, want);
+    if (problems.length > 0 && Date.now() - started < REPAIR_DEADLINE_MS) {
+      try {
+        const fixed = await ask([
+          ...first,
+          { role: "assistant", content: JSON.stringify(output) },
+          {
+            role: "user",
+            content: `Fix these problems and return the whole corrected plan, keeping everything else:\n${problems.map((p) => `- ${p}`).join("\n")}`,
+          },
+        ]);
+        if (
+          fixed &&
+          Array.isArray(fixed.days) &&
+          fixed.days.length > 0 &&
+          planProblems(fixed, want).length < problems.length
+        )
+          output = fixed;
+      } catch (err) {
+        // A failed review keeps the first plan; only a cancel or timeout ends the request.
+        if (abortSignal?.aborted) throw err;
+      }
     }
     return { ok: true, itinerary: output };
   } catch (err) {

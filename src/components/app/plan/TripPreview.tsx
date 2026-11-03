@@ -80,7 +80,7 @@ export function TripPreview({
         <p key={destLabel} className="animate-pop text-[19px] leading-tight font-semibold">
           {destLabel}
         </p>
-        <p className="mt-0.5 text-xs text-muted-foreground">{dest.region}</p>
+        {dest.region && <p className="mt-0.5 text-xs text-muted-foreground">{dest.region}</p>}
         <ul className="mt-4 space-y-1.5 text-[13px] [&_svg]:size-3.5 [&_svg]:shrink-0 [&_svg]:text-muted-foreground">
           {form.origin && form.tripType !== "staycation" && (
             <li className="flex items-center gap-2">

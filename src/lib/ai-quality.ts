@@ -52,9 +52,40 @@ export function matchRealPlace(name: string, places: RealPlace[]): RealPlace | n
   return null;
 }
 
+/**
+ * Places from several sources as one list: `primary` first, then anything from
+ * `secondary` that isn't the same place (by name). A duplicate still lends the
+ * primary its missing details (hours, address, map link).
+ */
+export function mergePlaces(primary: RealPlace[], secondary: RealPlace[]): RealPlace[] {
+  const out = primary.map((p) => ({ ...p }));
+  for (const s of secondary) {
+    const same = matchRealPlace(s.name, out);
+    if (!same) {
+      out.push(s);
+      continue;
+    }
+    if (!same.hours && s.hours) same.hours = s.hours;
+    if (!same.address && s.address) same.address = s.address;
+  }
+  return out;
+}
+
 /** Real nearby places as short lines for the prompt ("British Museum — Museum in London"). */
 export function placeLines(sights: RealPlace[], restaurants: RealPlace[]): string[] {
-  const line = (p: RealPlace) => clip(`${p.name} (${p.typeLabel})`, 140);
+  const line = (p: RealPlace) => {
+    const facts = [
+      p.description && p.description !== p.typeLabel ? p.description : "",
+      p.priceText
+        ? `price: ${p.priceText}`
+        : p.costSource === "price-level" && p.costPerPerson > 0
+          ? `about $${Math.round(p.costPerPerson)} per person`
+          : "",
+      p.hours ? `hours: ${p.hours}` : "",
+      p.source === "wikivoyage" ? "recommended by travelers" : "",
+    ].filter(Boolean);
+    return clip(`${p.name} (${p.typeLabel})${facts.length ? `: ${facts.join("; ")}` : ""}`, 260);
+  };
   return [...sights.slice(0, 25).map(line), ...restaurants.slice(0, 15).map(line)];
 }
 
@@ -112,10 +143,23 @@ export function cleanAiPlan(
         name,
         area: clip(it.area, 60),
         note: clip(it.note, 140),
-        costPerPerson: Number.isFinite(cost)
-          ? Math.round(Math.min(MAX_COST, Math.max(0, cost)) * 100) / 100
-          : 0,
-        ...(match ? { placeId: match.placeId, mapsUrl: match.mapsUrl } : {}),
+        // A price the source publishes beats the model's guess.
+        costPerPerson:
+          match?.costSource === "listed"
+            ? match.costPerPerson
+            : Number.isFinite(cost)
+              ? Math.round(Math.min(MAX_COST, Math.max(0, cost)) * 100) / 100
+              : 0,
+        ...(match
+          ? {
+              placeId: match.placeId,
+              mapsUrl: match.mapsUrl,
+              ...(match.costSource === "listed" ? { costSource: "listed" as const } : {}),
+              ...(match.hours ? { hours: match.hours } : {}),
+              ...(match.priceText ? { priceText: match.priceText } : {}),
+              ...(match.source ? { source: match.source } : {}),
+            }
+          : {}),
       });
     }
     items.sort((a, b) => SLOTS.indexOf(a.time) - SLOTS.indexOf(b.time));
@@ -131,6 +175,55 @@ export function cleanAiPlan(
     .filter(Boolean)
     .slice(0, 4);
   return { source: "ai", days, tips };
+}
+
+/**
+ * Problems worth one automatic retry: a missing or thin day, a sight repeated on
+ * different days, or spending well past the budget. Each is phrased as an
+ * instruction the model can act on. An empty list means the plan is fine as is.
+ */
+export function planProblems(
+  plan: RawPlan,
+  want: { days: number; activityBudgetPerPerson: number; foodBudgetPerPersonDay: number },
+): string[] {
+  const days = Array.isArray(plan.days) ? plan.days : [];
+  const problems: string[] = [];
+  if (days.length !== want.days)
+    problems.push(`Return exactly ${want.days} days (you returned ${days.length}).`);
+  const seen = new Map<string, number>();
+  let sights = 0;
+  let meals = 0;
+  days.slice(0, want.days).forEach((d, i) => {
+    const items = Array.isArray(d?.items) ? d.items : [];
+    if (items.length < 3)
+      problems.push(`Day ${i + 1} has only ${items.length} item(s); give it at least 4.`);
+    for (const it of items) {
+      const cost = Number(it?.costPerPerson);
+      const c = Number.isFinite(cost) && cost > 0 ? cost : 0;
+      if (it?.kind === "restaurant") meals += c;
+      else sights += c;
+      if (it?.kind !== "sight") continue;
+      const key = normName(String(it?.name ?? ""));
+      if (key.length < 4) continue;
+      const first = seen.get(key);
+      if (first !== undefined && first !== i + 1)
+        problems.push(`"${clip(it?.name, 60)}" is on day ${first} and day ${i + 1}; use it once.`);
+      else seen.set(key, i + 1);
+    }
+  });
+  const sightBudget = Math.max(0, want.activityBudgetPerPerson);
+  if (sights > sightBudget * 1.25 + 15)
+    problems.push(
+      `Sightseeing adds up to $${Math.round(sights)} per person but the budget is $${Math.round(sightBudget)}; swap in free or cheaper sights.`,
+    );
+  const n = Math.max(1, Math.min(days.length, want.days));
+  const mealsPerDay = meals / n;
+  const foodBudget = Math.max(0, want.foodBudgetPerPersonDay);
+  if (foodBudget > 0 && mealsPerDay > foodBudget * 1.35 + 5)
+    problems.push(
+      `Meals average $${Math.round(mealsPerDay)} per person per day but the food budget is $${Math.round(foodBudget)}; choose cheaper restaurants.`,
+    );
+  return problems.slice(0, 6);
 }
 
 /** How much of the AI's plan matched real places, for the success message. */

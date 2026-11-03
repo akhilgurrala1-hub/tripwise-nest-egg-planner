@@ -24,6 +24,16 @@ export function geocodeQuery(text: string) {
   };
 }
 
+/** `value`, once it has stopped changing for `ms` (so lookups wait until typing pauses). */
+export function useDebouncedValue<T>(value: T, ms = 300): T {
+  const [debounced, setDebounced] = useState(value);
+  useEffect(() => {
+    const t = setTimeout(() => setDebounced(value), ms);
+    return () => clearTimeout(t);
+  }, [value, ms]);
+  return debounced;
+}
+
 /** True after the first client render; live lookups never run during server rendering. */
 export function useHydrated() {
   const [ready, setReady] = useState(false);

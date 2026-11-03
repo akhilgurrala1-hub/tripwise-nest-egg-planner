@@ -50,7 +50,7 @@ import { addDays, dateRangeError, inclusiveDays, isIsoDate, todayIso } from "@/l
 import { useHomePlace } from "@/lib/live/use-home";
 import { useLocale } from "@/lib/live/use-locale";
 import { formatDistance } from "@/lib/locale";
-import { geocodeQuery, useHydrated } from "@/lib/live/use-live";
+import { geocodeQuery, useDebouncedValue, useHydrated } from "@/lib/live/use-live";
 import {
   destinationForTripType,
   suggestedBudget,
@@ -106,9 +106,11 @@ function Welcome() {
   };
 
   // Where the trip starts, as a point: picked/located, else the typed city looked up.
+  // Looked up once typing pauses, so the destination doesn't jump around mid-word.
+  const typedOrigin = useDebouncedValue(form.origin);
   const originGeo = useQuery({
-    ...geocodeQuery(form.origin),
-    enabled: hydrated && !form.originPoint && form.origin.trim().length >= 2,
+    ...geocodeQuery(typedOrigin),
+    enabled: hydrated && !form.originPoint && typedOrigin.trim().length >= 2,
   });
   const originPoint: GeoPoint | null =
     form.originPoint ??

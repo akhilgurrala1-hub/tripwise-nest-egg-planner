@@ -17,7 +17,17 @@ export interface RealPlace {
   costPerPerson: number;
   costSource: CostSource;
   interests: Interest[];
+  /** Opening hours as published, e.g. "Daily 9AM-5PM" */
+  hours?: string | null;
+  /** The price as published, e.g. "Adults $29.95, children $19.95" */
+  priceText?: string | null;
+  /** A bar, café or music venue: better for an evening than a meal */
+  evening?: boolean;
+  /** Where it came from: travel guide, Wikipedia, OpenStreetMap or Google Maps */
+  source?: PlaceSource;
 }
+
+export type PlaceSource = "wikivoyage" | "wikipedia" | "osm" | "google";
 
 export type DestinationPlacesResult =
   { ok: true; sights: RealPlace[]; restaurants: RealPlace[] } | { ok: false; error: string };

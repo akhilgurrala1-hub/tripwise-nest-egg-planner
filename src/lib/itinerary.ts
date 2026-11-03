@@ -1,7 +1,7 @@
 import { cleanAiPlan } from "./ai-quality";
 import { addDays } from "./dates";
 import type { DemoDestination, Interest, TravelStyle, TripType } from "./demo-data";
-import type { RealPlace } from "./places/types";
+import type { PlaceSource, RealPlace } from "./places/types";
 import type { CostSource } from "./routing/types";
 
 export type SlotTime = "Morning" | "Lunch" | "Afternoon" | "Dinner" | "Evening";
@@ -21,6 +21,11 @@ export interface ItineraryItem {
   rating?: number | null;
   ratingCount?: number | null;
   costSource?: CostSource;
+  /** Opening hours and price as the source publishes them */
+  hours?: string | null;
+  priceText?: string | null;
+  /** Where the place came from (travel guide, Wikipedia, OpenStreetMap, Google Maps) */
+  source?: PlaceSource;
   /** Added or edited by the traveler (shown as "Your stop"; never replaced by suggestions) */
   custom?: boolean;
 }
@@ -246,7 +251,9 @@ export function itineraryActivityCost(itin: Itinerary | null, travelers: number)
 function placeScore(p: RealPlace, interests: Interest[]): number {
   const match = p.interests.filter((i) => interests.includes(i)).length;
   const reviews = p.rating !== null && p.ratingCount ? p.rating * Math.log10(p.ratingCount + 1) : 0;
-  return match * 5 + reviews;
+  // Travel-guide picks were chosen and described by travelers, so they rank ahead of bare map pins.
+  const recommended = p.source === "wikivoyage" ? 4 + (p.description ? 1 : 0) : 0;
+  return match * 5 + reviews + recommended;
 }
 
 function placeItem(p: RealPlace, id: string, time: SlotTime): ItineraryItem {
@@ -269,6 +276,9 @@ function placeItem(p: RealPlace, id: string, time: SlotTime): ItineraryItem {
     rating: p.rating,
     ratingCount: p.ratingCount,
     costSource: p.costSource,
+    ...(p.hours ? { hours: p.hours } : {}),
+    ...(p.priceText ? { priceText: p.priceText } : {}),
+    ...(p.source ? { source: p.source } : {}),
   };
 }
 
@@ -285,18 +295,29 @@ export function buildRealItinerary(opts: {
   interests: Interest[];
   tripType: TripType;
   source?: "google" | "open";
+  /** Practical advice to add to the plan's tips (e.g. from the travel guide) */
+  extraTips?: string[];
+  /** The food budget per person per day: meals that would blow it aren't picked */
+  mealBudgetPerPersonDay?: number;
 }): Itinerary {
   const { destName, days, startDate, interests, tripType, source = "google" } = opts;
   const sights = [...opts.sights].sort(
     (a, b) => placeScore(b, interests) - placeScore(a, interests),
   );
-  const byScore = [...opts.restaurants].sort(
-    (a, b) => placeScore(b, interests) - placeScore(a, interests),
-  );
+  // Bars and music venues fill evenings rather than meals.
+  const eveningPool = opts.restaurants
+    .filter((r) => r.evening)
+    .sort((a, b) => placeScore(b, interests) - placeScore(a, interests));
+  const meal = opts.mealBudgetPerPersonDay;
+  const affordable = (r: RealPlace, share: number) =>
+    !meal || meal <= 0 || r.costSource === "unknown" || r.costPerPerson <= meal * share;
+  const byScore = opts.restaurants
+    .filter((r) => !r.evening && affordable(r, 0.75))
+    .sort((a, b) => placeScore(b, interests) - placeScore(a, interests));
   // Cheaper half for lunch, pricier half for dinner; fall back to whatever is left.
   const byCost = [...byScore].sort((a, b) => a.costPerPerson - b.costPerPerson);
   const half = Math.ceil(byCost.length / 2);
-  const lunchPool = byScore.filter((r) => byCost.indexOf(r) < half);
+  const lunchPool = byScore.filter((r) => byCost.indexOf(r) < half && affordable(r, 0.45));
   const dinnerPool = byScore.filter((r) => byCost.indexOf(r) >= half);
   const used = new Set<string>();
   const take = (...pools: RealPlace[][]) => {
@@ -346,6 +367,9 @@ export function buildRealItinerary(opts: {
     items.push(
       dn ? placeItem(dn, id("dinner"), "Dinner") : open(id("dinner"), "Dinner", "restaurant"),
     );
+    // Not on the last evening (heading home); never invented when there's no real pick.
+    const ev = d < days - 1 || days === 1 ? take(eveningPool) : null;
+    if (ev) items.push(placeItem(ev, id("eve"), "Evening"));
     out.push({
       day: d + 1,
       date: addDays(startDate, d),
@@ -365,8 +389,9 @@ export function buildRealItinerary(opts: {
     tips:
       source === "open"
         ? [
-            "Landmarks come from Wikipedia and restaurants from OpenStreetMap. Check opening hours and prices before you go.",
-            "These listings don't publish prices, so they show as not listed and aren't counted in the plan's total.",
+            ...(opts.extraTips ?? []).slice(0, 2),
+            "Picks come from Wikivoyage (written by travelers), Wikipedia and OpenStreetMap. Check opening hours before you go.",
+            "Places that don't publish a price show as not listed and aren't counted in the plan's total.",
           ]
         : [
             "Places, ratings and addresses come from Google Maps. Check opening hours before you go.",

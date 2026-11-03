@@ -5,14 +5,20 @@ import { toast } from "sonner";
 import { createAiItinerary } from "@/lib/ai-itinerary.functions";
 import { usePreferences } from "@/lib/account";
 import { INTERESTS, TRAVEL_STYLES, TRIP_TYPES } from "@/lib/demo-data";
-import { cleanAiPlan, groundedCount, placeLines, planLines } from "@/lib/ai-quality";
+import { cleanAiPlan, groundedCount, mergePlaces, placeLines, planLines } from "@/lib/ai-quality";
 import { inclusiveDays } from "@/lib/dates";
 import { addDays, buildRealItinerary } from "@/lib/itinerary";
 import { destinationQuery } from "@/lib/live/place";
 import { useTripWeather } from "@/lib/live/use-live";
 import { getDestinationPlaces } from "@/lib/places/destination-places.functions";
 import { fetchLandmarks, fetchRestaurants } from "@/lib/live/open-data";
-import { destinationPoint, useTripHolidays } from "@/lib/live/use-open-data";
+import type { GuideTip } from "@/lib/live/travel-guide";
+import {
+  destinationPoint,
+  travelGuideQuery,
+  useTripCountry,
+  useTripHolidays,
+} from "@/lib/live/use-open-data";
 import type { DestinationPlacesResult, RealPlace } from "@/lib/places/types";
 import { currentTrip, planKey, tripActions, useTrip } from "@/lib/trip-store";
 
@@ -23,7 +29,14 @@ const PLACES_TIMEOUT_MS = 30_000;
 /** Map lookups are billed, so identical searches in one session reuse the first answer. */
 const placesCache = new Map<string, DestinationPlacesResult>();
 /** Open-data lookups are free but shared services, so they're reused too. */
-const openCache = new Map<string, { sights: RealPlace[]; restaurants: RealPlace[] }>();
+interface NearbyPlaces {
+  sights: RealPlace[];
+  restaurants: RealPlace[];
+  /** How many of them came from the travel guide */
+  guided: number;
+  tips: GuideTip[];
+}
+const openCache = new Map<string, NearbyPlaces>();
 
 export type PlannerJob = "ai" | "places" | "open" | null;
 
@@ -48,6 +61,7 @@ export function usePlanner() {
   const prefs = usePreferences();
   const weather = useTripWeather();
   const holidays = useTripHolidays();
+  const country = useTripCountry();
   const [job, setJob] = useState<PlannerJob>(null);
   const controller = useRef<AbortController | null>(null);
 
@@ -94,25 +108,37 @@ export function usePlanner() {
     );
   };
 
-  /** Real places near the destination (free), shared by the open-data plan and AI grounding. */
-  const nearbyPlaces = async (signal: AbortSignal) => {
-    const where = await destinationPoint(
-      queryClient,
-      dest,
-      trip.setup.origin,
-      trip.setup.destinationPoint,
-    );
-    if (!where) return null;
-    const cacheKey = `open:${where.point.lat.toFixed(3)},${where.point.lon.toFixed(3)}`;
+  /**
+   * Real places at the destination (all free), shared by the open-data plan and AI
+   * grounding: the travel guide's picks first (chosen and described by travelers,
+   * often with prices and hours), then Wikipedia landmarks and OpenStreetMap
+   * restaurants that the guide doesn't already list.
+   */
+  const nearbyPlaces = async (signal: AbortSignal): Promise<NearbyPlaces | null> => {
+    const [whereRes, guideRes] = await Promise.allSettled([
+      destinationPoint(queryClient, dest, trip.setup.origin, trip.setup.destinationPoint),
+      queryClient.fetchQuery(travelGuideQuery(dest, trip.setup.origin, country)),
+    ]);
+    const where = whereRes.status === "fulfilled" ? whereRes.value : null;
+    const guide = guideRes.status === "fulfilled" ? guideRes.value : null;
+    if (!where && !guide) return null;
+    const cacheKey = `open:${where ? `${where.point.lat.toFixed(3)},${where.point.lon.toFixed(3)}` : ""}:${guide?.title ?? ""}`;
     const cached = openCache.get(cacheKey);
     if (cached) return cached;
-    const [sights, restaurants] = await Promise.allSettled([
-      fetchLandmarks(where.point, where.near, signal),
-      fetchRestaurants(where.point, where.near, signal),
-    ]);
-    const found = {
-      sights: sights.status === "fulfilled" ? sights.value : [],
-      restaurants: restaurants.status === "fulfilled" ? restaurants.value : [],
+    const [sights, restaurants] = where
+      ? await Promise.allSettled([
+          fetchLandmarks(where.point, where.near, signal),
+          fetchRestaurants(where.point, where.near, signal),
+        ])
+      : [];
+    const found: NearbyPlaces = {
+      sights: mergePlaces(guide?.sights ?? [], sights?.status === "fulfilled" ? sights.value : []),
+      restaurants: mergePlaces(
+        guide?.restaurants ?? [],
+        restaurants?.status === "fulfilled" ? restaurants.value : [],
+      ),
+      guided: (guide?.sights.length ?? 0) + (guide?.restaurants.length ?? 0),
+      tips: guide?.tips ?? [],
     };
     if (found.sights.length + found.restaurants.length > 0) openCache.set(cacheKey, found);
     return found;
@@ -155,6 +181,7 @@ export function usePlanner() {
             return `Day ${i + 1}: ${w.label}, high ${w.highF}°F, low ${w.lowF}°F${rain} (${w.source === "forecast" ? "forecast" : "typical for the date"})`;
           }).filter(Boolean),
           places: real ? placeLines(real.sights, real.restaurants) : [],
+          guide: real ? real.tips.map((t) => `${t.topic}: ${t.text}`) : [],
           notes: holidays.map((h) => {
             const day = inclusiveDays(trip.setup.startDate, h.date) ?? 0;
             return `Day ${day} (${h.date}) is ${h.name}, a public holiday: expect closures and crowds.`;
@@ -232,6 +259,7 @@ export function usePlanner() {
               startDate: trip.setup.startDate,
               interests: trip.setup.interests,
               tripType: trip.setup.tripType,
+              mealBudgetPerPersonDay: totals.categories.food / shape.travelers / shape.days,
             }),
           ),
         "Itinerary built from real places on Google Maps",
@@ -280,14 +308,18 @@ export function usePlanner() {
               interests: trip.setup.interests,
               tripType: trip.setup.tripType,
               source: "open",
+              extraTips: found.tips.map((t) => `${t.topic}: ${t.text}`),
+              mealBudgetPerPersonDay: totals.categories.food / shape.travelers / shape.days,
             }),
           ),
-        `Built from ${found.sights.length} real landmarks and ${found.restaurants.length} restaurants nearby`,
+        found.guided > 0
+          ? `Built from ${found.guided} travel-guide picks plus nearby landmarks and restaurants`
+          : `Built from ${found.sights.length} real landmarks and ${found.restaurants.length} restaurants nearby`,
       );
     } catch {
       failed(
         ctrl,
-        "Couldn't reach Wikipedia or OpenStreetMap. Your current plan is unchanged.",
+        "Couldn't reach the travel guide or map data. Your current plan is unchanged.",
         planWithOpenData,
       );
     } finally {
