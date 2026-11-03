@@ -64,7 +64,6 @@
   --color-style-budget: var(--style-budget);
   --color-style-comfort: var(--style-comfort);
   --color-style-luxury: var(--style-luxury);
-  --color-art-sky: var(--art-sky);
   --color-trip-road: var(--trip-road);
   --color-trip-flight: var(--trip-flight);
   --color-trip-cruise: var(--trip-cruise);
@@ -152,9 +151,6 @@
   --style-budget: oklch(0.52 0.13 160);
   --style-comfort: oklch(0.55 0.18 258);
   --style-luxury: oklch(0.52 0.2 310);
-
-  /* Illustrations */
-  --art-sky: oklch(0.95 0.03 240);
 
   /* Trip types: each kind of trip has its own hue (scenes, the trip chip, suggestions). */
   --trip-road: oklch(0.55 0.2 264);
@@ -253,8 +249,6 @@
   --style-budget: oklch(0.74 0.13 160);
   --style-comfort: oklch(0.72 0.14 258);
   --style-luxury: oklch(0.72 0.15 310);
-
-  --art-sky: oklch(0.27 0.04 250);
 
   --trip-road: oklch(0.7 0.15 264);
   --trip-flight: oklch(0.74 0.12 232);

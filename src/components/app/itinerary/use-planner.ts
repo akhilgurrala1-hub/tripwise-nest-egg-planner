@@ -193,6 +193,7 @@ export function usePlanner() {
       if (ctrl.signal.aborted) return failed(ctrl, "", () => planWithAi(instructions));
       if (!res.ok) {
         toast.error(res.error, {
+          ...(res.detail ? { description: `Details: ${res.detail}` } : {}),
           action: { label: "Try again", onClick: () => planWithAi(instructions) },
         });
         return;

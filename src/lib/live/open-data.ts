@@ -5,7 +5,7 @@
  * - Nager.Date: public holidays in the destination's country
  * Parsers are pure (and tested); fetchers take an AbortSignal.
  */
-import type { GeoPoint } from "../catalog";
+import { milesBetween, type GeoPoint } from "../catalog";
 import type { Interest } from "../demo-data";
 import type { RealPlace } from "../places/types";
 
@@ -53,14 +53,37 @@ export function tidyExtract(text: string): string {
     .trim();
 }
 
-export function parseSummary(body: unknown): PlaceSummary | null {
+/** Articles about things that share a place's name: never used for a destination's photo. */
+const NOT_A_PLACE =
+  /\b(film|movie|album|song|single|band|novel|book|television|tv series|sitcom|video game|episode|musical|opera|magazine|newspaper|football club|sports team|surname|given name|disambiguation|ship|aircraft|company|brand|character)\b/i;
+
+/** How far an article's coordinates may be from the destination and still describe it. */
+const MAX_KM = 350;
+
+/**
+ * The search result that's really about the place: not a film or album of the
+ * same name, and (when the destination's location is known) an article whose own
+ * coordinates are nearby. A result without coordinates is only trusted when it's
+ * the top match and nothing nearby was found.
+ */
+export function parseSummary(body: unknown, near?: GeoPoint | null): PlaceSummary | null {
   const pages = (body as { query?: { pages?: Record<string, Record<string, unknown>> } })?.query
     ?.pages;
   if (!pages) return null;
-  const page = Object.values(pages).sort(
-    (a, b) => Number(a["index"] ?? 0) - Number(b["index"] ?? 0),
-  )[0];
-  if (!page || page["missing"] !== undefined) return null;
+  const ranked = Object.values(pages)
+    .filter((p) => p["missing"] === undefined)
+    .sort((a, b) => Number(a["index"] ?? 0) - Number(b["index"] ?? 0))
+    .filter((p) => !NOT_A_PLACE.test(String(p["description"] ?? "")));
+  const coordsOf = (p: Record<string, unknown>) =>
+    (p["coordinates"] as { lat: number; lon: number }[] | undefined)?.[0] ?? null;
+  const nearby = near
+    ? ranked.find((p) => {
+        const c = coordsOf(p);
+        return c && milesBetween(near, { lat: c.lat, lon: c.lon }) * 1.609 <= MAX_KM;
+      })
+    : undefined;
+  const page = nearby ?? (near ? ranked.find((p, i) => i === 0 && !coordsOf(p)) : ranked[0]);
+  if (!page) return null;
   const title = String(page["title"] ?? "");
   const extract = tidyExtract(String(page["extract"] ?? ""));
   if (!title || !extract) return null;
@@ -73,10 +96,11 @@ export function parseSummary(body: unknown): PlaceSummary | null {
   };
 }
 
-/** Photo and short introduction for a place, from its best-matching Wikipedia article. */
+/** Photo and short introduction for a place, from the Wikipedia article really about it. */
 export async function fetchPlaceSummary(
   query: string,
   signal?: AbortSignal,
+  near?: GeoPoint | null,
 ): Promise<PlaceSummary | null> {
   const u = new URL(WIKI);
   const params: Record<string, string> = {
@@ -85,20 +109,23 @@ export async function fetchPlaceSummary(
     origin: "*",
     generator: "search",
     gsrsearch: query,
-    gsrlimit: "1",
-    prop: "pageimages|extracts|info",
+    gsrlimit: "5",
+    prop: "pageimages|extracts|info|coordinates|description",
     piprop: "thumbnail",
     pithumbsize: "960",
+    pilimit: "5",
     exintro: "1",
     explaintext: "1",
     exsentences: "2",
+    exlimit: "5",
+    colimit: "5",
     inprop: "url",
     redirects: "1",
   };
   for (const [k, v] of Object.entries(params)) u.searchParams.set(k, v);
   const res = await fetch(u.toString(), signal ? { signal } : {});
   if (!res.ok) throw new Error(`Wikipedia error (${res.status})`);
-  return parseSummary(await res.json());
+  return parseSummary(await res.json(), near);
 }
 
 // ---------- Landmarks (Wikipedia geosearch) ----------

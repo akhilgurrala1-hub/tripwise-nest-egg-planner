@@ -181,20 +181,20 @@ export function SectionTitle({
 }
 
 /** Interest toggles, the same on every page that asks. */
-/** Each interest's icon and color (mid-tone, readable on light and dark). */
-export const INTEREST_STYLE: Record<Interest, { icon: LucideIcon; color: string }> = {
-  nature: { icon: Trees, color: "oklch(0.58 0.14 150)" },
-  food: { icon: UtensilsCrossed, color: "oklch(0.63 0.16 50)" },
-  history: { icon: Landmark, color: "oklch(0.58 0.1 75)" },
-  beaches: { icon: Waves, color: "oklch(0.6 0.12 215)" },
-  arts: { icon: Palette, color: "oklch(0.6 0.18 350)" },
-  adventure: { icon: Mountain, color: "oklch(0.6 0.17 28)" },
-  family: { icon: FerrisWheel, color: "oklch(0.66 0.15 95)" },
-  nightlife: { icon: Moon, color: "oklch(0.55 0.17 285)" },
-  shopping: { icon: ShoppingBag, color: "oklch(0.58 0.17 320)" },
+/** Each interest's icon. */
+export const INTEREST_ICON: Record<Interest, LucideIcon> = {
+  nature: Trees,
+  food: UtensilsCrossed,
+  history: Landmark,
+  beaches: Waves,
+  arts: Palette,
+  adventure: Mountain,
+  family: FerrisWheel,
+  nightlife: Moon,
+  shopping: ShoppingBag,
 };
 
-/** What the traveler enjoys: a grid of colored tiles they can toggle. */
+/** What the traveler enjoys: a grid of quiet tiles; chosen ones take the accent color. */
 export function InterestChips({
   value,
   onToggle,
@@ -208,36 +208,36 @@ export function InterestChips({
     <div className={cn("grid grid-cols-2 gap-2 sm:grid-cols-3", className)}>
       {INTERESTS.map((i) => {
         const active = value.includes(i.id);
-        const { icon: Icon, color } = INTEREST_STYLE[i.id];
+        const Icon = INTEREST_ICON[i.id];
         return (
           <button
             key={i.id}
             type="button"
             aria-pressed={active}
             onClick={() => onToggle(i.id)}
-            style={{ "--tile": color } as CSSProperties}
             className={cn(
-              "flex h-11 items-center gap-2.5 rounded-lg border px-2.5 text-left text-[13px] font-medium transition-[background-color,border-color,transform] duration-150 active:scale-[0.98]",
+              "flex h-11 items-center gap-2.5 rounded-lg border px-3 text-left text-[13px] font-medium transition-[background-color,border-color,color,transform] duration-150 active:scale-[0.98]",
               active
-                ? "border-[var(--tile)] bg-[color-mix(in_oklab,var(--tile)_10%,var(--card))]"
-                : "border-border bg-card hover:border-[color-mix(in_oklab,var(--tile)_45%,var(--border))]",
+                ? "border-primary bg-[color-mix(in_oklab,var(--primary)_6%,var(--card))] text-foreground"
+                : "border-border bg-card text-foreground/85 hover:border-muted-foreground/40",
             )}
           >
-            <span
+            <Icon
               className={cn(
-                "grid size-7 shrink-0 place-items-center rounded-md transition-colors duration-150",
-                active
-                  ? "bg-[var(--tile)] text-white"
-                  : "bg-[color-mix(in_oklab,var(--tile)_14%,transparent)] text-[var(--tile)]",
+                "size-4 shrink-0 transition-colors duration-150",
+                active ? "text-primary" : "text-muted-foreground",
               )}
-            >
-              {active ? (
-                <Check className="size-4" strokeWidth={2.5} />
-              ) : (
-                <Icon className="size-4" />
+              strokeWidth={1.8}
+            />
+            <span className="min-w-0 flex-1 truncate">{i.label}</span>
+            <Check
+              className={cn(
+                "size-3.5 shrink-0 text-primary transition-opacity duration-150",
+                active ? "opacity-100" : "opacity-0",
               )}
-            </span>
-            <span className="min-w-0 truncate">{i.label}</span>
+              strokeWidth={2.5}
+              aria-hidden
+            />
           </button>
         );
       })}

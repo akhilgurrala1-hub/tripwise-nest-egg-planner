@@ -42,22 +42,25 @@ export function StylePicker({
             className={cn(
               "flex flex-col items-start gap-2 rounded-xl border p-3 text-left transition-[background-color,border-color,box-shadow,transform] duration-200 active:scale-[0.98]",
               active
-                ? "border-[var(--tile)] bg-[color-mix(in_oklab,var(--tile)_9%,var(--card))] shadow-[0_0_0_1px_var(--tile)]"
-                : "border-border bg-card hover:border-[color-mix(in_oklab,var(--tile)_45%,var(--border))]",
+                ? "border-[var(--tile)] bg-[color-mix(in_oklab,var(--tile)_5%,var(--card))] shadow-[0_0_0_1px_var(--tile)]"
+                : "border-border bg-card hover:border-muted-foreground/40",
             )}
           >
             <span className="flex w-full items-center justify-between">
               <span
                 className={cn(
-                  "grid size-8 place-items-center rounded-lg transition-colors duration-200",
+                  "grid size-8 place-items-center rounded-lg text-[var(--tile)] transition-colors duration-200",
                   active
-                    ? "bg-[var(--tile)] text-white"
-                    : "bg-[color-mix(in_oklab,var(--tile)_14%,transparent)] text-[var(--tile)]",
+                    ? "bg-[color-mix(in_oklab,var(--tile)_16%,transparent)]"
+                    : "bg-[color-mix(in_oklab,var(--tile)_9%,transparent)]",
                 )}
               >
-                <Icon className="size-4" />
+                <Icon className="size-4" strokeWidth={1.8} />
               </span>
-              <span className="tabular text-xs font-semibold text-[var(--tile)]" aria-hidden>
+              <span
+                className="tabular text-xs font-medium tracking-wide text-muted-foreground"
+                aria-hidden
+              >
                 {look.level}
               </span>
             </span>
