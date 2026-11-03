@@ -41,6 +41,8 @@ const GOING_HOME: TripDraft = {
   interests: [],
   covered: { lodging: true, meals: true, activities: true, localTransport: true },
   transferCost: 45,
+  cities: [],
+  cabin: null,
 };
 
 describe("only the costs a traveler actually has", () => {

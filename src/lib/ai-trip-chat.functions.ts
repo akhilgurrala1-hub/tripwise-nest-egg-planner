@@ -40,6 +40,12 @@ const draft = z
       })
       .default({ lodging: false, meals: false, activities: false, localTransport: false }),
     transferCost: z.number().min(0).max(5000).nullable().default(null),
+    // Older saved conversations predate multi-city trips and cabins.
+    cities: z
+      .array(z.object({ name: z.string().max(120), nights: z.number().min(0).max(30) }))
+      .max(8)
+      .default([]),
+    cabin: z.enum(["economy", "premium", "business", "first"]).nullable().default(null),
   })
   .nullable();
 

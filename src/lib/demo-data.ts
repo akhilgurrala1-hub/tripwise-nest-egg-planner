@@ -6,6 +6,8 @@ import {
   type CatalogPlace,
   type GeoPoint,
 } from "./catalog";
+import { inclusiveDays } from "./dates";
+import { citySchedule, isMultiCity, routeLegMiles, type TripCity } from "./multi-city";
 
 // DEMONSTRATION DATA ONLY.
 // Every price, venue, and distance below is an illustrative example, not live data.
@@ -893,6 +895,27 @@ export function buildCatalogCruise(c: CatalogCruise): DemoDestination {
   };
 }
 
+/** Flight cabins, with how much more each typically costs than economy (estimates). */
+export type Cabin = "economy" | "premium" | "business" | "first";
+export const CABINS: { id: Cabin; label: string; short: string; multiplier: number }[] = [
+  { id: "economy", label: "Economy", short: "Economy", multiplier: 1 },
+  { id: "premium", label: "Premium economy", short: "Premium", multiplier: 1.6 },
+  { id: "business", label: "Business", short: "Business", multiplier: 3.2 },
+  { id: "first", label: "First", short: "First", multiplier: 5 },
+];
+export const cabinInfo = (c: Cabin | null | undefined) =>
+  CABINS.find((x) => x.id === c) ?? CABINS[0]!;
+
+/** One-way fares are a little over half a round trip. */
+const ONE_WAY_SHARE = 0.55;
+
+/** Example fares per person for a route of one-way legs (home → cities → home). */
+export function faresForLegs(legMiles: readonly number[]): DemoDestination["fares"] {
+  const sum = (k: keyof DemoDestination["fares"]) =>
+    Math.round(legMiles.reduce((t, m) => t + faresForDistance(m)[k] * ONE_WAY_SHARE, 0) / 5) * 5;
+  return { flight: sum("flight"), train: sum("train"), bus: sum("bus") };
+}
+
 /** Example round-trip fares per person for a one-way distance, so far places cost more to reach. */
 export function faresForDistance(oneWayMiles: number): DemoDestination["fares"] {
   const m = Math.max(0, oneWayMiles);
@@ -919,14 +942,46 @@ export function destinationFor(s: {
   customDestination: string;
   originPoint?: GeoPoint | null | undefined;
   destinationPoint?: GeoPoint | null | undefined;
+  /** More cities after the destination (multi-city trips) */
+  cities?: readonly TripCity[] | null | undefined;
+  startDate?: string | undefined;
+  endDate?: string | undefined;
+  tripType?: TripType | undefined;
+  /** Flight cabin: fares scale with it */
+  cabin?: Cabin | null | undefined;
 }): DemoDestination {
+  const withCabin = (d: DemoDestination): DemoDestination => {
+    const m = cabinInfo(s.cabin).multiplier;
+    return m === 1
+      ? d
+      : { ...d, fares: { ...d.fares, flight: Math.round((d.fares.flight * m) / 5) * 5 } };
+  };
   const dest = getDestination(s.destinationId, s.customDestination);
-  if (!s.originPoint || dest.id === "hometown") return dest;
+  if (dest.id === "hometown") return dest;
   const to = travelPoint(dest, s.destinationPoint);
-  if (!to) return dest;
+  // Several cities: the route runs home → each city in turn → home, one way each leg.
+  const multi =
+    isMultiCity(s.cities) &&
+    s.tripType !== "cruise" &&
+    s.tripType !== "staycation" &&
+    !!s.startDate &&
+    !!s.endDate;
+  if (multi) {
+    const nights = Math.max(0, (inclusiveDays(s.startDate!, s.endDate!) ?? 1) - 1);
+    const legs = citySchedule(nights, { name: dest.name, point: to }, s.cities);
+    if (legs.length > 1) {
+      const miles = routeLegMiles(s.originPoint ?? null, legs);
+      return withCabin({
+        ...dest,
+        roundTripMiles: Math.round(miles.reduce((t, m) => t + m, 0)),
+        fares: faresForLegs(miles),
+      });
+    }
+  }
+  if (!s.originPoint || !to) return withCabin(dest);
   const oneWay = roadMiles(s.originPoint, to);
-  if (oneWay < 10) return dest;
-  return { ...dest, roundTripMiles: oneWay * 2, fares: faresForDistance(oneWay) };
+  if (oneWay < 10) return withCabin(dest);
+  return withCabin({ ...dest, roundTripMiles: oneWay * 2, fares: faresForDistance(oneWay) });
 }
 
 export function getDestination(id: string, customName = ""): DemoDestination {

@@ -201,6 +201,8 @@ describe("assistant answers are checked before they're shown", () => {
       interests: ["food", "food"] as "food"[],
       covered: { lodging: false, meals: false, activities: false, localTransport: false },
       transferCost: null,
+      cities: [],
+      cabin: null,
     },
   };
 

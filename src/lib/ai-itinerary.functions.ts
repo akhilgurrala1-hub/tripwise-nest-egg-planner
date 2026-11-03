@@ -28,6 +28,8 @@ const inputSchema = z.object({
   /** When refining: what the traveler wants changed, and the current plan */
   instructions: z.string().max(300).default(""),
   current: z.array(z.string().max(160)).max(80).default([]),
+  /** Multi-city: "Days 1-3: Rome, Italy" lines, in order */
+  cities: z.array(z.string().max(200)).max(5).default([]),
 });
 
 /** Signed-in only: each call spends AI credits, so it must never be callable anonymously. */

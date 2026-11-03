@@ -15,6 +15,7 @@ import { destinationQuery } from "@/lib/live/place";
 import { useHydrated } from "@/lib/live/use-live";
 import { getLivePriceStatus, getLivePrices } from "@/lib/prices/live-prices.functions";
 import { reusedNote } from "@/lib/prices/live";
+import { addDays } from "@/lib/dates";
 import { tripActions, useTrip } from "@/lib/trip-store";
 import { isDrivingMode } from "@/lib/demo-data";
 import { cn } from "@/lib/utils";
@@ -24,7 +25,7 @@ export { destinationQuery } from "@/lib/live/place";
 export function LivePricesPanel({ className }: { className?: string }) {
   const { user } = useAuth();
   const prefs = usePreferences();
-  const { trip, dest, shape } = useTrip();
+  const { trip, dest, shape, legs } = useTrip();
   const live = trip.live;
   const flying = trip.inputs.transportMode === "flight";
   const cruise = trip.setup.tripType === "cruise";
@@ -86,6 +87,18 @@ export function LivePricesPanel({ className }: { className?: string }) {
           includeHotels: !noHotel,
           originAirport: prefs?.home_airport ?? "",
           destinationAirport: /^[A-Z]{3}$/.test(destAirport) ? destAirport : "",
+          cabin: trip.setup.cabin ?? "economy",
+          // Multi-city: each city's own nights, so every leg and stay is priced.
+          cities:
+            legs.length > 1
+              ? legs.map((l) => ({
+                  name: l.main
+                    ? destinationQuery(dest, trip.setup.origin, prefs?.home_city)
+                    : l.name,
+                  checkIn: addDays(trip.setup.startDate, l.arriveDay),
+                  checkOut: addDays(trip.setup.startDate, l.arriveDay + l.nights),
+                }))
+              : [],
         },
       });
       if (!res.ok) {

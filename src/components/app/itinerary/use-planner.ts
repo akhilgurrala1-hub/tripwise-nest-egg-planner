@@ -4,11 +4,19 @@ import { toast } from "sonner";
 
 import { createAiItinerary } from "@/lib/ai-itinerary.functions";
 import { usePreferences } from "@/lib/account";
-import { INTERESTS, TRAVEL_STYLES, TRIP_TYPES } from "@/lib/demo-data";
+import {
+  INTERESTS,
+  TRAVEL_STYLES,
+  TRIP_TYPES,
+  buildCustomDestination,
+  type DemoDestination,
+} from "@/lib/demo-data";
+import type { GeoPoint } from "@/lib/catalog";
+import type { CityLeg } from "@/lib/multi-city";
 import { cleanAiPlan, groundedCount, mergePlaces, placeLines, planLines } from "@/lib/ai-quality";
 import { coveredLabels } from "@/lib/budget";
 import { inclusiveDays } from "@/lib/dates";
-import { addDays, buildRealItinerary } from "@/lib/itinerary";
+import { addDays, buildRealItinerary, stitchCityPlans, type Itinerary } from "@/lib/itinerary";
 import { destinationQuery } from "@/lib/live/place";
 import { useTripWeather } from "@/lib/live/use-live";
 import { getDestinationPlaces } from "@/lib/places/destination-places.functions";
@@ -57,7 +65,39 @@ export function keptNote(kept: number) {
  * it succeeds for the same trip it was asked about (see `planKey`).
  */
 export function usePlanner() {
-  const { trip, dest, shape, totals } = useTrip();
+  const { trip, dest, shape, totals, legs } = useTrip();
+  const multi = legs.length > 1;
+  /** Where each city's places are looked up: the destination itself, or a later city by name. */
+  const cityTarget = (leg: CityLeg): { dest: DemoDestination; point: GeoPoint | null } =>
+    leg.main
+      ? { dest, point: trip.setup.destinationPoint ?? null }
+      : { dest: buildCustomDestination(leg.name), point: leg.point };
+  /** A real-places plan for each city, joined into the whole trip (multi-city trips). */
+  const joinCities = (
+    found: readonly ({ sights: RealPlace[]; restaurants: RealPlace[] } | null)[],
+    source: "google" | "open",
+    tips: string[] = [],
+  ): Itinerary =>
+    stitchCityPlans(
+      legs,
+      legs.map((leg, i) =>
+        buildRealItinerary({
+          sights: found[i]?.sights ?? [],
+          restaurants: found[i]?.restaurants ?? [],
+          destName: leg.name,
+          days: leg.days,
+          startDate: addDays(trip.setup.startDate, leg.arriveDay),
+          interests: trip.setup.interests,
+          tripType: trip.setup.tripType,
+          source,
+          mealBudgetPerPersonDay: totals.categories.food / shape.travelers / shape.days,
+        }),
+      ),
+      Math.min(14, shape.days),
+      trip.setup.startDate,
+      source,
+      tips,
+    );
   const queryClient = useQueryClient();
   const prefs = usePreferences();
   const weather = useTripWeather();
@@ -115,10 +155,16 @@ export function usePlanner() {
    * often with prices and hours), then Wikipedia landmarks and OpenStreetMap
    * restaurants that the guide doesn't already list.
    */
-  const nearbyPlaces = async (signal: AbortSignal): Promise<NearbyPlaces | null> => {
+  const nearbyPlaces = async (
+    signal: AbortSignal,
+    target: { dest: DemoDestination; point: GeoPoint | null } = {
+      dest,
+      point: trip.setup.destinationPoint ?? null,
+    },
+  ): Promise<NearbyPlaces | null> => {
     const [whereRes, guideRes] = await Promise.allSettled([
-      destinationPoint(queryClient, dest, trip.setup.origin, trip.setup.destinationPoint),
-      queryClient.fetchQuery(travelGuideQuery(dest, trip.setup.origin, country)),
+      destinationPoint(queryClient, target.dest, trip.setup.origin, target.point),
+      queryClient.fetchQuery(travelGuideQuery(target.dest, trip.setup.origin, country)),
     ]);
     const where = whereRes.status === "fulfilled" ? whereRes.value : null;
     const guide = guideRes.status === "fulfilled" ? guideRes.value : null;
@@ -156,11 +202,28 @@ export function usePlanner() {
     const days = Math.min(14, shape.days);
     try {
       // Grounding is free and best-effort: a slow lookup never holds up the plan.
-      const real = await Promise.race([
-        nearbyPlaces(ctrl.signal).catch(() => null),
+      // Every city's places on a multi-city trip, each line marked with its city.
+      const perCity = await Promise.race([
+        Promise.all(
+          legs.map((leg) => nearbyPlaces(ctrl.signal, cityTarget(leg)).catch(() => null)),
+        ),
         new Promise<null>((r) => setTimeout(() => r(null), 5000)),
       ]);
-      const realPlaces = real ? [...real.sights, ...real.restaurants] : [];
+      const real = perCity?.[0] ?? null;
+      const realPlaces = (perCity ?? []).flatMap((p) => (p ? [...p.sights, ...p.restaurants] : []));
+      const placeList = multi
+        ? legs.flatMap((leg, i) => {
+            const p = perCity?.[i];
+            const city = leg.name.split(",")[0]!.trim();
+            return p
+              ? placeLines(p.sights, p.restaurants)
+                  .slice(0, Math.floor(40 / legs.length))
+                  .map((line) => `${city}: ${line}`.slice(0, 260))
+              : [];
+          })
+        : real
+          ? placeLines(real.sights, real.restaurants)
+          : [];
       const res = await createAiItinerary({
         signal: ctrl.signal,
         data: {
@@ -181,7 +244,15 @@ export function usePlanner() {
             const rain = w.precipChance !== null ? `, ${w.precipChance}% chance of rain` : "";
             return `Day ${i + 1}: ${w.label}, high ${w.highF}°F, low ${w.lowF}°F${rain} (${w.source === "forecast" ? "forecast" : "typical for the date"})`;
           }).filter(Boolean),
-          places: real ? placeLines(real.sights, real.restaurants) : [],
+          places: placeList,
+          cities: multi
+            ? legs.map((l) => {
+                const from = l.arriveDay + 1;
+                const to = Math.min(days, l.arriveDay + l.days);
+                const span = to > from ? `Days ${from}-${to}` : `Day ${from}`;
+                return `${span}: ${l.name}${l.arriveDay > 0 ? " (arrive on the first of these days)" : ""}`;
+              })
+            : [],
           guide: real ? real.tips.map((t) => `${t.topic}: ${t.text}`) : [],
           covered: coveredLabels(trip.setup.coverage),
           notes: holidays.map((h) => {
@@ -239,6 +310,43 @@ export function usePlanner() {
     const cacheKey = JSON.stringify(request);
     const { ctrl, done } = start("places", PLACES_TIMEOUT_MS);
     try {
+      if (multi) {
+        const perCity = await Promise.all(
+          legs.map(async (leg) => {
+            const req = {
+              ...request,
+              destination: leg.main ? request.destination : leg.name,
+            };
+            const k = JSON.stringify(req);
+            let r = placesCache.get(k);
+            if (!r) {
+              r = await getDestinationPlaces({ data: req, signal: ctrl.signal });
+              if (r.ok) placesCache.set(k, r);
+            }
+            return r;
+          }),
+        );
+        if (ctrl.signal.aborted) return failed(ctrl, "", planWithRealPlaces);
+        const firstError = perCity.find((r) => !r.ok);
+        if (perCity.every((r) => !r.ok)) {
+          toast.error(firstError && !firstError.ok ? firstError.error : "No places came back.", {
+            action: { label: "Try again", onClick: planWithRealPlaces },
+          });
+          return;
+        }
+        land(
+          () =>
+            tripActions.setItineraryFor(
+              key,
+              joinCities(
+                perCity.map((r) => (r.ok ? r : null)),
+                "google",
+              ),
+            ),
+          `Itinerary built from real places in all ${legs.length} cities`,
+        );
+        return;
+      }
       let res = placesCache.get(cacheKey);
       if (!res) {
         res = await getDestinationPlaces({ data: request, signal: ctrl.signal });
@@ -283,6 +391,28 @@ export function usePlanner() {
     const key = planKey(currentTrip());
     const { ctrl, done } = start("open", PLACES_TIMEOUT_MS);
     try {
+      if (multi) {
+        const perCity = await Promise.all(
+          legs.map((leg) => nearbyPlaces(ctrl.signal, cityTarget(leg)).catch(() => null)),
+        );
+        if (ctrl.signal.aborted) return failed(ctrl, "", planWithOpenData);
+        const total = perCity.reduce(
+          (t, p) => t + (p ? p.sights.length + p.restaurants.length : 0),
+          0,
+        );
+        if (total === 0) {
+          toast.error("No landmarks or restaurants came back for these cities. Try again soon.", {
+            action: { label: "Try again", onClick: planWithOpenData },
+          });
+          return;
+        }
+        const tips = perCity.flatMap((p) => (p?.tips ?? []).map((t) => `${t.topic}: ${t.text}`));
+        land(
+          () => tripActions.setItineraryFor(key, joinCities(perCity, "open", tips)),
+          `Built from real places in all ${legs.length} cities`,
+        );
+        return;
+      }
       const found = await nearbyPlaces(ctrl.signal);
       if (ctrl.signal.aborted) return failed(ctrl, "", planWithOpenData);
       if (!found) {

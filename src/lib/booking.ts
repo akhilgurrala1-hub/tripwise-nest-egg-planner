@@ -5,7 +5,8 @@
  * it here. Pure, so the checklist rules are testable.
  */
 import type { BudgetTotals, TripCoverage, TripShape } from "./budget";
-import type { DemoDestination } from "./demo-data";
+import { cabinInfo, type Cabin, type DemoDestination } from "./demo-data";
+import { citySchedule, type TripCity } from "./multi-city";
 import { addDays, formatCalendarDate } from "./dates";
 import type { Itinerary } from "./itinerary";
 import { destinationQuery } from "./live/place";
@@ -50,6 +51,9 @@ export interface BookingTrip {
     travelers: number;
     style: string;
     coverage?: TripCoverage | null;
+    /** Multi-city: the cities after the destination */
+    cities?: TripCity[] | null;
+    cabin?: Cabin | null;
   };
   inputs: { nightlyRate: number; rooms: number };
   itinerary: Itinerary | null;
@@ -143,6 +147,13 @@ export function bookingPlan(
   const items: BookingItem[] = [];
   const cruise = s.tripType === "cruise";
   const port = dest.port ?? place;
+  const legs =
+    cruise || s.tripType === "staycation"
+      ? []
+      : citySchedule(shape.nights, { name: place, point: null }, s.cities);
+  const multi = legs.length > 1;
+  const short = (x: string) => x.split(",")[0]!.trim();
+  const cabin = s.cabin && s.cabin !== "economy" ? cabinInfo(s.cabin).label : "";
 
   if (cruise) {
     items.push({
@@ -162,7 +173,31 @@ export function bookingPlan(
     });
   }
 
-  if (s.transportMode === "flight") {
+  if (s.transportMode === "flight" && multi) {
+    // Home → each city → home, each leg on the day the traveler moves on.
+    const stops = [from || "home", ...legs.map((l) => l.name), from || "home"];
+    const dates = [start, ...legs.slice(1).map((l) => addDays(start, l.arriveDay)), end];
+    const route = stops.map(short).join(" → ");
+    const query = stops
+      .slice(0, -1)
+      .map((a, i) => `${a} to ${stops[i + 1]} on ${dates[i]}`)
+      .join(", ");
+    items.push({
+      key: "flight",
+      kind: "flight",
+      title: `Flights ${route}`,
+      detail: `Multi-city · ${when} · ${who}${cabin ? ` · ${cabin}` : ""}`,
+      budget: c.transportation,
+      optional: false,
+      links: [
+        {
+          label: "Google Flights",
+          url: `https://www.google.com/travel/flights?q=${enc(`Multi-city flights ${query}${cabin ? ` ${cabin.toLowerCase()} class` : ""}`)}`,
+        },
+        { label: "Compare fares", url: google(`multi-city flights ${route} ${monthYear(start)}`) },
+      ],
+    });
+  } else if (s.transportMode === "flight") {
     const to = cruise ? port : place;
     items.push({
       key: "flight",
@@ -170,13 +205,13 @@ export function bookingPlan(
       title: from
         ? `Flights ${from.split(",")[0]} → ${to.split(",")[0]}`
         : `Flights to ${to.split(",")[0]}`,
-      detail: `Round trip · ${when} · ${who}`,
+      detail: `Round trip · ${when} · ${who}${cabin ? ` · ${cabin}` : ""}`,
       budget: c.transportation,
       optional: false,
       links: [
         {
           label: "Google Flights",
-          url: `https://www.google.com/travel/flights?q=${enc(`Flights to ${to}${from ? ` from ${from}` : ""} on ${cruise ? addDays(start, -1) : start} through ${end}`)}`,
+          url: `https://www.google.com/travel/flights?q=${enc(`Flights to ${to}${from ? ` from ${from}` : ""} on ${cruise ? addDays(start, -1) : start} through ${end}${cabin ? ` ${cabin.toLowerCase()} class` : ""}`)}`,
         },
         {
           label: "Compare fares",
@@ -208,7 +243,37 @@ export function bookingPlan(
   }
 
   const lodging = !cruise && shape.nights > 0 && trip.inputs.nightlyRate > 0;
-  if (lodging) {
+  if (lodging && multi) {
+    // One stay per city, for its own nights; the budget splits by nights.
+    const rooms = Math.max(1, trip.inputs.rooms);
+    legs.forEach((leg, i) => {
+      if (leg.nights < 1) return;
+      const inDate = addDays(start, leg.arriveDay);
+      const outDate = addDays(start, leg.arriveDay + leg.nights);
+      items.push({
+        key: i === 0 ? "hotel" : `hotel-${i + 1}`,
+        kind: "hotel",
+        title: `Stay in ${short(leg.name)}`,
+        detail: `${leg.nights} night${leg.nights === 1 ? "" : "s"} · ${day(inDate)} – ${day(outDate)} · ${rooms} room${rooms > 1 ? "s" : ""}, ${who}`,
+        budget: shape.nights > 0 ? Math.round((c.accommodations * leg.nights) / shape.nights) : 0,
+        optional: false,
+        links: [
+          {
+            label: "Booking.com",
+            url: `https://www.booking.com/searchresults.html?ss=${enc(leg.name)}&checkin=${inDate}&checkout=${outDate}&group_adults=${n}&no_rooms=${rooms}`,
+          },
+          {
+            label: "Google Hotels",
+            url: `https://www.google.com/travel/search?q=${enc(`hotels in ${leg.name}`)}`,
+          },
+          {
+            label: "Airbnb",
+            url: `https://www.airbnb.com/s/${enc(leg.name)}/homes?checkin=${inDate}&checkout=${outDate}&adults=${n}`,
+          },
+        ],
+      });
+    });
+  } else if (lodging) {
     const rooms = Math.max(1, trip.inputs.rooms);
     items.push({
       key: "hotel",

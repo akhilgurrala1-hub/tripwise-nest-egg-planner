@@ -98,12 +98,12 @@ export function PageHeader({
 }
 
 function TripBar({ title }: { title: string }) {
-  const { trip, dest, shape } = useTrip();
+  const { trip, place, shape } = useTrip();
   return (
     <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-[13px]">
       <TripTypeChip />
       {/* Not twice: the Overview's title already is the destination. */}
-      {title !== dest.name && <Chip icon={<MapPin />}>{dest.name}</Chip>}
+      {title !== place && <Chip icon={<MapPin />}>{place}</Chip>}
       <Chip icon={<CalendarDays />}>
         {formatDateRange(trip.setup.startDate, trip.setup.endDate)}
         <span className="text-muted-foreground">

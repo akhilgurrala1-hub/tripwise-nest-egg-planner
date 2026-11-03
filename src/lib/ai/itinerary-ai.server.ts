@@ -54,6 +54,11 @@ export interface AiItineraryRequest {
   instructions: string;
   /** The current plan, one line per item, when refining */
   current: string[];
+  /**
+   * Multi-city: which city each stretch of days is in, in order ("Days 1-3: Rome,
+   * Italy"; the first day in each later city is a travel day). Empty for one place.
+   */
+  cities?: string[];
 }
 
 export type AiItineraryResult =
@@ -120,8 +125,11 @@ export async function generateAiItinerary(
   const apiKey = process.env["LOVABLE_API_KEY"];
   if (!apiKey) return { ok: false, status: 401, error: "AI planning isn't configured yet." };
 
+  const cities = req.cities ?? [];
   const prompt = [
-    `Destination: ${req.destination}${req.region ? ` (${req.region})` : ""}`,
+    cities.length > 1
+      ? `Multi-city trip, ${cities.length} cities. Plan EVERY day in the city listed for it, never only the first city:\n${cities.join("\n")}\nOn the first day in each new city, start with a "stop" item in the Morning for the journey from the previous city (name like "Train to Florence", costPerPerson 0, it's in the transport budget), then plan that city. Day titles name the city.`
+      : `Destination: ${req.destination}${req.region ? ` (${req.region})` : ""}`,
     `Starting from: ${req.origin || "not specified"}`,
     `Trip type: ${req.tripType}; travel style: ${req.style}`,
     `Length: ${req.days} day(s); travelers: ${req.travelers}`,
@@ -143,7 +151,7 @@ export async function generateAiItinerary(
     ...(req.guide.length ? [`Advice from travelers (Wikivoyage):\n${req.guide.join("\n")}`] : []),
     ...(req.places.length
       ? [
-          `Real places at the destination (from the Wikivoyage travel guide, Wikipedia and OpenStreetMap):\n${req.places.map((p) => `- ${p}`).join("\n")}`,
+          `Real places ${cities.length > 1 ? "in these cities (each line starts with its city)" : "at the destination"} (from the Wikivoyage travel guide, Wikipedia and OpenStreetMap):\n${req.places.map((p) => `- ${p}`).join("\n")}`,
         ]
       : []),
     ...(req.instructions

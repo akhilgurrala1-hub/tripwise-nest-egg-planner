@@ -90,7 +90,13 @@ export function PlaceInput({
           className="absolute inset-x-0 top-full z-30 mt-1 overflow-hidden rounded-xl border border-border bg-popover py-1 text-popover-foreground shadow-lift"
         >
           {options.length === 0 && q.isFetching && (
-            <li className="flex items-center gap-2 px-3 py-2 text-sm text-muted-foreground">
+            // A status row inside a listbox must still be an option (disabled) for screen readers.
+            <li
+              role="option"
+              aria-selected={false}
+              aria-disabled
+              className="flex items-center gap-2 px-3 py-2 text-sm text-muted-foreground"
+            >
               <Loader2 className="size-3.5 animate-spin" /> Finding places…
             </li>
           )}

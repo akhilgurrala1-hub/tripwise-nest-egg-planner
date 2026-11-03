@@ -12,6 +12,7 @@ import {
 import { LivePricesPanel } from "@/components/app/LivePricesPanel";
 import { AnimatedMoney, stagger } from "@/components/app/motion";
 import { PageHeader } from "@/components/app/TripHeader";
+import { CabinPicker } from "@/components/app/plan/CabinPicker";
 import {
   Accordion,
   AccordionContent,
@@ -92,6 +93,12 @@ function BudgetPage() {
                   className="mt-2 h-12"
                   inputClassName="text-xl"
                 />
+                {trip.setup.budgetAuto && (
+                  <p className="mt-2 text-xs text-muted-foreground">
+                    Set from your trip's costs, and it follows the trip (cities, cabin, travel).
+                    Type your own to change it.
+                  </p>
+                )}
               </div>
               <dl className="grid grid-cols-2 gap-px overflow-hidden rounded-lg border border-border bg-border text-sm sm:grid-cols-4">
                 <Stat label="Emergency fund" value={totals.emergencyFund} />
@@ -298,9 +305,16 @@ function CategoryRow({ cat }: { cat: Category }) {
       formula = parts.length ? parts.join(" + ") : `${modeLabel} · no fares or rentals`;
       fields = (
         <>
+          {i.transportMode === "flight" && (
+            <CabinPicker
+              value={trip.setup.cabin}
+              onChange={(cabin) => tripActions.setCabin(cabin)}
+              className="col-span-full flex flex-wrap items-center gap-x-4 gap-y-2"
+            />
+          )}
           {fareMode && (
             <InputCell
-              label={`${modeLabel} fare, per person (round trip)`}
+              label={`${modeLabel} fare, per person (${(trip.setup.cities?.length ?? 0) > 0 ? "every leg" : "round trip"})`}
               value={i.farePerPerson}
               onChange={set("farePerPerson")}
               prefix="$"

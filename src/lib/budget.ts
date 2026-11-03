@@ -147,7 +147,12 @@ export interface CostPart {
  * trips", "Ride to the airport · there and back"), so a total is never a mystery.
  * Amounts add up to the Transportation estimate.
  */
-export function transportParts(inputs: BudgetInputs, trip: TripShape): CostPart[] {
+export function transportParts(
+  inputs: BudgetInputs,
+  trip: TripShape,
+  /** Cities on the route: past one, the fare covers every leg, not a round trip */
+  cities = 1,
+): CostPart[] {
   const mode = inputs.transportMode;
   const fareLabel =
     mode === "flight"
@@ -163,7 +168,10 @@ export function transportParts(inputs: BudgetInputs, trip: TripShape): CostPart[
     parts.push({
       key: "fares",
       label: fareLabel,
-      detail: `${formatMoney(fare)} × ${trip.travelers} round trip${trip.travelers === 1 ? "" : "s"}`,
+      detail:
+        cities > 1
+          ? `${formatMoney(fare)} × ${trip.travelers} traveler${trip.travelers === 1 ? "" : "s"}, ${cities + 1} legs`
+          : `${formatMoney(fare)} × ${trip.travelers} round trip${trip.travelers === 1 ? "" : "s"}`,
       amount: roundMoney(fare * trip.travelers),
     });
   if (mode === "rental-car" && inputs.rentalPerDay > 0)

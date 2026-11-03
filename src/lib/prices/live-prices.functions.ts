@@ -18,6 +18,17 @@ const inputSchema = z
     includeHotels: z.boolean().default(true),
     originAirport: z.string().regex(/^([A-Z]{3})?$/),
     destinationAirport: z.string().regex(/^([A-Z]{3})?$/),
+    cabin: z.enum(["economy", "premium", "business", "first"]).default("economy"),
+    cities: z
+      .array(
+        z.object({
+          name: z.string().trim().min(2).max(160),
+          checkIn: isoDate,
+          checkOut: isoDate,
+        }),
+      )
+      .max(5)
+      .default([]),
   })
   .refine((d) => d.endDate >= d.startDate, {
     message: "The trip must end on or after its start date",

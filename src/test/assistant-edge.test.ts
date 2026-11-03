@@ -22,6 +22,8 @@ const draft = (patch: Partial<TripDraft>): TripDraft => ({
   interests: [],
   covered: { lodging: false, meals: false, activities: false, localTransport: false },
   transferCost: null,
+  cities: [],
+  cabin: null,
   ...patch,
 });
 

@@ -52,6 +52,8 @@ export interface FlightQuote {
   typicalRange: [number, number] | null;
   options: FlightOption[];
   bookingUrl: string | null;
+  /** Multi-city: each one-way leg and its cheapest fare per person */
+  legs?: { from: string; to: string; date: string; perPerson: number }[];
 }
 
 export interface LivePrices {
