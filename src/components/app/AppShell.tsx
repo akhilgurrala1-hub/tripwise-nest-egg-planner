@@ -40,11 +40,12 @@ const NAV: {
   label: string;
   icon: LucideIcon;
 }[] = [
+  // In the order a trip comes together: set it up, see where it stands, then fine-tune.
   { to: "/", label: "Plan", icon: Compass },
+  { to: "/dashboard", label: "Overview", icon: LayoutDashboard },
   { to: "/budget", label: "Budget", icon: Wallet },
-  { to: "/road-trip", label: "Road trip", icon: RouteIcon },
   { to: "/itinerary", label: "Itinerary", icon: Map },
-  { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { to: "/road-trip", label: "Road trip", icon: RouteIcon },
 ];
 
 export function AppShell({ children }: { children: ReactNode }) {

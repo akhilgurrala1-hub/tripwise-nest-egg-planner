@@ -83,7 +83,7 @@ function ProfilePage() {
 
   return (
     <div>
-      <PageHeader eyebrow="Your account" title="Profile & preferences" />
+      <PageHeader eyebrow="Your account" title="Profile & preferences" showTrip={false} />
       <div className="mx-auto mt-6 max-w-3xl space-y-6 px-4">
         <section className="surface-card p-5">
           <p className="text-xs font-semibold tracking-wider text-muted-foreground uppercase">

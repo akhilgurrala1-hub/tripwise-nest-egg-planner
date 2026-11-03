@@ -9,7 +9,7 @@ import { WeatherCard } from "@/components/app/Weather";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth-context";
 import { CATEGORIES, CATEGORY_LABELS, SAVING_TITLES, formatMoney } from "@/lib/budget";
-import { TRAVEL_STYLES, TRIP_TYPES } from "@/lib/demo-data";
+import { TRAVEL_STYLES } from "@/lib/demo-data";
 import { liveCategories } from "@/lib/live/sources";
 import { tripActions, useTrip } from "@/lib/trip-store";
 import { cn } from "@/lib/utils";
@@ -17,13 +17,13 @@ import { cn } from "@/lib/utils";
 export const Route = createFileRoute("/dashboard")({
   head: () => ({
     meta: [
-      { title: "Trip dashboard — Waypoint" },
+      { title: "Trip overview — Waypoint" },
       {
         name: "description",
         content:
           "See total planned expenses, remaining money, potential savings and your protected emergency fund.",
       },
-      { property: "og:title", content: "Trip dashboard — Waypoint" },
+      { property: "og:title", content: "Trip overview — Waypoint" },
       {
         property: "og:description",
         content: "Your trip's planned spend, money left and savings opportunities at a glance.",
@@ -38,7 +38,6 @@ export const Route = createFileRoute("/dashboard")({
 function Dashboard() {
   const { trip, totals, savings, applied, potentialSavings, shape } = useTrip();
   const style = TRAVEL_STYLES.find((s) => s.id === trip.setup.style);
-  const type = TRIP_TYPES.find((t) => t.id === trip.setup.tripType);
 
   const breakdown = CATEGORIES.map((c) => ({ cat: c, value: totals.categories[c] }))
     .filter((d) => d.value > 0)
@@ -49,10 +48,7 @@ function Dashboard() {
 
   return (
     <div>
-      <PageHeader
-        eyebrow={[type?.label, style?.label].filter(Boolean).join(" · ")}
-        title="Overview"
-      />
+      <PageHeader eyebrow={`Overview · ${style?.label ?? ""} style`} title="At a glance" />
 
       <div className="mx-auto mt-8 max-w-6xl space-y-4 px-4">
         {/* Balance */}

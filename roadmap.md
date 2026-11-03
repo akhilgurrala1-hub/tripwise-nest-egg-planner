@@ -2,21 +2,30 @@
 
 ## Audit & fix round (current)
 
-- [ ] P1 Cross-tab sync, stable trip IDs, AI results scoped to the trip they were requested for
+- [x] P1 Cross-tab sync, stable trip IDs, AI results scoped to the trip they were requested for
 - [x] P1 Trip type ↔ transport ↔ route consistency (flights get airport handling, no driving stops)
 - [x] P1 Trip-type transitions explain what changed
-- [ ] P1 Date inputs: no reverting, one-day trips, timezone-safe dates, clear validation
+- [x] P1 Date inputs: no reverting (start moves keep the length), one-day trips, timezone-safe dates, clear validation
 - [ ] P2 One shared money engine in cents; "No spendable budget" instead of 999%
-- [ ] P2 Itinerary ↔ activities budget discrepancy flag + explicit sync
+- [x] P2 Itinerary ↔ activities budget discrepancy flag + explicit sync (with Undo)
 - [ ] P2 Live tips after itinerary edits; stale AI number tips hidden
 - [ ] P2 Savings show category vs total-trip savings; safe apply/undo
-- [ ] P2 Arrival/departure times, travel days; AI cancel/retry/timeout, previous plan kept
-- [ ] P2 Demo / AI / your-own / map-verified labels per item
+- [x] P2 AI cancel/retry/timeout, previous plan kept
+- [ ] P2 Arrival/departure times, travel days
+- [x] P2 Demo / AI / your-own / map-verified labels (plan label + "Yours" + Google Maps links)
 - [ ] P3 Saved trips in accounts (create, list, open, rename, duplicate, recoverable delete, save status, conflict detection)
 - [ ] P3 Verify sign-in flow and live maps signed in
 - [ ] P4 Dark-mode contrast, 44px touch targets, responsive check
 - [x] P4 Itinerary editing: add, edit, swap, reorder, undo remove
-- [ ] Tests + browser checks (two tabs, delayed AI, mobile, both themes)
+- [x] Tests + browser checks (two tabs, delayed/cancelled/timed-out AI, mobile, both themes)
+
+## Organization & motion (done)
+
+- [x] Nav in flow order: Plan, Overview, Budget, Itinerary, Road trip
+- [x] Trip bar on every planning page; trip type switchable in place
+- [x] Travel scenes: car drives, plane flies its arc, ship sails, train/bus pulls in, sun rises at home
+- [x] Compact road-trip stops; plan vs. budget panel; itinerary page split into components
+- [x] Budget derived once per change; odd dollar amounts no longer block the Plan form
 
 ## Live data & flow (done)
 
@@ -28,6 +37,7 @@
 - [x] Fixed custom/staycation destinations being searched as "X, Custom destination"
 
 ## Hardening (done)
+
 - [x] CI on every PR and push to main: type check, lint, tests, build
 - [x] AI itinerary requires sign-in (spends credits); stricter sign-in redirect check; booking links limited to http(s)
 - [x] Removed unused chart library (recharts)

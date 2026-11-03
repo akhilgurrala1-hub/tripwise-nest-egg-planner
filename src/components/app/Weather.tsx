@@ -120,7 +120,9 @@ export function WeatherCard({ className }: { className?: string }) {
       )}
       {w.status === "ready" && days.length === 0 && (
         <p className="mt-4 text-sm text-muted-foreground">
-          This trip's dates have passed, so there's no forecast to show.
+          {w.datesPassed
+            ? "This trip's dates have passed, so there's no forecast to show."
+            : "No weather data for these dates yet. Check back closer to your trip."}
         </p>
       )}
 

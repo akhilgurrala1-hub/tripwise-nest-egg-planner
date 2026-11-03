@@ -393,6 +393,46 @@
   }
 }
 
+/* ---------- Travel scenes ---------- */
+/* Parts scale and turn around their own centers; the ship rocks from its keel. */
+.travel-scene .scene-part {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+.travel-scene .scene-bob {
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+  animation: scene-bob 3.4s ease-in-out infinite;
+}
+.travel-scene .scene-wave {
+  animation: scene-wave 3.6s linear infinite;
+}
+.travel-scene .scene-wave-slow {
+  animation: scene-wave-slow 6s linear infinite;
+}
+@keyframes scene-bob {
+  0%,
+  100% {
+    transform: rotate(-1.2deg) translateY(0);
+  }
+  50% {
+    transform: rotate(1.2deg) translateY(-0.8px);
+  }
+}
+@keyframes scene-wave {
+  to {
+    transform: translateX(-40px);
+  }
+}
+@keyframes scene-wave-slow {
+  from {
+    transform: translateX(-48px);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
 /* ---------- Brand mark motion ---------- */
 /* The mark's parts are animated in SVG user space around their own centers. */
 .logo-mark .logo-tile,

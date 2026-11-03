@@ -88,6 +88,8 @@ export function useTripWeather() {
     placeLabel: place?.label ?? text,
     weather: weather.data ?? null,
     byDate,
+    /** Every trip day is before today, so there's nothing to forecast. */
+    datesPassed: !!today && trip.setup.endDate < today,
     refetch: () => (geo.isError ? geo.refetch() : weather.refetch()),
   };
 }

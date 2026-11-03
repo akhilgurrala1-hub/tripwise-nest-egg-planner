@@ -10,7 +10,7 @@ import {
   PriceSourceBadge,
 } from "@/components/app/bits";
 import { LivePricesPanel } from "@/components/app/LivePricesPanel";
-import { AnimatedMoney, Segmented, stagger } from "@/components/app/motion";
+import { AnimatedMoney, stagger } from "@/components/app/motion";
 import { PageHeader } from "@/components/app/TripHeader";
 import {
   Accordion,
@@ -31,7 +31,7 @@ import {
   type BudgetInputs,
   type Category,
 } from "@/lib/budget";
-import { TRANSPORT_MODES, TRIP_TYPES, isDrivingMode, tripTypeInfo } from "@/lib/demo-data";
+import { TRANSPORT_MODES, isDrivingMode } from "@/lib/demo-data";
 import { itineraryActivityCost } from "@/lib/itinerary";
 import { categorySource } from "@/lib/live/sources";
 import { tripActions, useTrip } from "@/lib/trip-store";
@@ -117,8 +117,6 @@ function BudgetPage() {
             </div>
             {totals.overBudget && <CutPlan />}
           </section>
-
-          <TripTypeSwitcher />
 
           {/* Categories */}
           <section className="animate-rise" style={stagger(2)}>
@@ -645,44 +643,3 @@ function CutPlan() {
 }
 
 /** Separate trip categories: switching re-estimates the budget for that kind of trip and says what changed. */
-function TripTypeSwitcher() {
-  const { trip } = useTrip();
-  const info = tripTypeInfo(trip.setup.tripType);
-  const modes = TRANSPORT_MODES.filter((m) => info.modes.includes(m.id));
-  return (
-    <section
-      className="surface-card animate-rise flex flex-wrap items-center gap-x-6 gap-y-3 p-4"
-      style={stagger(1)}
-    >
-      <div className="flex min-w-0 flex-wrap items-center gap-3">
-        <p className="text-[13px] text-muted-foreground">Trip</p>
-        <Segmented
-          ariaLabel="Trip type"
-          size="sm"
-          value={trip.setup.tripType}
-          onChange={(t) => {
-            const [headline, ...details] = tripActions.setTripType(t);
-            if (headline)
-              toast.success(
-                headline,
-                details.length ? { description: details.join(" ") } : undefined,
-              );
-          }}
-          options={TRIP_TYPES.map((t) => ({ value: t.id, label: t.label }))}
-        />
-      </div>
-      {modes.length > 1 && (
-        <div className="flex flex-wrap items-center gap-3">
-          <p className="text-[13px] text-muted-foreground">{info.modeQuestion}</p>
-          <Segmented
-            ariaLabel={info.modeQuestion}
-            size="sm"
-            value={trip.inputs.transportMode}
-            onChange={(m) => tripActions.setTransportMode(m)}
-            options={modes.map((m) => ({ value: m.id, label: m.label }))}
-          />
-        </div>
-      )}
-    </section>
-  );
-}
