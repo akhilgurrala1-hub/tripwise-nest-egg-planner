@@ -41,6 +41,9 @@ const inputSchema = z.object({
   today: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
   homeCity: z.string().max(120),
   draft,
+  country: z.string().max(2).default(""),
+  currency: z.string().max(3).default("USD"),
+  nearby: z.array(z.string().max(120)).max(16).default([]),
 });
 
 /** Signed-in only: every turn spends AI credits, so it is never callable anonymously. */

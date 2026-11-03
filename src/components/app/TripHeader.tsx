@@ -120,7 +120,11 @@ function TripTypeChip() {
         {tripTypeInfo(trip.setup.tripType).label}
         <ChevronDown className="size-3.5 text-muted-foreground print:hidden" />
       </PopoverTrigger>
-      <PopoverContent align="start" className="w-[min(420px,calc(100vw-2rem))] rounded-xl p-3">
+      <PopoverContent
+        align="start"
+        aria-label="Switch trip type"
+        className="w-[min(420px,calc(100vw-2rem))] rounded-xl p-3"
+      >
         <p className="px-1 pb-2.5 text-[13px] text-muted-foreground">
           Switch trip type — the budget is re-estimated for it.
         </p>

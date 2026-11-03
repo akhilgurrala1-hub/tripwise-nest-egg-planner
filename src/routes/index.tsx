@@ -191,12 +191,21 @@ function Welcome() {
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (dateError || destError || reserveError) {
-      toast.error(dateError || destError || reserveError);
-      return;
-    }
-    if (form.totalBudget <= 0) {
-      toast.error("Add a total budget to continue");
+    // Point at the field that needs fixing, not just a message.
+    const problem: [string, string] | null = dateError
+      ? [dateError, "Start date"]
+      : destError
+        ? [destError, "Destination"]
+        : reserveError
+          ? [reserveError, "Emergency reserve"]
+          : form.totalBudget <= 0
+            ? ["Add a total budget to continue", "Total budget"]
+            : null;
+    if (problem) {
+      toast.error(problem[0]);
+      const field = document.querySelector<HTMLElement>(`[aria-label="${problem[1]}"]`);
+      field?.scrollIntoView({ behavior: "smooth", block: "center" });
+      field?.focus({ preventScroll: true });
       return;
     }
     void start(effective);
@@ -242,6 +251,7 @@ function Welcome() {
           <div className="animate-rise" style={stagger(1)}>
             <TripAssistant
               homeCity={form.origin}
+              from={originPoint}
               onBuild={(draft) => void start(fromDraft(draft))}
               onFill={(draft) => {
                 const next = fromDraft(draft);

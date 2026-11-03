@@ -54,6 +54,11 @@ export interface TripChatRequest {
   today: string;
   homeCity: string;
   draft: TripDraft | null;
+  /** The traveler's country (ISO code) and the currency they think in */
+  country: string;
+  currency: string;
+  /** Real places Waypoint suggests from their home, "Name (Region) — trip type, distance" */
+  nearby: string[];
 }
 
 export type TripChatResult =
@@ -91,7 +96,17 @@ export async function runTripChat(
   });
   const context = [
     `Today: ${req.today} (${new Date(`${req.today}T12:00:00Z`).toLocaleDateString("en-US", { weekday: "long", timeZone: "UTC" })})`,
-    `Traveler's home city: ${req.homeCity || "unknown"}`,
+    `Traveler's home city: ${req.homeCity || "unknown"}${req.country ? ` (country ${req.country})` : ""}`,
+    ...(req.currency && req.currency !== "USD"
+      ? [
+          `They think in ${req.currency}. Budgets in "trip" are always US dollars: convert any amount they give in ${req.currency} to USD.`,
+        ]
+      : []),
+    ...(req.nearby.length
+      ? [
+          `Places Waypoint can plan in detail from their home (prefer these for ideas when they fit):\n${req.nearby.map((n) => `- ${n}`).join("\n")}`,
+        ]
+      : []),
     `Trip so far: ${req.draft ? JSON.stringify(req.draft) : "nothing yet"}`,
   ].join("\n");
 

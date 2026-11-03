@@ -7,7 +7,12 @@ import { stagger } from "@/components/app/motion";
 import { formatDateRange } from "@/components/app/TripHeader";
 import { Button } from "@/components/ui/button";
 import { tripChat } from "@/lib/ai-trip-chat.functions";
+import { cleanChatAnswer } from "@/lib/ai-quality";
 import { draftDates, missingFields, type TripDraft } from "@/lib/assistant";
+import type { GeoPoint } from "@/lib/catalog";
+import { useHomePlace } from "@/lib/live/use-home";
+import { useLocale } from "@/lib/live/use-locale";
+import { recommendDestinations } from "@/lib/recommend";
 import { useAuth } from "@/lib/auth-context";
 import { formatMoney } from "@/lib/budget";
 import { todayIso } from "@/lib/dates";
@@ -37,6 +42,20 @@ const EXAMPLES = [
   "A 4-night cruise from the closest port, comfortable but not fancy",
 ];
 
+/** Places Waypoint knows well near the traveler, so the assistant's ideas can be planned in detail. */
+function nearbyLines(from: GeoPoint | null, draft: TripDraft | null): string[] {
+  if (!from) return [];
+  const types = draft?.tripType ? [draft.tripType] : (["road-trip", "flight"] as const);
+  return types
+    .flatMap((tripType) =>
+      recommendDestinations({ from, tripType, interests: draft?.interests ?? [], limit: 6 }).map(
+        (s) =>
+          `${s.name} (${s.region}) — ${tripType === "flight" ? "fly-away" : tripType}${s.distanceLabel ? `, ${s.distanceLabel}` : ""}`,
+      ),
+    )
+    .slice(0, 12);
+}
+
 function load(): Saved {
   try {
     const raw = window.sessionStorage.getItem(STORAGE_KEY);
@@ -54,16 +73,21 @@ function load(): Saved {
  */
 export function TripAssistant({
   homeCity,
+  from = null,
   onBuild,
   onFill,
 }: {
   homeCity: string;
+  /** Where the traveler starts, for nearby ideas */
+  from?: GeoPoint | null;
   /** Start this trip now */
   onBuild: (draft: TripDraft) => void;
   /** Put it in the form below for fine-tuning */
   onFill: (draft: TripDraft) => void;
 }) {
   const { user, loading: authLoading } = useAuth();
+  const { currency } = useLocale();
+  const { place } = useHomePlace();
   const [state, setState] = useState<Saved>({ turns: [], draft: null, pending: "" });
   const [text, setText] = useState("");
   const [busy, setBusy] = useState(false);
@@ -120,6 +144,9 @@ export function TripAssistant({
           today,
           homeCity,
           draft: state.draft,
+          country: place?.country ?? "",
+          currency,
+          nearby: nearbyLines(from, state.draft),
         },
       });
       if (!res.ok) {
@@ -127,7 +154,7 @@ export function TripAssistant({
         setState((s) => ({ ...s, turns: s.turns.slice(0, -1) }));
         return;
       }
-      const a = res.answer;
+      const a = cleanChatAnswer(res.answer);
       setState((s) => ({
         ...s,
         draft: a.trip,

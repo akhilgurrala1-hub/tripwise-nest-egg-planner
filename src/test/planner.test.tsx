@@ -9,6 +9,29 @@ const toasts = vi.hoisted(() => ({ error: vi.fn(), success: vi.fn(), plain: vi.f
 vi.mock("@/lib/ai-itinerary.functions", () => ({ createAiItinerary: ai.fn }));
 vi.mock("@/lib/places/destination-places.functions", () => ({ getDestinationPlaces: vi.fn() }));
 vi.mock("@/integrations/supabase/client", () => ({ supabase: {} }));
+vi.mock("@/lib/live/location.functions", () => ({ getVisitorLocation: async () => null }));
+// Grounding lookups are free web calls; here they find one real landmark.
+vi.mock("@/lib/live/open-data", async (orig) => ({
+  ...(await orig<typeof import("@/lib/live/open-data")>()),
+  fetchLandmarks: async () => [
+    {
+      placeId: "wiki:1",
+      name: "AI Museum",
+      kind: "sight",
+      typeLabel: "Museum",
+      description: "Museum",
+      address: null,
+      rating: null,
+      ratingCount: null,
+      mapsUrl: "https://www.google.com/maps/search/?api=1&query=AI%20Museum",
+      costPerPerson: 0,
+      costSource: "unknown",
+      interests: ["arts"],
+    },
+  ],
+  fetchRestaurants: async () => [],
+  fetchHolidays: async () => [],
+}));
 vi.mock("sonner", () => ({
   toast: Object.assign(toasts.plain, { error: toasts.error, success: toasts.success }),
 }));
@@ -75,13 +98,21 @@ describe("AI planner requests", () => {
     let run!: Promise<void>;
     act(() => void (run = result.current.planWithAi()));
     expect(result.current.job).toBe("ai");
+    await waitFor(() => expect(ai.fn).toHaveBeenCalled());
     await act(async () => {
       answer(PLAN);
       await run;
     });
     expect(currentTrip().itinerary?.source).toBe("ai");
     expect(result.current.job).toBeNull();
-    expect(toasts.success).toHaveBeenCalled();
+    // The AI was given real nearby places, and its stop that names one links to the map.
+    expect(ai.fn.mock.calls[0]![0].data.places).toEqual(["AI Museum — Museum"]);
+    const stop = currentTrip().itinerary!.days[0]!.items[0]!;
+    expect(stop.mapsUrl).toContain("AI%20Museum");
+    expect(toasts.success).toHaveBeenCalledWith(
+      expect.stringContaining("matched real places"),
+      undefined,
+    );
   });
 
   it("cancel stops waiting and keeps the current plan", async () => {
@@ -90,6 +121,7 @@ describe("AI planner requests", () => {
     const { result } = renderHook(() => usePlanner(), { wrapper });
     let run!: Promise<void>;
     act(() => void (run = result.current.planWithAi()));
+    await waitFor(() => expect(ai.fn).toHaveBeenCalled());
     await act(async () => {
       result.current.cancel();
       await run;
@@ -104,6 +136,7 @@ describe("AI planner requests", () => {
     const { result } = renderHook(() => usePlanner(), { wrapper });
     let run!: Promise<void>;
     act(() => void (run = result.current.planWithAi()));
+    await waitFor(() => expect(ai.fn).toHaveBeenCalled());
     act(() => {
       tripActions.startTrip({
         ...sampleSetup(),
@@ -129,6 +162,7 @@ describe("AI planner requests", () => {
       const { result } = renderHook(() => usePlanner(), { wrapper });
       let run!: Promise<void>;
       act(() => void (run = result.current.planWithAi()));
+      await vi.waitFor(() => expect(ai.fn).toHaveBeenCalled());
       await act(async () => {
         vi.advanceTimersByTime(AI_TIMEOUT_MS + 10);
         await run;

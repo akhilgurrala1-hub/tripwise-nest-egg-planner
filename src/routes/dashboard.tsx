@@ -1,3 +1,5 @@
+import { useQuery } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowRight, Check, Lock, Undo2 } from "lucide-react";
 import { toast } from "sonner";
@@ -13,6 +15,7 @@ import { CATEGORIES, CATEGORY_LABELS, SAVING_TITLES, formatMoney } from "@/lib/b
 import { bookingPlan, bookingProgress } from "@/lib/booking";
 import { TRAVEL_STYLES } from "@/lib/demo-data";
 import { liveCategories } from "@/lib/live/sources";
+import { getLivePriceStatus } from "@/lib/prices/live-prices.functions";
 import { tripActions, useTrip } from "@/lib/trip-store";
 import { cn } from "@/lib/utils";
 
@@ -248,9 +251,20 @@ function NextSteps() {
   const roadTrip = trip.setup.tripType === "road-trip";
   const live = liveCategories(trip.inputs, trip.overrides, trip.live).length > 0;
   const realPlan = !!trip.itinerary && trip.itinerary.source !== "demo";
+  // Only ask for live prices once a price source is connected; otherwise the step could never be done.
+  const fetchStatus = useServerFn(getLivePriceStatus);
+  const status = useQuery({
+    queryKey: ["live", "price-status"],
+    queryFn: () => fetchStatus(),
+    staleTime: 10 * 60 * 1000,
+  });
+  const pricesAvailable =
+    live || (!!status.data && (status.data.gas || status.data.hotels || status.data.flights));
   const steps: { title: string; done: boolean; to: StepTo; cta: string }[] = [
     { title: "Plan the trip", done: !trip.isSample, to: "/", cta: "Start planning" },
-    { title: "Check live prices", done: live, to: "/budget", cta: "Open budget" },
+    ...(pricesAvailable
+      ? [{ title: "Check live prices", done: live, to: "/budget" as const, cta: "Open budget" }]
+      : []),
     ...(roadTrip
       ? [
           {

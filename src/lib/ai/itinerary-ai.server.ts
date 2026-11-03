@@ -42,6 +42,14 @@ export interface AiItineraryRequest {
   activityBudgetPerPerson: number;
   foodBudgetPerPersonDay: number;
   weather: string[];
+  /** Real places near the destination ("Name — what it is"), to ground the plan */
+  places: string[];
+  /** Dates to know about, e.g. public holidays */
+  notes: string[];
+  /** The traveler's requested changes, when refining a plan */
+  instructions: string;
+  /** The current plan, one line per item, when refining */
+  current: string[];
 }
 
 export type AiItineraryResult =
@@ -54,7 +62,11 @@ costPerPerson is an estimated USD amount per person (0 for free). Keep sightseei
 Only place weekday-specific events (markets, weekly shows) on a day whose weekday matches. Put after-dark activities in the Evening. Keep notes under 90 characters. Give 2-4 short money-saving or practical tips.
 For a cruise: Day 1 is boarding at the departure port and the last day is disembarking; meals in the main dining room and buffet are included (costPerPerson 0); fill port days with shore excursions and sea days with onboard activities.
 For a fly-away trip, Day 1 starts with the flight in; for a train or bus trip, with the ride in. Only road trips get "stop" items for drive breaks.
-When weather is given, plan around it: put indoor sights on days with rain, snow or storms, save outdoor highlights for dry days, and mention the weather in a tip when it matters.`;
+When weather is given, plan around it: put indoor sights on days with rain, snow or storms, save outdoor highlights for dry days, and mention the weather in a tip when it matters.
+When a list of real nearby places is given, build the plan from those exact names wherever they fit the traveler's interests, and don't make up specific venue names; if you need something the list doesn't have, describe the kind of place instead (e.g. "Neighborhood bakery").
+When public holidays are given, expect closures and crowds on those days: favor outdoor sights and markets that stay open, and say so in a tip.
+Return exactly the number of days asked for, in order.
+When the traveler asks for changes to their current plan, make those changes and keep everything they didn't ask to change.`;
 
 function describeError(err: unknown): { status: number; error: string } {
   const e = err as {
@@ -135,6 +147,18 @@ export async function generateAiItinerary(
     `Sightseeing budget per person for the whole trip: $${Math.round(req.activityBudgetPerPerson)}`,
     `Food budget per person per day: $${Math.round(req.foodBudgetPerPersonDay)}`,
     ...(req.weather.length ? [`Weather (real data):\n${req.weather.join("\n")}`] : []),
+    ...(req.notes.length ? [`Dates to know:\n${req.notes.join("\n")}`] : []),
+    ...(req.places.length
+      ? [
+          `Real places near the destination (Wikipedia and OpenStreetMap):\n${req.places.map((p) => `- ${p}`).join("\n")}`,
+        ]
+      : []),
+    ...(req.instructions
+      ? [
+          `Current plan:\n${req.current.join("\n")}`,
+          `The traveler asks for these changes: "${req.instructions}"`,
+        ]
+      : []),
   ].join("\n");
 
   try {
