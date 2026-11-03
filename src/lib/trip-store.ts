@@ -488,6 +488,15 @@ export const tripActions = {
     setState(() => ({ ...repairDates(migrated), id: newTripId(), isSample: false, cloud: link }));
     return true;
   },
+  /** Replace the current trip with one from a shared link (as a new trip of the traveler's own). */
+  openSharedTrip(
+    shared: Omit<TripState, "id" | "cloud" | "bookings" | "live" | "isSample">,
+  ): boolean {
+    const migrated = migrate({ ...shared, isSample: false, live: null, cloud: null, bookings: {} });
+    if (!migrated) return false;
+    setState(() => ({ ...repairDates(migrated), id: newTripId(), isSample: false, cloud: null }));
+    return true;
+  },
   setCloudLink(link: CloudLink | null) {
     setState((s) => ({ ...s, cloud: link, isSample: link ? false : s.isSample }));
   },
@@ -777,6 +786,9 @@ function derive(trip: TripState) {
 }
 
 export type TripView = ReturnType<typeof derive>;
+
+/** The same view for a trip that isn't the current one (e.g. a shared link's preview). */
+export const viewTrip = (trip: TripState): TripView => derive(trip);
 
 // Many components read the trip at once; the budget, savings and cut plan are worked out once per change, not once per component.
 const derived = new WeakMap<TripState, TripView>();

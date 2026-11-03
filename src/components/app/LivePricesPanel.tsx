@@ -14,6 +14,7 @@ import { formatMoney } from "@/lib/budget";
 import { destinationQuery } from "@/lib/live/place";
 import { useHydrated } from "@/lib/live/use-live";
 import { getLivePriceStatus, getLivePrices } from "@/lib/prices/live-prices.functions";
+import { reusedNote } from "@/lib/prices/live";
 import { tripActions, useTrip } from "@/lib/trip-store";
 import { isDrivingMode } from "@/lib/demo-data";
 import { cn } from "@/lib/utils";
@@ -92,7 +93,9 @@ export function LivePricesPanel({ className }: { className?: string }) {
         return;
       }
       tripActions.applyLivePrices(res.prices);
-      toast.success("Live prices are now in your budget");
+      toast.success("Live prices are now in your budget", {
+        description: res.prices.reused ? reusedNote(res.prices.fetchedAt) : undefined,
+      });
       for (const n of res.prices.notes) toast.message(n);
     } catch {
       toast.error("Couldn't reach the price services. Please try again in a moment.");

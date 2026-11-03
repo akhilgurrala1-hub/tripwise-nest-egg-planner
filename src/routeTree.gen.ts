@@ -18,6 +18,7 @@ import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as ItineraryRouteImport } from './routes/itinerary'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as RoadTripRouteImport } from './routes/road-trip'
+import { Route as SharedRouteImport } from './routes/shared'
 import { Route as AuthenticatedBookingsRouteImport } from './routes/_authenticated/bookings'
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
 import { Route as AuthenticatedTripsRouteImport } from './routes/_authenticated/trips'
@@ -66,6 +67,11 @@ const RoadTripRoute = RoadTripRouteImport.update({
   path: '/road-trip',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SharedRoute = SharedRouteImport.update({
+  id: '/shared',
+  path: '/shared',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedBookingsRoute = AuthenticatedBookingsRouteImport.update({
   id: '/bookings',
   path: '/bookings',
@@ -91,6 +97,7 @@ export interface FileRoutesByFullPath {
   '/itinerary': typeof ItineraryRoute
   '/reset-password': typeof ResetPasswordRoute
   '/road-trip': typeof RoadTripRoute
+  '/shared': typeof SharedRoute
   '/bookings': typeof AuthenticatedBookingsRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/trips': typeof AuthenticatedTripsRoute
@@ -104,6 +111,7 @@ export interface FileRoutesByTo {
   '/itinerary': typeof ItineraryRoute
   '/reset-password': typeof ResetPasswordRoute
   '/road-trip': typeof RoadTripRoute
+  '/shared': typeof SharedRoute
   '/bookings': typeof AuthenticatedBookingsRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/trips': typeof AuthenticatedTripsRoute
@@ -119,6 +127,7 @@ export interface FileRoutesById {
   '/itinerary': typeof ItineraryRoute
   '/reset-password': typeof ResetPasswordRoute
   '/road-trip': typeof RoadTripRoute
+  '/shared': typeof SharedRoute
   '/_authenticated/bookings': typeof AuthenticatedBookingsRoute
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
   '/_authenticated/trips': typeof AuthenticatedTripsRoute
@@ -134,6 +143,7 @@ export interface FileRouteTypes {
     | '/itinerary'
     | '/reset-password'
     | '/road-trip'
+    | '/shared'
     | '/bookings'
     | '/profile'
     | '/trips'
@@ -147,6 +157,7 @@ export interface FileRouteTypes {
     | '/itinerary'
     | '/reset-password'
     | '/road-trip'
+    | '/shared'
     | '/bookings'
     | '/profile'
     | '/trips'
@@ -161,6 +172,7 @@ export interface FileRouteTypes {
     | '/itinerary'
     | '/reset-password'
     | '/road-trip'
+    | '/shared'
     | '/_authenticated/bookings'
     | '/_authenticated/profile'
     | '/_authenticated/trips'
@@ -176,6 +188,7 @@ export interface RootRouteChildren {
   ItineraryRoute: typeof ItineraryRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   RoadTripRoute: typeof RoadTripRoute
+  SharedRoute: typeof SharedRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -243,6 +256,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof RoadTripRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/shared': {
+      id: '/shared'
+      path: '/shared'
+      fullPath: '/shared'
+      preLoaderRoute: typeof SharedRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated/bookings': {
       id: '/_authenticated/bookings'
       path: '/bookings'
@@ -292,6 +312,7 @@ const rootRouteChildren: RootRouteChildren = {
   ItineraryRoute: ItineraryRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   RoadTripRoute: RoadTripRoute,
+  SharedRoute: SharedRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

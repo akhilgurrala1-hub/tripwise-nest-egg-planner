@@ -16,6 +16,7 @@ import { toast } from "sonner";
 
 import { ApproxMoney, CATEGORY_COLOR_VAR, PriceSourceBadge } from "@/components/app/bits";
 import { AnimatedMoney, stagger } from "@/components/app/motion";
+import { ShareTripButton } from "@/components/app/ShareTrip";
 import { PageHeader } from "@/components/app/TripHeader";
 import { DestinationCard } from "@/components/app/DestinationIntro";
 import { WeatherCard } from "@/components/app/Weather";
@@ -100,7 +101,9 @@ function Dashboard() {
         eyebrow={`Overview · ${style?.label ?? ""} style`}
         title="At a glance"
         sampleBanner="card"
-      />
+      >
+        {!trip.isSample && <ShareTripButton />}
+      </PageHeader>
 
       <div className="mx-auto mt-8 max-w-6xl space-y-4 px-4">
         {/* Balance */}
