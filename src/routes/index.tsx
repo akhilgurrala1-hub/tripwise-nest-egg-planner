@@ -34,6 +34,7 @@ import {
   defaultEmergencyFund,
   applyCoverage,
   defaultInputs,
+  MAX_TRAVELERS,
   formatMoney,
   tripShape,
 } from "@/lib/budget";
@@ -433,8 +434,10 @@ function Welcome() {
                       size="icon"
                       className="size-9"
                       aria-label="More travelers"
-                      disabled={form.travelers >= 12}
-                      onClick={() => update({ travelers: Math.min(12, form.travelers + 1) })}
+                      disabled={form.travelers >= MAX_TRAVELERS}
+                      onClick={() =>
+                        update({ travelers: Math.min(MAX_TRAVELERS, form.travelers + 1) })
+                      }
                     >
                       <Plus />
                     </Button>
