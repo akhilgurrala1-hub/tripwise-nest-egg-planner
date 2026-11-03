@@ -17,7 +17,7 @@ import {
 import { useState, type CSSProperties } from "react";
 import { toast } from "sonner";
 
-import { NumberField } from "@/components/app/bits";
+import { ApproxMoney, NumberField } from "@/components/app/bits";
 import { LivePricesPanel } from "@/components/app/LivePricesPanel";
 import { AnimatedMoney, stagger } from "@/components/app/motion";
 import { PageHeader } from "@/components/app/TripHeader";
@@ -119,6 +119,7 @@ function BookPage() {
                 <dt className="text-muted-foreground">Booked so far</dt>
                 <dd>
                   <AnimatedMoney value={progress.spent} className="font-medium" />
+                  <ApproxMoney usd={progress.spent} className="block text-right text-xs" />
                 </dd>
               </div>
               <div className="flex justify-between">

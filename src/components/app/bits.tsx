@@ -20,7 +20,9 @@ import { useEffect, useState, type ReactNode } from "react";
 import { Badge } from "@/components/ui/badge";
 import type { Category } from "@/lib/budget";
 import { INTERESTS, type Interest } from "@/lib/demo-data";
+import { formatApprox } from "@/lib/locale";
 import { liveCategories } from "@/lib/live/sources";
+import { useLocale, useUsdRate } from "@/lib/live/use-locale";
 import { useTrip } from "@/lib/trip-store";
 import { cn } from "@/lib/utils";
 
@@ -223,5 +225,29 @@ export function InterestChips({
         );
       })}
     </div>
+  );
+}
+
+/** "≈ €1,840": a dollar amount in the traveler's own currency, when that isn't US dollars. */
+export function ApproxMoney({
+  usd,
+  suffix,
+  className,
+}: {
+  usd: number;
+  suffix?: string;
+  className?: string;
+}) {
+  const { currency } = useLocale();
+  const rate = useUsdRate(currency);
+  if (!rate) return null;
+  return (
+    <span
+      className={cn("tabular animate-pop text-muted-foreground", className)}
+      title={`Converted from US dollars at today's rate (European Central Bank, via Frankfurter)`}
+    >
+      {formatApprox(usd, currency, rate)}
+      {suffix ? ` ${suffix}` : ""}
+    </span>
   );
 }

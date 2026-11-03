@@ -1,4 +1,5 @@
 import {
+  CalendarHeart,
   Car,
   Coffee,
   ExternalLink,
@@ -39,16 +40,22 @@ export function DayCard({
   dayIndex,
   itinerary,
   weather,
+  holiday,
   style,
 }: {
   day: ItineraryDay;
   dayIndex: number;
   itinerary: Itinerary;
   weather: DayWeather | undefined;
+  /** A public holiday on this day, if any */
+  holiday?: string | undefined;
   style?: CSSProperties;
 }) {
   return (
-    <section className="surface-card animate-rise overflow-hidden" style={style}>
+    <section
+      className="surface-card animate-rise overflow-hidden print:break-inside-avoid print:shadow-none"
+      style={style}
+    >
       <header className="flex items-center gap-3 border-b border-border px-5 py-3.5">
         <span className="tabular grid size-9 shrink-0 place-items-center rounded-lg border border-border font-mono text-[13px] text-muted-foreground">
           {day.day}
@@ -58,6 +65,11 @@ export function DayCard({
             {formatCalendarDate(day.date, { weekday: "long", month: "short", day: "numeric" })}
           </p>
           <h2 className="line-clamp-2 text-[15px] leading-tight font-semibold">{day.title}</h2>
+          {holiday && (
+            <p className="mt-1 inline-flex items-center gap-1 text-[11px] font-medium text-[color-mix(in_oklab,var(--brand-coral)_80%,var(--foreground))]">
+              <CalendarHeart className="size-3" /> {holiday} — expect closures and crowds
+            </p>
+          )}
         </div>
         {weather && <WeatherChip day={weather} className="hidden shrink-0 sm:inline-flex" />}
       </header>
@@ -87,7 +99,7 @@ export function DayCard({
           <li className="py-3 text-sm text-muted-foreground">Free day — wander as you like.</li>
         )}
       </ol>
-      <div className="px-5 pb-4">
+      <div className="px-5 pb-4 print:hidden">
         <AddItemButton dayIndex={dayIndex} itinerary={itinerary} />
       </div>
     </section>
@@ -157,7 +169,9 @@ function ItemRow({
         <span className="pt-1.5">
           <CostChip item={item} />
         </span>
-        <ItemActions item={item} itinerary={itinerary} dayIndex={dayIndex} />
+        <span className="print:hidden">
+          <ItemActions item={item} itinerary={itinerary} dayIndex={dayIndex} />
+        </span>
       </div>
     </li>
   );

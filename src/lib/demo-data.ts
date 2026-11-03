@@ -167,6 +167,8 @@ export interface DemoDestination {
   anchor?: { name: string; lat: number; lon: number };
   /** Where a cruise departs, for distances from home */
   portPoint?: GeoPoint;
+  /** ISO country code, when known (demo destinations are all in the US) */
+  country?: string;
 }
 
 export const DESTINATIONS: DemoDestination[] = [
@@ -868,6 +870,7 @@ export function buildCatalogDestination(place: CatalogPlace): DemoDestination {
     activitiesPerPerson: TIER_ACTIVITIES[place.tier],
     parkingPerDay: place.tier === "premium" ? 28 : place.tier === "mid" ? 15 : 8,
     anchor: { name: place.town, lat: place.lat, lon: place.lon },
+    country: place.country,
   };
 }
 
@@ -886,6 +889,7 @@ export function buildCatalogCruise(c: CatalogCruise): DemoDestination {
     nightly: TIER_NIGHTLY[c.tier],
     parkingPerDay: 22,
     anchor: { name: c.callTown, lat: c.callPoint.lat, lon: c.callPoint.lon },
+    country: c.country ?? "US",
   };
 }
 
@@ -893,7 +897,7 @@ export function buildCatalogCruise(c: CatalogCruise): DemoDestination {
 export function faresForDistance(oneWayMiles: number): DemoDestination["fares"] {
   const m = Math.max(0, oneWayMiles);
   return {
-    flight: Math.round(Math.min(950, 140 + m * 0.11) / 5) * 5,
+    flight: Math.round(Math.min(1600, 140 + m * 0.11) / 5) * 5,
     train: Math.round(Math.min(600, 30 + m * 0.24) / 5) * 5,
     bus: Math.round(Math.min(350, 20 + m * 0.13) / 5) * 5,
   };

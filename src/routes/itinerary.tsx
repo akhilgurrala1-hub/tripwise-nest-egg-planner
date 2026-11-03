@@ -1,5 +1,16 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Car, Lightbulb, Loader2, MapPin, RotateCcw, Wand2, X } from "lucide-react";
+import {
+  Car,
+  ChevronDown,
+  Lightbulb,
+  Loader2,
+  MapPin,
+  Printer,
+  RotateCcw,
+  Star,
+  Wand2,
+  X,
+} from "lucide-react";
 import { toast } from "sonner";
 
 import { DemoBadge } from "@/components/app/bits";
@@ -11,10 +22,18 @@ import { stagger } from "@/components/app/motion";
 import { PageHeader } from "@/components/app/TripHeader";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { useAuth } from "@/lib/auth-context";
 import { formatMoney, stopCost } from "@/lib/budget";
 import { useTripWeather } from "@/lib/live/use-live";
+import { useTripHolidays } from "@/lib/live/use-open-data";
 import { tripActions, useTrip } from "@/lib/trip-store";
+import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/itinerary")({
   head: () => ({
@@ -43,38 +62,81 @@ function ItineraryPage() {
   const { user } = useAuth();
   const weather = useTripWeather();
   const planner = usePlanner();
+  const holidays = useTripHolidays();
   const itin = trip.itinerary;
 
   return (
     <div>
       <PageHeader eyebrow="Itinerary" title="Day by day">
         <div className="flex w-full flex-wrap gap-2 sm:w-auto">
+          {/* Real landmarks and restaurants from open data: free, so it's for everyone. */}
+          <div className="flex flex-1 sm:flex-none">
+            <Button
+              variant="ink"
+              onClick={planner.planWithOpenData}
+              disabled={planner.busy}
+              className={cn("flex-1", user && "rounded-r-none")}
+            >
+              {planner.job === "open" || planner.job === "places" ? (
+                <Loader2 className="animate-spin" />
+              ) : (
+                <MapPin />
+              )}
+              {planner.job === "open" || planner.job === "places"
+                ? "Finding places…"
+                : "Use real places"}
+            </Button>
+            {user && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="ink"
+                    size="icon"
+                    disabled={planner.busy}
+                    className="rounded-l-none border-l border-ink-foreground/20"
+                    aria-label="More ways to find real places"
+                  >
+                    <ChevronDown />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-64">
+                  <DropdownMenuItem onClick={planner.planWithOpenData}>
+                    <MapPin className="size-4" />
+                    <span>
+                      Landmarks & restaurants
+                      <span className="block text-xs text-muted-foreground">
+                        Wikipedia and OpenStreetMap
+                      </span>
+                    </span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={planner.planWithRealPlaces}>
+                    <Star className="size-4" />
+                    <span>
+                      Google Maps places
+                      <span className="block text-xs text-muted-foreground">
+                        With ratings and price levels
+                      </span>
+                    </span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
+          </div>
           {user ? (
-            <>
-              <Button
-                variant="ink"
-                onClick={planner.planWithRealPlaces}
-                disabled={planner.busy}
-                className="flex-1 sm:flex-none"
-              >
-                {planner.job === "places" ? <Loader2 className="animate-spin" /> : <MapPin />}
-                {planner.job === "places" ? "Finding places…" : "Use real places"}
-              </Button>
-              {/* AI planning spends credits, so like the map lookups it's for signed-in travelers. */}
-              <Button
-                variant="outline"
-                onClick={planner.planWithAi}
-                disabled={planner.busy}
-                className="flex-1 sm:flex-none"
-              >
-                {planner.job === "ai" ? <Loader2 className="animate-spin" /> : <Wand2 />}
-                {planner.job === "ai" ? "Planning…" : "Plan around my interests"}
-              </Button>
-            </>
+            /* AI planning spends credits, so it's for signed-in travelers. */
+            <Button
+              variant="outline"
+              onClick={planner.planWithAi}
+              disabled={planner.busy}
+              className="flex-1 sm:flex-none"
+            >
+              {planner.job === "ai" ? <Loader2 className="animate-spin" /> : <Wand2 />}
+              {planner.job === "ai" ? "Planning…" : "Plan around my interests"}
+            </Button>
           ) : (
-            <Button variant="ink" asChild className="flex-1 sm:flex-none">
+            <Button variant="outline" asChild className="flex-1 sm:flex-none">
               <Link to="/auth" search={{ redirect: "/itinerary" }}>
-                <MapPin /> Sign in for real places & planning
+                <Wand2 /> Sign in for AI planning
               </Link>
             </Button>
           )}
@@ -93,6 +155,15 @@ function ItineraryPage() {
           >
             <RotateCcw />
           </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => window.print()}
+            aria-label="Print or save as PDF"
+            title="Print or save as PDF"
+          >
+            <Printer />
+          </Button>
         </div>
       </PageHeader>
 
@@ -109,7 +180,9 @@ function ItineraryPage() {
               <p className="min-w-0 flex-1">
                 {planner.job === "ai"
                   ? "Planning around your interests, budget and weather — this can take up to a minute."
-                  : "Finding well-reviewed places near your destination…"}{" "}
+                  : planner.job === "open"
+                    ? "Looking up landmarks on Wikipedia and restaurants on OpenStreetMap…"
+                    : "Finding well-reviewed places near your destination…"}{" "}
                 Your current plan stays until the new one is ready.
               </p>
               <Button variant="ghost" size="sm" onClick={planner.cancel}>
@@ -135,6 +208,7 @@ function ItineraryPage() {
                 dayIndex={di}
                 itinerary={itin}
                 weather={weather.byDate.get(day.date)}
+                holiday={holidays.find((h) => h.date === day.date)?.name}
                 style={stagger(di)}
               />
             ))
@@ -166,7 +240,14 @@ function ItineraryPage() {
   );
 }
 
-function PlanSourceBadge({ source }: { source: "demo" | "ai" | "google" }) {
+function PlanSourceBadge({ source }: { source: "demo" | "ai" | "google" | "open" }) {
+  if (source === "open")
+    return (
+      <Badge variant="secondary" className="whitespace-normal">
+        <span className="size-1.5 rounded-full bg-success" /> Real landmarks from Wikipedia and
+        restaurants from OpenStreetMap · prices not listed
+      </Badge>
+    );
   if (source === "google")
     return (
       <Badge variant="secondary" className="whitespace-normal">

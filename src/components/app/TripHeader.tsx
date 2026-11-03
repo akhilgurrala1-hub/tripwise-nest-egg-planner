@@ -44,7 +44,7 @@ export function PageHeader({
   return (
     <div className="mx-auto max-w-6xl px-4 pt-8 sm:pt-10">
       {showTrip && trip.isSample && (
-        <p className="mb-6 flex items-center gap-2 text-[13px] text-muted-foreground">
+        <p className="mb-6 flex items-center gap-2 text-[13px] text-muted-foreground print:hidden">
           <Info className="size-3.5 shrink-0" />
           <span>
             You're looking at a sample trip.{" "}
@@ -63,7 +63,7 @@ export function PageHeader({
           <h1 className="mt-1 text-[28px] leading-tight font-semibold sm:text-[32px]">{title}</h1>
           {showTrip && <TripBar />}
         </div>
-        {children}
+        <div className="contents print:hidden">{children}</div>
       </div>
     </div>
   );
@@ -87,7 +87,7 @@ function TripBar() {
       </Chip>
       <Link
         to="/"
-        className="inline-flex h-8 items-center gap-1.5 rounded-lg px-2 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+        className="inline-flex h-8 items-center gap-1.5 rounded-lg px-2 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground print:hidden"
       >
         <Pencil className="size-3.5" /> Edit trip
       </Link>
@@ -118,7 +118,7 @@ function TripTypeChip() {
           strokeWidth={2}
         />
         {tripTypeInfo(trip.setup.tripType).label}
-        <ChevronDown className="size-3.5 text-muted-foreground" />
+        <ChevronDown className="size-3.5 text-muted-foreground print:hidden" />
       </PopoverTrigger>
       <PopoverContent align="start" className="w-[min(420px,calc(100vw-2rem))] rounded-xl p-3">
         <p className="px-1 pb-2.5 text-[13px] text-muted-foreground">

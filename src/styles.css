@@ -588,3 +588,29 @@ a:focus-visible > .logo .logo-ripple {
     display: none;
   }
 }
+
+/* ---------- Print / Save as PDF ---------- */
+@media print {
+  @page {
+    margin: 14mm;
+  }
+  html,
+  body {
+    background: #fff !important;
+    color: #111 !important;
+  }
+  /* Entrance animations would print mid-fade. */
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+  .surface-card {
+    box-shadow: none !important;
+  }
+  [data-sonner-toaster],
+  .intro {
+    display: none !important;
+  }
+}

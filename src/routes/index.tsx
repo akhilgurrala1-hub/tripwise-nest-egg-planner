@@ -35,6 +35,8 @@ import {
 } from "@/lib/demo-data";
 import { addDays, dateRangeError, inclusiveDays, isIsoDate, todayIso } from "@/lib/dates";
 import { useHomePlace } from "@/lib/live/use-home";
+import { useLocale } from "@/lib/live/use-locale";
+import { formatDistance } from "@/lib/locale";
 import { geocodeQuery, useHydrated } from "@/lib/live/use-live";
 import {
   destinationForTripType,
@@ -75,6 +77,7 @@ function Welcome() {
   const hydrated = useHydrated();
   const { trip } = useTrip();
   const home = useHomePlace();
+  const { units } = useLocale();
   const [form, setForm] = useState<TripSetup>(trip.setup);
   const touched = useRef(false);
   const reserveTouched = useRef(false);
@@ -211,10 +214,12 @@ function Welcome() {
     miles === null || miles < 10
       ? null
       : form.tripType === "flight"
-        ? `${Math.round(miles / 1.25).toLocaleString("en-US")} mi`
+        ? formatDistance(miles / 1.25, units)
         : form.tripType === "cruise"
           ? `${driveLabel(miles)} to the port`
-          : driveLabel(miles);
+          : form.tripType === "rail"
+            ? `about ${formatDistance(miles, units)} by ${form.transportMode === "bus" ? "bus" : "rail"}`
+            : driveLabel(miles);
   const fromLabel = form.origin.split(",")[0]?.trim() || "home";
   const approximate =
     !touched.current && home.place?.source === "approximate" && form.origin === home.place.label;

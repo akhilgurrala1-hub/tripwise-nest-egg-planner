@@ -32,7 +32,8 @@ export interface ItineraryDay {
 }
 
 export interface Itinerary {
-  source: "demo" | "ai" | "google";
+  /** google = Google Maps; open = Wikipedia landmarks + OpenStreetMap restaurants (free) */
+  source: "demo" | "ai" | "google" | "open";
   days: ItineraryDay[];
   tips: string[];
 }
@@ -255,7 +256,13 @@ function placeItem(p: RealPlace, id: string, time: SlotTime): ItineraryItem {
     kind: p.kind,
     name: p.name,
     area: p.address ?? p.typeLabel,
-    note: p.description || p.typeLabel,
+    // Don't repeat the type when it's already shown as the area.
+    note:
+      p.description && p.description !== (p.address ?? p.typeLabel)
+        ? p.description
+        : p.address
+          ? p.typeLabel
+          : "",
     costPerPerson: p.costPerPerson,
     placeId: p.placeId,
     mapsUrl: p.mapsUrl,
@@ -277,8 +284,9 @@ export function buildRealItinerary(opts: {
   startDate: string;
   interests: Interest[];
   tripType: TripType;
+  source?: "google" | "open";
 }): Itinerary {
-  const { destName, days, startDate, interests, tripType } = opts;
+  const { destName, days, startDate, interests, tripType, source = "google" } = opts;
   const sights = [...opts.sights].sort(
     (a, b) => placeScore(b, interests) - placeScore(a, interests),
   );
@@ -352,12 +360,18 @@ export function buildRealItinerary(opts: {
   }
 
   return {
-    source: "google",
+    source,
     days: out,
-    tips: [
-      "Places, ratings and addresses come from Google Maps. Check opening hours before you go.",
-      "Restaurant costs are estimated from each listing's price range or $ level. Attractions rarely publish ticket prices, so those show as not listed.",
-    ],
+    tips:
+      source === "open"
+        ? [
+            "Landmarks come from Wikipedia and restaurants from OpenStreetMap. Check opening hours and prices before you go.",
+            "These listings don't publish prices, so they show as not listed and aren't counted in the plan's total.",
+          ]
+        : [
+            "Places, ratings and addresses come from Google Maps. Check opening hours before you go.",
+            "Restaurant costs are estimated from each listing's price range or $ level. Attractions rarely publish ticket prices, so those show as not listed.",
+          ],
   };
 }
 

@@ -76,6 +76,51 @@ function monthYear(iso: string): string {
   return `${names[Number(m) - 1] ?? ""} ${y ?? ""}`.trim();
 }
 
+const EUROPE = new Set([
+  "GB",
+  "IE",
+  "FR",
+  "ES",
+  "PT",
+  "NL",
+  "BE",
+  "LU",
+  "DE",
+  "CZ",
+  "AT",
+  "CH",
+  "IT",
+  "DK",
+  "SE",
+  "NO",
+  "FI",
+  "PL",
+  "HU",
+  "HR",
+  "SI",
+  "SK",
+  "GR",
+]);
+
+/** Train operators or sellers for a destination country (the US when unknown). */
+export function railProviders(country = "US"): BookingLink[] {
+  if (country === "US") return [{ label: "Amtrak", url: "https://www.amtrak.com/" }];
+  if (country === "CA") return [{ label: "VIA Rail", url: "https://www.viarail.ca/en" }];
+  if (EUROPE.has(country)) return [{ label: "Trainline", url: "https://www.thetrainline.com/" }];
+  if (country === "JP") return [{ label: "JR trains", url: "https://www.japanrailpass.net/en/" }];
+  return [];
+}
+
+export function busProviders(country = "US"): BookingLink[] {
+  if (country === "US" || country === "CA")
+    return [
+      { label: "Greyhound", url: "https://www.greyhound.com/" },
+      { label: "FlixBus", url: "https://www.flixbus.com/" },
+    ];
+  if (EUROPE.has(country)) return [{ label: "FlixBus", url: "https://www.flixbus.com/" }];
+  return [];
+}
+
 /** The booking checklist for a trip. */
 export function bookingPlan(
   trip: BookingTrip,
@@ -149,22 +194,15 @@ export function bookingPlan(
       detail: `Round trip · ${when} · ${who}`,
       budget: c.transportation,
       optional: false,
-      links: train
-        ? [
-            { label: "Amtrak", url: "https://www.amtrak.com/" },
-            {
-              label: "Compare routes",
-              url: google(`train ${from ? `from ${from} ` : ""}to ${place} ${start}`),
-            },
-          ]
-        : [
-            { label: "Greyhound", url: "https://www.greyhound.com/" },
-            { label: "FlixBus", url: "https://www.flixbus.com/" },
-            {
-              label: "Compare routes",
-              url: google(`bus ${from ? `from ${from} ` : ""}to ${place} ${start}`),
-            },
-          ],
+      links: [
+        ...(train ? railProviders(dest.country) : busProviders(dest.country)),
+        {
+          label: "Compare routes",
+          url: google(
+            `${train ? "train" : "bus"} ${from ? `from ${from} ` : ""}to ${place} ${start}`,
+          ),
+        },
+      ],
     });
   }
 

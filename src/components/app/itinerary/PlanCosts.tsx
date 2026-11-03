@@ -57,13 +57,13 @@ export function PlanCosts() {
         </p>
       )}
 
-      {activities.fit === "matches" ? (
+      {unpriced > 0 && sightseeing === 0 ? null : activities.fit === "matches" ? (
         <p className="mt-4 flex items-center gap-1.5 text-xs text-muted-foreground">
           <Check className="size-3.5 text-success" /> Activities budget matches your plan
         </p>
       ) : (
         <Button
-          className="animate-pop mt-4 w-full"
+          className="animate-pop mt-4 w-full print:hidden"
           variant="ink"
           onClick={() => {
             tripActions.setOverride("activities", sightseeing);

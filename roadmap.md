@@ -19,6 +19,21 @@
 - [x] P4 Itinerary editing: add, edit, swap, reorder, undo remove
 - [x] Tests + browser checks (two tabs, delayed/cancelled/timed-out AI, mobile, both themes)
 
+## Worldwide & free data (done)
+
+- [x] ~50 international places and 7 international cruise routes; suggestions from any start point
+- [x] °C / km and local-currency estimates for travelers outside the US (display menu to change)
+- [x] Free real places for everyone: Wikipedia landmarks + OpenStreetMap restaurants
+- [x] Destination photos and introductions (Wikipedia); public holidays during the trip
+- [x] Regional train and bus booking links; print / save the itinerary as PDF
+
+## After funding (costs money)
+
+- [ ] AI on Claude with web search for live events, hours and prices
+- [ ] Own Supabase, hosting and Google Maps key (leave Lovable, no badge)
+- [ ] Live hotel/flight prices (SerpApi) and gas prices (EIA)
+- [ ] Reliable sign-up emails (custom SMTP, e.g. Resend)
+
 ## Personal & booking (done)
 
 - [x] Trips start where the traveler is (profile, device on request, or approximate city)

@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import {
   CATEGORY_COLOR_VAR,
   CATEGORY_ICONS,
+  ApproxMoney,
   NumberField,
   PriceSourceBadge,
 } from "@/components/app/bits";
@@ -113,6 +114,7 @@ function BudgetPage() {
               </div>
               <p className="tabular mt-1.5 text-xs text-muted-foreground">
                 {percentLabel(totals)} · {formatMoney(totals.perPersonPerDay)} per person per day
+                <ApproxMoney usd={totals.spendable} suffix="to spend" className="ml-2" />
               </p>
             </div>
             {totals.overBudget && <CutPlan />}
