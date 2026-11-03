@@ -25,7 +25,10 @@ const inputSchema = z.object({
 export const getDestinationPlaces = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: unknown) => inputSchema.parse(data))
-  .handler(async ({ data }) => {
+  .handler(async ({ data, context }) => {
+    const { takeRate } = await import("../rate-limit.server");
+    const limited = takeRate(context.userId, "places");
+    if (limited) return { ok: false as const, error: limited };
     const { findDestinationPlaces } = await import("./destination-places.server");
     return findDestinationPlaces(data);
   });

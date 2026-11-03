@@ -27,7 +27,10 @@ const inputSchema = z
 export const getLivePrices = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: unknown) => inputSchema.parse(data))
-  .handler(async ({ data }) => {
+  .handler(async ({ data, context }) => {
+    const { takeRate } = await import("../rate-limit.server");
+    const limited = takeRate(context.userId, "prices");
+    if (limited) return { ok: false as const, error: limited };
     const { fetchLivePrices } = await import("./live-prices.server");
     return fetchLivePrices(data);
   });
@@ -47,7 +50,10 @@ export const getLivePriceStatus = createServerFn({ method: "GET" }).handler(asyn
  */
 export const testPriceKeys = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .handler(async () => {
+  .handler(async ({ context }) => {
+    const { takeRate } = await import("../rate-limit.server");
+    const limited = takeRate(context.userId, "keyTest");
+    if (limited) throw new Error(limited);
     const { checkPriceKeys } = await import("./keys.server");
     return checkPriceKeys();
   });

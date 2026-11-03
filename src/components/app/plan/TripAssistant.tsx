@@ -66,7 +66,16 @@ function nearbyLines(from: GeoPoint | null, draft: TripDraft | null): string[] {
 function load(): Saved {
   try {
     const raw = window.sessionStorage.getItem(STORAGE_KEY);
-    if (raw) return JSON.parse(raw) as Saved;
+    const saved = raw ? (JSON.parse(raw) as Partial<Saved> | null) : null;
+    // A damaged or older saved conversation starts fresh instead of breaking the page.
+    if (saved && Array.isArray(saved.turns))
+      return {
+        turns: saved.turns.filter(
+          (t) => t && (t.role === "user" || t.role === "assistant") && typeof t === "object",
+        ),
+        draft: saved.draft ?? null,
+        pending: typeof saved.pending === "string" ? saved.pending : "",
+      };
   } catch {
     /* ignore */
   }

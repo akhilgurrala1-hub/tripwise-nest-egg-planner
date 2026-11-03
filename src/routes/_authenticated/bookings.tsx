@@ -131,7 +131,11 @@ function BookingsPage() {
                       <div className="mt-2 flex flex-wrap gap-1.5">
                         {h.link && (
                           <Button asChild size="sm" variant="ink">
-                            <a href={h.link} target="_blank" rel="noopener noreferrer">
+                            <a
+                              href={safeExternalUrl(h.link ?? "")}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                            >
                               Reserve <ExternalLink />
                             </a>
                           </Button>
@@ -221,7 +225,11 @@ function BookingsPage() {
               </ul>
               {live.flights.bookingUrl && (
                 <Button asChild variant="ink" className="mt-3">
-                  <a href={live.flights.bookingUrl} target="_blank" rel="noopener noreferrer">
+                  <a
+                    href={safeExternalUrl(live.flights.bookingUrl ?? "")}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
                     Book on Google Flights <ExternalLink />
                   </a>
                 </Button>

@@ -17,6 +17,7 @@ import type { CSSProperties } from "react";
 
 import { AddItemButton, ItemActions } from "@/components/app/ItineraryEditor";
 import { WeatherChip } from "@/components/app/Weather";
+import { safeExternalUrl } from "@/lib/booking";
 import { formatMoney } from "@/lib/budget";
 import { formatCalendarDate } from "@/lib/dates";
 import type { Itinerary, ItineraryDay, ItineraryItem, ItemKind, SlotTime } from "@/lib/itinerary";
@@ -176,7 +177,7 @@ function ItemRow({
               ) : null}
               {item.mapsUrl && (
                 <a
-                  href={item.mapsUrl}
+                  href={safeExternalUrl(item.mapsUrl ?? "")}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-1 font-semibold text-primary underline-offset-2 hover:underline"
