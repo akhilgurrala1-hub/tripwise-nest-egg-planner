@@ -1,4 +1,13 @@
-import { ArrowRight, CalendarDays, CircleCheck, CloudSun, MapPin, Users } from "lucide-react";
+import {
+  ArrowRight,
+  CalendarDays,
+  CircleAlert,
+  CircleCheck,
+  CloudSun,
+  MapPin,
+  Plane,
+  Users,
+} from "lucide-react";
 import type { CSSProperties } from "react";
 
 import { ApproxMoney, CATEGORY_COLOR_VAR } from "@/components/app/bits";
@@ -18,7 +27,8 @@ import {
   type BudgetTotals,
   type TripShape,
 } from "@/lib/budget";
-import { tripTypeInfo, type DemoDestination } from "@/lib/demo-data";
+import { travelPoint, tripTypeInfo, type DemoDestination } from "@/lib/demo-data";
+import { useAirportsFor } from "@/lib/live/use-airports";
 import { useLocale } from "@/lib/live/use-locale";
 import { useWeatherFor } from "@/lib/live/use-live";
 import { summarize } from "@/lib/live/weather";
@@ -65,6 +75,34 @@ export function TripPreview({
     .filter((x) => x.v > 0)
     .sort((a, b) => b.v - a.v);
   const top = cats.slice(0, 4);
+  // Flying: the real airports at each end (and each city), so the route is concrete.
+  const flying = form.transportMode === "flight";
+  const places = [
+    {
+      name: form.origin.split(",")[0]?.trim() || "home",
+      full: form.origin,
+      point: form.originPoint,
+    },
+    {
+      name: dest.name,
+      full: dest.port ?? dest.name,
+      point: travelPoint(dest, form.destinationPoint),
+    },
+    ...(form.cities ?? [])
+      .filter((c) => c.name.trim())
+      .map((c) => ({ name: c.name.split(",")[0]!.trim(), full: c.name, point: c.point })),
+  ];
+  const air = useAirportsFor(
+    flying ? places.map((p) => p.point) : [],
+    flying ? places.map((p) => p.full) : [],
+  );
+  const known = air.ready && air.airports.every(Boolean);
+  const codes = air.airports.map((a) => a?.code ?? "?");
+  const noAirport = air.ready
+    ? places
+        .map((p, i) => ({ ...p, closest: air.closest[i] }))
+        .filter((p, i) => p.point && !air.airports[i])
+    : [];
 
   return (
     <section
@@ -115,6 +153,31 @@ export function TripPreview({
             <Users />
             {shape.travelers} traveler{shape.travelers > 1 ? "s" : ""}
           </li>
+          {flying && known && air.airports.some(Boolean) && (
+            <li className="animate-pop flex items-center gap-2">
+              <Plane />
+              <span
+                className="tabular truncate"
+                title={air.airports
+                  .filter(Boolean)
+                  .map((a) => `${a!.code}: ${a!.name}`)
+                  .join("\n")}
+              >
+                {[...codes, ...(codes.length > 2 ? [codes[0]] : [])].join(" → ")}
+                <span className="text-muted-foreground"> · airports</span>
+              </span>
+            </li>
+          )}
+          {flying &&
+            noAirport.map((p) => (
+              <li key={p.name} className="animate-pop flex items-start gap-2 text-destructive">
+                <CircleAlert className="mt-0.5 text-destructive!" />
+                <span>
+                  No airport with flights near {p.name}
+                  {p.closest ? `. Closest: ${p.closest.code}, ${p.closest.miles} mi away.` : "."}
+                </span>
+              </li>
+            ))}
           {coveredLabels(form.coverage).length > 0 && (
             <li className="animate-pop flex items-start gap-2">
               <CircleCheck className="mt-0.5" />

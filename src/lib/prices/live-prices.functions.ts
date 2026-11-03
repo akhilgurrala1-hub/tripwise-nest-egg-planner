@@ -23,6 +23,10 @@ const inputSchema = z
       .array(
         z.object({
           name: z.string().trim().min(2).max(160),
+          airport: z
+            .string()
+            .regex(/^([A-Z]{3})?$/)
+            .default(""),
           checkIn: isoDate,
           checkOut: isoDate,
         }),

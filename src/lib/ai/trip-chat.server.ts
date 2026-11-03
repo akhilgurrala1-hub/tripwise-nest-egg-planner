@@ -69,6 +69,8 @@ export interface TripChatRequest {
   currency: string;
   /** Real places Waypoint suggests from their home, "Name (Region): trip type, distance" */
   nearby: string[];
+  /** Their nearest airport ("CLT (Charlotte Douglas International Airport), 8 miles away") */
+  homeAirport?: string;
 }
 
 export type TripChatResult =
@@ -113,6 +115,7 @@ export async function runTripChat(
   const context = [
     `Today: ${req.today} (${new Date(`${req.today}T12:00:00Z`).toLocaleDateString("en-US", { weekday: "long", timeZone: "UTC" })})`,
     `Traveler's home city: ${req.homeCity || "unknown"}${req.country ? ` (country ${req.country})` : ""}`,
+    ...(req.homeAirport ? [`Their nearest airport: ${req.homeAirport}`] : []),
     ...(req.currency && req.currency !== "USD"
       ? [
           `They think in ${req.currency}. Budgets in "trip" are always US dollars: convert any amount they give in ${req.currency} to USD.`,

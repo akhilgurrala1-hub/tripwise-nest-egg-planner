@@ -1,4 +1,4 @@
-import { useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Loader2, Save } from "lucide-react";
 import { useState } from "react";
@@ -16,7 +16,10 @@ import {
   savePreferences,
   type Preferences,
 } from "@/lib/account";
+import { airportByCode, airportsNear } from "@/lib/airports";
 import { INTERESTS, TRANSPORT_MODES, TRAVEL_STYLES } from "@/lib/demo-data";
+import { useAirports } from "@/lib/live/use-airports";
+import { geocodeQuery, useDebouncedValue } from "@/lib/live/use-live";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/profile")({
@@ -148,6 +151,11 @@ function ProfilePage() {
                   )
                 }
               />
+              <AirportHint
+                code={form.home_airport}
+                city={form.home_city}
+                onPick={(code) => set("home_airport", code)}
+              />
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="travelers">Usual number of travelers</Label>
@@ -265,5 +273,47 @@ function Chip({
     >
       {children}
     </button>
+  );
+}
+
+/** What a typed code is, or the airports nearest the home city to pick from. */
+function AirportHint({
+  code,
+  city,
+  onPick,
+}: {
+  code: string;
+  city: string;
+  onPick: (code: string) => void;
+}) {
+  const airports = useAirports();
+  const typed = useDebouncedValue(city.trim());
+  const geo = useQuery({ ...geocodeQuery(typed), enabled: typed.length >= 2 });
+  if (!airports) return null;
+  const known = code.length === 3 ? airportByCode(airports, code) : null;
+  if (code.length === 3)
+    return known ? (
+      <p className="text-xs text-muted-foreground">{known.name}</p>
+    ) : (
+      <p className="text-xs text-destructive">No airport with scheduled flights uses {code}.</p>
+    );
+  const p = geo.data?.[0];
+  const near = p ? airportsNear(airports, { lat: p.lat, lon: p.lon }, 3) : [];
+  if (!near.length) return null;
+  return (
+    <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
+      Nearest:
+      {near.map((a) => (
+        <button
+          key={a.code}
+          type="button"
+          onClick={() => onPick(a.code)}
+          title={a.name}
+          className="font-medium text-primary underline-offset-2 hover:underline"
+        >
+          {a.code} ({a.miles} mi)
+        </button>
+      ))}
+    </p>
   );
 }

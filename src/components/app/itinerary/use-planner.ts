@@ -19,6 +19,10 @@ import { inclusiveDays } from "@/lib/dates";
 import { addDays, buildRealItinerary, stitchCityPlans, type Itinerary } from "@/lib/itinerary";
 import { destinationQuery } from "@/lib/live/place";
 import { useTripWeather } from "@/lib/live/use-live";
+import { useTripAirports } from "@/lib/live/use-airports";
+import { useUsdRate } from "@/lib/live/use-locale";
+import { currencyForCountry } from "@/lib/locale";
+import { cabinInfo } from "@/lib/demo-data";
 import { getDestinationPlaces } from "@/lib/places/destination-places.functions";
 import { fetchLandmarks, fetchRestaurants } from "@/lib/live/open-data";
 import type { GuideTip } from "@/lib/live/travel-guide";
@@ -51,6 +55,14 @@ export type PlannerJob = "ai" | "places" | "open" | null;
 
 const label = (list: readonly { id: string; label: string }[], id: string) =>
   list.find((x) => x.id === id)?.label ?? id;
+
+/** "2026-12-03T16:52" → "4:52 PM" (Open-Meteo gives local time at the place). */
+const clock = (iso: string) => {
+  const m = /T(\d{2}):(\d{2})/.exec(iso);
+  if (!m) return iso;
+  const h = Number(m[1]);
+  return `${h % 12 || 12}:${m[2]} ${h < 12 ? "AM" : "PM"}`;
+};
 
 /** Toast detail when rebuilding a plan kept the traveler's own stops. */
 export function keptNote(kept: number) {
@@ -103,6 +115,9 @@ export function usePlanner() {
   const weather = useTripWeather();
   const holidays = useTripHolidays();
   const country = useTripCountry();
+  const air = useTripAirports(prefs?.home_airport);
+  const localCurrency = currencyForCountry(country);
+  const usdRate = useUsdRate(localCurrency);
   const [job, setJob] = useState<PlannerJob>(null);
   const controller = useRef<AbortController | null>(null);
 
@@ -191,6 +206,35 @@ export function usePlanner() {
     return found;
   };
 
+  /** Facts the AI can't know: how they travel, where they land, the money they'll use. */
+  const tripFacts = (): string[] => {
+    const facts: string[] = [];
+    const mode = trip.setup.transportMode;
+    if (mode === "flight") {
+      const cabin = cabinInfo(trip.setup.cabin).label.toLowerCase();
+      legs.forEach((leg, i) => {
+        const a = air.airports[i + 1];
+        if (a)
+          facts.push(
+            `Flights ${i === 0 ? "arrive" : "for " + leg.name.split(",")[0]} at ${a.code} (${a.name})${a.miles >= 5 ? `, ${a.miles} miles from ${leg.name.split(",")[0]}` : ""}; ${cabin} class. ${i === 0 ? "Day 1 starts with the arrival, so keep it light." : ""}`.trim(),
+          );
+      });
+    } else if (mode === "car" || mode === "rental-car") {
+      facts.push(
+        `They drive (${mode === "car" ? "their own car" : "a rental car"}), so places outside town are fine; plan parking.`,
+      );
+    } else if (mode === "train" || mode === "bus") {
+      facts.push(`They arrive by ${mode} and get around without a car: keep stops near transit.`);
+    }
+    if (localCurrency !== "USD")
+      facts.push(
+        `Local currency: ${localCurrency}${usdRate ? ` (about ${usdRate.toFixed(2)} ${localCurrency} per US dollar today)` : ""}. Give costs in US dollars.`,
+      );
+    if (shape.travelers >= 6)
+      facts.push(`A group of ${shape.travelers}: prefer places that take groups or reservations.`);
+    return facts;
+  };
+
   /**
    * Ask the AI for a plan (or, with `instructions`, for changes to the current one).
    * It's grounded in real nearby places, the weather and public holidays, and its
@@ -228,7 +272,10 @@ export function usePlanner() {
         signal: ctrl.signal,
         data: {
           destination: destinationQuery(dest, trip.setup.origin, prefs?.home_city),
-          region: "",
+          region: [dest.region, country && country !== "US" ? country : ""]
+            .filter(Boolean)
+            .join(", ")
+            .slice(0, 120),
           origin: trip.setup.origin,
           tripType: label(TRIP_TYPES, trip.setup.tripType),
           style: label(TRAVEL_STYLES, trip.setup.style),
@@ -242,8 +289,11 @@ export function usePlanner() {
             const w = weather.byDate.get(addDays(trip.setup.startDate, i));
             if (!w) return "";
             const rain = w.precipChance !== null ? `, ${w.precipChance}% chance of rain` : "";
-            return `Day ${i + 1}: ${w.label}, high ${w.highF}°F, low ${w.lowF}°F${rain} (${w.source === "forecast" ? "forecast" : "typical for the date"})`;
-          }).filter(Boolean),
+            const sunset = w.sunset ? `, sunset ${clock(w.sunset)}` : "";
+            return `Day ${i + 1}: ${w.label}, high ${w.highF}°F, low ${w.lowF}°F${rain}${sunset} (${w.source === "forecast" ? "forecast" : "typical for the date"})`;
+          })
+            .filter(Boolean)
+            .map((w) => w.slice(0, 120)),
           places: placeList,
           cities: multi
             ? legs.map((l) => {
@@ -253,12 +303,25 @@ export function usePlanner() {
                 return `${span}: ${l.name}${l.arriveDay > 0 ? " (arrive on the first of these days)" : ""}`;
               })
             : [],
-          guide: real ? real.tips.map((t) => `${t.topic}: ${t.text}`) : [],
+          // Travel-guide advice for every city (the first city's first), within the request's limits.
+          guide: legs
+            .flatMap((leg, i) =>
+              (perCity?.[i]?.tips ?? []).map(
+                (t) => `${multi ? `${leg.name.split(",")[0]}, ` : ""}${t.topic}: ${t.text}`,
+              ),
+            )
+            .slice(0, 4)
+            .map((t) => t.slice(0, 360)),
           covered: coveredLabels(trip.setup.coverage),
-          notes: holidays.map((h) => {
-            const day = inclusiveDays(trip.setup.startDate, h.date) ?? 0;
-            return `Day ${day} (${h.date}) is ${h.name}, a public holiday: expect closures and crowds.`;
-          }),
+          notes: [
+            ...holidays.map((h) => {
+              const day = inclusiveDays(trip.setup.startDate, h.date) ?? 0;
+              return `Day ${day} (${h.date}) is ${h.name}, a public holiday: expect closures and crowds.`;
+            }),
+            ...tripFacts(),
+          ]
+            .slice(0, 10)
+            .map((n) => n.slice(0, 160)),
           instructions: instructions.trim().slice(0, 300),
           current: instructions ? planLines(trip.itinerary).slice(0, 80) : [],
         },

@@ -133,6 +133,8 @@ export function bookingPlan(
   shape: TripShape,
   totals: BudgetTotals,
   homeCity = "",
+  /** Airport codes for home and each city in order (from the airport table), when known */
+  airports: readonly (string | null | undefined)[] = [],
 ): BookingItem[] {
   const s = trip.setup;
   const place = destinationQuery(dest, s.origin, homeCity);
@@ -175,9 +177,17 @@ export function bookingPlan(
 
   if (s.transportMode === "flight" && multi) {
     // Home → each city → home, each leg on the day the traveler moves on.
-    const stops = [from || "home", ...legs.map((l) => l.name), from || "home"];
+    // Airport codes where we know them: searches find the right airport, not a namesake.
+    const code = (i: number) => airports[i] || null;
+    const names = [from || "home", ...legs.map((l) => l.name), from || "home"];
+    const stops = names.map((n, i) => code(i === names.length - 1 ? 0 : i) ?? n);
     const dates = [start, ...legs.slice(1).map((l) => addDays(start, l.arriveDay)), end];
-    const route = stops.map(short).join(" → ");
+    const route = names
+      .map((n, i) => {
+        const c = code(i === names.length - 1 ? 0 : i);
+        return c ? `${short(n)} (${c})` : short(n);
+      })
+      .join(" → ");
     const query = stops
       .slice(0, -1)
       .map((a, i) => `${a} to ${stops[i + 1]} on ${dates[i]}`)
@@ -199,23 +209,27 @@ export function bookingPlan(
     });
   } else if (s.transportMode === "flight") {
     const to = cruise ? port : place;
+    const fromCode = airports[0] || "";
+    const toCode = airports[1] || "";
+    const fromName = from ? `${from.split(",")[0]}${fromCode ? ` (${fromCode})` : ""}` : "";
+    const toName = `${to.split(",")[0]}${toCode ? ` (${toCode})` : ""}`;
     items.push({
       key: "flight",
       kind: "flight",
-      title: from
-        ? `Flights ${from.split(",")[0]} → ${to.split(",")[0]}`
-        : `Flights to ${to.split(",")[0]}`,
+      title: fromName ? `Flights ${fromName} → ${toName}` : `Flights to ${toName}`,
       detail: `Round trip · ${when} · ${who}${cabin ? ` · ${cabin}` : ""}`,
       budget: c.transportation,
       optional: false,
       links: [
         {
           label: "Google Flights",
-          url: `https://www.google.com/travel/flights?q=${enc(`Flights to ${to}${from ? ` from ${from}` : ""} on ${cruise ? addDays(start, -1) : start} through ${end}${cabin ? ` ${cabin.toLowerCase()} class` : ""}`)}`,
+          url: `https://www.google.com/travel/flights?q=${enc(`Flights to ${toCode || to}${from ? ` from ${fromCode || from}` : ""} on ${cruise ? addDays(start, -1) : start} through ${end}${cabin ? ` ${cabin.toLowerCase()} class` : ""}`)}`,
         },
         {
           label: "Compare fares",
-          url: google(`cheap flights ${from ? `${from} to ` : "to "}${to} ${start}`),
+          url: google(
+            `cheap flights ${from ? `${fromCode || from} to ` : "to "}${toCode || to} ${start}`,
+          ),
         },
       ],
     });
