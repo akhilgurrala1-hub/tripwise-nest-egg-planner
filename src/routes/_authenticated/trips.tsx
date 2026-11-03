@@ -125,7 +125,7 @@ function TripsPage() {
       <PageHeader eyebrow="Your account" title="Saved trips" showTrip={false} />
       <div className="mx-auto mt-6 max-w-4xl space-y-6 px-4">
         <section className="surface-card p-5">
-          <h2 className="text-[15px] font-semibold">Trip you're planning now</h2>
+          <h2 className="title-display text-[26px]">Trip you're planning now</h2>
           {trip.cloud ? (
             <p className="mt-1 text-sm text-muted-foreground">
               Saved as <strong className="text-foreground">{trip.cloud.name}</strong> · last saved{" "}
@@ -169,7 +169,7 @@ function TripsPage() {
         </section>
 
         <section className="space-y-3">
-          <h2 className="text-[15px] font-semibold">All trips ({active.length})</h2>
+          <h2 className="title-display text-[26px]">All trips ({active.length})</h2>
           {active.length === 0 && (
             <div className="surface-card p-6 text-center text-sm text-muted-foreground">
               No saved trips yet.{" "}

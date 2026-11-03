@@ -91,7 +91,7 @@ function AuthPage() {
 
         {user ? (
           <>
-            <h1 className="mt-4 text-2xl font-semibold tracking-tight">You're signed in</h1>
+            <h1 className="title-display mt-4 text-4xl">You're signed in</h1>
             <p className="mt-1 text-sm text-muted-foreground">{user.email}</p>
             <Button className="mt-6 w-full" onClick={goNext}>
               Continue
@@ -100,7 +100,7 @@ function AuthPage() {
         ) : sent ? (
           <>
             <MailCheck className="mt-4 size-8 text-success" />
-            <h1 className="mt-2 text-2xl font-semibold tracking-tight">Check your email</h1>
+            <h1 className="title-display mt-2 text-4xl">Check your email</h1>
             <p className="mt-1 text-sm text-muted-foreground">
               {sent === "confirm"
                 ? `We sent a confirmation link to ${email}. Open it to finish creating your account. It can take a few minutes, so check your spam folder too.`
@@ -119,7 +119,7 @@ function AuthPage() {
           </>
         ) : (
           <>
-            <h1 className="mt-4 text-2xl font-semibold tracking-tight">
+            <h1 className="title-display mt-4 text-4xl">
               {mode === "signin"
                 ? "Welcome back"
                 : mode === "signup"

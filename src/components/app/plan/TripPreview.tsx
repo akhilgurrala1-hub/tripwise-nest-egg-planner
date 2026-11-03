@@ -71,19 +71,21 @@ export function TripPreview({
       className={cn("surface-card overflow-hidden", className)}
       style={{ "--trip": color } as CSSProperties}
     >
-      <div className="flex items-center gap-2 border-b border-border bg-[color-mix(in_oklab,var(--trip)_9%,var(--card))] px-5 py-3 text-[13px] font-medium transition-colors duration-500">
-        <Icon className="size-4" style={{ color }} strokeWidth={2} />
+      <div className="flex items-center gap-2 px-5 pt-5 text-[13px] font-medium">
+        <span className="grid size-7 place-items-center rounded-lg bg-[color-mix(in_oklab,var(--trip)_12%,transparent)] transition-colors duration-500">
+          <Icon className="size-4" style={{ color }} strokeWidth={2} />
+        </span>
         {tripTypeInfo(form.tripType).label}
-        <span className="ml-auto text-xs font-normal text-muted-foreground">Preview</span>
+        <span className="eyebrow ml-auto">Preview</span>
       </div>
-      <div className="p-5">
+      <div className="p-5 pt-4">
         <DestinationPhoto
           dest={dest}
           origin={form.origin}
           showText={false}
           className="-mx-1 mb-4"
         />
-        <p key={destLabel} className="animate-pop text-[19px] leading-tight font-semibold">
+        <p key={destLabel} className="title-display animate-pop text-[32px]">
           {destLabel}
         </p>
         {dest.region && <p className="mt-0.5 text-xs text-muted-foreground">{dest.region}</p>}
@@ -128,7 +130,7 @@ export function TripPreview({
         <div className="mt-5 border-t border-border pt-4">
           <div className="flex items-baseline justify-between gap-2">
             <p className="text-[13px] text-muted-foreground">Estimated cost</p>
-            <AnimatedMoney value={totals.planned} className="text-[22px] font-semibold" />
+            <AnimatedMoney value={totals.planned} className="money-display text-[36px]" />
           </div>
           <ApproxMoney usd={totals.planned} className="block text-right text-xs" />
           <div className="mt-2 flex h-1.5 overflow-hidden rounded-full bg-muted">

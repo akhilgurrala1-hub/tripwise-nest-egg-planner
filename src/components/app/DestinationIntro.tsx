@@ -17,18 +17,20 @@ export function DestinationPhoto({
   origin,
   className,
   showText = true,
+  showImage = true,
 }: {
   dest: DemoDestination;
   origin: string;
   className?: string;
   showText?: boolean;
+  showImage?: boolean;
 }) {
   const q = useDestinationSummary(dest, origin);
   const s = q.data;
   if (!s) return null;
   return (
     <figure className={cn("animate-pop", className)}>
-      {s.image && (
+      {showImage && s.image && (
         <a
           href={s.url}
           target="_blank"
@@ -63,8 +65,11 @@ export function DestinationPhoto({
   );
 }
 
-/** About the destination: photo, introduction and any public holidays during the trip. */
-export function DestinationCard({
+/**
+ * The destination's photo, large: the Overview's hero. Credited by linking to the
+ * source. Nothing at all when there's no photo (better none than somewhere else).
+ */
+export function DestinationHero({
   dest,
   origin,
   className,
@@ -73,15 +78,51 @@ export function DestinationCard({
   origin: string;
   className?: string;
 }) {
+  const s = useDestinationSummary(dest, origin).data;
+  if (!s?.image) return null;
+  return (
+    <a
+      href={s.url}
+      target="_blank"
+      rel="noopener noreferrer"
+      title="Photo from Wikipedia"
+      className={cn(
+        "animate-pop group relative block overflow-hidden rounded-[20px] bg-muted shadow-[var(--shadow-soft-value)]",
+        className,
+      )}
+    >
+      <img
+        src={s.image}
+        alt={s.title}
+        decoding="async"
+        className="absolute inset-0 size-full object-cover transition-transform duration-700 ease-[var(--ease-out-quint)] group-hover:scale-[1.02]"
+      />
+    </a>
+  );
+}
+
+/** About the destination: photo, introduction and any public holidays during the trip. */
+export function DestinationCard({
+  dest,
+  origin,
+  className,
+  photo = true,
+}: {
+  dest: DemoDestination;
+  origin: string;
+  className?: string;
+  /** Off when the page already shows the photo large */
+  photo?: boolean;
+}) {
   const holidays = useTripHolidays();
   const summary = useDestinationSummary(dest, origin);
   const guide = useTravelGuide();
   const reviews = destinationReviewLinks(destinationQuery(dest, origin));
   return (
     <section className={cn("surface-card p-5", className)}>
-      <h2 className="text-[15px] font-semibold">About {dest.name}</h2>
+      <h2 className="title-display text-[28px]">About {dest.name}</h2>
       {summary.data ? (
-        <DestinationPhoto dest={dest} origin={origin} className="mt-3" />
+        <DestinationPhoto dest={dest} origin={origin} showImage={photo} className="mt-3" />
       ) : (
         // Until (or unless) the introduction loads, the place's own short description.
         <p className="mt-2 text-[13px] leading-relaxed text-muted-foreground">

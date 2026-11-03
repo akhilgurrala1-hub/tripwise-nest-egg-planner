@@ -73,7 +73,7 @@ function BadLink() {
   return (
     <section className="surface-card animate-rise p-6 text-center sm:p-8">
       <Link2Off className="mx-auto size-8 text-muted-foreground" />
-      <h1 className="mt-4 text-xl font-semibold">This link doesn't open a trip</h1>
+      <h1 className="title-display mt-4 text-3xl">This link doesn't open a trip</h1>
       <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">
         Part of it may have been cut off when it was copied. Ask for the link again, or plan a trip
         of your own.
@@ -122,9 +122,7 @@ function Preview({ shared }: { shared: SharedTrip }) {
           <RouteMark className="hidden w-16 shrink-0 sm:block" />
           <div className="min-w-0">
             <p className="eyebrow">A trip shared with you</p>
-            <h1 className="mt-1 text-[26px] leading-tight font-semibold sm:text-[30px]">
-              {dest.name}
-            </h1>
+            <h1 className="title-display mt-2 text-[38px] sm:text-[48px]">{dest.name}</h1>
             <div className="mt-3 flex flex-wrap gap-x-4 gap-y-2 text-[13px]">
               <Fact icon={<TypeIcon />}>{type.label}</Fact>
               <Fact icon={<CalendarDays />}>
@@ -170,9 +168,7 @@ function Preview({ shared }: { shared: SharedTrip }) {
 
       {lines.length > 0 && (
         <section className="surface-card p-5 sm:p-6">
-          <h2 className="flex items-center gap-2 text-[15px] font-semibold">
-            <Wallet className="size-4 text-primary" /> Where the money goes
-          </h2>
+          <h2 className="title-display text-[26px]">Where the money goes</h2>
           <ul className="mt-3 divide-y divide-border text-sm">
             {lines.map(({ c, amount }) => (
               <li key={c} className="flex items-center justify-between gap-3 py-2">
@@ -193,7 +189,7 @@ function Preview({ shared }: { shared: SharedTrip }) {
 
       {days.length > 0 && (
         <section className="surface-card p-5 sm:p-6">
-          <h2 className="text-[15px] font-semibold">Day by day</h2>
+          <h2 className="title-display text-[26px]">Day by day</h2>
           <ol className="mt-3 space-y-4">
             {days.map((d) => (
               <li key={d.day}>

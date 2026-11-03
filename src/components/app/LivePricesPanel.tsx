@@ -108,7 +108,7 @@ export function LivePricesPanel({ className }: { className?: string }) {
     <section id="live-prices" className={cn("surface-card scroll-mt-24 p-5", className)}>
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
-          <h2 className="text-[15px] font-semibold">Live prices</h2>
+          <h2 className="title-display text-[26px]">Live prices</h2>
           <p className="mt-0.5 text-[13px] text-muted-foreground">
             Hotel and flight prices from Google, gas from the U.S. Energy Information
             Administration's weekly survey.

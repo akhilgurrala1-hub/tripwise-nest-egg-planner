@@ -29,7 +29,7 @@ export function PlanCosts() {
 
   return (
     <section className="surface-card p-5">
-      <h2 className="text-[15px] font-semibold">Plan vs. budget</h2>
+      <h2 className="title-display text-[26px]">Plan vs. budget</h2>
       <p className="mt-0.5 text-xs text-muted-foreground">
         For {shape.travelers} traveler{shape.travelers > 1 ? "s" : ""}
       </p>

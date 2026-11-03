@@ -6,7 +6,6 @@ import {
   CornerDownRight,
   RotateCcw,
   SlidersHorizontal,
-  Sparkles,
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
@@ -212,14 +211,16 @@ export function TripAssistant({
 
   return (
     <section className="surface-card overflow-hidden">
-      <header className="flex items-center gap-2 border-b border-border bg-[color-mix(in_oklab,var(--brand-coral)_6%,var(--card))] px-4 py-3">
-        <span className="grid size-7 place-items-center rounded-lg bg-card text-brand-coral shadow-[0_1px_2px_oklch(0.2_0.01_260/0.08)]">
-          <Sparkles className="size-4" />
-        </span>
+      <header className="flex items-start gap-3 px-5 pt-5 sm:px-6 sm:pt-6">
         <div className="min-w-0 flex-1">
-          <h2 className="text-[15px] leading-tight font-semibold">Describe your trip</h2>
-          <p className="text-xs text-muted-foreground">
-            Tell us in your own words. Waypoint asks what it needs, then builds the plan.
+          <p className="eyebrow flex items-center gap-1.5">
+            <span aria-hidden className="size-[5px] rounded-full bg-brand-coral" /> Describe it
+          </p>
+          <h2 className="mt-2 text-[19px] leading-snug font-semibold">
+            Tell us the trip in your own words
+          </h2>
+          <p className="mt-1 text-[13.5px] text-muted-foreground">
+            Waypoint asks what it needs, then builds the plan.
           </p>
         </div>
         {state.turns.length > 0 && (
@@ -338,13 +339,13 @@ export function TripAssistant({
       )}
 
       <form
-        className="border-t border-border p-3"
+        className={cn("p-4 sm:p-5", state.turns.length > 0 && "border-t border-border")}
         onSubmit={(e) => {
           e.preventDefault();
           void send(text);
         }}
       >
-        <div className="flex flex-col gap-2 rounded-xl border border-input bg-card p-1.5 pl-3 transition-[border-color,box-shadow] focus-within:border-primary focus-within:ring-3 focus-within:ring-primary/15 sm:flex-row sm:items-end">
+        <div className="flex flex-col gap-2 rounded-2xl border border-input bg-background/70 p-2 pl-4 transition-[border-color,box-shadow,background-color] focus-within:border-primary focus-within:bg-card focus-within:ring-4 focus-within:ring-primary/10 sm:flex-row sm:items-end">
           <textarea
             value={text}
             onChange={(e) => setText(e.target.value)}
@@ -362,7 +363,7 @@ export function TripAssistant({
                 : "e.g. A long weekend somewhere with hiking and good food, 2 of us, about $1,200"
             }
             aria-label="Describe your trip"
-            className="min-h-9 w-full flex-1 resize-none bg-transparent py-1.5 text-sm outline-none placeholder:text-muted-foreground"
+            className="min-h-9 w-full flex-1 resize-none bg-transparent py-2 text-[15px] leading-relaxed outline-none placeholder:text-muted-foreground"
           />
           {user || authLoading ? (
             <Button
@@ -371,12 +372,12 @@ export function TripAssistant({
               variant="ink"
               disabled={!text.trim() || busy || authLoading}
               aria-label="Send"
-              className="size-9 shrink-0 self-end rounded-lg"
+              className="size-10 shrink-0 self-end rounded-xl"
             >
               <ArrowUp />
             </Button>
           ) : (
-            <Button asChild size="sm" variant="ink" className="h-9 shrink-0 self-end">
+            <Button asChild variant="ink" className="h-10 shrink-0 self-end rounded-xl">
               <Link to="/auth" search={{ redirect: "/" }}>
                 Sign in to ask
               </Link>
@@ -384,17 +385,15 @@ export function TripAssistant({
           )}
         </div>
         {state.turns.length === 0 && (
-          <div className="mt-2.5">
-            <p className="px-1 text-[11px] font-medium tracking-wide text-muted-foreground uppercase">
-              Try one
-            </p>
-            <ul className="mt-1">
+          <div className="mt-4">
+            <p className="eyebrow px-1">Try one</p>
+            <ul className="mt-1.5 divide-y divide-border/70">
               {EXAMPLES.map((ex) => (
                 <li key={ex}>
                   <button
                     type="button"
                     onClick={() => (user ? send(ex) : setText(ex))}
-                    className="group flex w-full items-start gap-2 rounded-md px-1 py-1.5 text-left text-[13px] text-muted-foreground transition-colors hover:text-foreground"
+                    className="group flex w-full items-start gap-2.5 px-1 py-2.5 text-left text-[14px] text-muted-foreground transition-colors hover:text-foreground"
                   >
                     <CornerDownRight className="mt-0.5 size-3.5 shrink-0 text-brand-coral transition-transform group-hover:translate-x-0.5" />
                     {ex}

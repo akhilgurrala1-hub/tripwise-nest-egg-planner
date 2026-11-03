@@ -1,13 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import {
-  AlertTriangle,
-  Check,
-  ChevronDown,
-  ChevronUp,
-  Lock,
-  RotateCcw,
-  ShieldCheck,
-} from "lucide-react";
+import { AlertTriangle, Check, ChevronDown, ChevronUp, Lock, RotateCcw } from "lucide-react";
 import { useState, type ReactNode } from "react";
 import { toast } from "sonner";
 
@@ -135,7 +127,7 @@ function BudgetPage() {
           {/* Categories */}
           <section className="animate-rise" style={stagger(2)}>
             <div className="mb-2.5 flex min-h-8 items-center justify-between">
-              <h2 className="text-[15px] font-semibold">Where your money goes</h2>
+              <h2 className="title-display text-[26px]">Where your money goes</h2>
               {hasOverrides && (
                 <Button variant="ghost" size="sm" onClick={tripActions.resetToEstimates}>
                   <RotateCcw /> Reset custom amounts
@@ -175,9 +167,7 @@ function BudgetPage() {
         <aside className="space-y-4 lg:order-2">
           <section className="surface-card animate-rise p-5" style={stagger(1)}>
             <div className="flex items-center justify-between">
-              <h2 className="flex items-center gap-2 text-[15px] font-semibold">
-                <ShieldCheck className="size-4" strokeWidth={1.8} /> Emergency fund
-              </h2>
+              <h2 className="title-display text-[26px]">Emergency fund</h2>
               <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
                 <Lock className="size-3" /> Protected
               </span>
@@ -185,7 +175,7 @@ function BudgetPage() {
             <p className="mt-2 text-[13px] leading-relaxed text-muted-foreground">
               For flat tires, urgent care or a surprise night's stay.
             </p>
-            <p className="mt-5 text-[32px] leading-none font-semibold tracking-tight">
+            <p className="money-display mt-5 text-[52px]">
               <AnimatedMoney value={totals.emergencyFund} />
             </p>
             <p className="mt-1.5 text-xs text-muted-foreground">

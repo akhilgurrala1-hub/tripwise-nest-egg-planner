@@ -220,7 +220,7 @@ function BookingCard({
     <article
       style={{ ...style, "--kind": color } as CSSProperties}
       className={cn(
-        "surface-card animate-rise relative overflow-hidden p-4 transition-[opacity,border-color] duration-300 sm:p-5",
+        "surface-card animate-rise render-lazy relative overflow-hidden p-4 transition-[opacity,border-color] duration-300 [contain-intrinsic-size:auto_200px] sm:p-5",
         isNext && "border-[color-mix(in_oklab,var(--brand-coral)_45%,var(--border))]",
         skipped && "opacity-60",
       )}

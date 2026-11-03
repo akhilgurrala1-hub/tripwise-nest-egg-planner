@@ -114,7 +114,7 @@ function ProfilePage() {
 
         <section className="surface-card space-y-5 p-5">
           <div>
-            <h2 className="text-[15px] font-semibold">How you like to travel</h2>
+            <h2 className="title-display text-[26px]">How you like to travel</h2>
             <p className="text-sm text-muted-foreground">
               New trips start with these choices, and flight prices search from your home airport.
             </p>

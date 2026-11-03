@@ -58,7 +58,7 @@ export function DayCard({
 }) {
   return (
     <section
-      className="surface-card animate-rise overflow-hidden print:break-inside-avoid print:shadow-none"
+      className="surface-card animate-rise render-lazy overflow-hidden print:break-inside-avoid print:shadow-none"
       style={style}
     >
       <header className="flex items-center gap-3 border-b border-border px-5 py-3.5">
@@ -69,7 +69,7 @@ export function DayCard({
           <p className="eyebrow">
             {formatCalendarDate(day.date, { weekday: "long", month: "short", day: "numeric" })}
           </p>
-          <h2 className="line-clamp-2 text-[15px] leading-tight font-semibold">{day.title}</h2>
+          <h2 className="title-display line-clamp-2 text-[24px]">{day.title}</h2>
           {holiday && (
             <p className="mt-1 inline-flex items-center gap-1 text-[11px] font-medium text-[color-mix(in_oklab,var(--brand-coral)_55%,var(--foreground))]">
               <CalendarHeart className="size-3" /> {holiday}: expect closures and crowds
