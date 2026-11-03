@@ -70,24 +70,53 @@ export function labelFromReverse(body: unknown): string | null {
   return countryName ? `${city}, ${countryName}` : city;
 }
 
-/** Ask the device where it is (shows the browser's permission prompt). */
-export function devicePosition(): Promise<GeoPoint> {
+/** Why the device didn't share a location: "denied" (permission off) or "unavailable". */
+export class LocationError extends Error {
+  readonly reason: "denied" | "unavailable";
+  constructor(reason: "denied" | "unavailable", message: string) {
+    super(message);
+    this.reason = reason;
+  }
+}
+
+function askDevice(highAccuracy: boolean, timeout: number): Promise<GeoPoint> {
   return new Promise((resolve, reject) => {
-    if (typeof navigator === "undefined" || !navigator.geolocation)
-      return reject(new Error("This browser can't share its location."));
     navigator.geolocation.getCurrentPosition(
       (p) => resolve({ lat: p.coords.latitude, lon: p.coords.longitude }),
       (e) =>
         reject(
-          new Error(
-            e.code === e.PERMISSION_DENIED
-              ? "Location access is off for this site. Type your city instead."
-              : "Couldn't get your location. Type your city instead.",
-          ),
+          e.code === e.PERMISSION_DENIED
+            ? new LocationError(
+                "denied",
+                "Location access is off for this site. Allow it in your browser's site settings, or type your city.",
+              )
+            : new LocationError(
+                "unavailable",
+                "Your device didn't share a location. On a computer, check that Location Services are on for your browser, or type your city.",
+              ),
         ),
-      { enableHighAccuracy: false, timeout: 10_000, maximumAge: 30 * 60_000 },
+      { enableHighAccuracy: highAccuracy, timeout, maximumAge: 30 * 60_000 },
     );
   });
+}
+
+/**
+ * Ask the device where it is (shows the browser's permission prompt). A quick
+ * network-based fix first; if that fails for any reason but a refusal, one
+ * more try that may use GPS / Wi-Fi scanning.
+ */
+export async function devicePosition(): Promise<GeoPoint> {
+  if (typeof navigator === "undefined" || !navigator.geolocation)
+    throw new LocationError(
+      "unavailable",
+      "This browser can't share its location. Type your city.",
+    );
+  try {
+    return await askDevice(false, 10_000);
+  } catch (e) {
+    if (e instanceof LocationError && e.reason === "denied") throw e;
+    return askDevice(true, 15_000);
+  }
 }
 
 export function readDevicePlace(): HomePlace | null {

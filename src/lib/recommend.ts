@@ -150,3 +150,22 @@ function distanceText(tripType: TripType, miles: number, units: Units): string {
 export function interestLabel(id: Interest): string {
   return INTERESTS.find((i) => i.id === id)?.label ?? id;
 }
+
+/**
+ * When the traveler changes where they start, the destination to switch to, or
+ * null to keep the current one: it stays while it's still among the top
+ * suggestions from the new start (and a typed destination or staycation never
+ * changes). Only used until they pick a destination themselves.
+ */
+export function destinationForNewStart(opts: {
+  destinationId: string;
+  tripType: TripType;
+  interests: Interest[];
+  from: GeoPoint;
+}): string | null {
+  const { destinationId, tripType, interests, from } = opts;
+  if (tripType === "staycation" || destinationId === "custom") return null;
+  const top = recommendDestinations({ from, tripType, interests, limit: 5 });
+  if (!top[0] || top.some((s) => s.id === destinationId)) return null;
+  return top[0].id;
+}

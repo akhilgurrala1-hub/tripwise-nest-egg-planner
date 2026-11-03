@@ -71,7 +71,7 @@ export function useHomePlace() {
     }
   };
 
-  return { place, locate, locating };
+  return { place, approximate: approx.data ?? null, locate, locating };
 }
 
 /** Once we know where the traveler is, the untouched sample trip starts from there, to a place nearby. */
