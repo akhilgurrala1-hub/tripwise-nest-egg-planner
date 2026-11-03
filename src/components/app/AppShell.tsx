@@ -1,4 +1,4 @@
-import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
+import { Link, useNavigate, useRouter, useRouterState } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   Bookmark,
@@ -19,7 +19,7 @@ import {
   Wallet,
   type LucideIcon,
 } from "lucide-react";
-import type { ReactNode } from "react";
+import { useEffect, type ReactNode } from "react";
 
 import { Logo } from "./Logo";
 import { useActiveIndicator } from "./motion";
@@ -67,31 +67,35 @@ export function AppShell({ children }: { children: ReactNode }) {
   const active = nav.find((n) => n.to === pathname)?.to;
   const desk = useActiveIndicator<HTMLDivElement>([active, nav.length]);
   const mobile = useActiveIndicator<HTMLDivElement>([active, nav.length]);
+  usePreloadTabs();
 
   return (
     <div className="min-h-screen bg-background">
       <header className="glass sticky top-0 z-40 border-b border-border print:hidden">
-        <div className="mx-auto flex h-14 max-w-6xl items-center justify-between gap-4 px-4">
+        <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-4">
           <Link to="/" className="flex items-center rounded-md" aria-label="Waypoint home">
             <Logo />
           </Link>
           <nav className="hidden md:block" aria-label="Main">
-            <div ref={desk.ref} className="relative flex items-center gap-0.5">
+            <div ref={desk.ref} className="relative flex items-center gap-1">
+              {/* "You are here": the brand's coral destination dot travels to the current tab. */}
               <span
                 aria-hidden
                 className={cn(
-                  "pointer-events-none absolute top-0 left-0 rounded-md bg-secondary transition-[transform,width,opacity] duration-300 ease-[var(--ease-out-quint)]",
+                  "pointer-events-none absolute top-0 left-0 flex items-end justify-center transition-[transform,width,opacity] duration-300 ease-[var(--ease-out-quint)]",
                   desk.ready && active ? "opacity-100" : "opacity-0",
                 )}
                 style={desk.style}
-              />
+              >
+                <span className="mb-[-3px] block size-[5px] rounded-full bg-brand-coral" />
+              </span>
               {nav.map((item) => (
                 <Link
                   key={item.to}
                   to={item.to}
                   data-active={item.to === active}
                   className={cn(
-                    "relative rounded-md px-3 py-1.5 text-sm font-medium transition-colors",
+                    "relative rounded-md px-3 py-2 text-[14px] font-medium tracking-[-0.005em] transition-colors",
                     item.to === active
                       ? "text-foreground"
                       : "text-muted-foreground hover:text-foreground",
@@ -130,9 +134,9 @@ export function AppShell({ children }: { children: ReactNode }) {
               "pointer-events-none absolute top-0 left-0 transition-[transform,width,opacity] duration-300 ease-[var(--ease-out-quint)]",
               mobile.ready && active ? "opacity-100" : "opacity-0",
             )}
-            style={mobile.style ? { ...mobile.style, height: 2 } : undefined}
+            style={mobile.style ? { ...mobile.style, height: 5 } : undefined}
           >
-            <span className="mx-auto block h-0.5 w-6 rounded-full bg-foreground" />
+            <span className="mx-auto mt-0.5 block size-[5px] rounded-full bg-brand-coral" />
           </span>
           {nav.map(({ to, label, icon: Icon }) => {
             const isActive = to === active;
@@ -142,11 +146,11 @@ export function AppShell({ children }: { children: ReactNode }) {
                 to={to}
                 data-active={isActive}
                 className={cn(
-                  "flex flex-col items-center gap-1 py-2 text-[11px] font-medium transition-colors active:scale-95",
+                  "flex flex-col items-center gap-1 pt-2.5 pb-1.5 text-[10.5px] font-medium tracking-[0.01em] transition-colors active:scale-95",
                   isActive ? "text-foreground" : "text-muted-foreground",
                 )}
               >
-                <Icon className="size-5" strokeWidth={isActive ? 2.2 : 1.8} />
+                <Icon className="size-[22px]" strokeWidth={isActive ? 2 : 1.6} />
                 {label}
               </Link>
             );
@@ -155,6 +159,30 @@ export function AppShell({ children }: { children: ReactNode }) {
       </nav>
     </div>
   );
+}
+
+/**
+ * Once the first page has settled, fetch every tab's code in the background, so
+ * switching tabs never waits on the network (phones don't hover, so "intent"
+ * preloading alone only helps on tap).
+ */
+function usePreloadTabs() {
+  const router = useRouter();
+  useEffect(() => {
+    const warm = () => {
+      for (const { to } of NAV) void router.preloadRoute({ to }).catch(() => undefined);
+    };
+    const w = window as Window & {
+      requestIdleCallback?: (cb: () => void, o?: { timeout: number }) => number;
+      cancelIdleCallback?: (id: number) => void;
+    };
+    if (w.requestIdleCallback) {
+      const id = w.requestIdleCallback(warm, { timeout: 2500 });
+      return () => w.cancelIdleCallback?.(id);
+    }
+    const t = window.setTimeout(warm, 1200);
+    return () => window.clearTimeout(t);
+  }, [router]);
 }
 
 function AccountButton() {

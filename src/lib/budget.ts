@@ -740,11 +740,18 @@ export const SAVING_TITLES: Record<SavingId, string> = {
   cabin: "Inside cabin",
 };
 
-export function formatMoney(n: number, opts: { cents?: boolean } = {}): string {
-  return new Intl.NumberFormat("en-US", {
+// Made once: formatting money runs hundreds of times per page (and every frame of a tween).
+const money = (cents: boolean) =>
+  new Intl.NumberFormat("en-US", {
     style: "currency",
     currency: "USD",
-    minimumFractionDigits: opts.cents ? 2 : 0,
-    maximumFractionDigits: opts.cents ? 2 : 0,
-  }).format(Number.isFinite(n) ? n : 0);
+    minimumFractionDigits: cents ? 2 : 0,
+    maximumFractionDigits: cents ? 2 : 0,
+  });
+let wholeDollars: Intl.NumberFormat | null = null;
+let withCents: Intl.NumberFormat | null = null;
+
+export function formatMoney(n: number, opts: { cents?: boolean } = {}): string {
+  const f = opts.cents ? (withCents ??= money(true)) : (wholeDollars ??= money(false));
+  return f.format(Number.isFinite(n) ? n : 0);
 }

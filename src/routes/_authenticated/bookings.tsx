@@ -86,9 +86,7 @@ function BookingsPage() {
         <LivePricesPanel />
 
         <section className="surface-card p-5">
-          <h2 className="flex items-center gap-2 text-[15px] font-semibold">
-            <Hotel className="size-5" /> Hotels
-          </h2>
+          <h2 className="title-display text-[26px]">Hotels</h2>
           {live?.hotels ? (
             <>
               <p className="text-sm text-muted-foreground">
@@ -175,9 +173,7 @@ function BookingsPage() {
         </section>
 
         <section className="surface-card p-5">
-          <h2 className="flex items-center gap-2 text-[15px] font-semibold">
-            <Plane className="size-5" /> Flights
-          </h2>
+          <h2 className="title-display text-[26px]">Flights</h2>
           {live?.flights ? (
             <>
               <p className="text-sm text-muted-foreground">
@@ -241,9 +237,7 @@ function BookingsPage() {
         </section>
 
         <section className="surface-card p-5">
-          <h2 className="flex items-center gap-2 text-[15px] font-semibold">
-            <Car className="size-5" /> Rental cars
-          </h2>
+          <h2 className="title-display text-[26px]">Rental cars</h2>
           <p className="text-sm text-muted-foreground">
             Live rental prices aren't connected yet. Your budget's estimate is{" "}
             <strong className="tabular text-foreground">{formatMoney(carEstimate)}</strong> (
@@ -281,7 +275,7 @@ function BookingsPage() {
         </section>
 
         <section className="space-y-3">
-          <h2 className="text-[15px] font-semibold">My bookings ({bookings.length})</h2>
+          <h2 className="title-display text-[26px]">My bookings ({bookings.length})</h2>
           {bookings.length === 0 && (
             <p className="surface-card p-5 text-sm text-muted-foreground">
               Nothing tracked yet. Tap Track on a hotel, flight or rental above.

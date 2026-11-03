@@ -1,16 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import {
-  ArrowRight,
-  Check,
-  ChevronDown,
-  Lock,
-  PieChart,
-  PiggyBank,
-  Undo2,
-  type LucideIcon,
-} from "lucide-react";
+import { ArrowRight, Check, ChevronDown, Lock, Undo2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -18,7 +9,7 @@ import { ApproxMoney, CATEGORY_COLOR_VAR, PriceSourceBadge } from "@/components/
 import { AnimatedMoney, stagger } from "@/components/app/motion";
 import { ShareTripButton } from "@/components/app/ShareTrip";
 import { PageHeader } from "@/components/app/TripHeader";
-import { DestinationCard } from "@/components/app/DestinationIntro";
+import { DestinationCard, DestinationHero } from "@/components/app/DestinationIntro";
 import { WeatherCard } from "@/components/app/Weather";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth-context";
@@ -60,17 +51,6 @@ export const Route = createFileRoute("/dashboard")({
 const SAVINGS_SHOWN = 5;
 
 /** A small colored square with an icon, for card titles. */
-function IconTile({ icon: Icon, color }: { icon: LucideIcon; color: string }) {
-  return (
-    <span
-      className="grid size-7 shrink-0 place-items-center rounded-md"
-      style={{ color, background: `color-mix(in oklab, ${color} 14%, transparent)` }}
-    >
-      <Icon className="size-4" />
-    </span>
-  );
-}
-
 function Dashboard() {
   const { trip, dest, totals, savings, applied, potentialSavings, shape } = useTrip();
   const [showAllSavings, setShowAllSavings] = useState(false);
@@ -99,100 +79,107 @@ function Dashboard() {
     <div>
       <PageHeader
         eyebrow={`Overview · ${style?.label ?? ""} style`}
-        title="At a glance"
+        title={dest.name}
         sampleBanner="card"
       >
         {!trip.isSample && <ShareTripButton />}
       </PageHeader>
 
       <div className="mx-auto mt-8 max-w-6xl space-y-4 px-4">
-        {/* Balance */}
-        <section className="surface-card animate-rise p-5 sm:p-7">
-          <div className="grid gap-6 sm:grid-cols-[1fr_auto] sm:items-end">
-            <div>
-              <p className="text-sm text-muted-foreground">
-                {totals.overBudget ? "Over your spending money" : "Left to spend"}
-              </p>
-              <p
-                className={cn(
-                  "mt-1 text-[44px] leading-none font-semibold tracking-[-0.035em] sm:text-[56px]",
-                  totals.overBudget && "text-destructive",
-                )}
-              >
-                {totals.overBudget ? "−" : ""}
-                <AnimatedMoney value={Math.abs(totals.remaining)} />
-              </p>
-              <ApproxMoney
-                usd={Math.abs(totals.remaining)}
-                suffix={totals.overBudget ? "over" : "left"}
-                className="mt-1 block text-sm"
-              />
-              <p className="tabular mt-3 text-sm text-muted-foreground">
-                {formatMoney(totals.planned)} planned of {formatMoney(totals.spendable)}
-                <span className="px-1.5 text-border">/</span>
-                <Lock className="mr-1 inline size-3 -translate-y-px" />
-                {formatMoney(totals.emergencyFund)} emergency fund
-              </p>
-            </div>
-            <dl className="grid grid-cols-2 gap-x-8 gap-y-3 text-sm sm:text-right">
+        <div className="flex flex-col gap-4 lg:flex-row">
+          <DestinationHero
+            dest={dest}
+            origin={trip.setup.origin}
+            className="h-[220px] shrink-0 sm:h-[300px] lg:order-2 lg:h-auto lg:w-[400px]"
+          />
+          {/* Balance */}
+          <section className="surface-card animate-rise min-w-0 flex-1 p-5 sm:p-7">
+            <div className="grid gap-6 sm:grid-cols-[1fr_auto] sm:items-end">
               <div>
-                <dt className="text-muted-foreground">Per person, per day</dt>
-                <dd className="tabular mt-0.5 text-base font-medium">
-                  <AnimatedMoney value={totals.perPersonPerDay} />
-                </dd>
-              </div>
-              <div>
-                <dt className="text-muted-foreground">Could save</dt>
-                <dd className="tabular mt-0.5 text-base font-medium text-success">
-                  <AnimatedMoney value={potentialSavings} />
-                </dd>
-              </div>
-            </dl>
-          </div>
-
-          {/* One stacked bar: every category in proportion, with the spending limit marked. */}
-          <div className="relative mt-7">
-            <div className="flex h-2.5 gap-px overflow-hidden rounded-full bg-muted">
-              {breakdown.map((d) => (
-                <span
-                  key={d.cat}
-                  title={`${CATEGORY_LABELS[d.cat]} ${formatMoney(d.value)}`}
-                  className="h-full transition-[width] duration-500 ease-[var(--ease-out-quint)] first:rounded-l-full last:rounded-r-full"
-                  style={{
-                    width: `${(d.value / scale) * 100}%`,
-                    backgroundColor: CATEGORY_COLOR_VAR[d.cat],
-                  }}
-                />
-              ))}
-            </div>
-            {totals.overBudget && (
-              <span
-                className="absolute -top-1 -bottom-1 w-0.5 rounded-full bg-foreground transition-[left] duration-500"
-                style={{ left: `${spendLine}%` }}
-                aria-hidden
-              />
-            )}
-            <div className="mt-2.5 flex flex-wrap justify-between gap-2 text-xs text-muted-foreground">
-              <span className="tabular">
-                {totals.percentUsed === null
-                  ? "No spendable budget"
-                  : `${Math.round(totals.percentUsed)}% of spending money planned`}
-              </span>
-              {totals.overBudget ? (
-                <Link
-                  to="/budget"
-                  className="font-medium text-foreground underline decoration-border underline-offset-4 hover:decoration-foreground"
+                <p className="text-sm text-muted-foreground">
+                  {totals.overBudget ? "Over your spending money" : "Left to spend"}
+                </p>
+                <p
+                  className={cn(
+                    "money-display mt-2 text-[64px] sm:text-[88px]",
+                    totals.overBudget && "text-destructive",
+                  )}
                 >
-                  See where to cut
-                </Link>
-              ) : (
-                <span>
-                  {shape.days} days · {shape.travelers} traveler{shape.travelers > 1 ? "s" : ""}
-                </span>
-              )}
+                  {totals.overBudget ? "−" : ""}
+                  <AnimatedMoney value={Math.abs(totals.remaining)} />
+                </p>
+                <ApproxMoney
+                  usd={Math.abs(totals.remaining)}
+                  suffix={totals.overBudget ? "over" : "left"}
+                  className="mt-1 block text-sm"
+                />
+                <p className="tabular mt-3 text-sm text-muted-foreground">
+                  {formatMoney(totals.planned)} planned of {formatMoney(totals.spendable)}
+                  <span className="px-1.5 text-border">/</span>
+                  <Lock className="mr-1 inline size-3 -translate-y-px" />
+                  {formatMoney(totals.emergencyFund)} emergency fund
+                </p>
+              </div>
+              <dl className="grid grid-cols-2 gap-x-8 gap-y-3 text-sm sm:text-right">
+                <div>
+                  <dt className="text-muted-foreground">Per person, per day</dt>
+                  <dd className="tabular mt-0.5 text-base font-medium">
+                    <AnimatedMoney value={totals.perPersonPerDay} />
+                  </dd>
+                </div>
+                <div>
+                  <dt className="text-muted-foreground">Could save</dt>
+                  <dd className="tabular mt-0.5 text-base font-medium text-success">
+                    <AnimatedMoney value={potentialSavings} />
+                  </dd>
+                </div>
+              </dl>
             </div>
-          </div>
-        </section>
+
+            {/* One stacked bar: every category in proportion, with the spending limit marked. */}
+            <div className="relative mt-7">
+              <div className="flex h-2.5 gap-px overflow-hidden rounded-full bg-muted">
+                {breakdown.map((d) => (
+                  <span
+                    key={d.cat}
+                    title={`${CATEGORY_LABELS[d.cat]} ${formatMoney(d.value)}`}
+                    className="h-full transition-[width] duration-500 ease-[var(--ease-out-quint)] first:rounded-l-full last:rounded-r-full"
+                    style={{
+                      width: `${(d.value / scale) * 100}%`,
+                      backgroundColor: CATEGORY_COLOR_VAR[d.cat],
+                    }}
+                  />
+                ))}
+              </div>
+              {totals.overBudget && (
+                <span
+                  className="absolute -top-1 -bottom-1 w-0.5 rounded-full bg-foreground transition-[left] duration-500"
+                  style={{ left: `${spendLine}%` }}
+                  aria-hidden
+                />
+              )}
+              <div className="mt-2.5 flex flex-wrap justify-between gap-2 text-xs text-muted-foreground">
+                <span className="tabular">
+                  {totals.percentUsed === null
+                    ? "No spendable budget"
+                    : `${Math.round(totals.percentUsed)}% of spending money planned`}
+                </span>
+                {totals.overBudget ? (
+                  <Link
+                    to="/budget"
+                    className="font-medium text-foreground underline decoration-border underline-offset-4 hover:decoration-foreground"
+                  >
+                    See where to cut
+                  </Link>
+                ) : (
+                  <span>
+                    {shape.days} days · {shape.travelers} traveler{shape.travelers > 1 ? "s" : ""}
+                  </span>
+                )}
+              </div>
+            </div>
+          </section>
+        </div>
 
         <NextSteps />
 
@@ -200,9 +187,7 @@ function Dashboard() {
           {/* Breakdown */}
           <section className="surface-card animate-rise p-5" style={stagger(2)}>
             <div className="flex items-center justify-between gap-3">
-              <h2 className="flex items-center gap-2 text-[15px] font-semibold">
-                <IconTile icon={PieChart} color="var(--primary)" /> Where it goes
-              </h2>
+              <h2 className="title-display text-[28px]">Where it goes</h2>
               <PriceSourceBadge />
             </div>
             <ul className="mt-4 divide-y divide-border">
@@ -262,9 +247,7 @@ function Dashboard() {
 
           {/* Savings */}
           <section className="surface-card animate-rise p-5" style={stagger(3)}>
-            <h2 className="flex items-center gap-2 text-[15px] font-semibold">
-              <IconTile icon={PiggyBank} color="var(--go)" /> Ways to spend less
-            </h2>
+            <h2 className="title-display text-[28px]">Ways to spend less</h2>
             <p className="mt-0.5 text-[13px] text-muted-foreground">
               Applies to your budget instantly. Undo anytime.
             </p>
@@ -329,7 +312,12 @@ function Dashboard() {
         </div>
 
         <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)]">
-          <DestinationCard dest={dest} origin={trip.setup.origin} className="animate-rise" />
+          <DestinationCard
+            dest={dest}
+            origin={trip.setup.origin}
+            photo={false}
+            className="animate-rise"
+          />
           <WeatherCard className="animate-rise" />
         </div>
       </div>
@@ -402,7 +390,7 @@ function NextSteps() {
     <section className="surface-card animate-rise p-5" style={stagger(1)}>
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h2 className="text-[15px] font-semibold">Checklist</h2>
+          <h2 className="title-display text-[28px]">Checklist</h2>
           <p className="tabular mt-0.5 text-[13px] text-muted-foreground">
             {next ? `${doneCount} of ${steps.length} done` : "All set. Have a great trip."}
           </p>

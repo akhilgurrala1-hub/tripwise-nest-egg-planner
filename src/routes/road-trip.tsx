@@ -367,7 +367,7 @@ function RoadTripPage() {
         {/* Route plan */}
         <aside className="space-y-4 lg:sticky lg:top-20 lg:self-start">
           <section className="surface-card p-5">
-            <h2 className="text-[15px] font-semibold">Your route plan</h2>
+            <h2 className="title-display text-[26px]">Your route plan</h2>
             <dl className="mt-3 grid grid-cols-2 gap-3 text-sm">
               <div className="rounded-lg border border-border p-3">
                 <dt className="text-xs text-muted-foreground">Stops added</dt>
@@ -413,7 +413,7 @@ function RoadTripPage() {
 
           {realOk ? (
             <section className="surface-card p-4">
-              <h2 className="mb-3 text-[15px] font-semibold">Route map</h2>
+              <h2 className="title-display mb-3 text-[26px]">Route map</h2>
               <RealRouteMap
                 route={realOk.route}
                 stops={withinDetour}
@@ -487,7 +487,7 @@ function StopCard({
     <article
       id={`stop-${stop.id}`}
       className={cn(
-        "surface-card animate-rise flex gap-3 p-4 transition-[border-color,box-shadow] duration-200",
+        "surface-card animate-rise render-lazy flex gap-3 p-4 transition-[border-color,box-shadow] duration-200 [contain-intrinsic-size:auto_160px]",
         included && "border-primary ring-3 ring-primary/12",
       )}
     >
@@ -593,7 +593,7 @@ function RouteMap({
   return (
     <section className="surface-card p-5">
       <div className="flex items-center justify-between">
-        <h2 className="text-[15px] font-semibold">Route sketch</h2>
+        <h2 className="title-display text-[26px]">Route sketch</h2>
         <SourceNote label="Not to scale" />
       </div>
       <div className="relative mt-4 ml-3 h-80">

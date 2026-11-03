@@ -2,7 +2,6 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import {
   Car,
   ChevronDown,
-  Lightbulb,
   Loader2,
   MapPin,
   Printer,
@@ -227,9 +226,7 @@ function ItineraryPage() {
           <PlanCosts />
           {itin && itin.tips.length > 0 && (
             <section className="surface-card p-5">
-              <h2 className="flex items-center gap-2 text-[15px] font-semibold">
-                <Lightbulb className="size-4" strokeWidth={1.8} /> Tips
-              </h2>
+              <h2 className="title-display text-[26px]">Tips</h2>
               <ul className="mt-2 space-y-2 text-sm">
                 {itin.tips.map((t, i) => (
                   <li key={i} className="leading-snug">
@@ -265,7 +262,7 @@ function DriveStops() {
       <header className="flex items-center justify-between gap-3 border-b border-border px-5 py-3.5">
         <div>
           <p className="eyebrow">On the drive</p>
-          <h2 className="text-[15px] font-semibold">Road-trip stops</h2>
+          <h2 className="title-display text-[26px]">Road-trip stops</h2>
         </div>
         <Link
           to="/road-trip"

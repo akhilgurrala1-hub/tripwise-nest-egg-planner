@@ -52,8 +52,18 @@ export function dateRangeError(start: string, end: string, maxDays = MAX_TRIP_DA
   return "";
 }
 
+// Building a date formatter is slow (toLocaleDateString builds one on every call), and
+// pages format dozens of dates per render, so each set of options gets one, reused.
+const FORMATTERS = new Map<string, Intl.DateTimeFormat>();
+
 /** Weekday + month/day label for a calendar date, independent of the viewer's time zone. */
 export function formatCalendarDate(iso: string, opts: Intl.DateTimeFormatOptions): string {
   if (!isIsoDate(iso)) return iso;
-  return new Date(toUtc(iso)).toLocaleDateString("en-US", { ...opts, timeZone: "UTC" });
+  const key = JSON.stringify(opts);
+  let f = FORMATTERS.get(key);
+  if (!f) {
+    f = new Intl.DateTimeFormat("en-US", { ...opts, timeZone: "UTC" });
+    FORMATTERS.set(key, f);
+  }
+  return f.format(new Date(toUtc(iso)));
 }

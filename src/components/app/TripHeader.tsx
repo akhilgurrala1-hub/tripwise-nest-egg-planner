@@ -53,8 +53,8 @@ export function PageHeader({
         <section className="surface-card animate-rise mb-7 grid grid-cols-[56px_1fr] items-center gap-4 p-5 sm:grid-cols-[72px_1fr_auto] sm:gap-6 sm:p-6 print:hidden">
           <RouteMark className="w-14 sm:w-[72px]" />
           <div className="min-w-0">
-            <h2 className="text-lg leading-snug font-semibold sm:text-xl">
-              This is a sample trip. Make it yours.
+            <h2 className="title-display text-[26px] sm:text-[30px]">
+              This is a sample trip. <em className="text-primary">Make it yours.</em>
             </h2>
             <p className="mt-1 max-w-lg text-sm text-muted-foreground">
               Pick where you're going, your dates and your budget. Everything on these pages updates
@@ -88,8 +88,8 @@ export function PageHeader({
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div className="min-w-0">
           <p className="eyebrow">{eyebrow}</p>
-          <h1 className="mt-1 text-[28px] leading-tight font-semibold sm:text-[32px]">{title}</h1>
-          {showTrip && <TripBar />}
+          <h1 className="title-display mt-2 text-[40px] sm:text-[52px]">{title}</h1>
+          {showTrip && <TripBar title={title} />}
         </div>
         <div className="contents print:hidden">{children}</div>
       </div>
@@ -97,12 +97,13 @@ export function PageHeader({
   );
 }
 
-function TripBar() {
+function TripBar({ title }: { title: string }) {
   const { trip, dest, shape } = useTrip();
   return (
-    <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-[13px]">
+    <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-[13px]">
       <TripTypeChip />
-      <Chip icon={<MapPin />}>{dest.name}</Chip>
+      {/* Not twice: the Overview's title already is the destination. */}
+      {title !== dest.name && <Chip icon={<MapPin />}>{dest.name}</Chip>}
       <Chip icon={<CalendarDays />}>
         {formatDateRange(trip.setup.startDate, trip.setup.endDate)}
         <span className="text-muted-foreground">

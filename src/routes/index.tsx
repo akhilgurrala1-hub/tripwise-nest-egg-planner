@@ -1,17 +1,6 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import {
-  ArrowRight,
-  CalendarDays,
-  MapPin,
-  Minus,
-  Plus,
-  Receipt,
-  Route as RouteIcon,
-  Sparkles,
-  Wallet,
-  type LucideIcon,
-} from "lucide-react";
+import { ArrowRight, Minus, Plus } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 
@@ -282,11 +271,11 @@ function Welcome() {
     <div className="mx-auto max-w-6xl px-4 pt-6 pb-10 sm:pt-10">
       <header className="animate-rise grid items-center gap-6 sm:grid-cols-[minmax(0,1fr)_260px] lg:grid-cols-[minmax(0,1fr)_340px] lg:gap-10">
         <div>
-          <p className="eyebrow text-primary">New trip</p>
-          <h1 className="mt-2 text-[30px] leading-[1.1] font-semibold sm:text-[44px]">
-            Plan a trip, to the dollar.
+          <p className="eyebrow">New trip</p>
+          <h1 className="title-display mt-3 text-[46px] sm:text-[64px] lg:text-[72px]">
+            Plan a trip, <em className="text-primary">to the dollar.</em>
           </h1>
-          <p className="mt-3 max-w-md text-[15px] text-muted-foreground">
+          <p className="mt-4 max-w-md text-[16px] leading-relaxed text-muted-foreground">
             Describe your trip or fill in the steps below. Waypoint builds the budget, keeps an
             emergency fund aside and plans each day.
           </p>
@@ -313,12 +302,15 @@ function Welcome() {
             />
           </div>
 
-          <h2 id="plan-steps" className="mt-10 scroll-mt-24 text-lg font-semibold">
-            Plan it yourself
+          <h2
+            id="plan-steps"
+            className="title-display mt-14 scroll-mt-24 text-[32px] sm:text-[36px]"
+          >
+            Or plan it yourself
           </h2>
 
           <form id="plan-form" onSubmit={submit} noValidate className="mt-2 divide-y divide-border">
-            <Section icon={RouteIcon} title="Trip" style={stagger(2)}>
+            <Section step="01" title="Trip" style={stagger(2)}>
               <TripTypePicker
                 tripType={form.tripType}
                 mode={form.transportMode}
@@ -330,7 +322,7 @@ function Welcome() {
             </Section>
 
             <Section
-              icon={MapPin}
+              step="02"
               title={
                 form.tripType === "cruise"
                   ? "Cruise"
@@ -372,7 +364,7 @@ function Welcome() {
               </div>
             </Section>
 
-            <Section icon={CalendarDays} title="When & who" style={stagger(3)}>
+            <Section step="03" title="When & who" style={stagger(3)}>
               <div className="flex flex-wrap items-start gap-x-3 gap-y-4">
                 <div className="min-w-0 flex-1 basis-64">
                   <p className="mb-1.5 text-[13px] text-muted-foreground">Dates</p>
@@ -446,13 +438,13 @@ function Welcome() {
               </div>
             </Section>
 
-            <Section icon={Sparkles} title="Style" style={stagger(4)}>
+            <Section step="04" title="Style" style={stagger(4)}>
               <StylePicker value={form.style} onChange={(style) => update({ style })} />
               <p className="mt-5 mb-2.5 text-sm text-muted-foreground">Interests</p>
               <InterestChips value={form.interests} onToggle={toggleInterest} />
             </Section>
 
-            <Section icon={Receipt} title="What you pay for" style={stagger(5)}>
+            <Section step="05" title="What you pay for" style={stagger(5)}>
               <CoveragePicker
                 value={form.coverage}
                 mode={form.transportMode}
@@ -460,7 +452,7 @@ function Welcome() {
               />
             </Section>
 
-            <Section icon={Wallet} title="Budget" style={stagger(5)}>
+            <Section step="06" title="Budget" style={stagger(5)}>
               <div className="grid gap-4 sm:grid-cols-2">
                 <div>
                   <Label className="text-[13px] font-normal text-muted-foreground">
@@ -560,13 +552,14 @@ function Welcome() {
 }
 
 function Section({
-  icon: Icon,
+  step,
   title,
   aside,
   children,
   style,
 }: {
-  icon: LucideIcon;
+  /** "01", "02"...: the order the trip comes together in */
+  step: string;
   title: string;
   aside?: string;
   children: React.ReactNode;
@@ -574,14 +567,14 @@ function Section({
 }) {
   return (
     <section
-      className="animate-rise grid gap-4 py-7 sm:grid-cols-[132px_1fr] sm:gap-8"
+      className="animate-rise grid gap-4 py-9 sm:grid-cols-[140px_1fr] sm:gap-8"
       style={style}
     >
-      <div className="flex items-center gap-2.5 sm:block">
-        <span className="grid size-8 place-items-center rounded-lg bg-[color-mix(in_oklab,var(--primary)_9%,transparent)] text-primary">
-          <Icon className="size-4" />
+      <div className="flex items-baseline gap-2.5 sm:block">
+        <span aria-hidden className="font-mono text-[12px] text-coral-text">
+          {step}
         </span>
-        <h2 className="text-[15px] font-semibold sm:mt-2">{title}</h2>
+        <h2 className="text-[17px] font-semibold sm:mt-1.5">{title}</h2>
         {aside && <p className="ml-auto text-xs text-muted-foreground sm:mt-1 sm:ml-0">{aside}</p>}
       </div>
       <div className="min-w-0">{children}</div>

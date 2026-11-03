@@ -83,7 +83,7 @@ export function WeatherCard({ className }: { className?: string }) {
     <section className={cn("surface-card p-5", className)}>
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div className="min-w-0">
-          <h2 className="text-[15px] font-semibold">Weather</h2>
+          <h2 className="title-display text-[26px]">Weather</h2>
           <p className="text-sm text-muted-foreground">
             {w.status === "ready" && days.length > 0
               ? `${w.placeLabel} · ${summarize(days, units)}`
