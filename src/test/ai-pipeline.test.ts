@@ -105,6 +105,7 @@ const REQ: AiItineraryRequest = {
   weather: [],
   places: [],
   guide: [],
+  covered: [],
   notes: [],
   instructions: "",
   current: [],
@@ -170,6 +171,8 @@ const ANSWER = {
     style: null,
     totalBudget: null,
     interests: [],
+    covered: { lodging: false, meals: false, activities: false, localTransport: false },
+    transferCost: null,
   },
 };
 

@@ -33,6 +33,15 @@ export const tripDraftSchema = z.object({
   style: z.enum(STYLE_IDS).nullable(),
   totalBudget: z.number().nullable(),
   interests: z.array(z.enum(INTEREST_IDS)),
+  /** What they won't pay for on this trip (staying at home, eating with family...) */
+  covered: z.object({
+    lodging: z.boolean(),
+    meals: z.boolean(),
+    activities: z.boolean(),
+    localTransport: z.boolean(),
+  }),
+  /** Round trip from where they start (dorm, home) to the airport or station, whole group, USD */
+  transferCost: z.number().nullable(),
 });
 
 export const tripChatSchema = z.object({
@@ -70,6 +79,14 @@ Each turn:
 - If destination, dates and travelers are all known, set ready=true, give a one- or two-sentence summary in "reply", and ask nothing more (questions = []).
 - Otherwise set ready=false and ask at most 3 short questions, most important first, each with 2–4 short tappable answer options (e.g. "Just me", "2 people", "Family of 4").
 - If they don't know where to go, offer 3 "ideas": real places in "City, ST" form (or a departure port city for cruises) that fit their starting city, the season, their interests and trip type, each with a short "why" (under 12 words). Otherwise ideas = [].
+Work out what the traveler actually pays for, and leave out what they don't:
+- covered.lodging = true when they stay somewhere free: their own home, family, friends, a dorm ("I live there", "staying with my parents", "going home").
+- covered.meals = true when they'll eat at home or with family (usually true when going home or staying with family); otherwise false.
+- covered.activities = true when they only care about getting there ("just the flight", "only the ticket") or are going home; false when they want to do things.
+- covered.localTransport = true when they'll have a car or rides at the destination (family picking them up, their own car).
+- transferCost: when they fly or take a train or bus, the round trip for the whole group from where they're leaving (dorm, campus, home) to the airport or station and back, in USD. Estimate it from the distance: rideshare is about $1.50 to $2.50 per mile plus $5 per ride; transit is a few dollars. Use null when there's no such leg.
+- origin is where they're leaving from (e.g. the college town with their dorm), even when they "live" at the destination. If that isn't clear, ask where they're starting from.
+- When something is covered, say what you left out in "reply", e.g. "Since you're staying at home, I only counted the flight and rides to the airport."
 Rules: today's date is given; resolve "next weekend", "in March" etc. to real dates that are not in the past (a month without days = a 4-day trip starting the first Friday). Weekend = Friday to Sunday. A road trip or staycation starts from their home city when they don't say otherwise. Destination is "City, ST" for US places, "City, Country" elsewhere. Dates are YYYY-MM-DD. Keep "reply" under 50 words, warm and plain. No emoji, no markdown, no em dashes.`;
 
 function requestSignal(clientSignal?: AbortSignal): AbortSignal | undefined {

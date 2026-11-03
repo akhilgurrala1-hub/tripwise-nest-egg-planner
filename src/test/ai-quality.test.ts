@@ -199,6 +199,8 @@ describe("assistant answers are checked before they're shown", () => {
       style: null,
       totalBudget: -100,
       interests: ["food", "food"] as "food"[],
+      covered: { lodging: false, meals: false, activities: false, localTransport: false },
+      transferCost: null,
     },
   };
 

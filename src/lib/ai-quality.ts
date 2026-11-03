@@ -276,6 +276,17 @@ export function cleanChatAnswer(a: ChatAnswer): ChatAnswer {
       nights,
       totalBudget: budget,
       interests: [...new Set(t.interests)],
+      covered: {
+        lodging: !!t.covered?.lodging,
+        meals: !!t.covered?.meals,
+        activities: !!t.covered?.activities,
+        localTransport: !!t.covered?.localTransport,
+      },
+      // A round trip to the airport or station: never negative, never absurd.
+      transferCost:
+        t.transferCost === null || t.transferCost === undefined || !Number.isFinite(t.transferCost)
+          ? null
+          : Math.round(Math.min(500, Math.max(0, t.transferCost))),
     },
   };
 }

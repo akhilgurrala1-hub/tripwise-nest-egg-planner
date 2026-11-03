@@ -21,6 +21,8 @@ const inputSchema = z.object({
   places: z.array(z.string().max(260)).max(40).default([]),
   /** Practical advice from the travel guide ("Stay safe: ...", "Get around: ...") */
   guide: z.array(z.string().max(360)).max(4).default([]),
+  /** Costs the traveler doesn't have ("a place to stay", "meals") */
+  covered: z.array(z.string().max(40)).max(4).default([]),
   /** Public holidays and other dates to know */
   notes: z.array(z.string().max(160)).max(10).default([]),
   /** When refining: what the traveler wants changed, and the current plan */

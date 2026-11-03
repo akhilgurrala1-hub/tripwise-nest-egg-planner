@@ -46,6 +46,8 @@ export interface AiItineraryRequest {
   places: string[];
   /** Practical advice from the travel guide */
   guide: string[];
+  /** Costs the traveler doesn't have, e.g. "a place to stay", "meals" */
+  covered: string[];
   /** Dates to know about, e.g. public holidays */
   notes: string[];
   /** The traveler's requested changes, when refining a plan */
@@ -132,6 +134,11 @@ export async function generateAiItinerary(
     `Sightseeing budget per person for the whole trip: $${Math.round(req.activityBudgetPerPerson)}`,
     `Food budget per person per day: $${Math.round(req.foodBudgetPerPersonDay)}`,
     ...(req.weather.length ? [`Weather (real data):\n${req.weather.join("\n")}`] : []),
+    ...(req.covered.length
+      ? [
+          `Already taken care of, so don't plan or price it: ${req.covered.join(", ")}.${req.covered.includes("meals") ? " Meals are at home (costPerPerson 0); suggest at most one optional meal out." : ""}${req.covered.includes("activities") ? " Keep sights free (costPerPerson 0)." : ""}`,
+        ]
+      : []),
     ...(req.notes.length ? [`Dates to know:\n${req.notes.join("\n")}`] : []),
     ...(req.guide.length ? [`Advice from travelers (Wikivoyage):\n${req.guide.join("\n")}`] : []),
     ...(req.places.length

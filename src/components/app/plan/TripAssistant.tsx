@@ -16,13 +16,13 @@ import { formatDateRange } from "@/components/app/TripHeader";
 import { Button } from "@/components/ui/button";
 import { tripChat } from "@/lib/ai-trip-chat.functions";
 import { cleanChatAnswer } from "@/lib/ai-quality";
-import { draftDates, missingFields, type TripDraft } from "@/lib/assistant";
+import { coverageFromDraft, draftDates, missingFields, type TripDraft } from "@/lib/assistant";
 import type { GeoPoint } from "@/lib/catalog";
 import { useHomePlace } from "@/lib/live/use-home";
 import { useLocale } from "@/lib/live/use-locale";
 import { recommendDestinations } from "@/lib/recommend";
 import { useAuth } from "@/lib/auth-context";
-import { formatMoney } from "@/lib/budget";
+import { coveredLabels, formatMoney } from "@/lib/budget";
 import { todayIso } from "@/lib/dates";
 import { tripTypeInfo } from "@/lib/demo-data";
 import { cn } from "@/lib/utils";
@@ -440,6 +440,25 @@ function DraftSummary({ draft, today }: { draft: TripDraft; today: string }) {
       label: "Budget",
       value: draft.totalBudget ? formatMoney(draft.totalBudget) : null,
     },
+    // Only shown once the assistant has worked them out: nothing to fill in otherwise.
+    ...(() => {
+      const coverage = coverageFromDraft(draft);
+      const covered = coveredLabels(coverage);
+      return [
+        ...(covered.length
+          ? [{ key: "covered", label: "Not counted", value: covered.join(", ") }]
+          : []),
+        ...(coverage?.transfer
+          ? [
+              {
+                key: "transfer",
+                label: "To the airport or station",
+                value: `${formatMoney(coverage.transfer)} round trip`,
+              },
+            ]
+          : []),
+      ];
+    })(),
   ];
   return (
     <div className="flex flex-wrap gap-1.5 border-t border-border bg-muted/40 px-4 py-2.5">

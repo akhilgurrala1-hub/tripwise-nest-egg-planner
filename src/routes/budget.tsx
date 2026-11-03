@@ -229,6 +229,8 @@ function CategoryRow({ cat }: { cat: Category }) {
 
   const driving = isDrivingMode(i.transportMode);
   const modeLabel = TRANSPORT_MODES.find((m) => m.id === i.transportMode)?.label ?? "";
+  const stationWord = i.transportMode === "flight" ? "airport" : "station";
+  const covered = trip.setup.coverage ?? {};
   let fields: ReactNode = null;
   let formula = "";
   switch (cat) {
@@ -272,6 +274,8 @@ function CategoryRow({ cat }: { cat: Category }) {
         parts.push(`${formatMoney(i.rentalPerDay)} rental × ${shape.days} days`);
       if (i.localTransitPerDay > 0)
         parts.push(`${formatMoney(i.localTransitPerDay)} local rides × ${shape.days} days`);
+      if ((i.transferRoundTrip ?? 0) > 0)
+        parts.push(`${formatMoney(i.transferRoundTrip ?? 0)} to the ${stationWord} and back`);
       formula = parts.length ? parts.join(" + ") : `${modeLabel} · no fares or rentals`;
       fields = (
         <>
@@ -299,6 +303,15 @@ function CategoryRow({ cat }: { cat: Category }) {
             onChange={set("localTransitPerDay")}
             prefix="$"
           />
+          {fareMode && (
+            <InputCell
+              label={`To the ${stationWord} and back (group)`}
+              value={i.transferRoundTrip ?? 0}
+              onChange={set("transferRoundTrip")}
+              prefix="$"
+              step={5}
+            />
+          )}
         </>
       );
       break;
@@ -331,7 +344,10 @@ function CategoryRow({ cat }: { cat: Category }) {
       );
       break;
     case "food":
-      formula = `${formatMoney(i.foodPerPersonDay)} × ${shape.travelers} people × ${shape.days} days`;
+      formula =
+        covered.meals && i.foodPerPersonDay === 0
+          ? "Meals are covered, so nothing to pay"
+          : `${formatMoney(i.foodPerPersonDay)} × ${shape.travelers} people × ${shape.days} days`;
       fields = (
         <InputCell
           label="Per person, per day"
@@ -342,7 +358,10 @@ function CategoryRow({ cat }: { cat: Category }) {
       );
       break;
     case "snacks":
-      formula = `${formatMoney(i.snacksPerPersonDay, { cents: true })} × ${shape.travelers} people × ${shape.days} days`;
+      formula =
+        covered.meals && i.snacksPerPersonDay === 0
+          ? "Covered along with meals"
+          : `${formatMoney(i.snacksPerPersonDay, { cents: true })} × ${shape.travelers} people × ${shape.days} days`;
       fields = (
         <InputCell
           label="Per person, per day"
@@ -354,7 +373,10 @@ function CategoryRow({ cat }: { cat: Category }) {
       );
       break;
     case "water":
-      formula = `${formatMoney(i.waterPerPersonDay, { cents: true })} × ${shape.travelers} people × ${shape.days} days`;
+      formula =
+        covered.meals && i.waterPerPersonDay === 0
+          ? "Covered along with meals"
+          : `${formatMoney(i.waterPerPersonDay, { cents: true })} × ${shape.travelers} people × ${shape.days} days`;
       fields = (
         <InputCell
           label="Per person, per day"
@@ -367,9 +389,11 @@ function CategoryRow({ cat }: { cat: Category }) {
       break;
     case "accommodations":
       formula =
-        trip.setup.tripType === "cruise" && i.nightlyRate === 0
-          ? "Your cabin is in the cruise fare. Add a pre-cruise hotel night here if you need one"
-          : `${formatMoney(i.nightlyRate)} × ${i.rooms} room${i.rooms === 1 ? "" : "s"} × ${shape.nights} nights`;
+        covered.lodging && i.nightlyRate === 0
+          ? "You have a place to stay, so nothing to pay"
+          : trip.setup.tripType === "cruise" && i.nightlyRate === 0
+            ? "Your cabin is in the cruise fare. Add a pre-cruise hotel night here if you need one"
+            : `${formatMoney(i.nightlyRate)} × ${i.rooms} room${i.rooms === 1 ? "" : "s"} × ${shape.nights} nights`;
       fields = (
         <>
           <InputCell
@@ -440,7 +464,10 @@ function CategoryRow({ cat }: { cat: Category }) {
       break;
     case "activities": {
       const fromItinerary = itineraryActivityCost(trip.itinerary, shape.travelers);
-      formula = `${formatMoney(i.activitiesPerPerson)} × ${shape.travelers} people`;
+      formula =
+        covered.activities && i.activitiesPerPerson === 0
+          ? "No paid activities planned"
+          : `${formatMoney(i.activitiesPerPerson)} × ${shape.travelers} people`;
       fields = (
         <>
           <InputCell
