@@ -1,3 +1,4 @@
+import { cleanAiPlan } from "./ai-quality";
 import { addDays } from "./dates";
 import type { DemoDestination, Interest, TravelStyle, TripType } from "./demo-data";
 import type { RealPlace } from "./places/types";
@@ -414,24 +415,11 @@ export interface AiPlanDay {
   items: Omit<ItineraryItem, "id" | "costSource" | "custom">[];
 }
 
-/** Turn the AI planner's answer into an itinerary for these dates: ids, real dates, no negative prices. */
+/** Turn the AI planner's answer into an itinerary for these dates (checked and cleaned; see ai-quality.ts). */
 export function fromAiPlan(
   plan: { days: AiPlanDay[]; tips: string[] },
   startDate: string,
   days: number,
 ): Itinerary {
-  return {
-    source: "ai",
-    tips: plan.tips.slice(0, 4),
-    days: plan.days.slice(0, days).map((d, di) => ({
-      day: di + 1,
-      date: addDays(startDate, di),
-      title: d.title,
-      items: d.items.map((it, ii) => ({
-        ...it,
-        id: `ai-${di}-${ii}`,
-        costPerPerson: Math.max(0, Number(it.costPerPerson) || 0),
-      })),
-    })),
-  };
+  return cleanAiPlan(plan, { days, startDate });
 }

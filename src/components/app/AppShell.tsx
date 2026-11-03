@@ -181,7 +181,7 @@ function AccountButton() {
   };
 
   return (
-    <DropdownMenu>
+    <DropdownMenu modal={false}>
       <DropdownMenuTrigger asChild>
         <Button size="icon" variant="outline" className="size-9" aria-label="Account">
           <UserRound />
@@ -226,7 +226,7 @@ function ThemeToggle() {
   const { pref, setPref } = useTheme();
   const { currency, prefs, autoUnits, autoCurrency } = useLocale();
   return (
-    <DropdownMenu>
+    <DropdownMenu modal={false}>
       <DropdownMenuTrigger asChild>
         <Button size="icon" variant="ghost" className="size-9" aria-label="Display settings">
           <Sun className="dark:hidden" />

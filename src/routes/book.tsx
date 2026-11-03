@@ -246,7 +246,7 @@ function BookingCard({
           <div className="flex flex-wrap items-center gap-2">
             <h2 className="text-[15px] leading-snug font-semibold">{item.title}</h2>
             {isNext && (
-              <span className="rounded-md bg-[color-mix(in_oklab,var(--brand-coral)_14%,var(--card))] px-1.5 py-0.5 text-[10px] font-semibold tracking-wide text-[color-mix(in_oklab,var(--brand-coral)_80%,var(--foreground))] uppercase">
+              <span className="rounded-md bg-[color-mix(in_oklab,var(--brand-coral)_14%,var(--card))] px-1.5 py-0.5 text-[10px] font-semibold tracking-wide text-[color-mix(in_oklab,var(--brand-coral)_55%,var(--foreground))] uppercase">
                 Next
               </span>
             )}

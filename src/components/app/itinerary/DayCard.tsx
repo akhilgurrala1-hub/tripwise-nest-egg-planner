@@ -66,7 +66,7 @@ export function DayCard({
           </p>
           <h2 className="line-clamp-2 text-[15px] leading-tight font-semibold">{day.title}</h2>
           {holiday && (
-            <p className="mt-1 inline-flex items-center gap-1 text-[11px] font-medium text-[color-mix(in_oklab,var(--brand-coral)_80%,var(--foreground))]">
+            <p className="mt-1 inline-flex items-center gap-1 text-[11px] font-medium text-[color-mix(in_oklab,var(--brand-coral)_55%,var(--foreground))]">
               <CalendarHeart className="size-3" /> {holiday} — expect closures and crowds
             </p>
           )}

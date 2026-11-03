@@ -11,6 +11,7 @@ import { usePreferences } from "@/lib/account";
 import { useAuth } from "@/lib/auth-context";
 import { formatMoney } from "@/lib/budget";
 import { destinationQuery } from "@/lib/live/place";
+import { useHydrated } from "@/lib/live/use-live";
 import { getLivePriceStatus, getLivePrices } from "@/lib/prices/live-prices.functions";
 import { tripActions, useTrip } from "@/lib/trip-store";
 import { isDrivingMode } from "@/lib/demo-data";
@@ -29,10 +30,11 @@ export function LivePricesPanel({ className }: { className?: string }) {
   const noHotel = cruise || (trip.setup.tripType === "staycation" && trip.inputs.nightlyRate === 0);
   const fetchPrices = useServerFn(getLivePrices);
   const fetchStatus = useServerFn(getLivePriceStatus);
+  const hydrated = useHydrated();
   const status = useQuery({
-    queryKey: ["live", "price-status", user?.id],
+    queryKey: ["live", "price-status"],
     queryFn: () => fetchStatus(),
-    enabled: !!user,
+    enabled: hydrated,
     staleTime: 10 * 60 * 1000,
   });
   const connected = status.data;
@@ -104,7 +106,7 @@ export function LivePricesPanel({ className }: { className?: string }) {
             Administration's weekly survey.
           </p>
         </div>
-        {user && connected && !anyConnected ? null : user ? (
+        {connected && !anyConnected ? null : user ? (
           <Button variant="outline" onClick={run} disabled={loading || status.isPending}>
             {loading ? <Loader2 className="animate-spin" /> : live ? <RefreshCw /> : <BadgeCheck />}
             {loading ? "Checking prices…" : live ? "Refresh prices" : "Get live prices"}
@@ -118,7 +120,7 @@ export function LivePricesPanel({ className }: { className?: string }) {
         )}
       </div>
 
-      {user && connected && !anyConnected && (
+      {connected && !anyConnected && (
         <p className="mt-3 rounded-lg bg-muted px-3 py-2 text-xs leading-snug text-muted-foreground">
           Live hotel, flight and gas prices need a price-data connection that isn't set up for this
           app yet, so these amounts stay demo estimates. Weather and places are already live.

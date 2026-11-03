@@ -504,7 +504,7 @@ function StopCard({
         <p className="eyebrow truncate">
           {label} · {segment}
         </p>
-        <h3 className="mt-0.5 text-sm leading-snug font-medium">{stop.name}</h3>
+        <h2 className="mt-0.5 text-sm leading-snug font-medium">{stop.name}</h2>
         <p className="mt-0.5 text-xs text-muted-foreground">
           {stop.rating !== null && (
             <span className="tabular mr-2 inline-flex items-center gap-0.5 font-medium text-foreground">

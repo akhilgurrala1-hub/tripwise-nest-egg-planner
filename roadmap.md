@@ -19,6 +19,14 @@
 - [x] P4 Itinerary editing: add, edit, swap, reorder, undo remove
 - [x] Tests + browser checks (two tabs, delayed/cancelled/timed-out AI, mobile, both themes)
 
+## Quality pass (done)
+
+- [x] Accessibility audit (axe-core) clean on every page, both themes, mobile, menus and dialogs
+- [x] AI grounded in real nearby places, weather and holidays; every answer checked before it's shown
+- [x] "Refine this plan": ask the AI for specific changes, keep the rest
+- [x] Plan trip jumps to the field that needs fixing; no impossible checklist steps
+- [x] Security updates: vite 8.1.6, zod 4.6.6, vitest 4.1.12 and 24 transitive fixes
+
 ## Worldwide & free data (done)
 
 - [x] ~50 international places and 7 international cruise routes; suggestions from any start point

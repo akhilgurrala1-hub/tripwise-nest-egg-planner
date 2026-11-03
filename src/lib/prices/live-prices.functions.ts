@@ -33,10 +33,10 @@ export const getLivePrices = createServerFn({ method: "POST" })
   });
 
 /** Which live price sources have keys configured, so the UI never offers a search that can't run. */
-export const getLivePriceStatus = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
-  .handler(async () => ({
-    gas: !!process.env["EIA_API_KEY"],
-    hotels: !!process.env["SERPAPI_API_KEY"],
-    flights: !!process.env["SERPAPI_API_KEY"],
-  }));
+// Public on purpose: it only says which price sources are configured (no lookups, no cost),
+// so signed-out travelers aren't asked to sign in for prices that can't be fetched yet.
+export const getLivePriceStatus = createServerFn({ method: "GET" }).handler(async () => ({
+  gas: !!process.env["EIA_API_KEY"],
+  hotels: !!process.env["SERPAPI_API_KEY"],
+  flights: !!process.env["SERPAPI_API_KEY"],
+}));

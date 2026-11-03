@@ -239,7 +239,7 @@ export function ItemActions({
           <ArrowDown />
         </IconButton>
       </div>
-      <DropdownMenu>
+      <DropdownMenu modal={false}>
         <DropdownMenuTrigger asChild>
           <Button
             variant="ghost"

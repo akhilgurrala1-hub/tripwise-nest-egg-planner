@@ -1,10 +1,14 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { fireEvent, render as rtlRender, screen, waitFor } from "@testing-library/react";
+import type { ReactElement } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const chat = vi.hoisted(() => ({ fn: vi.fn() }));
 const auth = vi.hoisted(() => ({ user: { id: "u1" } as { id: string } | null }));
 
 vi.mock("@/lib/ai-trip-chat.functions", () => ({ tripChat: chat.fn }));
+vi.mock("@/integrations/supabase/client", () => ({ supabase: {} }));
+vi.mock("@/lib/live/location.functions", () => ({ getVisitorLocation: async () => null }));
 vi.mock("@/lib/auth-context", () => ({ useAuth: () => ({ user: auth.user, loading: false }) }));
 vi.mock("@tanstack/react-router", () => ({
   Link: ({ children }: { children: React.ReactNode }) => <a href="/auth">{children}</a>,
@@ -12,6 +16,11 @@ vi.mock("@tanstack/react-router", () => ({
 
 import { TripAssistant } from "@/components/app/plan/TripAssistant";
 import { addDays, todayIso } from "@/lib/dates";
+
+function render(ui: ReactElement) {
+  const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  return rtlRender(<QueryClientProvider client={qc}>{ui}</QueryClientProvider>);
+}
 
 const empty = {
   destination: null,

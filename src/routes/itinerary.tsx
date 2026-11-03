@@ -11,6 +11,7 @@ import {
   Wand2,
   X,
 } from "lucide-react";
+import { useState } from "react";
 import { toast } from "sonner";
 
 import { DemoBadge } from "@/components/app/bits";
@@ -87,7 +88,7 @@ function ItineraryPage() {
                 : "Use real places"}
             </Button>
             {user && (
-              <DropdownMenu>
+              <DropdownMenu modal={false}>
                 <DropdownMenuTrigger asChild>
                   <Button
                     variant="ink"
@@ -126,7 +127,7 @@ function ItineraryPage() {
             /* AI planning spends credits, so it's for signed-in travelers. */
             <Button
               variant="outline"
-              onClick={planner.planWithAi}
+              onClick={() => planner.planWithAi()}
               disabled={planner.busy}
               className="flex-1 sm:flex-none"
             >
@@ -170,6 +171,9 @@ function ItineraryPage() {
       <div className="mx-auto mt-8 grid max-w-6xl grid-cols-1 gap-4 px-4 lg:grid-cols-[minmax(0,1fr)_320px]">
         <div className="min-w-0 space-y-4">
           <PlanSourceBadge source={itin?.source ?? "demo"} />
+          {user && itin && itin.days.length > 0 && (
+            <RefinePlan busy={planner.busy} onRefine={(text) => planner.planWithAi(text)} />
+          )}
 
           {planner.busy && (
             <div
@@ -307,6 +311,64 @@ function DriveStops() {
           </li>
         ))}
       </ol>
+    </section>
+  );
+}
+
+const REFINE_IDEAS = [
+  "Cheaper dinners",
+  "More time outdoors",
+  "Slower mornings",
+  "Kid-friendly picks",
+  "More local food",
+];
+
+/** Ask the AI for specific changes; everything else in the plan stays. */
+function RefinePlan({ busy, onRefine }: { busy: boolean; onRefine: (text: string) => void }) {
+  const [text, setText] = useState("");
+  const submit = (value: string) => {
+    const v = value.trim();
+    if (!v || busy) return;
+    onRefine(v);
+    setText("");
+  };
+  return (
+    <section className="surface-card p-3 print:hidden">
+      <div className="flex items-center gap-2 rounded-lg border border-input bg-card p-1 pl-3 focus-within:border-primary focus-within:ring-3 focus-within:ring-primary/15">
+        <Wand2 className="size-4 shrink-0 text-brand-coral" aria-hidden />
+        <input
+          value={text}
+          onChange={(e) => setText(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") submit(text);
+          }}
+          maxLength={300}
+          placeholder="Refine this plan — e.g. no museums on day 2, cheaper lunches"
+          aria-label="What should change in the plan?"
+          className="h-9 min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
+        />
+        <Button
+          size="sm"
+          variant="ink"
+          disabled={!text.trim() || busy}
+          onClick={() => submit(text)}
+        >
+          Update
+        </Button>
+      </div>
+      <div className="mt-2 flex flex-wrap gap-1.5">
+        {REFINE_IDEAS.map((idea) => (
+          <button
+            key={idea}
+            type="button"
+            disabled={busy}
+            onClick={() => submit(idea)}
+            className="h-8 rounded-lg bg-muted px-2.5 text-xs text-muted-foreground transition-colors hover:bg-accent hover:text-foreground disabled:opacity-50"
+          >
+            {idea}
+          </button>
+        ))}
+      </div>
     </section>
   );
 }

@@ -5,12 +5,14 @@ import { toast } from "sonner";
 import { createAiItinerary } from "@/lib/ai-itinerary.functions";
 import { usePreferences } from "@/lib/account";
 import { INTERESTS, TRAVEL_STYLES, TRIP_TYPES } from "@/lib/demo-data";
-import { addDays, buildRealItinerary, fromAiPlan } from "@/lib/itinerary";
+import { cleanAiPlan, groundedCount, placeLines, planLines } from "@/lib/ai-quality";
+import { inclusiveDays } from "@/lib/dates";
+import { addDays, buildRealItinerary } from "@/lib/itinerary";
 import { destinationQuery } from "@/lib/live/place";
 import { useTripWeather } from "@/lib/live/use-live";
 import { getDestinationPlaces } from "@/lib/places/destination-places.functions";
 import { fetchLandmarks, fetchRestaurants } from "@/lib/live/open-data";
-import { destinationPoint } from "@/lib/live/use-open-data";
+import { destinationPoint, useTripHolidays } from "@/lib/live/use-open-data";
 import type { DestinationPlacesResult, RealPlace } from "@/lib/places/types";
 import { currentTrip, planKey, tripActions, useTrip } from "@/lib/trip-store";
 
@@ -45,6 +47,7 @@ export function usePlanner() {
   const queryClient = useQueryClient();
   const prefs = usePreferences();
   const weather = useTripWeather();
+  const holidays = useTripHolidays();
   const [job, setJob] = useState<PlannerJob>(null);
   const controller = useRef<AbortController | null>(null);
 
@@ -91,11 +94,46 @@ export function usePlanner() {
     );
   };
 
-  const planWithAi = async () => {
+  /** Real places near the destination (free), shared by the open-data plan and AI grounding. */
+  const nearbyPlaces = async (signal: AbortSignal) => {
+    const where = await destinationPoint(
+      queryClient,
+      dest,
+      trip.setup.origin,
+      trip.setup.destinationPoint,
+    );
+    if (!where) return null;
+    const cacheKey = `open:${where.point.lat.toFixed(3)},${where.point.lon.toFixed(3)}`;
+    const cached = openCache.get(cacheKey);
+    if (cached) return cached;
+    const [sights, restaurants] = await Promise.allSettled([
+      fetchLandmarks(where.point, where.near, signal),
+      fetchRestaurants(where.point, where.near, signal),
+    ]);
+    const found = {
+      sights: sights.status === "fulfilled" ? sights.value : [],
+      restaurants: restaurants.status === "fulfilled" ? restaurants.value : [],
+    };
+    if (found.sights.length + found.restaurants.length > 0) openCache.set(cacheKey, found);
+    return found;
+  };
+
+  /**
+   * Ask the AI for a plan (or, with `instructions`, for changes to the current one).
+   * It's grounded in real nearby places, the weather and public holidays, and its
+   * answer is checked and cleaned before it's shown.
+   */
+  const planWithAi = async (instructions = "") => {
     const key = planKey(currentTrip());
     const { ctrl, done } = start("ai", AI_TIMEOUT_MS);
     const days = Math.min(14, shape.days);
     try {
+      // Grounding is free and best-effort: a slow lookup never holds up the plan.
+      const real = await Promise.race([
+        nearbyPlaces(ctrl.signal).catch(() => null),
+        new Promise<null>((r) => setTimeout(() => r(null), 5000)),
+      ]);
+      const realPlaces = real ? [...real.sights, ...real.restaurants] : [];
       const res = await createAiItinerary({
         signal: ctrl.signal,
         data: {
@@ -116,20 +154,46 @@ export function usePlanner() {
             const rain = w.precipChance !== null ? `, ${w.precipChance}% chance of rain` : "";
             return `Day ${i + 1}: ${w.label}, high ${w.highF}°F, low ${w.lowF}°F${rain} (${w.source === "forecast" ? "forecast" : "typical for the date"})`;
           }).filter(Boolean),
+          places: real ? placeLines(real.sights, real.restaurants) : [],
+          notes: holidays.map((h) => {
+            const day = inclusiveDays(trip.setup.startDate, h.date) ?? 0;
+            return `Day ${day} (${h.date}) is ${h.name}, a public holiday: expect closures and crowds.`;
+          }),
+          instructions: instructions.trim().slice(0, 300),
+          current: instructions ? planLines(trip.itinerary).slice(0, 80) : [],
         },
       });
-      if (ctrl.signal.aborted) return failed(ctrl, "", planWithAi);
+      if (ctrl.signal.aborted) return failed(ctrl, "", () => planWithAi(instructions));
       if (!res.ok) {
-        toast.error(res.error, { action: { label: "Try again", onClick: planWithAi } });
+        toast.error(res.error, {
+          action: { label: "Try again", onClick: () => planWithAi(instructions) },
+        });
         return;
       }
+      const plan = cleanAiPlan(res.itinerary, {
+        days,
+        startDate: trip.setup.startDate,
+        realPlaces,
+      });
+      if (plan.days.every((d) => d.items.length === 0)) {
+        toast.error("The AI planner sent back an empty plan. Your current plan is unchanged.", {
+          action: { label: "Try again", onClick: () => planWithAi(instructions) },
+        });
+        return;
+      }
+      const grounded = groundedCount(plan);
       land(
-        () =>
-          tripActions.setItineraryFor(key, fromAiPlan(res.itinerary, trip.setup.startDate, days)),
-        "Plan ready — double-check details before you go",
+        () => tripActions.setItineraryFor(key, plan),
+        instructions
+          ? "Plan updated — double-check details before you go"
+          : grounded > 0
+            ? `Plan ready — ${grounded} stop${grounded === 1 ? "" : "s"} matched real places on the map`
+            : "Plan ready — double-check details before you go",
       );
     } catch {
-      failed(ctrl, "Couldn't reach the AI planner. Your current plan is unchanged.", planWithAi);
+      failed(ctrl, "Couldn't reach the AI planner. Your current plan is unchanged.", () =>
+        planWithAi(instructions),
+      );
     } finally {
       done();
     }
@@ -188,31 +252,13 @@ export function usePlanner() {
     const key = planKey(currentTrip());
     const { ctrl, done } = start("open", PLACES_TIMEOUT_MS);
     try {
-      const where = await destinationPoint(
-        queryClient,
-        dest,
-        trip.setup.origin,
-        trip.setup.destinationPoint,
-      );
-      if (!where) {
+      const found = await nearbyPlaces(ctrl.signal);
+      if (ctrl.signal.aborted) return failed(ctrl, "", planWithOpenData);
+      if (!found) {
         toast.error("We couldn't find that destination on the map. Check its spelling.");
         return;
       }
-      const cacheKey = `open:${where.point.lat.toFixed(3)},${where.point.lon.toFixed(3)}`;
-      let places = openCache.get(cacheKey);
-      if (!places) {
-        const [sights, restaurants] = await Promise.allSettled([
-          fetchLandmarks(where.point, where.near, ctrl.signal),
-          fetchRestaurants(where.point, where.near, ctrl.signal),
-        ]);
-        places = {
-          sights: sights.status === "fulfilled" ? sights.value : [],
-          restaurants: restaurants.status === "fulfilled" ? restaurants.value : [],
-        };
-        if (places.sights.length + places.restaurants.length > 0) openCache.set(cacheKey, places);
-      }
-      if (ctrl.signal.aborted) return failed(ctrl, "", planWithOpenData);
-      if (places.sights.length + places.restaurants.length === 0) {
+      if (found.sights.length + found.restaurants.length === 0) {
         toast.error(
           "No landmarks or restaurants came back for this place. Try again in a moment.",
           {
@@ -221,7 +267,6 @@ export function usePlanner() {
         );
         return;
       }
-      const found = places;
       land(
         () =>
           tripActions.setItineraryFor(
