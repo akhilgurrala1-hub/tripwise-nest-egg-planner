@@ -12,6 +12,14 @@ import {
   type LivePricesResult,
 } from "./live";
 
+import {
+  cachedLookup,
+  keyPart,
+  priceCache,
+  PRICE_TTL,
+  type Cached,
+  type PriceCache,
+} from "./cache.server";
 import { priceKey } from "./keys.server";
 
 const SERPAPI = "https://serpapi.com/search.json";
@@ -70,8 +78,12 @@ function serpUrl(params: Record<string, string | number>, key: string) {
   return u.toString();
 }
 
-async function gasQuote(place: string, key: string): Promise<GasQuote> {
+function gasQuote(place: string, key: string, cache: PriceCache): Promise<Cached<GasQuote>> {
   const area = gasAreaFor(place);
+  return cachedLookup(cache, `gas|${area.code}`, PRICE_TTL.gas, () => loadGas(area, key));
+}
+
+async function loadGas(area: ReturnType<typeof gasAreaFor>, key: string): Promise<GasQuote> {
   const u = new URL(EIA);
   u.searchParams.set("api_key", key);
   u.searchParams.set("frequency", "weekly");
@@ -102,13 +114,48 @@ interface SerpHotel {
   total_rate?: { extracted_lowest?: number };
 }
 
-async function hotelQuote(req: LivePricesRequest, key: string): Promise<HotelQuote> {
+async function hotelQuote(
+  req: LivePricesRequest,
+  key: string,
+  cache: PriceCache,
+): Promise<Cached<HotelQuote>> {
+  const adults = Math.max(1, Math.min(6, Math.ceil(req.travelers / Math.max(1, req.rooms))));
+  // The listings don't depend on travel style, so every style shares one search.
+  const listed = await cachedLookup(
+    cache,
+    ["hotels", keyPart(req.destination), req.startDate, req.endDate, adults].join("|"),
+    PRICE_TTL.hotels,
+    () => hotelOptions(req, adults, key),
+  );
+  const options = listed.value;
+  const pick = pickNightly(options, req.style);
+  const searchUrl = `https://www.google.com/travel/hotels/${encodeURIComponent(req.destination)}?q=${encodeURIComponent(
+    `hotels in ${req.destination}`,
+  )}&dates=${req.startDate},${req.endDate}`;
+  return {
+    ...listed,
+    value: {
+      checkIn: req.startDate,
+      checkOut: req.endDate,
+      nightly: pick.nightly,
+      pickLabel: pick.label,
+      options,
+      searchUrl,
+    },
+  };
+}
+
+async function hotelOptions(
+  req: LivePricesRequest,
+  adults: number,
+  key: string,
+): Promise<HotelOption[]> {
   const params = {
     engine: "google_hotels",
     q: req.destination,
     check_in_date: req.startDate,
     check_out_date: req.endDate,
-    adults: Math.max(1, Math.min(6, Math.ceil(req.travelers / Math.max(1, req.rooms)))),
+    adults,
     currency: "USD",
     gl: "us",
     hl: "en",
@@ -132,21 +179,20 @@ async function hotelQuote(req: LivePricesRequest, key: string): Promise<HotelQuo
     .filter((o) => o.name && o.nightly > 0)
     .slice(0, 12);
   if (options.length === 0) throw new PriceError("Hotel prices: no rooms listed for these dates.");
-  const pick = pickNightly(options, req.style);
-  const searchUrl = `https://www.google.com/travel/hotels/${encodeURIComponent(req.destination)}?q=${encodeURIComponent(
-    `hotels in ${req.destination}`,
-  )}&dates=${req.startDate},${req.endDate}`;
-  return {
-    checkIn: req.startDate,
-    checkOut: req.endDate,
-    nightly: pick.nightly,
-    pickLabel: pick.label,
-    options,
-    searchUrl,
-  };
+  return options;
 }
 
-async function airportFor(place: string, key: string): Promise<string | null> {
+/** The airport for a place, remembered for a week (only when one was found). */
+async function airportFor(place: string, key: string, cache: PriceCache): Promise<string | null> {
+  const cacheKey = `airport|${keyPart(place)}`;
+  const known = await cache.get<string>(cacheKey).catch(() => null);
+  if (known) return known.value;
+  const code = await lookupAirport(place, key);
+  if (code) await cache.set(cacheKey, code, PRICE_TTL.airport).catch(() => undefined);
+  return code;
+}
+
+async function lookupAirport(place: string, key: string): Promise<string | null> {
   const body = await getJson(
     serpUrl({ engine: "google_flights_autocomplete", q: place, gl: "us", hl: "en" }, key),
     "Airport lookup",
@@ -170,10 +216,14 @@ interface SerpFlightGroup {
   }[];
 }
 
-async function flightQuote(req: LivePricesRequest, key: string): Promise<FlightQuote> {
+async function flightQuote(
+  req: LivePricesRequest,
+  key: string,
+  cache: PriceCache,
+): Promise<Cached<FlightQuote>> {
   const [from, to] = await Promise.all([
-    req.originAirport || airportFor(req.origin, key),
-    req.destinationAirport || airportFor(req.destination, key),
+    req.originAirport || airportFor(req.origin, key, cache),
+    req.destinationAirport || airportFor(req.destination, key, cache),
   ]);
   if (!from || !to)
     throw new PriceError(
@@ -181,6 +231,20 @@ async function flightQuote(req: LivePricesRequest, key: string): Promise<FlightQ
     );
   if (from === to)
     throw new PriceError("Flight prices: your start and destination use the same airport.");
+  return cachedLookup(
+    cache,
+    ["flights", from, to, req.startDate, req.endDate, req.travelers].join("|"),
+    PRICE_TTL.flights,
+    () => loadFlights(req, from, to, key),
+  );
+}
+
+async function loadFlights(
+  req: LivePricesRequest,
+  from: string,
+  to: string,
+  key: string,
+): Promise<FlightQuote> {
   const body = await getJson(
     serpUrl(
       {
@@ -238,7 +302,10 @@ async function flightQuote(req: LivePricesRequest, key: string): Promise<FlightQ
 const reason = (r: PromiseRejectedResult) =>
   r.reason instanceof PriceError ? r.reason.message : "A price service didn't respond.";
 
-export async function fetchLivePrices(req: LivePricesRequest): Promise<LivePricesResult> {
+export async function fetchLivePrices(
+  req: LivePricesRequest,
+  cache: PriceCache = priceCache(),
+): Promise<LivePricesResult> {
   const serp = priceKey("serpapi")?.key;
   const eia = priceKey("eia")?.key;
   if (!serp && !eia) return { ok: false, error: "Live prices aren't connected yet." };
@@ -246,25 +313,32 @@ export async function fetchLivePrices(req: LivePricesRequest): Promise<LivePrice
   const missing = (label: string) => Promise.reject(new PriceError(`${label}: not connected.`));
 
   const [gas, hotels, flights] = await Promise.allSettled([
-    eia ? gasQuote(req.destination, eia) : missing("Gas prices"),
+    eia ? gasQuote(req.destination, eia, cache) : missing("Gas prices"),
     req.endDate <= req.startDate || !req.includeHotels
       ? Promise.resolve(null)
       : serp
-        ? hotelQuote(req, serp)
+        ? hotelQuote(req, serp, cache)
         : missing("Hotel prices"),
     req.includeFlights
       ? serp
-        ? flightQuote(req, serp)
+        ? flightQuote(req, serp, cache)
         : missing("Flight prices")
       : Promise.resolve(null),
   ]);
   for (const r of [gas, hotels, flights]) if (r.status === "rejected") notes.push(reason(r));
+  const got = <T>(r: PromiseSettledResult<Cached<T> | null>) =>
+    r.status === "fulfilled" ? r.value : null;
+  const parts = [got(gas), got(hotels), got(flights)].filter((p) => p !== null);
+  // The oldest part decides how fresh the prices are, so a reused answer never looks new.
+  const fetchedAt = parts.length ? Math.min(...parts.map((p) => p.savedAt)) : Date.now();
   const prices = {
-    fetchedAt: new Date().toISOString(),
-    gas: gas.status === "fulfilled" ? gas.value : null,
-    hotels: hotels.status === "fulfilled" ? hotels.value : null,
-    flights: flights.status === "fulfilled" ? flights.value : null,
+    fetchedAt: new Date(fetchedAt).toISOString(),
+    gas: got(gas)?.value ?? null,
+    hotels: got(hotels)?.value ?? null,
+    flights: got(flights)?.value ?? null,
     notes,
+    // Hotel or flight answers reused from an earlier search (they cost no searches).
+    reused: [got(hotels), got(flights)].some((p) => p?.hit),
   };
   if (!prices.gas && !prices.hotels && !prices.flights)
     return { ok: false, error: notes[0] ?? "Live prices are unavailable right now." };

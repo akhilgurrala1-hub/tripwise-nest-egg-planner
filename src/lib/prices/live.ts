@@ -61,6 +61,8 @@ export interface LivePrices {
   flights: FlightQuote | null;
   /** Why a part couldn't be loaded, in plain language */
   notes: string[];
+  /** Hotel or flight prices came from a recent identical search (no search spent) */
+  reused?: boolean;
 }
 
 export type LivePricesResult = { ok: true; prices: LivePrices } | { ok: false; error: string };
@@ -209,4 +211,14 @@ export function gasAreaFor(text: string): { code: string; label: string } {
     if (region) return { code: region[0], label: region[1] };
   }
   return { code: "NUS", label: "U.S. average" };
+}
+
+/** Same search a little while ago: say how old the prices are. */
+export function reusedNote(fetchedAt: string, now = Date.now()): string {
+  const minutes = Math.max(1, Math.round((now - new Date(fetchedAt).getTime()) / 60_000));
+  const age =
+    minutes < 60
+      ? `${minutes} minute${minutes === 1 ? "" : "s"}`
+      : `${Math.round(minutes / 60)} hour${Math.round(minutes / 60) === 1 ? "" : "s"}`;
+  return `Same prices as a search ${age} ago. Prices are checked again after a few hours.`;
 }

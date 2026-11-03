@@ -20,6 +20,7 @@ import { PlanCosts } from "@/components/app/itinerary/PlanCosts";
 import { usePlanner } from "@/components/app/itinerary/use-planner";
 import { LogoMark } from "@/components/app/Logo";
 import { stagger } from "@/components/app/motion";
+import { ShareTripButton } from "@/components/app/ShareTrip";
 import { PageHeader } from "@/components/app/TripHeader";
 import { Button } from "@/components/ui/button";
 import {
@@ -155,6 +156,7 @@ function ItineraryPage() {
           >
             <RotateCcw />
           </Button>
+          {!trip.isSample && <ShareTripButton compact />}
           <Button
             variant="ghost"
             size="icon"
