@@ -29,6 +29,7 @@ import { PageHeader } from "@/components/app/TripHeader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Slider } from "@/components/ui/slider";
+import { safeExternalUrl } from "@/lib/booking";
 import { formatMoney, roundMoney, stopCost } from "@/lib/budget";
 import { TRIP_TYPES, isDrivingMode, type Interest } from "@/lib/demo-data";
 import {
@@ -529,7 +530,7 @@ function StopCard({
         )}
         {stop.mapsUrl && !stop.isDemo && (
           <a
-            href={stop.mapsUrl}
+            href={safeExternalUrl(stop.mapsUrl ?? "")}
             target="_blank"
             rel="noreferrer"
             className="mt-2 inline-flex items-center gap-1 text-xs font-medium text-primary underline-offset-2 hover:underline"

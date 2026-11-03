@@ -34,7 +34,10 @@ const inputSchema = z.object({
 export const createAiItinerary = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: unknown) => inputSchema.parse(data))
-  .handler(async ({ data }) => {
+  .handler(async ({ data, context }) => {
+    const { takeRate } = await import("./rate-limit.server");
+    const limited = takeRate(context.userId, "aiPlan");
+    if (limited) return { ok: false as const, status: 429, error: limited };
     const [{ generateAiItinerary }, { getRequest }] = await Promise.all([
       import("./ai/itinerary-ai.server"),
       import("@tanstack/react-start/server"),

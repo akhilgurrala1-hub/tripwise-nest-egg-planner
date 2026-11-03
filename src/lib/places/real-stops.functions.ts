@@ -25,7 +25,10 @@ const inputSchema = z.object({
 export const getRealStops = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: unknown) => inputSchema.parse(data))
-  .handler(async ({ data }) => {
+  .handler(async ({ data, context }) => {
+    const { takeRate } = await import("../rate-limit.server");
+    const limited = takeRate(context.userId, "stops");
+    if (limited) return { ok: false as const, error: limited };
     const { findRealStops } = await import("./google-stops.server");
     return findRealStops(data);
   });

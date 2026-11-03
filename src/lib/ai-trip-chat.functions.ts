@@ -60,7 +60,10 @@ const inputSchema = z.object({
 export const tripChat = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: unknown) => inputSchema.parse(data))
-  .handler(async ({ data }) => {
+  .handler(async ({ data, context }) => {
+    const { takeRate } = await import("./rate-limit.server");
+    const limited = takeRate(context.userId, "aiChat");
+    if (limited) return { ok: false as const, status: 429, error: limited };
     const [{ runTripChat }, { getRequest }] = await Promise.all([
       import("./ai/trip-chat.server"),
       import("@tanstack/react-start/server"),

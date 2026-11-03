@@ -1,5 +1,6 @@
 import { CalendarHeart, ExternalLink, Footprints, ShieldCheck } from "lucide-react";
 
+import { safeExternalUrl } from "@/lib/booking";
 import { formatCalendarDate } from "@/lib/dates";
 import type { DemoDestination } from "@/lib/demo-data";
 import { destinationQuery } from "@/lib/live/place";
@@ -180,7 +181,7 @@ function TravelerTips({
         );
       })}
       <a
-        href={url}
+        href={safeExternalUrl(url)}
         target="_blank"
         rel="noopener noreferrer"
         title="Wikivoyage travel guide"
