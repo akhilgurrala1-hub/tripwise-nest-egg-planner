@@ -141,7 +141,7 @@ export function TripPreview({
               ? "Add a budget to compare"
               : left >= 0
                 ? `${formatMoney(left)} to spare of ${formatMoney(spendable)} · ${Math.round(pct)}% planned`
-                : `${formatMoney(-left)} over your ${formatMoney(spendable)} — try Savvy or fewer nights`}
+                : `${formatMoney(-left)} over your ${formatMoney(spendable)}. Try Savvy or fewer nights`}
           </p>
           <ul className="mt-3 space-y-1.5 text-xs">
             {top.map(({ c, v }) => (
@@ -155,9 +155,8 @@ export function TripPreview({
               </li>
             ))}
           </ul>
-          <p className="mt-3 text-[11px] text-muted-foreground">Demo estimates · weather is live</p>
         </div>
-        <Button type="submit" form={formId} variant="hero" size="lg" className="mt-5 w-full">
+        <Button type="submit" form={formId} variant="go" size="lg" className="mt-5 w-full">
           Plan trip <ArrowRight />
         </Button>
       </div>

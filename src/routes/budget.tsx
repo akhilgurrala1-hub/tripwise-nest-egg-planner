@@ -8,7 +8,6 @@ import {
   CATEGORY_ICONS,
   ApproxMoney,
   NumberField,
-  PriceSourceBadge,
 } from "@/components/app/bits";
 import { LivePricesPanel } from "@/components/app/LivePricesPanel";
 import { AnimatedMoney, stagger } from "@/components/app/motion";
@@ -41,13 +40,13 @@ import { cn } from "@/lib/utils";
 export const Route = createFileRoute("/budget")({
   head: () => ({
     meta: [
-      { title: "Budget calculator — Waypoint" },
+      { title: "Budget calculator | Waypoint" },
       {
         name: "description",
         content:
           "Edit hotels, gas, tolls, parking, transportation, meals, snacks, water, taxes and activities with live budget math.",
       },
-      { property: "og:title", content: "Budget calculator — Waypoint" },
+      { property: "og:title", content: "Budget calculator | Waypoint" },
       {
         property: "og:description",
         content: "A smart, editable trip budget with a protected emergency fund.",
@@ -66,9 +65,7 @@ function BudgetPage() {
 
   return (
     <div>
-      <PageHeader eyebrow="Spending plan" title="Budget">
-        <PriceSourceBadge />
-      </PageHeader>
+      <PageHeader eyebrow="Spending plan" title="Budget" />
 
       <div className="mx-auto mt-8 grid max-w-6xl grid-cols-1 gap-4 px-4 lg:grid-cols-[minmax(0,1fr)_340px]">
         <div className="min-w-0 space-y-4 lg:order-1">
@@ -90,7 +87,7 @@ function BudgetPage() {
                 />
               </div>
               <dl className="grid grid-cols-2 gap-px overflow-hidden rounded-lg border border-border bg-border text-sm sm:grid-cols-4">
-                <Stat label="Reserve" value={totals.emergencyFund} />
+                <Stat label="Emergency fund" value={totals.emergencyFund} />
                 <Stat label="To spend" value={totals.spendable} />
                 <Stat label="Planned" value={totals.planned} />
                 <Stat
@@ -136,7 +133,7 @@ function BudgetPage() {
               ))}
             </Accordion>
             <p className="mt-2.5 text-xs text-muted-foreground">
-              Unmarked amounts are estimates from demo prices for {shape.days} day
+              Unmarked amounts are estimates for {shape.days} day
               {shape.days > 1 ? "s" : ""}, {shape.nights} night
               {shape.nights === 1 ? "" : "s"} and {shape.travelers} traveler
               {shape.travelers > 1 ? "s" : ""}. Open a category to tune the inputs or type your own
@@ -150,15 +147,14 @@ function BudgetPage() {
           <section className="surface-card animate-rise p-5" style={stagger(1)}>
             <div className="flex items-center justify-between">
               <h2 className="flex items-center gap-2 text-[15px] font-semibold">
-                <ShieldCheck className="size-4" strokeWidth={1.8} /> Emergency reserve
+                <ShieldCheck className="size-4" strokeWidth={1.8} /> Emergency fund
               </h2>
               <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
                 <Lock className="size-3" /> Protected
               </span>
             </div>
             <p className="mt-2 text-[13px] leading-relaxed text-muted-foreground">
-              A little extra set aside for peace of mind. It never counts as spending money — it's
-              there for flat tires, urgent care or a surprise night's stay.
+              For flat tires, urgent care or a surprise night's stay.
             </p>
             <p className="mt-5 text-[32px] leading-none font-semibold tracking-tight">
               <AnimatedMoney value={totals.emergencyFund} />
@@ -372,7 +368,7 @@ function CategoryRow({ cat }: { cat: Category }) {
     case "accommodations":
       formula =
         trip.setup.tripType === "cruise" && i.nightlyRate === 0
-          ? "Your cabin is in the cruise fare — add a pre-cruise hotel night here if you need one"
+          ? "Your cabin is in the cruise fare. Add a pre-cruise hotel night here if you need one"
           : `${formatMoney(i.nightlyRate)} × ${i.rooms} room${i.rooms === 1 ? "" : "s"} × ${shape.nights} nights`;
       fields = (
         <>
@@ -581,10 +577,8 @@ function CutPlan() {
       <div className="flex gap-2.5 text-sm text-destructive">
         <AlertTriangle className="mt-0.5 size-4 shrink-0" />
         <p>
-          <strong>
-            Your plan is {formatMoney(cuts.gap, { cents: true })} more than your spending money.
-          </strong>{" "}
-          No worries — your reserve stays untouched. Here's a smarter way to spend less:
+          <strong>Your plan is {formatMoney(cuts.gap, { cents: true })} over budget.</strong> Here
+          are ways to close the gap:
         </p>
       </div>
       <ul className="mt-2">

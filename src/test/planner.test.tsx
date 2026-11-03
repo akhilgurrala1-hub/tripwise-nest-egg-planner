@@ -106,7 +106,7 @@ describe("AI planner requests", () => {
     expect(currentTrip().itinerary?.source).toBe("ai");
     expect(result.current.job).toBeNull();
     // The AI was given real nearby places, and its stop that names one links to the map.
-    expect(ai.fn.mock.calls[0]![0].data.places).toEqual(["AI Museum — Museum"]);
+    expect(ai.fn.mock.calls[0]![0].data.places).toEqual(["AI Museum (Museum)"]);
     const stop = currentTrip().itinerary!.days[0]!.items[0]!;
     expect(stop.mapsUrl).toContain("AI%20Museum");
     expect(toasts.success).toHaveBeenCalledWith(

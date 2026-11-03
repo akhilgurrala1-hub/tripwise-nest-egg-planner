@@ -39,13 +39,13 @@ import { cn } from "@/lib/utils";
 export const Route = createFileRoute("/book")({
   head: () => ({
     meta: [
-      { title: "Book your trip — Waypoint" },
+      { title: "Book your trip | Waypoint" },
       {
         name: "description",
         content:
           "Everything your trip needs booked, in order, with searches pre-filled for your dates and group.",
       },
-      { property: "og:title", content: "Book your trip — Waypoint" },
+      { property: "og:title", content: "Book your trip | Waypoint" },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],
@@ -78,7 +78,7 @@ function BookPage() {
     <div>
       <PageHeader eyebrow="Book" title="Book your trip">
         <p className="max-w-xs text-xs text-muted-foreground">
-          You book and pay on each provider's own site — Waypoint never takes payment. Searches open
+          You book and pay on each provider's own site. Waypoint never takes payment. Searches open
           pre-filled with your dates and group.
         </p>
       </PageHeader>
@@ -360,7 +360,7 @@ function BookingCard({
 
         <div className="hidden shrink-0 text-right sm:block">
           <p className="tabular text-sm font-semibold">
-            {item.budget > 0 ? formatMoney(item.budget) : "—"}
+            {item.budget > 0 ? formatMoney(item.budget) : "Not set"}
           </p>
           <p className="text-[11px] text-muted-foreground">
             {item.budget > 0 ? "budgeted" : "not in budget"}

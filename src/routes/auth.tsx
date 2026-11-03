@@ -16,12 +16,12 @@ export const Route = createFileRoute("/auth")({
   }),
   head: () => ({
     meta: [
-      { title: "Sign in — Waypoint" },
+      { title: "Sign in | Waypoint" },
       {
         name: "description",
         content: "Sign in or create a Waypoint account to see real places along your route.",
       },
-      { property: "og:title", content: "Sign in — Waypoint" },
+      { property: "og:title", content: "Sign in | Waypoint" },
       {
         property: "og:description",
         content: "Create a free Waypoint account to unlock real routes and places.",
@@ -65,7 +65,7 @@ function AuthPage() {
         if (error) throw error;
         if (data.session) {
           // Email confirmation is off for this project, so the account is ready right away.
-          toast.success("Account created — you're signed in", {
+          toast.success("Account created. You're signed in", {
             description: "No confirmation email is needed.",
           });
           goNext();
@@ -103,7 +103,7 @@ function AuthPage() {
             <h1 className="mt-2 text-2xl font-semibold tracking-tight">Check your email</h1>
             <p className="mt-1 text-sm text-muted-foreground">
               {sent === "confirm"
-                ? `We sent a confirmation link to ${email}. Open it to finish creating your account. It can take a few minutes — check your spam folder too.`
+                ? `We sent a confirmation link to ${email}. Open it to finish creating your account. It can take a few minutes, so check your spam folder too.`
                 : `If an account exists for ${email}, a password reset link is on its way.`}
             </p>
             <Button

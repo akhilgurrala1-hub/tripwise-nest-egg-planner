@@ -1,7 +1,17 @@
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowRight, Check, Lock, Undo2 } from "lucide-react";
+import {
+  ArrowRight,
+  Check,
+  ChevronDown,
+  Lock,
+  PieChart,
+  PiggyBank,
+  Undo2,
+  type LucideIcon,
+} from "lucide-react";
+import { useState } from "react";
 import { toast } from "sonner";
 
 import { ApproxMoney, CATEGORY_COLOR_VAR, PriceSourceBadge } from "@/components/app/bits";
@@ -22,13 +32,13 @@ import { cn } from "@/lib/utils";
 export const Route = createFileRoute("/dashboard")({
   head: () => ({
     meta: [
-      { title: "Trip overview — Waypoint" },
+      { title: "Trip overview | Waypoint" },
       {
         name: "description",
         content:
           "See total planned expenses, remaining money, potential savings and your protected emergency fund.",
       },
-      { property: "og:title", content: "Trip overview — Waypoint" },
+      { property: "og:title", content: "Trip overview | Waypoint" },
       {
         property: "og:description",
         content: "Your trip's planned spend, money left and savings opportunities at a glance.",
@@ -40,8 +50,23 @@ export const Route = createFileRoute("/dashboard")({
   component: Dashboard,
 });
 
+const SAVINGS_SHOWN = 5;
+
+/** A small colored square with an icon, for card titles. */
+function IconTile({ icon: Icon, color }: { icon: LucideIcon; color: string }) {
+  return (
+    <span
+      className="grid size-7 shrink-0 place-items-center rounded-md"
+      style={{ color, background: `color-mix(in oklab, ${color} 14%, transparent)` }}
+    >
+      <Icon className="size-4" />
+    </span>
+  );
+}
+
 function Dashboard() {
   const { trip, dest, totals, savings, applied, potentialSavings, shape } = useTrip();
+  const [showAllSavings, setShowAllSavings] = useState(false);
   const style = TRAVEL_STYLES.find((s) => s.id === trip.setup.style);
 
   const breakdown = CATEGORIES.map((c) => ({ cat: c, value: totals.categories[c] }))
@@ -53,7 +78,11 @@ function Dashboard() {
 
   return (
     <div>
-      <PageHeader eyebrow={`Overview · ${style?.label ?? ""} style`} title="At a glance" />
+      <PageHeader
+        eyebrow={`Overview · ${style?.label ?? ""} style`}
+        title="At a glance"
+        sampleBanner="card"
+      />
 
       <div className="mx-auto mt-8 max-w-6xl space-y-4 px-4">
         {/* Balance */}
@@ -81,7 +110,7 @@ function Dashboard() {
                 {formatMoney(totals.planned)} planned of {formatMoney(totals.spendable)}
                 <span className="px-1.5 text-border">/</span>
                 <Lock className="mr-1 inline size-3 -translate-y-px" />
-                {formatMoney(totals.emergencyFund)} reserve, untouched
+                {formatMoney(totals.emergencyFund)} emergency fund
               </p>
             </div>
             <dl className="grid grid-cols-2 gap-x-8 gap-y-3 text-sm sm:text-right">
@@ -150,7 +179,9 @@ function Dashboard() {
           {/* Breakdown */}
           <section className="surface-card animate-rise p-5" style={stagger(2)}>
             <div className="flex items-center justify-between gap-3">
-              <h2 className="text-[15px] font-semibold">Where it goes</h2>
+              <h2 className="flex items-center gap-2 text-[15px] font-semibold">
+                <IconTile icon={PieChart} color="var(--primary)" /> Where it goes
+              </h2>
               <PriceSourceBadge />
             </div>
             <ul className="mt-4 divide-y divide-border">
@@ -179,12 +210,14 @@ function Dashboard() {
 
           {/* Savings */}
           <section className="surface-card animate-rise p-5" style={stagger(3)}>
-            <h2 className="text-[15px] font-semibold">Ways to spend less</h2>
+            <h2 className="flex items-center gap-2 text-[15px] font-semibold">
+              <IconTile icon={PiggyBank} color="var(--go)" /> Ways to spend less
+            </h2>
             <p className="mt-0.5 text-[13px] text-muted-foreground">
               Applies to your budget instantly. Undo anytime.
             </p>
             <ul className="mt-3 divide-y divide-border">
-              {savings.map((s) => (
+              {(showAllSavings ? savings : savings.slice(0, SAVINGS_SHOWN)).map((s) => (
                 <li key={s.id} className="flex items-center gap-3 py-3">
                   <div className="min-w-0 flex-1">
                     <p className="text-sm font-medium">{s.title}</p>
@@ -214,6 +247,16 @@ function Dashboard() {
                 </li>
               )}
             </ul>
+            {!showAllSavings && savings.length > SAVINGS_SHOWN && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="mt-1 w-full text-primary"
+                onClick={() => setShowAllSavings(true)}
+              >
+                Show {savings.length - SAVINGS_SHOWN} more <ChevronDown />
+              </Button>
+            )}
             {applied.length > 0 && (
               <div className="mt-3 flex flex-wrap items-center gap-1.5 border-t border-border pt-3">
                 <span className="mr-1 text-xs text-muted-foreground">Applied</span>
@@ -313,7 +356,7 @@ function NextSteps() {
           </p>
         </div>
         {next && (
-          <Button asChild variant="hero" size="sm">
+          <Button asChild variant="go" size="sm">
             {link(
               next.to,
               <>

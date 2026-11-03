@@ -152,7 +152,7 @@ describe("AI itinerary answers are checked before they're shown", () => {
         [place("Louvre")],
         [{ ...place("Chez Paul", "French restaurant"), kind: "restaurant" }],
       ),
-    ).toEqual(["Louvre — Museum", "Chez Paul — French restaurant"]);
+    ).toEqual(["Louvre (Museum)", "Chez Paul (French restaurant)"]);
     const plan = cleanAiPlan(
       {
         days: [

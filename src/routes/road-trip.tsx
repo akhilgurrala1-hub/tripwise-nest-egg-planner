@@ -22,10 +22,9 @@ import {
 import { useCallback, useState } from "react";
 import { toast } from "sonner";
 
-import { DemoBadge, InterestChips, NumberField } from "@/components/app/bits";
+import { InterestChips, NumberField, SourceNote } from "@/components/app/bits";
 import { Segmented } from "@/components/app/motion";
 import { RealRouteMap } from "@/components/app/RealRouteMap";
-import { Badge } from "@/components/ui/badge";
 import { PageHeader } from "@/components/app/TripHeader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -51,13 +50,13 @@ import { cn } from "@/lib/utils";
 export const Route = createFileRoute("/road-trip")({
   head: () => ({
     meta: [
-      { title: "Road-trip discovery — Waypoint" },
+      { title: "Road-trip discovery | Waypoint" },
       {
         name: "description",
         content:
           "Find scenic viewpoints, food, parks and free stops along your route, with cost, detour time and budget impact.",
       },
-      { property: "og:title", content: "Road-trip discovery — Waypoint" },
+      { property: "og:title", content: "Road-trip discovery | Waypoint" },
       {
         property: "og:description",
         content: "Pick stops along your drive and watch your trip budget update instantly.",
@@ -180,11 +179,9 @@ function RoadTripPage() {
     <div>
       <PageHeader eyebrow="Road trip" title="Find the stops worth the detour">
         {realMode ? (
-          <Badge variant="success" className="px-3 py-1">
-            Real places & drive times · prices are estimates
-          </Badge>
+          <SourceNote label="Real places and drive times. Prices are estimates." />
         ) : (
-          <DemoBadge label="Demo stops · sample times & prices" />
+          <SourceNote label="Example stops. Sign in for real places on your route." />
         )}
       </PageHeader>
 
@@ -342,8 +339,8 @@ function RoadTripPage() {
                     : ""}
                   .{" "}
                   {view === "demo"
-                    ? "Demonstration mode: stop types, times and prices are samples, not real businesses."
-                    : "Places and drive times come from Google Maps. Costs are estimates — check before you go."}
+                    ? "These are example stops, not real businesses. Sign in to see real places along your route."
+                    : "Places and drive times come from Google Maps. Costs are estimates, so check before you go."}
                 </p>
                 {visible.length === 0 ? (
                   <StateCard
@@ -604,7 +601,7 @@ function RouteMap({
     <section className="surface-card p-5">
       <div className="flex items-center justify-between">
         <h2 className="text-[15px] font-semibold">Route sketch</h2>
-        <DemoBadge label="Schematic" />
+        <SourceNote label="Not to scale" />
       </div>
       <div className="relative mt-4 ml-3 h-80">
         <span
@@ -656,8 +653,7 @@ function RouteMap({
         </div>
       </div>
       <p className="mt-3 text-[11px] text-muted-foreground">
-        Not a map — a simple sketch of where sample stops fall along the drive. Sign in for a live
-        map.
+        Not a map, just a sketch of where sample stops fall along the drive. Sign in for a live map.
       </p>
     </section>
   );

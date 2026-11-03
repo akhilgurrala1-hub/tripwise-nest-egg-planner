@@ -95,9 +95,9 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { property: "og:image", content: `${SITE_URL}/og-image.png` },
       { property: "og:image:width", content: "1200" },
       { property: "og:image:height", content: "630" },
-      { property: "og:image:alt", content: "Waypoint — Plan a trip, to the dollar." },
+      { property: "og:image:alt", content: "Waypoint: plan a trip, to the dollar." },
       { name: "twitter:image", content: `${SITE_URL}/og-image.png` },
-      { title: "Waypoint — Trip planning, to the dollar" },
+      { title: "Waypoint | Trip planning, to the dollar" },
       {
         name: "description",
         content:

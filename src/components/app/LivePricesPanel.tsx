@@ -123,19 +123,19 @@ export function LivePricesPanel({ className }: { className?: string }) {
       {connected && !anyConnected && (
         <p className="mt-3 rounded-lg bg-muted px-3 py-2 text-xs leading-snug text-muted-foreground">
           Live hotel, flight and gas prices need a price-data connection that isn't set up for this
-          app yet, so these amounts stay demo estimates. Weather and places are already live.
+          app yet, so these amounts stay estimates.
         </p>
       )}
       {user && anyConnected && notConnected.length > 0 && (
         <p className="mt-3 text-xs text-muted-foreground">
-          Not connected yet: {notConnected.join(", ")} — those amounts stay demo estimates.
+          Not connected yet: {notConnected.join(", ")}. Those amounts stay estimates.
         </p>
       )}
       {live && (stale || tripChanged) && (
         <p className="mt-3 rounded-lg border border-border px-3 py-2 text-xs">
           {tripChanged
-            ? "Your dates changed since these prices were checked — refresh to price the new dates."
-            : `These prices were checked ${Math.round(ageHours / 24)} day${Math.round(ageHours / 24) === 1 ? "" : "s"} ago — refresh for today's rates.`}
+            ? "Your dates changed since these prices were checked. Refresh to price the new dates."
+            : `These prices were checked ${Math.round(ageHours / 24)} day${Math.round(ageHours / 24) === 1 ? "" : "s"} ago. Refresh for today's rates.`}
         </p>
       )}
 
@@ -220,9 +220,9 @@ export function LivePricesPanel({ className }: { className?: string }) {
             confirmed only when you book.
           </p>
         </div>
-      ) : (
+      ) : connected && !anyConnected ? null : (
         <p className="mt-3 text-xs text-muted-foreground">
-          Until you check, gas, hotel and fare amounts are demo estimates.
+          Until you check, gas, hotel and fare amounts are estimates.
         </p>
       )}
     </section>

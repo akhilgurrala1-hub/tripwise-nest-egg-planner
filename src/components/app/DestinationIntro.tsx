@@ -1,11 +1,14 @@
-import { CalendarHeart, ExternalLink } from "lucide-react";
+import { CalendarHeart } from "lucide-react";
 
 import { formatCalendarDate } from "@/lib/dates";
 import type { DemoDestination } from "@/lib/demo-data";
 import { useDestinationSummary, useTripHolidays } from "@/lib/live/use-open-data";
 import { cn } from "@/lib/utils";
 
-/** A destination's photo and two-line introduction from Wikipedia (free, credited). */
+/**
+ * A destination's photo and short introduction from Wikipedia (free). The source
+ * is credited by linking the photo and a "Read more" link to the article.
+ */
 export function DestinationPhoto({
   dest,
   origin,
@@ -23,7 +26,13 @@ export function DestinationPhoto({
   return (
     <figure className={cn("animate-pop", className)}>
       {s.image && (
-        <div className="relative overflow-hidden rounded-lg bg-muted">
+        <a
+          href={s.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          title="Photo from Wikipedia"
+          className="relative block overflow-hidden rounded-lg bg-muted"
+        >
           <img
             src={s.image}
             alt={s.title}
@@ -31,21 +40,22 @@ export function DestinationPhoto({
             decoding="async"
             className="aspect-[16/9] w-full object-cover"
           />
-        </div>
+        </a>
       )}
       {showText && (
-        <p className="mt-3 text-[13px] leading-relaxed text-muted-foreground">{s.extract}</p>
+        <figcaption className="mt-3 text-[13px] leading-relaxed text-muted-foreground">
+          {s.extract}{" "}
+          <a
+            href={s.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            title="Wikipedia article"
+            className="font-medium whitespace-nowrap text-primary underline-offset-2 hover:underline"
+          >
+            Read more
+          </a>
+        </figcaption>
       )}
-      <figcaption className="mt-1.5 text-[11px] text-muted-foreground">
-        <a
-          href={s.url}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex items-center gap-1 underline-offset-2 hover:text-foreground hover:underline"
-        >
-          {s.image ? "Photo and text" : "Text"} from Wikipedia <ExternalLink className="size-3" />
-        </a>
-      </figcaption>
     </figure>
   );
 }
@@ -61,10 +71,19 @@ export function DestinationCard({
   className?: string;
 }) {
   const holidays = useTripHolidays();
+  const summary = useDestinationSummary(dest, origin);
   return (
     <section className={cn("surface-card p-5", className)}>
       <h2 className="text-[15px] font-semibold">About {dest.name}</h2>
-      <DestinationPhoto dest={dest} origin={origin} className="mt-3" />
+      {summary.data ? (
+        <DestinationPhoto dest={dest} origin={origin} className="mt-3" />
+      ) : (
+        // Until (or unless) the introduction loads, the place's own short description.
+        <p className="mt-2 text-[13px] leading-relaxed text-muted-foreground">
+          {dest.region ? `${dest.region}. ` : ""}
+          {dest.tagline}
+        </p>
+      )}
       <HolidayList holidays={holidays} className="mt-4" />
     </section>
   );
@@ -96,7 +115,7 @@ export function HolidayList({
         ))}
       </ul>
       <p className="mt-1.5 text-[11px] text-muted-foreground">
-        Expect closures and bigger crowds — book popular spots ahead.
+        Expect closures and bigger crowds, so book popular spots ahead.
       </p>
     </div>
   );

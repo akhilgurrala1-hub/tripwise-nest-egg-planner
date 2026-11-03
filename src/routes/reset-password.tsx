@@ -11,9 +11,9 @@ import { supabase } from "@/integrations/supabase/client";
 export const Route = createFileRoute("/reset-password")({
   head: () => ({
     meta: [
-      { title: "Choose a new password — Waypoint" },
+      { title: "Choose a new password | Waypoint" },
       { name: "description", content: "Set a new password for your Waypoint account." },
-      { property: "og:title", content: "Choose a new password — Waypoint" },
+      { property: "og:title", content: "Choose a new password | Waypoint" },
       { property: "og:description", content: "Set a new password for your Waypoint account." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -75,7 +75,7 @@ function ResetPassword() {
           </form>
         ) : (
           <p className="mt-2 text-sm text-muted-foreground">
-            Open this page from the reset link in your email. Links expire after a while — request a
+            Open this page from the reset link in your email. Links expire after a while. Request a
             new one from the sign-in page if needed.
           </p>
         )}

@@ -273,7 +273,7 @@ export function bookingPlan(
       key: "parking",
       kind: "parking",
       title: `Cruise parking in ${port.split(",")[0]}`,
-      detail: `${shape.days} day${shape.days > 1 ? "s" : ""} at or near the terminal — booking ahead is usually cheaper`,
+      detail: `${shape.days} day${shape.days > 1 ? "s" : ""} at or near the terminal. Booking ahead is usually cheaper`,
       budget: c.parking,
       optional: true,
       links: [{ label: "Find parking", url: google(`cruise port parking ${port}`) }],
@@ -314,7 +314,7 @@ export function bookingPlan(
       key: "dining",
       kind: "dining",
       title: "Dinner reservations",
-      detail: `Popular spots fill up — ${who}`,
+      detail: `Popular spots fill up · ${who}`,
       budget: 0,
       optional: true,
       links: [

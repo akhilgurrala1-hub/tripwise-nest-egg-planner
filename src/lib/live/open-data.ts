@@ -21,6 +21,38 @@ export interface PlaceSummary {
   url: string;
 }
 
+/**
+ * Wikipedia's opening sentence, minus the asides before "is": pronunciations
+ * ("Nashville ( NASH-vil) is…"), native spellings and the like. Also swaps em
+ * dashes for plain punctuation.
+ */
+export function tidyExtract(text: string): string {
+  const verb = text.search(/\s(is|was|are|were|refers)\s/);
+  const cutoff = verb > 0 ? verb : Math.min(text.length, 120);
+  let out = "";
+  let depth = 0;
+  for (let i = 0; i < text.length; i++) {
+    const ch = text[i]!;
+    if (i < cutoff || depth > 0) {
+      if (ch === "(" || ch === "[") {
+        depth++;
+        continue;
+      }
+      if ((ch === ")" || ch === "]") && depth > 0) {
+        depth--;
+        continue;
+      }
+      if (depth > 0) continue;
+    }
+    out += ch;
+  }
+  return out
+    .replace(/\s*—\s*/g, ", ")
+    .replace(/\s+([,.;:])/g, "$1")
+    .replace(/\s{2,}/g, " ")
+    .trim();
+}
+
 export function parseSummary(body: unknown): PlaceSummary | null {
   const pages = (body as { query?: { pages?: Record<string, Record<string, unknown>> } })?.query
     ?.pages;
@@ -30,7 +62,7 @@ export function parseSummary(body: unknown): PlaceSummary | null {
   )[0];
   if (!page || page["missing"] !== undefined) return null;
   const title = String(page["title"] ?? "");
-  const extract = String(page["extract"] ?? "").trim();
+  const extract = tidyExtract(String(page["extract"] ?? ""));
   if (!title || !extract) return null;
   const thumb = page["thumbnail"] as { source?: string } | undefined;
   return {

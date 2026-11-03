@@ -1,5 +1,13 @@
 import { Link } from "@tanstack/react-router";
-import { ArrowRight, ArrowUp, Check, RotateCcw, Sparkles, SlidersHorizontal } from "lucide-react";
+import {
+  ArrowRight,
+  ArrowUp,
+  Check,
+  CornerDownRight,
+  RotateCcw,
+  SlidersHorizontal,
+  Sparkles,
+} from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
 import { LogoMark } from "@/components/app/Logo";
@@ -50,7 +58,7 @@ function nearbyLines(from: GeoPoint | null, draft: TripDraft | null): string[] {
     .flatMap((tripType) =>
       recommendDestinations({ from, tripType, interests: draft?.interests ?? [], limit: 6 }).map(
         (s) =>
-          `${s.name} (${s.region}) — ${tripType === "flight" ? "fly-away" : tripType}${s.distanceLabel ? `, ${s.distanceLabel}` : ""}`,
+          `${s.name} (${s.region}): ${tripType === "flight" ? "fly-away" : tripType}${s.distanceLabel ? `, ${s.distanceLabel}` : ""}`,
       ),
     )
     .slice(0, 12);
@@ -205,7 +213,7 @@ export function TripAssistant({
         <div className="min-w-0 flex-1">
           <h2 className="text-[15px] leading-tight font-semibold">Describe your trip</h2>
           <p className="text-xs text-muted-foreground">
-            Say it your way — Waypoint asks what it needs, then builds the plan.
+            Tell us in your own words. Waypoint asks what it needs, then builds the plan.
           </p>
         </div>
         {state.turns.length > 0 && (
@@ -320,7 +328,7 @@ export function TripAssistant({
           void send(text);
         }}
       >
-        <div className="flex items-end gap-2 rounded-xl border border-input bg-card p-1.5 pl-3 transition-[border-color,box-shadow] focus-within:border-primary focus-within:ring-3 focus-within:ring-primary/15">
+        <div className="flex flex-col gap-2 rounded-xl border border-input bg-card p-1.5 pl-3 transition-[border-color,box-shadow] focus-within:border-primary focus-within:ring-3 focus-within:ring-primary/15 sm:flex-row sm:items-end">
           <textarea
             value={text}
             onChange={(e) => setText(e.target.value)}
@@ -330,7 +338,7 @@ export function TripAssistant({
                 void send(text);
               }
             }}
-            rows={state.turns.length ? 1 : 2}
+            rows={state.turns.length ? 1 : 3}
             maxLength={1200}
             placeholder={
               state.turns.length
@@ -338,7 +346,7 @@ export function TripAssistant({
                 : "e.g. A long weekend somewhere with hiking and good food, 2 of us, about $1,200"
             }
             aria-label="Describe your trip"
-            className="min-h-9 flex-1 resize-none bg-transparent py-1.5 text-sm outline-none placeholder:text-muted-foreground"
+            className="min-h-9 w-full flex-1 resize-none bg-transparent py-1.5 text-sm outline-none placeholder:text-muted-foreground"
           />
           {user || authLoading ? (
             <Button
@@ -347,12 +355,12 @@ export function TripAssistant({
               variant="ink"
               disabled={!text.trim() || busy || authLoading}
               aria-label="Send"
-              className="size-9 shrink-0 rounded-lg"
+              className="size-9 shrink-0 self-end rounded-lg"
             >
               <ArrowUp />
             </Button>
           ) : (
-            <Button asChild size="sm" variant="ink" className="h-9 shrink-0">
+            <Button asChild size="sm" variant="ink" className="h-9 shrink-0 self-end">
               <Link to="/auth" search={{ redirect: "/" }}>
                 Sign in to ask
               </Link>
@@ -360,24 +368,25 @@ export function TripAssistant({
           )}
         </div>
         {state.turns.length === 0 && (
-          <div className="mt-2.5 flex flex-wrap gap-1.5">
-            {EXAMPLES.map((ex) => (
-              <button
-                key={ex}
-                type="button"
-                onClick={() => (user ? send(ex) : setText(ex))}
-                className="rounded-lg bg-muted px-2.5 py-1.5 text-left text-xs text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
-              >
-                {ex}
-              </button>
-            ))}
+          <div className="mt-2.5">
+            <p className="px-1 text-[11px] font-medium tracking-wide text-muted-foreground uppercase">
+              Try one
+            </p>
+            <ul className="mt-1">
+              {EXAMPLES.map((ex) => (
+                <li key={ex}>
+                  <button
+                    type="button"
+                    onClick={() => (user ? send(ex) : setText(ex))}
+                    className="group flex w-full items-start gap-2 rounded-md px-1 py-1.5 text-left text-[13px] text-muted-foreground transition-colors hover:text-foreground"
+                  >
+                    <CornerDownRight className="mt-0.5 size-3.5 shrink-0 text-brand-coral transition-transform group-hover:translate-x-0.5" />
+                    {ex}
+                  </button>
+                </li>
+              ))}
+            </ul>
           </div>
-        )}
-        {!user && !authLoading && (
-          <p className="mt-2 text-[11px] text-muted-foreground">
-            The assistant uses AI, so it's for signed-in travelers. Your message is kept while you
-            sign in.
-          </p>
         )}
       </form>
     </section>

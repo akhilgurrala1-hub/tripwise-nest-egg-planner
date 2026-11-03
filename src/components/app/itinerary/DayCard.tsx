@@ -67,7 +67,7 @@ export function DayCard({
           <h2 className="line-clamp-2 text-[15px] leading-tight font-semibold">{day.title}</h2>
           {holiday && (
             <p className="mt-1 inline-flex items-center gap-1 text-[11px] font-medium text-[color-mix(in_oklab,var(--brand-coral)_55%,var(--foreground))]">
-              <CalendarHeart className="size-3" /> {holiday} — expect closures and crowds
+              <CalendarHeart className="size-3" /> {holiday}: expect closures and crowds
             </p>
           )}
         </div>
@@ -81,7 +81,7 @@ export function DayCard({
       {weather && isWetDay(weather) && (
         <p className="border-b border-border bg-shield-soft px-5 py-2 text-xs">
           {weather.label}{" "}
-          {weather.source === "forecast" ? "in the forecast" : "is common on this date"} — have an
+          {weather.source === "forecast" ? "in the forecast" : "is common on this date"}. Have an
           indoor backup (a museum, market or long lunch) ready for outdoor stops.
         </p>
       )}
@@ -96,7 +96,7 @@ export function DayCard({
           />
         ))}
         {day.items.length === 0 && (
-          <li className="py-3 text-sm text-muted-foreground">Free day — wander as you like.</li>
+          <li className="py-3 text-sm text-muted-foreground">Free day. Wander as you like.</li>
         )}
       </ol>
       <div className="px-5 pb-4 print:hidden">

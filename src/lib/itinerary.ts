@@ -46,7 +46,7 @@ export { addDays } from "./dates";
 const ARRIVAL: Partial<Record<TripType, { name: string; note: string }>> = {
   "road-trip": {
     name: "Scenic drive & roadside stop",
-    note: "Stretch, refuel and grab a photo — fuel is in your gas budget.",
+    note: "Stretch, refuel and grab a photo. Fuel is in your gas budget.",
   },
   flight: {
     name: "Fly in & check in",
@@ -54,11 +54,11 @@ const ARRIVAL: Partial<Record<TripType, { name: string; note: string }>> = {
   },
   rail: {
     name: "Ride in by train or bus",
-    note: "Your ticket is in Transportation — pack snacks for the ride.",
+    note: "Your ticket is in Transportation. Pack snacks for the ride.",
   },
   cruise: {
     name: "Board the ship",
-    note: "Check-in, muster drill and sail-away — cabin and main dining are in your fare.",
+    note: "Check-in, muster drill and sail-away. Cabin and main dining are in your fare.",
   },
 };
 
@@ -113,7 +113,7 @@ export function generateDemoItinerary(opts: {
       daySights[si++] ?? {
         name: "Open time to wander",
         area: dest.name,
-        note: "Unplanned time — revisit a favorite or rest up",
+        note: "Unplanned time to revisit a favorite or rest up",
         costPerPerson: 0,
         interests: [],
       };
@@ -215,7 +215,6 @@ export function generateDemoItinerary(opts: {
     source: "demo",
     days: out,
     tips: [
-      "Demo itinerary — venues and prices are examples, not live listings.",
       style === "budget"
         ? "Free stops are prioritized to stretch your budget."
         : style === "luxury"
@@ -316,7 +315,7 @@ export function buildRealItinerary(opts: {
     kind,
     name: kind === "restaurant" ? "Your pick for a meal" : "Open time to wander",
     area: destName,
-    note: "No more highly rated places matched — choose something on the day",
+    note: "No more highly rated places matched. Choose something on the day",
     costPerPerson: 0,
     costSource: "unknown",
   });
