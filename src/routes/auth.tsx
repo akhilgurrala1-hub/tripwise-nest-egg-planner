@@ -63,8 +63,13 @@ function AuthPage() {
           options: { emailRedirectTo: `${window.location.origin}${redirect ?? "/road-trip"}` },
         });
         if (error) throw error;
-        if (data.session) goNext();
-        else setSent("confirm");
+        if (data.session) {
+          // Email confirmation is off for this project, so the account is ready right away.
+          toast.success("Account created — you're signed in", {
+            description: "No confirmation email is needed.",
+          });
+          goNext();
+        } else setSent("confirm");
       } else {
         const { error } = await supabase.auth.resetPasswordForEmail(email, {
           redirectTo: `${window.location.origin}/reset-password`,
@@ -98,7 +103,7 @@ function AuthPage() {
             <h1 className="mt-2 text-2xl font-semibold tracking-tight">Check your email</h1>
             <p className="mt-1 text-sm text-muted-foreground">
               {sent === "confirm"
-                ? `We sent a confirmation link to ${email}. Open it to finish creating your account.`
+                ? `We sent a confirmation link to ${email}. Open it to finish creating your account. It can take a few minutes — check your spam folder too.`
                 : `If an account exists for ${email}, a password reset link is on its way.`}
             </p>
             <Button

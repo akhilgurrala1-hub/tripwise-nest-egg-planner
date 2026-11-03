@@ -32,7 +32,7 @@ describe("stable trip ids", () => {
   it("adds an id to v4 trips and keeps an existing one", () => {
     const { id: _id, ...v4 } = { ...buildTrip(sampleSetup()), version: 4 };
     const upgraded = migrate(JSON.parse(JSON.stringify(v4)))!;
-    expect(upgraded.version).toBe(5);
+    expect(upgraded.version).toBe(6);
     expect(upgraded.id).toMatch(/.+/);
     const kept = migrate(JSON.parse(JSON.stringify(upgraded)))!;
     expect(kept.id).toBe(upgraded.id);
@@ -201,5 +201,44 @@ describe("plan vs. budget", () => {
     // Negative AI prices are clamped to 0; sights aren't meals.
     expect(itineraryMealCost(plan, 2)).toBe(25);
     expect(plan.days[0]!.date).toBe("2026-12-01");
+  });
+});
+
+describe("the sample trip starts where the traveler is", () => {
+  const CHICAGO = { label: "Chicago, IL", lat: 41.8781, lon: -87.6298 };
+
+  it("moves an untouched sample to their city and a nearby place", async () => {
+    const store = await freshStore();
+    store.tripActions.personalizeSample(CHICAGO);
+    const t = store.currentTrip();
+    expect(t.isSample).toBe(true);
+    expect(t.setup.origin).toBe("Chicago, IL");
+    expect(t.setup.originPoint).toEqual({ lat: CHICAGO.lat, lon: CHICAGO.lon });
+    expect(t.setup.destinationId).not.toBe("blue-ridge");
+  });
+
+  it("leaves a sample the traveler changed, and real trips, alone", async () => {
+    const store = await freshStore();
+    store.tripActions.setOverride("food", 99);
+    store.tripActions.personalizeSample(CHICAGO);
+    expect(store.currentTrip().setup.origin).toBe("Charlotte, NC");
+    store.tripActions.startTrip(store.sampleSetup());
+    store.tripActions.personalizeSample(CHICAGO);
+    expect(store.currentTrip().setup.origin).toBe("Charlotte, NC");
+  });
+});
+
+describe("booking records", () => {
+  it("merges updates and keeps confirmations short", async () => {
+    const store = await freshStore();
+    store.tripActions.setBooking("hotel", { status: "booked", confirmation: "X".repeat(200) });
+    store.tripActions.setBooking("hotel", { price: 480 });
+    const r = store.currentTrip().bookings["hotel"]!;
+    expect(r.status).toBe("booked");
+    expect(r.confirmation).toHaveLength(80);
+    expect(r.price).toBe(480);
+    // A new trip starts with an empty checklist.
+    store.tripActions.startTrip(store.sampleSetup());
+    expect(store.currentTrip().bookings).toEqual({});
   });
 });

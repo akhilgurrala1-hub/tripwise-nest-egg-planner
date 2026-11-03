@@ -2,6 +2,7 @@ import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   Bookmark,
+  CalendarCheck,
   Compass,
   LayoutDashboard,
   LogOut,
@@ -33,10 +34,11 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { useTheme, type ThemePref } from "@/lib/theme";
+import { usePersonalizedSample } from "@/lib/live/use-home";
 import { useTrip } from "@/lib/trip-store";
 
 const NAV: {
-  to: "/" | "/budget" | "/road-trip" | "/itinerary" | "/dashboard";
+  to: "/" | "/budget" | "/road-trip" | "/itinerary" | "/dashboard" | "/book";
   label: string;
   icon: LucideIcon;
 }[] = [
@@ -46,10 +48,12 @@ const NAV: {
   { to: "/budget", label: "Budget", icon: Wallet },
   { to: "/itinerary", label: "Itinerary", icon: Map },
   { to: "/road-trip", label: "Road trip", icon: RouteIcon },
+  { to: "/book", label: "Book", icon: CalendarCheck },
 ];
 
 export function AppShell({ children }: { children: ReactNode }) {
   const { trip } = useTrip();
+  usePersonalizedSample();
   const pathname = useRouterState({ select: (r) => r.location.pathname });
   // Route stops only make sense on a road trip, so the tab appears only for one.
   const nav = NAV.filter((n) => n.to !== "/road-trip" || trip.setup.tripType === "road-trip");
@@ -110,7 +114,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           ref={mobile.ref}
           className={cn(
             "relative mx-auto grid max-w-lg px-2 pt-1",
-            nav.length === 5 ? "grid-cols-5" : "grid-cols-4",
+            nav.length === 6 ? "grid-cols-6" : "grid-cols-5",
           )}
         >
           <span

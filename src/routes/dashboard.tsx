@@ -9,6 +9,7 @@ import { WeatherCard } from "@/components/app/Weather";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth-context";
 import { CATEGORIES, CATEGORY_LABELS, SAVING_TITLES, formatMoney } from "@/lib/budget";
+import { bookingPlan, bookingProgress } from "@/lib/booking";
 import { TRAVEL_STYLES } from "@/lib/demo-data";
 import { liveCategories } from "@/lib/live/sources";
 import { tripActions, useTrip } from "@/lib/trip-store";
@@ -229,11 +230,11 @@ function Dashboard() {
   );
 }
 
-type StepTo = "/" | "/budget" | "/road-trip" | "/itinerary" | "/trips" | "/auth";
+type StepTo = "/" | "/budget" | "/road-trip" | "/itinerary" | "/book" | "/trips" | "/auth";
 
 /** The planning flow in order, with what's done and the one thing to do next. */
 function NextSteps() {
-  const { trip } = useTrip();
+  const { trip, dest, shape, totals } = useTrip();
   const { user } = useAuth();
   const roadTrip = trip.setup.tripType === "road-trip";
   const live = liveCategories(trip.inputs, trip.overrides, trip.live).length > 0;
@@ -252,6 +253,12 @@ function NextSteps() {
         ]
       : []),
     { title: "Build itinerary", done: realPlan, to: "/itinerary", cta: "Open itinerary" },
+    {
+      title: "Book",
+      done: bookingProgress(bookingPlan(trip, dest, shape, totals), trip.bookings).requiredDone,
+      to: "/book",
+      cta: "Start booking",
+    },
     {
       title: "Save trip",
       done: !!trip.cloud,

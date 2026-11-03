@@ -16,10 +16,11 @@ import {
   type Overrides,
   type SavingId,
 } from "./budget";
+import type { GeoPoint } from "./catalog";
 import {
   CUSTOM_DESTINATION_ID,
   DESTINATIONS,
-  getDestination,
+  destinationFor,
   modeForTripType,
   tripTypeInfo,
   upgradeTripType,
@@ -28,6 +29,7 @@ import {
   type TravelStyle,
   type TripType,
 } from "./demo-data";
+import { recommendDestinations } from "./recommend";
 import { addDays, generateDemoItinerary, type Itinerary, type ItineraryItem } from "./itinerary";
 import {
   addItem,
@@ -40,6 +42,7 @@ import {
   type ItemPatch,
   type RemovedItem,
 } from "./itinerary-edit";
+import type { BookingRecord } from "./booking";
 import type { LivePrices } from "./prices/live";
 import type { RouteStop } from "./routing/types";
 
@@ -56,6 +59,10 @@ export interface TripSetup {
   interests: Interest[];
   totalBudget: number;
   emergencyFund: number;
+  /** Where the traveler starts, when known (from their location or a place they picked) */
+  originPoint?: GeoPoint | null;
+  /** A typed destination's real location, when it could be found */
+  destinationPoint?: GeoPoint | null;
 }
 
 export interface RoadTripPlan {
@@ -77,7 +84,7 @@ export interface CloudLink {
 }
 
 export interface TripState {
-  version: 5;
+  version: 6;
   /** Stable for the life of one trip (kept through edits and trip-type switches, new for each trip started or opened). */
   id: string;
   isSample: boolean;
@@ -91,6 +98,8 @@ export interface TripState {
   /** Last live price lookup applied to this trip */
   live: LivePrices | null;
   cloud: CloudLink | null;
+  /** What's been booked (on providers' sites), by booking checklist item */
+  bookings: Record<string, BookingRecord>;
 }
 
 const STORAGE_KEY = "waypoint.trip.v1";
@@ -119,10 +128,10 @@ function defaultRoadTrip(setup: TripSetup, destName: string): RoadTripPlan {
 
 export function buildTrip(input: TripSetup, isSample = false, id?: string): TripState {
   const setup = { ...input, transportMode: modeForTripType(input.tripType, input.transportMode) };
-  const dest = getDestination(setup.destinationId, setup.customDestination);
+  const dest = destinationFor(setup);
   const shape = tripShape(setup.startDate, setup.endDate, setup.travelers);
   return {
-    version: 5,
+    version: 6,
     id: id ?? (isSample ? SAMPLE_TRIP_ID : newTripId()),
     isSample,
     setup,
@@ -141,7 +150,26 @@ export function buildTrip(input: TripSetup, isSample = false, id?: string): Trip
     roadTrip: defaultRoadTrip(setup, dest.name),
     live: null,
     cloud: null,
+    bookings: {},
   };
+}
+
+/**
+ * A budget that covers the default estimate for this setup plus a 10% reserve,
+ * rounded up to $50 (or the planned spend plus a reserve the traveler chose).
+ */
+export function suggestedBudget(setup: TripSetup, reserve?: number): number {
+  const dest = destinationFor(setup);
+  const shape = tripShape(setup.startDate, setup.endDate, setup.travelers);
+  const planned = calculateBudget(
+    defaultInputs(dest, setup.style, setup.tripType, setup.travelers, setup.transportMode),
+    shape,
+    0,
+    0,
+  ).planned;
+  return reserve !== undefined
+    ? Math.ceil((planned + reserve) / 50) * 50
+    : Math.ceil(planned / 0.9 / 50) * 50;
 }
 
 export function sampleSetup(): TripSetup {
@@ -168,22 +196,30 @@ const NEW_INPUT_DEFAULTS = { cruisePerNight: 0, portFeesPerPerson: 0, gratuities
 /**
  * Upgrade trips saved by earlier versions of the app (also used for trips loaded from an account).
  * v4 split trips into separate types: old "Getaway" trips become fly-away, train & bus or road trips
- * by how they travel. v5 gave every trip a stable id.
+ * by how they travel. v5 gave every trip a stable id; v6 added the booking checklist.
  */
 export function migrate(raw: unknown): TripState | null {
   const v4 = migrateToV4(raw);
   if (!v4) return null;
   const id =
     typeof v4.id === "string" && v4.id ? v4.id : v4.isSample ? SAMPLE_TRIP_ID : newTripId();
-  return { ...v4, version: 5, id };
+  const bookings =
+    v4.bookings && typeof v4.bookings === "object" && !Array.isArray(v4.bookings)
+      ? v4.bookings
+      : {};
+  return { ...v4, version: 6, id, bookings };
 }
 
-type V4Trip = Omit<TripState, "version" | "id"> & { version: 4 | 5; id?: string };
+type V4Trip = Omit<TripState, "version" | "id" | "bookings"> & {
+  version: 4 | 5 | 6;
+  id?: string;
+  bookings?: Record<string, BookingRecord>;
+};
 
 function migrateToV4(raw: unknown): V4Trip | null {
   const s = raw as Partial<Omit<TripState, "version">> & { version?: number };
   if (!s || typeof s !== "object" || !s.setup || !s.inputs) return null;
-  if (s.version === 4 || s.version === 5)
+  if (s.version === 4 || s.version === 5 || s.version === 6)
     return { ...(s as V4Trip), live: s.live ?? null, cloud: s.cloud ?? null };
   if (s.version === 2 || s.version === 3) {
     const old = s as unknown as V4Trip;
@@ -205,7 +241,7 @@ function migrateToV4(raw: unknown): V4Trip | null {
     transportMode: "car",
     emergencyFund: s.emergencyFund ?? defaultEmergencyFund(s.setup.totalBudget),
   };
-  const dest = getDestination(setup.destinationId, setup.customDestination);
+  const dest = destinationFor(setup);
   const fresh = defaultInputs(dest, setup.style, setup.tripType, setup.travelers, "car");
   return {
     version: 4 as const,
@@ -234,13 +270,26 @@ export function destinationForTripType(
       ? { destinationId, reason: "" }
       : { destinationId: "hometown", reason: "A staycation is planned around your home city." };
   }
-  const current = DESTINATIONS.find((d) => d.id === destinationId);
-  if (current?.bestFor.includes(tripType)) return { destinationId, reason: "" };
-  const next = DESTINATIONS.find((d) => d.bestFor.includes(tripType)) ?? DESTINATIONS[0]!;
+  const current = destinationFor(setup);
+  if (current.bestFor.includes(tripType)) return { destinationId, reason: "" };
+  // The best fit for the new kind of trip from where the traveler starts.
+  const next =
+    recommendDestinations({
+      from: setup.originPoint ?? null,
+      tripType,
+      interests: setup.interests,
+      limit: 1,
+    })[0]?.id ??
+    DESTINATIONS.find((d) => d.bestFor.includes(tripType))?.id ??
+    DESTINATIONS[0]!.id;
+  const nextName = destinationFor({ ...setup, destinationId: next }).name;
   const label = tripTypeInfo(tripType).label.toLowerCase();
   return {
-    destinationId: next.id,
-    reason: `${current?.name ?? "That destination"} isn't a ${label} destination, so we picked ${next.name}.`,
+    destinationId: next,
+    reason:
+      destinationId === "hometown"
+        ? `We picked ${nextName} for your ${label}.`
+        : `${current.name} isn't a ${label} destination, so we picked ${nextName}.`,
   };
 }
 
@@ -264,7 +313,7 @@ function repairDates(trip: TripState): TripState {
   const days = Math.min(14, Math.max(1, tripShape(startDate, endDate, 1).days));
   const start = addDays(todayIso(), 30);
   const setup = { ...trip.setup, startDate: start, endDate: addDays(start, days - 1) };
-  const dest = getDestination(setup.destinationId, setup.customDestination);
+  const dest = destinationFor(setup);
   return {
     ...trip,
     setup,
@@ -385,6 +434,34 @@ export const tripActions = {
   startTrip(setup: TripSetup) {
     setState(() => buildTrip(setup));
   },
+  /**
+   * Start the untouched sample trip from where the traveler is, headed somewhere
+   * that suits them nearby. Does nothing once they've changed the sample.
+   */
+  personalizeSample(home: { label: string; lat: number; lon: number }) {
+    const s = getSnapshot();
+    const pristine =
+      s.isSample &&
+      Object.keys(s.overrides).length === 0 &&
+      Object.keys(s.appliedSavings).length === 0 &&
+      s.roadTrip.includedStops.length === 0 &&
+      !s.itinerary?.days.some((d) => d.items.some((i) => i.custom));
+    const from = { lat: home.lat, lon: home.lon };
+    const same =
+      s.setup.origin === home.label &&
+      s.setup.originPoint?.lat === from.lat &&
+      s.setup.originPoint?.lon === from.lon;
+    if (!pristine || same) return;
+    const setup: TripSetup = { ...sampleSetup(), origin: home.label, originPoint: from };
+    const pick = recommendDestinations({
+      from,
+      tripType: "road-trip",
+      interests: setup.interests,
+      limit: 1,
+    })[0];
+    if (pick) setup.destinationId = pick.id;
+    setState(() => buildTrip(setup, true));
+  },
   /** Replace the current trip with one opened from the account. */
   openSavedTrip(data: unknown, link: CloudLink): boolean {
     const migrated = migrate(data);
@@ -446,7 +523,7 @@ export const tripActions = {
   },
   setTransportMode(mode: TransportMode) {
     setState((s) => {
-      const dest = getDestination(s.setup.destinationId, s.setup.customDestination);
+      const dest = destinationFor(s.setup);
       const allowed = modeForTripType(s.setup.tripType, mode);
       const overrides = { ...s.overrides };
       for (const c of ["transportation", "gas", "tolls", "parking"] as Category[])
@@ -511,7 +588,7 @@ export const tripActions = {
   },
   applySaving(id: SavingId) {
     setState((s) => {
-      const dest = getDestination(s.setup.destinationId, s.setup.customDestination);
+      const dest = destinationFor(s.setup);
       const changes = applySaving(id, s.inputs, dest);
       const previous = Object.fromEntries(
         Object.keys(changes).map((k) => [k, s.inputs[k as keyof BudgetInputs]]),
@@ -556,7 +633,7 @@ export const tripActions = {
   },
   regenerateDemoItinerary() {
     setState((s) => {
-      const dest = getDestination(s.setup.destinationId, s.setup.customDestination);
+      const dest = destinationFor(s.setup);
       const shape = tripShape(s.setup.startDate, s.setup.endDate, s.setup.travelers);
       return {
         ...s,
@@ -618,6 +695,18 @@ export const tripActions = {
       return { ...s, roadTrip: { ...s.roadTrip, includedStops } };
     });
   },
+  /** Record progress on one booking checklist item. */
+  setBooking(key: string, patch: Partial<BookingRecord>) {
+    setState((s) => {
+      const prev = s.bookings[key] ?? { status: "todo", confirmation: "", price: null };
+      const next: BookingRecord = {
+        ...prev,
+        ...patch,
+        confirmation: (patch.confirmation ?? prev.confirmation).slice(0, 80),
+      };
+      return { ...s, bookings: { ...s.bookings, [key]: next } };
+    });
+  },
   clearStops() {
     setState((s) => ({ ...s, roadTrip: { ...s.roadTrip, includedStops: [] } }));
   },
@@ -625,7 +714,7 @@ export const tripActions = {
 
 /** Everything the pages show about a trip, computed from its state. */
 function derive(trip: TripState) {
-  const dest = getDestination(trip.setup.destinationId, trip.setup.customDestination);
+  const dest = destinationFor(trip.setup);
   const shape = tripShape(trip.setup.startDate, trip.setup.endDate, trip.setup.travelers);
   const stopsTotal = stopsTotalFor(trip);
   const totals = calculateBudget(

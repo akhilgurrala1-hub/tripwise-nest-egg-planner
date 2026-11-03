@@ -58,6 +58,8 @@ export interface SegmentOption<V extends string> {
   label: ReactNode;
   hint?: ReactNode;
   icon?: ReactNode;
+  /** Color for the icon while selected (defaults to the primary accent) */
+  accent?: string;
 }
 
 /**
@@ -131,7 +133,15 @@ export function Segmented<V extends string>({
             )}
           >
             {o.icon && (
-              <span className={cn("shrink-0", active ? "text-primary" : "")}>{o.icon}</span>
+              <span
+                className={cn(
+                  "shrink-0 transition-[color,transform] duration-300",
+                  active ? "scale-110 text-primary" : "",
+                )}
+                style={active && o.accent ? { color: o.accent } : undefined}
+              >
+                {o.icon}
+              </span>
             )}
             <span className="min-w-0">
               <span className="block leading-tight">{o.label}</span>

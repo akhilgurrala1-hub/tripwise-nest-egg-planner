@@ -25,7 +25,7 @@ export function geocodeQuery(text: string) {
 }
 
 /** True after the first client render; live lookups never run during server rendering. */
-function useHydrated() {
+export function useHydrated() {
   const [ready, setReady] = useState(false);
   useEffect(() => setReady(true), []);
   return ready;
@@ -35,9 +35,19 @@ export type LiveStatus = "no-place" | "loading" | "not-found" | "error" | "ready
 
 export function useTripWeather() {
   const { trip, dest } = useTrip();
+  return useWeatherFor(dest, trip.setup.origin, trip.setup.startDate, trip.setup.endDate);
+}
+
+/** Live weather for any destination and dates (e.g. a trip still being set up). */
+export function useWeatherFor(
+  dest: DemoDestination,
+  origin: string,
+  startDate: string,
+  endDate: string,
+) {
   const prefs = usePreferences();
   const hydrated = useHydrated();
-  const text = weatherPlaceText(dest, trip.setup.origin, prefs?.home_city ?? "");
+  const text = weatherPlaceText(dest, origin, prefs?.home_city ?? "");
   const anchor = dest.anchor;
 
   const geo = useQuery({
@@ -49,7 +59,6 @@ export function useTripWeather() {
     : (geo.data?.[0] ?? null);
 
   const today = hydrated ? todayIso() : "";
-  const { startDate, endDate } = trip.setup;
   const weather = useQuery({
     queryKey: ["live", "weather", place?.lat, place?.lon, startDate, endDate, today],
     queryFn: ({ signal }) =>
@@ -89,7 +98,7 @@ export function useTripWeather() {
     weather: weather.data ?? null,
     byDate,
     /** Every trip day is before today, so there's nothing to forecast. */
-    datesPassed: !!today && trip.setup.endDate < today,
+    datesPassed: !!today && endDate < today,
     refetch: () => (geo.isError ? geo.refetch() : weather.refetch()),
   };
 }

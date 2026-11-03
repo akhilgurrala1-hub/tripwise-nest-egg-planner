@@ -141,13 +141,11 @@ function BudgetPage() {
               amount.
             </p>
           </section>
-
-          <LivePricesPanel className="animate-rise" />
         </div>
 
         {/* Emergency fund */}
-        <aside className="lg:order-2">
-          <section className="surface-card animate-rise p-5 lg:sticky lg:top-20" style={stagger(1)}>
+        <aside className="space-y-4 lg:order-2">
+          <section className="surface-card animate-rise p-5" style={stagger(1)}>
             <div className="flex items-center justify-between">
               <h2 className="flex items-center gap-2 text-[15px] font-semibold">
                 <ShieldCheck className="size-4" strokeWidth={1.8} /> Emergency reserve
@@ -186,6 +184,7 @@ function BudgetPage() {
               className="mt-4"
             />
           </section>
+          <LivePricesPanel className="animate-rise" />
         </aside>
       </div>
     </div>

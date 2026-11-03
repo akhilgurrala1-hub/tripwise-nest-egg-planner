@@ -151,7 +151,7 @@ describe("upgrading saved trips", () => {
       inputs: oldInputs,
     };
     const out = migrate(JSON.parse(JSON.stringify(v3)))!;
-    expect(out.version).toBe(5);
+    expect(out.version).toBe(6);
     expect(out.id).toBeTruthy();
     expect(out.setup.tripType).toBe("flight");
     expect(out.inputs.cruisePerNight).toBe(0);
