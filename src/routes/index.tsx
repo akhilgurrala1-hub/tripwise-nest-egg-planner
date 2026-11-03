@@ -6,6 +6,7 @@ import {
   MapPin,
   Minus,
   Plus,
+  Receipt,
   Route as RouteIcon,
   Sparkles,
   Wallet,
@@ -18,6 +19,7 @@ import { InterestChips, NumberField } from "@/components/app/bits";
 import { stagger } from "@/components/app/motion";
 import { RouteMap } from "@/components/app/Illustrations";
 import { DestinationPicker } from "@/components/app/plan/DestinationPicker";
+import { CoveragePicker } from "@/components/app/plan/CoveragePicker";
 import { OriginField } from "@/components/app/plan/OriginField";
 import { StylePicker } from "@/components/app/plan/StylePicker";
 import { TripAssistant } from "@/components/app/plan/TripAssistant";
@@ -30,6 +32,7 @@ import { setupFromDraft, type TripDraft } from "@/lib/assistant";
 import {
   calculateBudget,
   defaultEmergencyFund,
+  applyCoverage,
   defaultInputs,
   formatMoney,
   tripShape,
@@ -166,7 +169,10 @@ function Welcome() {
   const estimate = useMemo(
     () =>
       calculateBudget(
-        defaultInputs(dest, form.style, form.tripType, form.travelers, form.transportMode),
+        applyCoverage(
+          defaultInputs(dest, form.style, form.tripType, form.travelers, form.transportMode),
+          form.coverage,
+        ),
         shape,
         form.totalBudget,
         Math.min(form.emergencyFund, form.totalBudget),
@@ -177,6 +183,7 @@ function Welcome() {
       form.tripType,
       form.travelers,
       form.transportMode,
+      form.coverage,
       form.totalBudget,
       form.emergencyFund,
       shape,
@@ -445,6 +452,14 @@ function Welcome() {
               <StylePicker value={form.style} onChange={(style) => update({ style })} />
               <p className="mt-5 mb-2.5 text-sm text-muted-foreground">Interests</p>
               <InterestChips value={form.interests} onToggle={toggleInterest} />
+            </Section>
+
+            <Section icon={Receipt} title="What you pay for" style={stagger(5)}>
+              <CoveragePicker
+                value={form.coverage}
+                mode={form.transportMode}
+                onChange={(coverage) => update({ coverage })}
+              />
             </Section>
 
             <Section icon={Wallet} title="Budget" style={stagger(5)}>

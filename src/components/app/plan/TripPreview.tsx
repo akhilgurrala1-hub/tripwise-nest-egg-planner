@@ -1,4 +1,4 @@
-import { ArrowRight, CalendarDays, CloudSun, MapPin, Users } from "lucide-react";
+import { ArrowRight, CalendarDays, CircleCheck, CloudSun, MapPin, Users } from "lucide-react";
 import type { CSSProperties } from "react";
 
 import { ApproxMoney, CATEGORY_COLOR_VAR } from "@/components/app/bits";
@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import {
   CATEGORY_LABELS,
   categoriesFor,
+  coveredLabels,
   formatMoney,
   type BudgetTotals,
   type TripShape,
@@ -105,6 +106,12 @@ export function TripPreview({
             <Users />
             {shape.travelers} traveler{shape.travelers > 1 ? "s" : ""}
           </li>
+          {coveredLabels(form.coverage).length > 0 && (
+            <li className="animate-pop flex items-start gap-2">
+              <CircleCheck className="mt-0.5" />
+              <span>Not counted: {coveredLabels(form.coverage).join(", ")}</span>
+            </li>
+          )}
           {weather.status === "ready" && days.length > 0 && (
             <li className="animate-pop flex items-center gap-2">
               <CloudSun />

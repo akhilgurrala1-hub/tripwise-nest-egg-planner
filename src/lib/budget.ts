@@ -93,6 +93,53 @@ export interface BudgetInputs {
   portFeesPerPerson: number;
   /** Crew gratuities per person per night */
   gratuitiesPerNight: number;
+  /**
+   * Getting to the airport or station and back from where the traveler starts
+   * (a dorm, home), whole group. Optional so trips saved before it stay valid.
+   */
+  transferRoundTrip?: number;
+}
+
+/**
+ * What the traveler doesn't pay for on this trip (staying with family, eating at
+ * home...), and what it costs to reach the airport or station. Only the costs they
+ * actually have end up in the budget.
+ */
+export interface TripCoverage {
+  /** Somewhere to stay for free: family, friends, their own place */
+  lodging?: boolean;
+  /** Meals taken care of (eating at home or with family) */
+  meals?: boolean;
+  /** No paid sightseeing or activities */
+  activities?: boolean;
+  /** A car or rides at the destination: no rideshares or rentals there */
+  localTransport?: boolean;
+  /** Round trip from where they start to the airport or station, whole group, USD */
+  transfer?: number;
+}
+
+/** The inputs with every covered cost set to $0 and the airport/station trip added. */
+export function applyCoverage(inputs: BudgetInputs, c?: TripCoverage | null): BudgetInputs {
+  if (!c) return inputs;
+  return {
+    ...inputs,
+    ...(c.lodging ? { nightlyRate: 0 } : {}),
+    ...(c.meals ? { foodPerPersonDay: 0, snacksPerPersonDay: 0, waterPerPersonDay: 0 } : {}),
+    ...(c.activities ? { activitiesPerPerson: 0 } : {}),
+    ...(c.localTransport ? { localTransitPerDay: 0 } : {}),
+    ...(c.transfer !== undefined ? { transferRoundTrip: roundMoney(clampNum(c.transfer)) } : {}),
+  };
+}
+
+/** Covered costs, in plain words ("a place to stay", "meals"), for summaries. */
+export function coveredLabels(c?: TripCoverage | null): string[] {
+  if (!c) return [];
+  return [
+    c.lodging ? "a place to stay" : "",
+    c.meals ? "meals" : "",
+    c.activities ? "activities" : "",
+    c.localTransport ? "getting around there" : "",
+  ].filter(Boolean);
 }
 
 export type Overrides = Partial<Record<Category, number>>;
@@ -160,7 +207,13 @@ export function estimateCategories(
     : 0;
   const rental =
     inputs.transportMode === "rental-car" ? toCents(inputs.rentalPerDay) * trip.days : 0;
-  set("transportation", fares + rental + toCents(inputs.localTransitPerDay) * trip.days);
+  set(
+    "transportation",
+    fares +
+      rental +
+      toCents(inputs.localTransitPerDay) * trip.days +
+      toCents(inputs.transferRoundTrip ?? 0),
+  );
   set("gas", toCents(gallons * clampNum(inputs.gasPrice)));
   set("tolls", driving ? toCents(inputs.tolls) : 0);
   set("parking", toCents(inputs.parkingPerDay) * trip.days);

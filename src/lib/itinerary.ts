@@ -73,6 +73,48 @@ const TIERS: Record<TravelStyle, { lunch: number[]; dinner: number[] }> = {
   luxury: { lunch: [2], dinner: [3] },
 };
 
+/**
+ * A plan that respects what's already covered: with meals taken care of, meals are
+ * at home ($0); with no paid activities, paid sights become free time. The
+ * traveler's own stops are never changed.
+ */
+export function fitToCoverage(
+  itin: Itinerary,
+  coverage: { meals?: boolean; activities?: boolean } | null | undefined,
+): Itinerary {
+  if (!coverage?.meals && !coverage?.activities) return itin;
+  return {
+    ...itin,
+    days: itin.days.map((d) => ({
+      ...d,
+      items: d.items.map((i): ItineraryItem => {
+        if (i.custom) return i;
+        if (coverage.meals && i.kind === "restaurant")
+          return {
+            id: i.id,
+            time: i.time,
+            kind: i.kind,
+            name: "Meal at home",
+            area: "",
+            note: "Covered",
+            costPerPerson: 0,
+          };
+        if (coverage.activities && i.kind === "sight" && i.costPerPerson > 0)
+          return {
+            id: i.id,
+            time: i.time,
+            kind: i.kind,
+            name: "Free time",
+            area: "",
+            note: "No paid activities planned",
+            costPerPerson: 0,
+          };
+        return i;
+      }),
+    })),
+  };
+}
+
 export function generateDemoItinerary(opts: {
   dest: DemoDestination;
   days: number;

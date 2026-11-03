@@ -4,7 +4,7 @@
  * never books or takes payment; travelers book on the provider's site and record
  * it here. Pure, so the checklist rules are testable.
  */
-import type { BudgetTotals, TripShape } from "./budget";
+import type { BudgetTotals, TripCoverage, TripShape } from "./budget";
 import type { DemoDestination } from "./demo-data";
 import { addDays, formatCalendarDate } from "./dates";
 import type { Itinerary } from "./itinerary";
@@ -49,6 +49,7 @@ export interface BookingTrip {
     endDate: string;
     travelers: number;
     style: string;
+    coverage?: TripCoverage | null;
   };
   inputs: { nightlyRate: number; rooms: number };
   itinerary: Itinerary | null;
@@ -250,6 +251,29 @@ export function bookingPlan(
     });
   }
 
+  const transfer = s.coverage?.transfer ?? 0;
+  const fareMode =
+    s.transportMode === "flight" || s.transportMode === "train" || s.transportMode === "bus";
+  if (fareMode && transfer > 0) {
+    const station = s.transportMode === "flight" ? "airport" : "station";
+    items.push({
+      key: "transfer",
+      kind: "car",
+      title: `Ride to the ${station}`,
+      detail: `${from ? `From ${from.split(",")[0]}` : "From where you start"} to the ${station} and back · ${who}`,
+      budget: transfer,
+      optional: true,
+      links: [
+        { label: "Uber", url: "https://m.uber.com/" },
+        { label: "Lyft", url: "https://www.lyft.com/" },
+        {
+          label: "Transit",
+          url: `https://www.google.com/maps/dir/?api=1&travelmode=transit&destination=${enc(`${from.split(",")[0] ?? ""} ${station}`.trim())}`,
+        },
+      ],
+    });
+  }
+
   if (s.transportMode === "rental-car") {
     items.push({
       key: "car",
@@ -286,30 +310,31 @@ export function bookingPlan(
     .filter((i) => i.kind !== "restaurant" && i.costPerPerson >= 15)
     .map((i) => i.name);
   const stops = [...new Set(paid)].slice(0, 6);
-  items.push({
-    key: "tickets",
-    kind: "tickets",
-    title: cruise ? "Shore excursions & tickets" : "Tickets & tours",
-    detail:
-      stops.length > 0
-        ? `${stops.length} paid stop${stops.length > 1 ? "s" : ""} in your plan · ${who}`
-        : `Tours and timed-entry tickets · ${who}`,
-    budget: c.activities,
-    optional: stops.length === 0,
-    stops,
-    links: [
-      {
-        label: "GetYourGuide",
-        url: `https://www.getyourguide.com/s/?q=${enc(cruise ? (dest.anchor?.name ?? place) : place)}&date_from=${start}&date_to=${end}`,
-      },
-      {
-        label: "Viator",
-        url: `https://www.viator.com/searchResults/all?text=${enc(cruise ? (dest.anchor?.name ?? place) : place)}`,
-      },
-    ],
-  });
+  if (!s.coverage?.activities || stops.length > 0)
+    items.push({
+      key: "tickets",
+      kind: "tickets",
+      title: cruise ? "Shore excursions & tickets" : "Tickets & tours",
+      detail:
+        stops.length > 0
+          ? `${stops.length} paid stop${stops.length > 1 ? "s" : ""} in your plan · ${who}`
+          : `Tours and timed-entry tickets · ${who}`,
+      budget: c.activities,
+      optional: stops.length === 0,
+      stops,
+      links: [
+        {
+          label: "GetYourGuide",
+          url: `https://www.getyourguide.com/s/?q=${enc(cruise ? (dest.anchor?.name ?? place) : place)}&date_from=${start}&date_to=${end}`,
+        },
+        {
+          label: "Viator",
+          url: `https://www.viator.com/searchResults/all?text=${enc(cruise ? (dest.anchor?.name ?? place) : place)}`,
+        },
+      ],
+    });
 
-  if (!cruise && s.style !== "budget") {
+  if (!cruise && s.style !== "budget" && !s.coverage?.meals) {
     items.push({
       key: "dining",
       kind: "dining",

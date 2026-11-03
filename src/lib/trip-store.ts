@@ -2,6 +2,7 @@ import { useSyncExternalStore } from "react";
 
 import {
   applySaving,
+  applyCoverage,
   calculateBudget,
   defaultEmergencyFund,
   defaultInputs,
@@ -15,6 +16,7 @@ import {
   type Category,
   type Overrides,
   type SavingId,
+  type TripCoverage,
 } from "./budget";
 import type { GeoPoint } from "./catalog";
 import {
@@ -30,7 +32,13 @@ import {
   type TripType,
 } from "./demo-data";
 import { recommendDestinations } from "./recommend";
-import { addDays, generateDemoItinerary, type Itinerary, type ItineraryItem } from "./itinerary";
+import {
+  addDays,
+  fitToCoverage,
+  generateDemoItinerary,
+  type Itinerary,
+  type ItineraryItem,
+} from "./itinerary";
 import {
   addItem,
   keepCustomItems,
@@ -63,6 +71,8 @@ export interface TripSetup {
   originPoint?: GeoPoint | null;
   /** A typed destination's real location, when it could be found */
   destinationPoint?: GeoPoint | null;
+  /** What they don't pay for (staying with family...) and getting to the airport; see applyCoverage */
+  coverage?: TripCoverage | null;
 }
 
 export interface RoadTripPlan {
@@ -135,18 +145,24 @@ export function buildTrip(input: TripSetup, isSample = false, id?: string): Trip
     id: id ?? (isSample ? SAMPLE_TRIP_ID : newTripId()),
     isSample,
     setup,
-    inputs: defaultInputs(dest, setup.style, setup.tripType, setup.travelers, setup.transportMode),
+    inputs: applyCoverage(
+      defaultInputs(dest, setup.style, setup.tripType, setup.travelers, setup.transportMode),
+      setup.coverage,
+    ),
     overrides: {},
     emergencyFund: Math.min(Math.max(0, setup.emergencyFund), setup.totalBudget),
     appliedSavings: {},
-    itinerary: generateDemoItinerary({
-      dest,
-      days: shape.days,
-      startDate: setup.startDate,
-      interests: setup.interests,
-      style: setup.style,
-      tripType: setup.tripType,
-    }),
+    itinerary: fitToCoverage(
+      generateDemoItinerary({
+        dest,
+        days: shape.days,
+        startDate: setup.startDate,
+        interests: setup.interests,
+        style: setup.style,
+        tripType: setup.tripType,
+      }),
+      setup.coverage,
+    ),
     roadTrip: defaultRoadTrip(setup, dest.name),
     live: null,
     cloud: null,
@@ -162,7 +178,10 @@ export function suggestedBudget(setup: TripSetup, reserve?: number): number {
   const dest = destinationFor(setup);
   const shape = tripShape(setup.startDate, setup.endDate, setup.travelers);
   const planned = calculateBudget(
-    defaultInputs(dest, setup.style, setup.tripType, setup.travelers, setup.transportMode),
+    applyCoverage(
+      defaultInputs(dest, setup.style, setup.tripType, setup.travelers, setup.transportMode),
+      setup.coverage,
+    ),
     shape,
     0,
     0,
@@ -531,7 +550,10 @@ export const tripActions = {
       return {
         ...s,
         setup: { ...s.setup, transportMode: allowed },
-        inputs: { ...s.inputs, ...modeDefaults(dest, s.setup.style, allowed, s.setup.tripType) },
+        inputs: applyCoverage(
+          { ...s.inputs, ...modeDefaults(dest, s.setup.style, allowed, s.setup.tripType) },
+          s.setup.coverage,
+        ),
         overrides,
       };
     });
@@ -639,14 +661,17 @@ export const tripActions = {
         ...s,
         itinerary: keepCustomItems(
           s.itinerary,
-          generateDemoItinerary({
-            dest,
-            days: shape.days,
-            startDate: s.setup.startDate,
-            interests: s.setup.interests,
-            style: s.setup.style,
-            tripType: s.setup.tripType,
-          }),
+          fitToCoverage(
+            generateDemoItinerary({
+              dest,
+              days: shape.days,
+              startDate: s.setup.startDate,
+              interests: s.setup.interests,
+              style: s.setup.style,
+              tripType: s.setup.tripType,
+            }),
+            s.setup.coverage,
+          ),
         ).itinerary,
       };
     });

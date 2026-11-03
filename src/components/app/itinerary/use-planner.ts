@@ -6,6 +6,7 @@ import { createAiItinerary } from "@/lib/ai-itinerary.functions";
 import { usePreferences } from "@/lib/account";
 import { INTERESTS, TRAVEL_STYLES, TRIP_TYPES } from "@/lib/demo-data";
 import { cleanAiPlan, groundedCount, mergePlaces, placeLines, planLines } from "@/lib/ai-quality";
+import { coveredLabels } from "@/lib/budget";
 import { inclusiveDays } from "@/lib/dates";
 import { addDays, buildRealItinerary } from "@/lib/itinerary";
 import { destinationQuery } from "@/lib/live/place";
@@ -182,6 +183,7 @@ export function usePlanner() {
           }).filter(Boolean),
           places: real ? placeLines(real.sights, real.restaurants) : [],
           guide: real ? real.tips.map((t) => `${t.topic}: ${t.text}`) : [],
+          covered: coveredLabels(trip.setup.coverage),
           notes: holidays.map((h) => {
             const day = inclusiveDays(trip.setup.startDate, h.date) ?? 0;
             return `Day ${day} (${h.date}) is ${h.name}, a public holiday: expect closures and crowds.`;

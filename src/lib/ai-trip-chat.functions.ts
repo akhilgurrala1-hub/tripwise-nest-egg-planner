@@ -30,6 +30,16 @@ const draft = z
         ]),
       )
       .max(9),
+    // Older saved conversations predate these two fields.
+    covered: z
+      .object({
+        lodging: z.boolean(),
+        meals: z.boolean(),
+        activities: z.boolean(),
+        localTransport: z.boolean(),
+      })
+      .default({ lodging: false, meals: false, activities: false, localTransport: false }),
+    transferCost: z.number().min(0).max(5000).nullable().default(null),
   })
   .nullable();
 

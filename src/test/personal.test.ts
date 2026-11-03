@@ -147,6 +147,8 @@ const draft = (patch: Partial<TripDraft>): TripDraft => ({
   style: null,
   totalBudget: null,
   interests: [],
+  covered: { lodging: false, meals: false, activities: false, localTransport: false },
+  transferCost: null,
   ...patch,
 });
 

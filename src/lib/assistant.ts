@@ -13,7 +13,7 @@ import {
   type TripType,
 } from "./demo-data";
 import { addDays, isIsoDate, MAX_TRIP_DAYS } from "./dates";
-import { defaultEmergencyFund } from "./budget";
+import { defaultEmergencyFund, type TripCoverage } from "./budget";
 import { suggestedBudget, type TripSetup } from "./trip-store";
 
 export type { TripDraft };
@@ -71,6 +71,35 @@ export function draftDates(
   return { startDate: start, endDate: end > maxEnd ? maxEnd : end };
 }
 
+/**
+ * What the traveler said they don't pay for, and their trip to the airport or
+ * station, as the trip's coverage (null when nothing is covered).
+ */
+export function coverageFromDraft(draft: TripDraft): TripCoverage | null {
+  const c = draft.covered;
+  const flying =
+    draft.transportMode === "flight" ||
+    draft.transportMode === "train" ||
+    draft.transportMode === "bus" ||
+    draft.tripType === "flight" ||
+    draft.tripType === "rail";
+  const transfer =
+    flying &&
+    draft.transferCost !== null &&
+    draft.transferCost !== undefined &&
+    draft.transferCost > 0
+      ? Math.min(500, Math.round(draft.transferCost))
+      : undefined;
+  const coverage: TripCoverage = {
+    ...(c?.lodging ? { lodging: true } : {}),
+    ...(c?.meals ? { meals: true } : {}),
+    ...(c?.activities ? { activities: true } : {}),
+    ...(c?.localTransport ? { localTransport: true } : {}),
+    ...(transfer !== undefined ? { transfer } : {}),
+  };
+  return Object.keys(coverage).length ? coverage : null;
+}
+
 /** A trip setup from the draft, starting from `base` for anything the draft doesn't say. */
 export function setupFromDraft(draft: TripDraft, base: TripSetup, today: string): TripSetup {
   const dates = draftDates(draft, today);
@@ -108,6 +137,7 @@ export function setupFromDraft(draft: TripDraft, base: TripSetup, today: string)
     travelers,
     interests: draft.interests.length ? draft.interests : base.interests,
     ...(dates ?? { startDate: base.startDate, endDate: base.endDate }),
+    coverage: coverageFromDraft(draft),
   };
   const totalBudget =
     draft.totalBudget && draft.totalBudget > 0

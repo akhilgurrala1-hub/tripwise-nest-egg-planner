@@ -34,6 +34,8 @@ const empty = {
   style: null,
   totalBudget: null,
   interests: [],
+  covered: { lodging: false, meals: false, activities: false, localTransport: false },
+  transferCost: null,
 };
 
 beforeEach(() => {
