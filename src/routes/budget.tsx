@@ -1,6 +1,14 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { AlertTriangle, Check, Lock, RotateCcw, ShieldCheck } from "lucide-react";
-import type { ReactNode } from "react";
+import {
+  AlertTriangle,
+  Check,
+  ChevronDown,
+  ChevronUp,
+  Lock,
+  RotateCcw,
+  ShieldCheck,
+} from "lucide-react";
+import { useState, type ReactNode } from "react";
 import { toast } from "sonner";
 
 import {
@@ -62,6 +70,13 @@ function BudgetPage() {
   const { trip, totals, shape } = useTrip();
   const maxFund = Math.max(0, trip.setup.totalBudget);
   const hasOverrides = Object.keys(trip.overrides).length > 0;
+  // Categories at $0 (no tolls, no stops yet...) fold away so the list shows what the trip costs.
+  const shownCats = categoriesFor(trip.setup.tripType, trip.inputs.transportMode);
+  const zeroCats = shownCats.filter(
+    (c) => totals.categories[c] === 0 && trip.overrides[c] === undefined,
+  );
+  const activeCats = shownCats.filter((c) => !zeroCats.includes(c));
+  const [showZero, setShowZero] = useState(false);
 
   return (
     <div>
@@ -128,10 +143,24 @@ function BudgetPage() {
               )}
             </div>
             <Accordion type="multiple" className="surface-card overflow-hidden">
-              {categoriesFor(trip.setup.tripType, trip.inputs.transportMode).map((cat) => (
+              {(showZero ? shownCats : activeCats).map((cat) => (
                 <CategoryRow key={cat} cat={cat} />
               ))}
             </Accordion>
+            {zeroCats.length > 0 && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="mt-1.5 h-auto max-w-full py-1.5 text-left whitespace-normal text-muted-foreground"
+                onClick={() => setShowZero((v) => !v)}
+                aria-expanded={showZero}
+              >
+                {showZero ? <ChevronUp /> : <ChevronDown />}
+                {showZero
+                  ? "Hide categories at $0"
+                  : `Show ${zeroCats.length} more at $0: ${zeroCats.map((c) => CATEGORY_LABELS[c]).join(", ")}`}
+              </Button>
+            )}
             <p className="mt-2.5 text-xs text-muted-foreground">
               Unmarked amounts are estimates for {shape.days} day
               {shape.days > 1 ? "s" : ""}, {shape.nights} night

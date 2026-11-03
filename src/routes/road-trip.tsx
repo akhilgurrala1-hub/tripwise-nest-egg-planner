@@ -177,13 +177,7 @@ function RoadTripPage() {
 
   return (
     <div>
-      <PageHeader eyebrow="Road trip" title="Find the stops worth the detour">
-        {realMode ? (
-          <SourceNote label="Real places and drive times. Prices are estimates." />
-        ) : (
-          <SourceNote label="Example stops. Sign in for real places on your route." />
-        )}
-      </PageHeader>
+      <PageHeader eyebrow="Road trip" title="Find the stops worth the detour" />
 
       <div className="mx-auto mt-6 grid max-w-6xl grid-cols-1 gap-6 px-4 lg:grid-cols-[minmax(0,1fr)_340px]">
         <div className="min-w-0 space-y-6">
@@ -477,7 +471,10 @@ function StopCard({
       ? "Not listed"
       : cost === 0
         ? "Free"
-        : formatMoney(cost, { cents: true });
+        : // A few cents of detour gas reads as noise; whole dollars are what people plan with.
+          cost < 1
+          ? "Under $1"
+          : formatMoney(cost);
   const costDetail =
     (stop.costSource === "unknown"
       ? "price not published"
@@ -548,19 +545,15 @@ function StopCard({
           </p>
           <p className="tabular inline-flex items-center gap-1 text-[11px] text-muted-foreground">
             <Clock className="size-3" /> +{stop.extraMinutes} min
-            {stop.isDemo ? " (sample)" : ""}
           </p>
-          <p
-            className={cn(
-              "tabular text-[11px]",
-              remainingAfter < 0 || stopLeftAfter < 0
-                ? "text-destructive"
-                : "text-muted-foreground",
-            )}
-            title={`Stop budget left: ${formatMoney(stopLeftAfter)}`}
-          >
-            {formatMoney(remainingAfter)} {included ? "left" : "left after"}
-          </p>
+          {/* Only worth a line when it would push the trip or the stop budget over. */}
+          {(remainingAfter < 0 || stopLeftAfter < 0) && (
+            <p className="tabular text-[11px] text-destructive">
+              {remainingAfter < 0
+                ? `${formatMoney(-remainingAfter)} over budget`
+                : `${formatMoney(-stopLeftAfter)} over stop budget`}
+            </p>
+          )}
         </div>
         <Button
           size="sm"

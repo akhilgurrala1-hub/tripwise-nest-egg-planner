@@ -13,7 +13,7 @@ import {
   type TripType,
 } from "./demo-data";
 import { addDays, isIsoDate, MAX_TRIP_DAYS } from "./dates";
-import { defaultEmergencyFund, type TripCoverage } from "./budget";
+import { defaultEmergencyFund, MAX_TRAVELERS, type TripCoverage } from "./budget";
 import { suggestedBudget, type TripSetup } from "./trip-store";
 
 export type { TripDraft };
@@ -119,7 +119,10 @@ export function setupFromDraft(draft: TripDraft, base: TripSetup, today: string)
       customDestination = named.slice(0, 120);
     }
   }
-  const travelers = Math.min(12, Math.max(1, Math.round(draft.travelers ?? base.travelers)));
+  const travelers = Math.min(
+    MAX_TRAVELERS,
+    Math.max(1, Math.round(draft.travelers ?? base.travelers)),
+  );
   const next: TripSetup = {
     ...base,
     tripType,

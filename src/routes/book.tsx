@@ -76,14 +76,13 @@ function BookPage() {
 
   return (
     <div>
-      <PageHeader eyebrow="Book" title="Book your trip">
-        <p className="max-w-xs text-xs text-muted-foreground">
-          You book and pay on each provider's own site. Waypoint never takes payment. Searches open
-          pre-filled with your dates and group.
-        </p>
-      </PageHeader>
+      <PageHeader eyebrow="Book" title="Book your trip" />
+      <p className="mx-auto mt-4 max-w-6xl px-4 text-[13px] text-muted-foreground">
+        Each search opens on the provider's own site with your dates and group filled in. You book
+        and pay there; Waypoint never takes payment.
+      </p>
 
-      <div className="mx-auto mt-8 grid max-w-6xl grid-cols-1 gap-4 px-4 lg:grid-cols-[minmax(0,1fr)_320px]">
+      <div className="mx-auto mt-6 grid max-w-6xl grid-cols-1 gap-4 px-4 lg:grid-cols-[minmax(0,1fr)_320px]">
         <div className="min-w-0 space-y-3">
           {items.map((item, i) => (
             <BookingCard

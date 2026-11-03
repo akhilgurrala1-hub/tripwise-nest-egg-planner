@@ -47,7 +47,13 @@ export function PriceKeyCheck({
 
   return (
     <div className={cn("rounded-lg border border-border p-3 text-xs", className)}>
-      {!connected && (
+      {!connected && !import.meta.env.DEV && (
+        <p className="text-muted-foreground">
+          Live prices aren't available right now, so these amounts are estimates.
+        </p>
+      )}
+      {/* Setup help is for whoever runs the app: shown in the editor preview, not to visitors. */}
+      {!connected && import.meta.env.DEV && (
         <div className="space-y-1.5 text-muted-foreground">
           <p className="font-medium text-foreground">Live prices aren't connected yet</p>
           <p>

@@ -131,6 +131,9 @@ export function applyCoverage(inputs: BudgetInputs, c?: TripCoverage | null): Bu
   };
 }
 
+/** Largest group Waypoint plans for (a reunion, a team trip); matches what the assistant accepts. */
+export const MAX_TRAVELERS = 20;
+
 export interface CostPart {
   key: "fares" | "rental" | "local" | "transfer";
   label: string;
