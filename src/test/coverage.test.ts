@@ -7,13 +7,21 @@ import {
   calculateBudget,
   coveredLabels,
   defaultInputs,
+  transportParts,
   tripShape,
 } from "@/lib/budget";
 import { addDays, todayIso } from "@/lib/dates";
 import { bookingPlan } from "@/lib/booking";
 import { DESTINATIONS, destinationFor } from "@/lib/demo-data";
 import { fitToCoverage, generateDemoItinerary } from "@/lib/itinerary";
-import { buildTrip, sampleSetup, suggestedBudget, type TripSetup } from "@/lib/trip-store";
+import {
+  buildTrip,
+  currentTrip,
+  sampleSetup,
+  suggestedBudget,
+  tripActions,
+  type TripSetup,
+} from "@/lib/trip-store";
 
 const today = todayIso();
 const start = addDays(today, 20);
@@ -180,5 +188,40 @@ describe("booking only lists what's needed", () => {
     expect(keys).not.toContain("hotel");
     expect(keys).not.toContain("dining");
     expect(keys).not.toContain("tickets");
+  });
+});
+
+describe("what Transportation is made of", () => {
+  it("names each part and adds up to the total", () => {
+    const base = defaultInputs(DESTINATIONS[0]!, "comfort", "flight", 2, "flight");
+    const inputs = applyCoverage(base, { localTransport: true, transfer: 45 });
+    const shape = tripShape(start, addDays(start, 3), 2);
+    const parts = transportParts(inputs, shape);
+    expect(parts.map((p) => p.label)).toEqual(["Flights", "Ride to the airport"]);
+    expect(parts[0]!.detail).toBe(`$${inputs.farePerPerson} × 2 round trips`);
+    const total = calculateBudget(inputs, shape, 5000, 0).categories.transportation;
+    expect(parts.reduce((s, p) => s + p.amount, 0)).toBeCloseTo(total, 2);
+  });
+
+  it("lists a rental and rides at the destination when there are some", () => {
+    const inputs = defaultInputs(DESTINATIONS[0]!, "comfort", "road-trip", 1, "rental-car");
+    const shape = tripShape(start, addDays(start, 1), 1);
+    const labels = transportParts({ ...inputs, localTransitPerDay: 10 }, shape).map((p) => p.label);
+    expect(labels).toEqual(["Rental car", "Getting around there"]);
+  });
+});
+
+describe("live prices respect what's covered", () => {
+  it("never adds a hotel price when the traveler has a place to stay", () => {
+    tripActions.startTrip(setupFromDraft(GOING_HOME, sampleSetup(), today));
+    tripActions.applyLivePrices({
+      fetchedAt: new Date().toISOString(),
+      gas: null,
+      hotels: { nightly: 180 },
+      flights: { perPerson: 212 },
+    } as never);
+    const t = currentTrip();
+    expect(t.inputs.nightlyRate).toBe(0);
+    expect(t.inputs.farePerPerson).toBe(212);
   });
 });

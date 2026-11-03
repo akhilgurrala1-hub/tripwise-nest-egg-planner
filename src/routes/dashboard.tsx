@@ -21,7 +21,13 @@ import { DestinationCard } from "@/components/app/DestinationIntro";
 import { WeatherCard } from "@/components/app/Weather";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth-context";
-import { CATEGORIES, CATEGORY_LABELS, SAVING_TITLES, formatMoney } from "@/lib/budget";
+import {
+  CATEGORIES,
+  CATEGORY_LABELS,
+  SAVING_TITLES,
+  formatMoney,
+  transportParts,
+} from "@/lib/budget";
 import { bookingPlan, bookingProgress } from "@/lib/booking";
 import { TRAVEL_STYLES } from "@/lib/demo-data";
 import { liveCategories } from "@/lib/live/sources";
@@ -69,6 +75,18 @@ function Dashboard() {
   const [showAllSavings, setShowAllSavings] = useState(false);
   const style = TRAVEL_STYLES.find((s) => s.id === trip.setup.style);
 
+  const live = liveCategories(trip.inputs, trip.overrides, trip.live);
+  const fareLive = live.includes("transportation");
+  const fetchStatus = useServerFn(getLivePriceStatus);
+  const priceStatus = useQuery({
+    queryKey: ["live", "price-status"],
+    queryFn: () => fetchStatus(),
+    staleTime: 10 * 60 * 1000,
+  });
+  const flightsConnected = !!priceStatus.data?.flights;
+  // Transportation's parts only add up while it isn't a custom total.
+  const parts =
+    trip.overrides.transportation === undefined ? transportParts(trip.inputs, shape) : [];
   const breakdown = CATEGORIES.map((c) => ({ cat: c, value: totals.categories[c] }))
     .filter((d) => d.value > 0)
     .sort((a, b) => b.value - a.value);
@@ -186,7 +204,7 @@ function Dashboard() {
             </div>
             <ul className="mt-4 divide-y divide-border">
               {breakdown.map(({ cat, value }) => (
-                <li key={cat} className="flex items-center gap-3 py-2.5 text-sm">
+                <li key={cat} className="flex flex-wrap items-center gap-x-3 py-2.5 text-sm">
                   <span
                     className="size-2 shrink-0 rounded-[3px]"
                     style={{ backgroundColor: CATEGORY_COLOR_VAR[cat] }}
@@ -198,6 +216,37 @@ function Dashboard() {
                   <span className="tabular w-20 text-right font-medium">
                     <AnimatedMoney value={value} />
                   </span>
+                  {cat === "transportation" && parts.length > 0 && (
+                    <ul className="basis-full space-y-1 pt-1.5 pl-5">
+                      {parts.map((p) => (
+                        <li key={p.key} className="flex items-baseline gap-2 text-xs">
+                          <span className="min-w-0 flex-1 truncate text-foreground/85">
+                            {p.label}
+                            <span className="text-muted-foreground"> · {p.detail}</span>
+                          </span>
+                          {p.key === "fares" && fareLive ? (
+                            <span className="text-[11px] font-medium text-success">Live</span>
+                          ) : p.key === "fares" && flightsConnected ? (
+                            <Link
+                              to="/budget"
+                              hash="live-prices"
+                              className="text-[11px] font-medium text-primary hover:underline"
+                            >
+                              Check the real fare
+                            </Link>
+                          ) : null}
+                          <span className="tabular text-muted-foreground">
+                            {formatMoney(p.amount)}
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                  {cat === "misc" && (
+                    <span className="basis-full pl-5 text-xs text-muted-foreground">
+                      {trip.inputs.miscPct}% set aside for prices that change before you book
+                    </span>
+                  )}
                 </li>
               ))}
             </ul>
