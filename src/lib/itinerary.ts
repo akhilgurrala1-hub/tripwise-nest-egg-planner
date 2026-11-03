@@ -367,3 +367,57 @@ export function unpricedItems(itin: Itinerary | null): number {
   return itin.days.flatMap((d) => d.items).filter((i) => i.costSource === "unknown" && i.placeId)
     .length;
 }
+
+/** Restaurant picks in the plan, for the whole group. */
+export function itineraryMealCost(itin: Itinerary | null, travelers: number): number {
+  if (!itin) return 0;
+  const perPerson = itin.days
+    .flatMap((d) => d.items)
+    .filter((i) => i.kind === "restaurant")
+    .reduce((s, i) => s + (Number.isFinite(i.costPerPerson) ? i.costPerPerson : 0), 0);
+  return Math.round(perPerson * Math.max(1, travelers) * 100) / 100;
+}
+
+export type BudgetFit = "matches" | "under" | "over";
+
+/**
+ * How the plan's total compares to the budget set aside for it. Within 5% (or $10)
+ * counts as matching so small rounding never raises a flag.
+ */
+export function compareToBudget(
+  planned: number,
+  budget: number,
+): { fit: BudgetFit; difference: number } {
+  const difference = Math.round((planned - budget) * 100) / 100;
+  const tolerance = Math.max(10, Math.abs(budget) * 0.05);
+  if (Math.abs(difference) <= tolerance) return { fit: "matches", difference };
+  return { fit: difference > 0 ? "over" : "under", difference };
+}
+
+/** Shape of a day plan returned by the AI planner (before ids and dates are added). */
+export interface AiPlanDay {
+  title: string;
+  items: Omit<ItineraryItem, "id" | "costSource" | "custom">[];
+}
+
+/** Turn the AI planner's answer into an itinerary for these dates: ids, real dates, no negative prices. */
+export function fromAiPlan(
+  plan: { days: AiPlanDay[]; tips: string[] },
+  startDate: string,
+  days: number,
+): Itinerary {
+  return {
+    source: "ai",
+    tips: plan.tips.slice(0, 4),
+    days: plan.days.slice(0, days).map((d, di) => ({
+      day: di + 1,
+      date: addDays(startDate, di),
+      title: d.title,
+      items: d.items.map((it, ii) => ({
+        ...it,
+        id: `ai-${di}-${ii}`,
+        costPerPerson: Math.max(0, Number(it.costPerPerson) || 0),
+      })),
+    })),
+  };
+}

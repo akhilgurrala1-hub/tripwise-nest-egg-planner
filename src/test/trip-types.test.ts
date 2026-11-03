@@ -136,7 +136,7 @@ describe("upgrading saved trips", () => {
     expect(upgradeTripType("staycation", "car")).toBe("staycation");
   });
 
-  it("migrates a v3 trip to v4 with the new cruise inputs zeroed", () => {
+  it("migrates a v3 trip to the current version with the new cruise inputs zeroed", () => {
     const v4 = buildTrip({ ...sampleSetup(), transportMode: "flight", tripType: "flight" });
     const {
       cruisePerNight: _a,
@@ -151,7 +151,8 @@ describe("upgrading saved trips", () => {
       inputs: oldInputs,
     };
     const out = migrate(JSON.parse(JSON.stringify(v3)))!;
-    expect(out.version).toBe(4);
+    expect(out.version).toBe(5);
+    expect(out.id).toBeTruthy();
     expect(out.setup.tripType).toBe("flight");
     expect(out.inputs.cruisePerNight).toBe(0);
     expect(calculateBudget(out.inputs, shape, 0, 0).categories.cruise).toBe(0);

@@ -22,7 +22,8 @@ import {
 import { useCallback, useState } from "react";
 import { toast } from "sonner";
 
-import { DemoBadge, NumberField } from "@/components/app/bits";
+import { DemoBadge, InterestChips, NumberField } from "@/components/app/bits";
+import { Segmented } from "@/components/app/motion";
 import { RealRouteMap } from "@/components/app/RealRouteMap";
 import { Badge } from "@/components/ui/badge";
 import { PageHeader } from "@/components/app/TripHeader";
@@ -30,7 +31,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Slider } from "@/components/ui/slider";
 import { formatMoney, roundMoney, stopCost } from "@/lib/budget";
-import { INTERESTS, TRIP_TYPES, isDrivingMode, type Interest } from "@/lib/demo-data";
+import { TRIP_TYPES, isDrivingMode, type Interest } from "@/lib/demo-data";
 import {
   STOP_FILTERS,
   getRouteProvider,
@@ -193,7 +194,7 @@ function RoadTripPage() {
           <section className="surface-card space-y-5 p-5">
             <div className="grid gap-3 sm:grid-cols-2">
               <div>
-                <label htmlFor="rt-origin" className="text-sm font-semibold">
+                <label htmlFor="rt-origin" className="text-[13px] text-muted-foreground">
                   Starting location
                 </label>
                 <Input
@@ -202,11 +203,11 @@ function RoadTripPage() {
                   placeholder="e.g. your city"
                   maxLength={80}
                   onChange={(e) => tripActions.updateRoadTrip({ origin: e.target.value })}
-                  className="mt-1.5 h-11 rounded-xl bg-card"
+                  className="mt-1.5 h-11"
                 />
               </div>
               <div>
-                <label htmlFor="rt-dest" className="text-sm font-semibold">
+                <label htmlFor="rt-dest" className="text-[13px] text-muted-foreground">
                   Destination
                 </label>
                 <Input
@@ -215,14 +216,14 @@ function RoadTripPage() {
                   placeholder="Where you're headed"
                   maxLength={80}
                   onChange={(e) => tripActions.updateRoadTrip({ destination: e.target.value })}
-                  className="mt-1.5 h-11 rounded-xl bg-card"
+                  className="mt-1.5 h-11"
                 />
               </div>
             </div>
 
             <div className="grid gap-5 sm:grid-cols-2">
               <div>
-                <label htmlFor="rt-budget" className="text-sm font-semibold">
+                <label htmlFor="rt-budget" className="text-[13px] text-muted-foreground">
                   Budget for stops & detours
                 </label>
                 <NumberField
@@ -236,10 +237,8 @@ function RoadTripPage() {
               </div>
               <div>
                 <div className="flex items-baseline justify-between">
-                  <span className="text-sm font-semibold">Max detour per stop</span>
-                  <span className="tabular text-sm font-semibold text-primary">
-                    {rt.maxDetourMinutes} min
-                  </span>
+                  <span className="text-[13px] text-muted-foreground">Max detour per stop</span>
+                  <span className="tabular text-sm font-medium">{rt.maxDetourMinutes} min</span>
                 </div>
                 <Slider
                   className="mt-4"
@@ -254,28 +253,8 @@ function RoadTripPage() {
             </div>
 
             <div>
-              <p className="mb-2 text-sm font-semibold">Interests</p>
-              <div className="flex flex-wrap gap-2">
-                {INTERESTS.map((i) => {
-                  const active = rt.interests.includes(i.id);
-                  return (
-                    <button
-                      key={i.id}
-                      type="button"
-                      aria-pressed={active}
-                      onClick={() => toggleInterest(i.id)}
-                      className={cn(
-                        "rounded-full border px-3 py-1.5 text-xs font-semibold transition-all",
-                        active
-                          ? "border-primary bg-primary text-primary-foreground"
-                          : "border-border bg-card hover:border-primary/40",
-                      )}
-                    >
-                      {i.label}
-                    </button>
-                  );
-                })}
-              </div>
+              <p className="mb-2 text-[13px] text-muted-foreground">Interests</p>
+              <InterestChips value={rt.interests} onToggle={toggleInterest} />
             </div>
             {authLoading ? null : realMode ? (
               <Button
@@ -288,10 +267,10 @@ function RoadTripPage() {
                 {real.isFetching ? "Looking along your route…" : "Find real stops"}
               </Button>
             ) : (
-              <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-accent px-4 py-3 text-sm">
+              <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg bg-muted px-4 py-3 text-sm">
                 <p>
-                  <strong>You're seeing sample stops.</strong> Sign in to explore real places,
-                  routes and drive times.
+                  <span className="font-medium">You're seeing sample stops.</span> Sign in to
+                  explore real places, routes and drive times.
                 </p>
                 <Button asChild size="sm" variant="outline">
                   <Link to="/auth" search={{ redirect: "/road-trip" }}>
@@ -345,23 +324,15 @@ function RoadTripPage() {
               </StateCard>
             ) : (
               <>
-                <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:flex-wrap sm:px-0">
-                  {STOP_FILTERS.map((f) => (
-                    <button
-                      key={f.id}
-                      type="button"
-                      aria-pressed={filter === f.id}
-                      onClick={() => setFilter(f.id)}
-                      className={cn(
-                        "min-h-10 shrink-0 rounded-full border px-4 py-2 text-sm font-semibold transition-all",
-                        filter === f.id
-                          ? "border-sunset bg-accent text-foreground"
-                          : "border-border bg-card text-muted-foreground hover:text-foreground",
-                      )}
-                    >
-                      {f.label}
-                    </button>
-                  ))}
+                <div className="-mx-4 overflow-x-auto px-4 pb-1 sm:mx-0 sm:px-0">
+                  <Segmented
+                    ariaLabel="Filter stops"
+                    size="sm"
+                    value={filter}
+                    onChange={setFilter}
+                    options={STOP_FILTERS.map((f) => ({ value: f.id, label: f.label }))}
+                    className="max-w-none flex-nowrap"
+                  />
                 </div>
                 <p className="text-xs text-muted-foreground">
                   {visible.length} stop{visible.length === 1 ? "" : "s"} within{" "}
@@ -504,148 +475,111 @@ function StopCard({
   // Stops are excluded from taxes and the cushion, so their effect on the budget is exactly their cost.
   const remainingAfter = included ? tripRemaining : roundMoney(tripRemaining - cost);
   const stopLeftAfter = included ? stopBudgetLeft : roundMoney(stopBudgetLeft - cost);
+  const costText =
+    stop.costSource === "unknown" && cost === 0
+      ? "Not listed"
+      : cost === 0
+        ? "Free"
+        : formatMoney(cost, { cents: true });
+  const costDetail =
+    (stop.costSource === "unknown"
+      ? "price not published"
+      : stop.costPerPerson === 0
+        ? "no entry fee"
+        : `${formatMoney(stop.costPerPerson)}/pp × ${travelers}${stop.costSource === "price-level" ? " (est.)" : ""}`) +
+    (driving && stop.extraMinutes > 0 ? " + fuel" : "");
 
   return (
     <article
       id={`stop-${stop.id}`}
       className={cn(
-        "surface-card animate-rise overflow-hidden transition-all",
-        included && "ring-2 ring-success/40",
+        "surface-card animate-rise flex gap-3 p-4 transition-[border-color,box-shadow] duration-200",
+        included && "border-primary ring-3 ring-primary/12",
       )}
     >
-      <div className="flex gap-3 p-4">
-        <span
-          className={cn(
-            "grid size-11 shrink-0 place-items-center rounded-2xl",
-            stop.kind === "restaurant"
-              ? "bg-accent text-primary"
-              : stop.costPerPerson === 0
-                ? "bg-success-soft text-success"
-                : "bg-secondary text-primary",
-          )}
-        >
-          <Icon className="size-5" />
-        </span>
-        <div className="min-w-0 flex-1">
-          <p className="text-[11px] font-semibold tracking-wider text-muted-foreground uppercase">
-            {label} · {segment}
-          </p>
-          <h3 className="text-[15px] leading-snug font-semibold">{stop.name}</h3>
-          {stop.description && <p className="text-xs text-muted-foreground">{stop.description}</p>}
-          {(stop.rating !== null || stop.address) && (
-            <p className="mt-0.5 flex flex-wrap items-center gap-x-2 text-xs text-muted-foreground">
-              {stop.rating !== null && (
-                <span className="inline-flex items-center gap-0.5 font-semibold text-foreground">
-                  <Star className="size-3 fill-gold text-gold" /> {stop.rating.toFixed(1)}
-                  {stop.ratingCount !== null && (
-                    <span className="font-normal text-muted-foreground">
-                      ({stop.ratingCount.toLocaleString()})
-                    </span>
-                  )}
+      <span className="grid size-9 shrink-0 place-items-center rounded-lg border border-border text-foreground/80">
+        <Icon className="size-4" strokeWidth={1.8} />
+      </span>
+      <div className="min-w-0 flex-1">
+        <p className="eyebrow truncate">
+          {label} · {segment}
+        </p>
+        <h3 className="mt-0.5 text-sm leading-snug font-medium">{stop.name}</h3>
+        <p className="mt-0.5 text-xs text-muted-foreground">
+          {stop.rating !== null && (
+            <span className="tabular mr-2 inline-flex items-center gap-0.5 font-medium text-foreground">
+              <Star className="size-3 fill-gold text-gold" /> {stop.rating.toFixed(1)}
+              {stop.ratingCount !== null && (
+                <span className="font-normal text-muted-foreground">
+                  ({stop.ratingCount.toLocaleString()})
                 </span>
               )}
-              {stop.address && <span className="truncate">{stop.address}</span>}
-            </p>
+            </span>
           )}
-          <p className="mt-2 text-[11px] font-semibold tracking-wider text-muted-foreground uppercase">
-            Worth the detour?
-          </p>
-          <ul className="mt-1 flex flex-wrap gap-1.5">
+          {stop.description || stop.address}
+        </p>
+        {reasons.length > 0 && (
+          <ul
+            className="mt-2 flex flex-wrap gap-x-3 gap-y-1"
+            aria-label="Why it's worth the detour"
+          >
             {reasons.map((r) => (
               <li
                 key={r}
-                className="inline-flex items-center gap-1 rounded-md border border-border px-1.5 py-0.5 text-[11px] font-medium"
+                className="inline-flex items-center gap-1 text-[11px] text-muted-foreground"
               >
                 <Check className="size-3 text-success" /> {r}
               </li>
             ))}
           </ul>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-3 border-t border-border bg-muted/40 text-center text-xs">
-        <div className="p-3">
-          <p className="text-muted-foreground">Est. cost</p>
-          <p className="tabular text-sm font-semibold">
-            {stop.costSource === "unknown" && cost === 0
-              ? "Not listed"
-              : cost === 0
-                ? "Free"
-                : formatMoney(cost, { cents: true })}
-          </p>
-          <p className="tabular text-[10px] text-muted-foreground">
-            {stop.costSource === "unknown"
-              ? "price not published"
-              : stop.costPerPerson === 0
-                ? "no entry fee"
-                : `${formatMoney(stop.costPerPerson)}/pp × ${travelers}`}
-            {driving && stop.extraMinutes > 0 ? " + fuel" : ""}
-          </p>
-          {stop.costSource === "price-level" && (
-            <p className="text-[10px] text-muted-foreground">est. from $ level</p>
-          )}
-          {stop.costSource === "listed" && (
-            <p className="text-[10px] text-muted-foreground">listed price range</p>
-          )}
-        </div>
-        <div className="border-x border-border p-3">
-          <p className="text-muted-foreground">Extra drive</p>
-          <p className="tabular inline-flex items-center gap-1 text-sm font-semibold">
-            <Clock className="size-3" /> +{stop.extraMinutes} min
-          </p>
-          <p className="text-[10px] text-muted-foreground">
-            {stop.isDemo ? "sample time" : "Google drive time"}
-          </p>
-        </div>
-        <div className="p-3">
-          <p className="text-muted-foreground">{included ? "Trip remaining" : "Remaining after"}</p>
-          <p
-            className={cn(
-              "tabular text-sm font-semibold",
-              remainingAfter < 0 ? "text-destructive" : "text-success",
-            )}
-          >
-            {formatMoney(remainingAfter)}
-          </p>
-          <p
-            className={cn(
-              "tabular text-[10px]",
-              stopLeftAfter < 0 ? "text-destructive" : "text-muted-foreground",
-            )}
-          >
-            stop budget {formatMoney(stopLeftAfter)}
-          </p>
-        </div>
-      </div>
-
-      <div className="flex items-center justify-between gap-3 border-t border-border px-4 py-3">
-        {stop.isDemo ? (
-          <DemoBadge label="Demo" />
-        ) : stop.mapsUrl ? (
+        )}
+        {stop.mapsUrl && !stop.isDemo && (
           <a
             href={stop.mapsUrl}
             target="_blank"
             rel="noreferrer"
-            className="inline-flex items-center gap-1 text-xs font-semibold text-primary underline-offset-2 hover:underline"
+            className="mt-2 inline-flex items-center gap-1 text-xs font-medium text-primary underline-offset-2 hover:underline"
           >
             View on Google Maps <ExternalLink className="size-3" />
           </a>
-        ) : (
-          <span />
         )}
+      </div>
+      <div className="flex shrink-0 flex-col items-end gap-2 text-right">
+        <div>
+          <p className="tabular text-sm font-semibold" title={costDetail}>
+            {costText}
+          </p>
+          <p className="tabular inline-flex items-center gap-1 text-[11px] text-muted-foreground">
+            <Clock className="size-3" /> +{stop.extraMinutes} min
+            {stop.isDemo ? " (sample)" : ""}
+          </p>
+          <p
+            className={cn(
+              "tabular text-[11px]",
+              remainingAfter < 0 || stopLeftAfter < 0
+                ? "text-destructive"
+                : "text-muted-foreground",
+            )}
+            title={`Stop budget left: ${formatMoney(stopLeftAfter)}`}
+          >
+            {formatMoney(remainingAfter)} {included ? "left" : "left after"}
+          </p>
+        </div>
         <Button
           size="sm"
-          variant={included ? "outline" : "default"}
+          variant={included ? "outline" : "ink"}
           onClick={() => tripActions.toggleStop(stop)}
           aria-pressed={included}
+          aria-label={`${included ? "Remove" : "Add"} ${stop.name}`}
+          className="min-w-[84px]"
         >
           {included ? (
             <>
-              <Minus /> Remove from trip
+              <Minus /> Remove
             </>
           ) : (
             <>
-              <Plus /> Add to trip
+              <Plus /> Add
             </>
           )}
         </Button>

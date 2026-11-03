@@ -180,8 +180,12 @@ export async function fetchTripWeather(opts: {
           opts.signal,
         )
           .then((b) => parseDaily(b, "typical", 1))
-          // Last year's record is a nice-to-have: a failure there must not hide the live forecast.
-          .catch(() => [] as DayWeather[])
+          // Last year's record is a nice-to-have next to a live forecast: a failure there must not
+          // hide the forecast. When it's all there is, the failure is reported so it can be retried.
+          .catch((err: unknown) => {
+            if (!plan.forecast) throw err;
+            return [] as DayWeather[];
+          })
       : Promise.resolve([]),
   ]);
   const days = [...forecast, ...typical].filter(

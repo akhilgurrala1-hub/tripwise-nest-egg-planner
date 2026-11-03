@@ -1,5 +1,6 @@
 import {
   Bus,
+  Check,
   Cookie,
   MapPinned,
   Car,
@@ -18,6 +19,7 @@ import { useEffect, useState, type ReactNode } from "react";
 
 import { Badge } from "@/components/ui/badge";
 import type { Category } from "@/lib/budget";
+import { INTERESTS, type Interest } from "@/lib/demo-data";
 import { liveCategories } from "@/lib/live/sources";
 import { useTrip } from "@/lib/trip-store";
 import { cn } from "@/lib/utils";
@@ -129,9 +131,23 @@ export function NumberField({
         aria-label={ariaLabel}
         type="number"
         inputMode="decimal"
-        step={step}
+        // Any amount is valid (a step here would make the browser reject e.g. $4,321 and block
+        // forms); the arrow keys still nudge to the next round step.
+        step="any"
         min={min}
         value={text}
+        onKeyDown={(e) => {
+          if (e.key !== "ArrowUp" && e.key !== "ArrowDown") return;
+          e.preventDefault();
+          const current = Number(text) || 0;
+          const next =
+            e.key === "ArrowUp"
+              ? Math.floor(current / step + 1e-9) * step + step
+              : Math.ceil(current / step - 1e-9) * step - step;
+          const n = Math.max(min, Math.round(next * 100) / 100);
+          setText(String(n));
+          onChange(n);
+        }}
         onChange={(e) => {
           setText(e.target.value);
           const n = Number(e.target.value);
@@ -164,6 +180,48 @@ export function SectionTitle({
         <h2 className="text-lg font-semibold text-foreground">{title}</h2>
       </div>
       {action}
+    </div>
+  );
+}
+
+/** Interest toggles, the same on every page that asks. */
+export function InterestChips({
+  value,
+  onToggle,
+  className,
+}: {
+  value: Interest[];
+  onToggle: (id: Interest) => void;
+  className?: string;
+}) {
+  return (
+    <div className={cn("flex flex-wrap gap-1.5", className)}>
+      {INTERESTS.map((i) => {
+        const active = value.includes(i.id);
+        return (
+          <button
+            key={i.id}
+            type="button"
+            aria-pressed={active}
+            onClick={() => onToggle(i.id)}
+            className={cn(
+              "inline-flex h-9 items-center gap-1.5 rounded-lg border px-3 text-[13px] font-medium transition-[background-color,border-color,color,transform] duration-150 active:scale-[0.97]",
+              active
+                ? "border-foreground bg-foreground text-background"
+                : "border-border bg-card text-foreground hover:border-muted-foreground/40",
+            )}
+          >
+            <Check
+              className={cn(
+                "size-3.5 transition-[width,opacity] duration-200",
+                active ? "w-3.5 opacity-100" : "-mr-1.5 w-0 opacity-0",
+              )}
+              aria-hidden
+            />
+            {i.label}
+          </button>
+        );
+      })}
     </div>
   );
 }

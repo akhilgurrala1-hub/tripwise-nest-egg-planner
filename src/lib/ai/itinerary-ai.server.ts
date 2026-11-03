@@ -95,7 +95,21 @@ function describeError(err: unknown): { status: number; error: string } {
   };
 }
 
-export async function generateAiItinerary(req: AiItineraryRequest): Promise<AiItineraryResult> {
+/** Longest a single generation may run on the server, so a stuck request can't hold credits or a worker. */
+const SERVER_TIMEOUT_MS = 85_000;
+
+function requestSignal(clientSignal?: AbortSignal): AbortSignal | undefined {
+  if (typeof AbortSignal === "undefined" || typeof AbortSignal.timeout !== "function")
+    return clientSignal;
+  const timeout = AbortSignal.timeout(SERVER_TIMEOUT_MS);
+  if (!clientSignal || typeof AbortSignal.any !== "function") return timeout;
+  return AbortSignal.any([timeout, clientSignal]);
+}
+
+export async function generateAiItinerary(
+  req: AiItineraryRequest,
+  clientSignal?: AbortSignal,
+): Promise<AiItineraryResult> {
   const apiKey = process.env["LOVABLE_API_KEY"];
   if (!apiKey) return { ok: false, status: 401, error: "AI planning isn't configured yet." };
 
@@ -124,7 +138,9 @@ export async function generateAiItinerary(req: AiItineraryRequest): Promise<AiIt
   ].join("\n");
 
   try {
+    const abortSignal = requestSignal(clientSignal);
     const result = streamText({
+      ...(abortSignal ? { abortSignal } : {}),
       model: provider.responses(MODEL),
       instructions: INSTRUCTIONS,
       messages: [{ role: "user", content: prompt }],
@@ -149,6 +165,12 @@ export async function generateAiItinerary(req: AiItineraryRequest): Promise<AiIt
     }
     return { ok: true, itinerary: output };
   } catch (err) {
+    if ((err as { name?: string })?.name === "TimeoutError")
+      return {
+        ok: false,
+        status: 504,
+        error: "The AI planner took too long. Your current plan is unchanged — try again.",
+      };
     console.error("AI itinerary failed", err);
     return { ok: false, ...describeError(err) };
   }

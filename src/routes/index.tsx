@@ -1,23 +1,12 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import {
-  ArrowRight,
-  Car,
-  Check,
-  Home,
-  MapPin,
-  Minus,
-  Plane,
-  Plus,
-  Ship,
-  TrainFront,
-  type LucideIcon,
-} from "lucide-react";
+import { ArrowRight, MapPin, Minus, Plus } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 
-import { NumberField } from "@/components/app/bits";
+import { InterestChips, NumberField } from "@/components/app/bits";
 import { Segmented, stagger } from "@/components/app/motion";
 import { PlaceInput } from "@/components/app/PlaceInput";
+import { TripTypePicker } from "@/components/app/TripTypePicker";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -32,14 +21,13 @@ import {
   CUSTOM_DESTINATION_ID,
   DESTINATIONS,
   INTERESTS,
-  TRANSPORT_MODES,
   TRAVEL_STYLES,
-  TRIP_TYPES,
   getDestination,
   modeForTripType,
   tripTypeInfo,
   type TripType,
 } from "@/lib/demo-data";
+import { addDays, dateRangeError, inclusiveDays, isIsoDate, todayIso } from "@/lib/dates";
 import { destinationForTripType, tripActions, useTrip, type TripSetup } from "@/lib/trip-store";
 import { cn } from "@/lib/utils";
 
@@ -65,7 +53,6 @@ export const Route = createFileRoute("/")({
   component: Welcome,
 });
 
-const MAX_DAYS = 14;
 const BUDGET_PRESETS = [500, 1000, 2500, 5000];
 
 function Welcome() {
@@ -87,13 +74,15 @@ function Welcome() {
 
   const shape = tripShape(form.startDate, form.endDate, form.travelers);
   const dateError =
-    !form.startDate || !form.endDate
-      ? "Choose your dates"
-      : form.endDate < form.startDate
-        ? "End date must be after the start date"
-        : shape.days > MAX_DAYS
-          ? `Trips up to ${MAX_DAYS} days for now`
-          : "";
+    dateRangeError(form.startDate, form.endDate) ||
+    (form.startDate < todayIso() ? "That start date has already passed" : "");
+
+  /** Moving the start date keeps the trip's length, so the end date never ends up before it. */
+  const setStartDate = (startDate: string) => {
+    const length = inclusiveDays(form.startDate, form.endDate);
+    if (!isIsoDate(startDate) || length === null) return update({ startDate });
+    update({ startDate, endDate: addDays(startDate, length - 1) });
+  };
   const reserveError =
     form.emergencyFund > form.totalBudget ? "Reserve can't be more than your total budget" : "";
   const destError =
@@ -136,8 +125,6 @@ function Welcome() {
     () => DESTINATIONS.filter((d) => d.bestFor.includes(form.tripType)),
     [form.tripType],
   );
-  const typeInfo = tripTypeInfo(form.tripType);
-  const modes = TRANSPORT_MODES.filter((m) => typeInfo.modes.includes(m.id));
 
   const setTripType = (tripType: TripType) => {
     const { destinationId } = destinationForTripType(form, tripType);
@@ -177,7 +164,7 @@ function Welcome() {
       : dest.name;
 
   return (
-    <form onSubmit={submit} className="mx-auto max-w-2xl px-4 pt-10 pb-10 sm:pt-16">
+    <form onSubmit={submit} noValidate className="mx-auto max-w-2xl px-4 pt-10 pb-10 sm:pt-16">
       <header className="animate-rise">
         <p className="eyebrow">New trip</p>
         <h1 className="mt-2 text-[34px] leading-[1.1] font-semibold sm:text-[44px]">
@@ -191,36 +178,14 @@ function Welcome() {
 
       <div className="mt-12 divide-y divide-border">
         <Section n={1} title="Trip" style={stagger(1)}>
-          <Segmented
-            ariaLabel="Trip type"
-            size="lg"
-            columns={5}
-            value={form.tripType}
-            onChange={setTripType}
-            options={TRIP_TYPES.map((t) => {
-              const Icon = TRIP_ICONS[t.id];
-              return {
-                value: t.id,
-                label: t.label,
-                icon: <Icon className="size-[18px]" strokeWidth={1.7} />,
-              };
-            })}
+          <TripTypePicker
+            tripType={form.tripType}
+            mode={form.transportMode}
+            onTripType={setTripType}
+            onMode={(m) => update({ transportMode: m })}
+            from={form.origin.split(",")[0]?.trim() || "Home"}
+            to={destLabel}
           />
-          <p key={form.tripType} className="animate-pop mt-2.5 text-[13px] text-muted-foreground">
-            {typeInfo.blurb}.
-          </p>
-          {modes.length > 1 && (
-            <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2">
-              <p className="text-sm text-muted-foreground">{typeInfo.modeQuestion}</p>
-              <Segmented
-                ariaLabel={typeInfo.modeQuestion}
-                size="sm"
-                value={form.transportMode}
-                onChange={(m) => update({ transportMode: m })}
-                options={modes.map((m) => ({ value: m.id, label: m.label }))}
-              />
-            </div>
-          )}
         </Section>
 
         <Section
@@ -304,7 +269,8 @@ function Welcome() {
                   type="date"
                   aria-label="Start date"
                   value={form.startDate}
-                  onChange={(e) => update({ startDate: e.target.value })}
+                  min={todayIso()}
+                  onChange={(e) => setStartDate(e.target.value)}
                   className="h-11"
                 />
                 <Input
@@ -323,7 +289,9 @@ function Welcome() {
                 )}
               >
                 {dateError ||
-                  `${shape.days} day${shape.days > 1 ? "s" : ""}, ${shape.nights} night${shape.nights === 1 ? "" : "s"}`}
+                  (shape.days === 1
+                    ? "Day trip, no overnight stay"
+                    : `${shape.days} days, ${shape.nights} night${shape.nights === 1 ? "" : "s"}`)}
               </p>
             </div>
             <div>
@@ -371,34 +339,7 @@ function Welcome() {
             options={TRAVEL_STYLES.map((t) => ({ value: t.id, label: t.label, hint: t.blurb }))}
           />
           <p className="mt-5 mb-2.5 text-sm text-muted-foreground">Interests</p>
-          <div className="flex flex-wrap gap-1.5">
-            {INTERESTS.map((i) => {
-              const active = form.interests.includes(i.id);
-              return (
-                <button
-                  key={i.id}
-                  type="button"
-                  aria-pressed={active}
-                  onClick={() => toggleInterest(i.id)}
-                  className={cn(
-                    "inline-flex h-9 items-center gap-1.5 rounded-lg border px-3 text-[13px] font-medium transition-[background-color,border-color,color,transform] duration-150 active:scale-[0.97]",
-                    active
-                      ? "border-foreground bg-foreground text-background"
-                      : "border-border bg-card text-foreground hover:border-muted-foreground/40",
-                  )}
-                >
-                  <Check
-                    className={cn(
-                      "size-3.5 transition-[width,opacity] duration-200",
-                      active ? "w-3.5 opacity-100" : "-mr-1.5 w-0 opacity-0",
-                    )}
-                    aria-hidden
-                  />
-                  {i.label}
-                </button>
-              );
-            })}
-          </div>
+          <InterestChips value={form.interests} onToggle={toggleInterest} />
         </Section>
 
         <Section n={5} title="Budget" style={stagger(5)}>
@@ -574,11 +515,3 @@ function OptionRow({
     </button>
   );
 }
-
-const TRIP_ICONS: Record<TripType, LucideIcon> = {
-  "road-trip": Car,
-  flight: Plane,
-  cruise: Ship,
-  rail: TrainFront,
-  staycation: Home,
-};

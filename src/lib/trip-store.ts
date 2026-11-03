@@ -1,4 +1,4 @@
-import { useMemo, useSyncExternalStore } from "react";
+import { useSyncExternalStore } from "react";
 
 import {
   applySaving,
@@ -77,7 +77,9 @@ export interface CloudLink {
 }
 
 export interface TripState {
-  version: 4;
+  version: 5;
+  /** Stable for the life of one trip (kept through edits and trip-type switches, new for each trip started or opened). */
+  id: string;
   isSample: boolean;
   setup: TripSetup;
   inputs: BudgetInputs;
@@ -92,9 +94,16 @@ export interface TripState {
 }
 
 const STORAGE_KEY = "waypoint.trip.v1";
+export const SAMPLE_TRIP_ID = "sample";
 
 function todayIso() {
   return new Date().toISOString().slice(0, 10);
+}
+
+export function newTripId(): string {
+  const c = typeof globalThis !== "undefined" ? globalThis.crypto : undefined;
+  if (c?.randomUUID) return c.randomUUID();
+  return `t-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
 }
 
 function defaultRoadTrip(setup: TripSetup, destName: string): RoadTripPlan {
@@ -108,12 +117,13 @@ function defaultRoadTrip(setup: TripSetup, destName: string): RoadTripPlan {
   };
 }
 
-export function buildTrip(input: TripSetup, isSample = false): TripState {
+export function buildTrip(input: TripSetup, isSample = false, id?: string): TripState {
   const setup = { ...input, transportMode: modeForTripType(input.tripType, input.transportMode) };
   const dest = getDestination(setup.destinationId, setup.customDestination);
   const shape = tripShape(setup.startDate, setup.endDate, setup.travelers);
   return {
-    version: 4,
+    version: 5,
+    id: id ?? (isSample ? SAMPLE_TRIP_ID : newTripId()),
     isSample,
     setup,
     inputs: defaultInputs(dest, setup.style, setup.tripType, setup.travelers, setup.transportMode),
@@ -158,19 +168,30 @@ const NEW_INPUT_DEFAULTS = { cruisePerNight: 0, portFeesPerPerson: 0, gratuities
 /**
  * Upgrade trips saved by earlier versions of the app (also used for trips loaded from an account).
  * v4 split trips into separate types: old "Getaway" trips become fly-away, train & bus or road trips
- * by how they travel.
+ * by how they travel. v5 gave every trip a stable id.
  */
 export function migrate(raw: unknown): TripState | null {
-  const s = raw as Partial<TripState> & { version?: number };
-  if (!s || !s.setup || !s.inputs) return null;
-  if (s.version === 4) return { ...(s as TripState), live: s.live ?? null, cloud: s.cloud ?? null };
+  const v4 = migrateToV4(raw);
+  if (!v4) return null;
+  const id =
+    typeof v4.id === "string" && v4.id ? v4.id : v4.isSample ? SAMPLE_TRIP_ID : newTripId();
+  return { ...v4, version: 5, id };
+}
+
+type V4Trip = Omit<TripState, "version" | "id"> & { version: 4 | 5; id?: string };
+
+function migrateToV4(raw: unknown): V4Trip | null {
+  const s = raw as Partial<Omit<TripState, "version">> & { version?: number };
+  if (!s || typeof s !== "object" || !s.setup || !s.inputs) return null;
+  if (s.version === 4 || s.version === 5)
+    return { ...(s as V4Trip), live: s.live ?? null, cloud: s.cloud ?? null };
   if (s.version === 2 || s.version === 3) {
-    const old = s as unknown as TripState;
+    const old = s as unknown as V4Trip;
     const mode = old.inputs.transportMode ?? old.setup.transportMode ?? "car";
     const tripType = upgradeTripType(old.setup.tripType, mode);
     return {
       ...old,
-      version: 4,
+      version: 4 as const,
       setup: { ...old.setup, tripType, transportMode: mode },
       inputs: { ...NEW_INPUT_DEFAULTS, ...old.inputs },
       live: (s.version === 3 ? old.live : null) ?? null,
@@ -187,7 +208,7 @@ export function migrate(raw: unknown): TripState | null {
   const dest = getDestination(setup.destinationId, setup.customDestination);
   const fresh = defaultInputs(dest, setup.style, setup.tripType, setup.travelers, "car");
   return {
-    version: 4,
+    version: 4 as const,
     isSample: !!s.isSample,
     setup,
     inputs: { ...fresh, ...s.inputs, transportMode: "car" },
@@ -265,15 +286,7 @@ const listeners = new Set<() => void>();
 function load() {
   if (loaded || typeof window === "undefined") return;
   loaded = true;
-  try {
-    const raw = window.localStorage.getItem(STORAGE_KEY);
-    if (raw) {
-      const migrated = migrate(JSON.parse(raw));
-      if (migrated) state = repairDates(migrated);
-    }
-  } catch {
-    /* ignore corrupt storage */
-  }
+  state = readStored();
 }
 
 function persist() {
@@ -291,9 +304,35 @@ function setState(updater: (s: TripState) => TripState) {
   listeners.forEach((l) => l());
 }
 
+/** Read the stored trip (another tab may have written it). */
+function readStored(): TripState | null {
+  try {
+    const raw = window.localStorage.getItem(STORAGE_KEY);
+    const migrated = raw ? migrate(JSON.parse(raw)) : null;
+    return migrated ? repairDates(migrated) : null;
+  } catch {
+    return null;
+  }
+}
+
+/** Another tab changed the trip: show its version here too, so tabs never overwrite each other with stale copies. */
+function onStorage(e: StorageEvent) {
+  if (e.key !== null && e.key !== STORAGE_KEY) return;
+  if (e.storageArea && e.storageArea !== window.localStorage) return;
+  loaded = true;
+  state = readStored();
+  listeners.forEach((l) => l());
+}
+
 function subscribe(l: () => void) {
+  if (listeners.size === 0 && typeof window !== "undefined")
+    window.addEventListener("storage", onStorage);
   listeners.add(l);
-  return () => listeners.delete(l);
+  return () => {
+    listeners.delete(l);
+    if (listeners.size === 0 && typeof window !== "undefined")
+      window.removeEventListener("storage", onStorage);
+  };
 }
 
 function getSnapshot() {
@@ -314,10 +353,27 @@ export function stopsTotalFor(trip: TripState): number {
   return Math.round(total * 100) / 100;
 }
 
-/** The trip as stored in an account: everything except the account link itself. */
-export function tripForSaving(trip: TripState): Omit<TripState, "cloud"> {
-  const { cloud: _cloud, ...rest } = trip;
+/** The trip as stored in an account: everything except the account link and this device's trip id. */
+export function tripForSaving(trip: TripState): Omit<TripState, "cloud" | "id"> {
+  const { cloud: _cloud, id: _id, ...rest } = trip;
   return { ...rest, isSample: false };
+}
+
+/**
+ * What a generated plan depends on. A plan requested for one key is only applied
+ * while the trip still has that key — switching trips, trip type, destination or
+ * dates mid-request discards the stale answer instead of landing it on the wrong trip.
+ */
+export function planKey(trip: TripState): string {
+  const s = trip.setup;
+  return [
+    trip.id,
+    s.tripType,
+    s.destinationId,
+    s.customDestination.trim().toLowerCase(),
+    s.startDate,
+    s.endDate,
+  ].join("|");
 }
 
 /** The current trip, read outside React (e.g. right before saving). */
@@ -333,7 +389,7 @@ export const tripActions = {
   openSavedTrip(data: unknown, link: CloudLink): boolean {
     const migrated = migrate(data);
     if (!migrated) return false;
-    setState(() => ({ ...repairDates(migrated), isSample: false, cloud: link }));
+    setState(() => ({ ...repairDates(migrated), id: newTripId(), isSample: false, cloud: link }));
     return true;
   },
   setCloudLink(link: CloudLink | null) {
@@ -439,6 +495,7 @@ export const tripActions = {
     ].filter(Boolean);
     setState(() => ({
       ...fresh,
+      id: s.id === SAMPLE_TRIP_ID ? fresh.id : s.id,
       isSample: false,
       cloud: s.cloud,
     }));
@@ -487,6 +544,15 @@ export const tripActions = {
     const { itinerary: merged, kept } = keepCustomItems(getSnapshot().itinerary, itinerary);
     setState((s) => ({ ...s, itinerary: merged }));
     return kept;
+  },
+  /**
+   * Apply a plan that was requested for `key` (see `planKey`), only if the trip
+   * still matches. Returns how many of the traveler's own stops were kept, or
+   * null when the trip changed and the plan was discarded.
+   */
+  setItineraryFor(key: string, itinerary: Itinerary): number | null {
+    if (planKey(getSnapshot()) !== key) return null;
+    return tripActions.setItinerary(itinerary);
   },
   regenerateDemoItinerary() {
     setState((s) => {
@@ -557,39 +623,51 @@ export const tripActions = {
   },
 };
 
-export function useTrip() {
+/** Everything the pages show about a trip, computed from its state. */
+function derive(trip: TripState) {
+  const dest = getDestination(trip.setup.destinationId, trip.setup.customDestination);
+  const shape = tripShape(trip.setup.startDate, trip.setup.endDate, trip.setup.travelers);
+  const stopsTotal = stopsTotalFor(trip);
+  const totals = calculateBudget(
+    trip.inputs,
+    shape,
+    trip.setup.totalBudget,
+    trip.emergencyFund,
+    trip.overrides,
+    stopsTotal,
+  );
+  const applied = Object.keys(trip.appliedSavings) as SavingId[];
+  const savings = savingsOpportunities(
+    trip.inputs,
+    shape,
+    trip.overrides,
+    stopsTotal,
+    dest,
+    applied,
+  );
+  const potentialSavings = Math.round(savings.reduce((s, t) => s + t.totalSavings * 100, 0)) / 100;
+  const cuts = reductionPlan(
+    trip.inputs,
+    shape,
+    trip.setup.totalBudget,
+    trip.emergencyFund,
+    trip.overrides,
+    stopsTotal,
+  );
+  return { trip, dest, shape, totals, savings, applied, potentialSavings, cuts, stopsTotal };
+}
+
+export type TripView = ReturnType<typeof derive>;
+
+// Many components read the trip at once; the budget, savings and cut plan are worked out once per change, not once per component.
+const derived = new WeakMap<TripState, TripView>();
+
+export function useTrip(): TripView {
   const trip = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
-  return useMemo(() => {
-    const dest = getDestination(trip.setup.destinationId, trip.setup.customDestination);
-    const shape = tripShape(trip.setup.startDate, trip.setup.endDate, trip.setup.travelers);
-    const stopsTotal = stopsTotalFor(trip);
-    const totals = calculateBudget(
-      trip.inputs,
-      shape,
-      trip.setup.totalBudget,
-      trip.emergencyFund,
-      trip.overrides,
-      stopsTotal,
-    );
-    const applied = Object.keys(trip.appliedSavings) as SavingId[];
-    const savings = savingsOpportunities(
-      trip.inputs,
-      shape,
-      trip.overrides,
-      stopsTotal,
-      dest,
-      applied,
-    );
-    const potentialSavings =
-      Math.round(savings.reduce((s, t) => s + t.totalSavings * 100, 0)) / 100;
-    const cuts = reductionPlan(
-      trip.inputs,
-      shape,
-      trip.setup.totalBudget,
-      trip.emergencyFund,
-      trip.overrides,
-      stopsTotal,
-    );
-    return { trip, dest, shape, totals, savings, applied, potentialSavings, cuts, stopsTotal };
-  }, [trip]);
+  let view = derived.get(trip);
+  if (!view) {
+    view = derive(trip);
+    derived.set(trip, view);
+  }
+  return view;
 }

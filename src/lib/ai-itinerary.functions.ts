@@ -24,6 +24,10 @@ export const createAiItinerary = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: unknown) => inputSchema.parse(data))
   .handler(async ({ data }) => {
-    const { generateAiItinerary } = await import("./ai/itinerary-ai.server");
-    return generateAiItinerary(data);
+    const [{ generateAiItinerary }, { getRequest }] = await Promise.all([
+      import("./ai/itinerary-ai.server"),
+      import("@tanstack/react-start/server"),
+    ]);
+    // Stop generating (and spending credits) when the traveler cancels or closes the page.
+    return generateAiItinerary(data, getRequest()?.signal);
   });

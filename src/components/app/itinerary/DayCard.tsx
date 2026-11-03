@@ -1,0 +1,193 @@
+import {
+  Car,
+  Coffee,
+  ExternalLink,
+  Landmark,
+  Moon,
+  Star,
+  Sun,
+  Sunrise,
+  UtensilsCrossed,
+  type LucideIcon,
+} from "lucide-react";
+import type { CSSProperties } from "react";
+
+import { AddItemButton, ItemActions } from "@/components/app/ItineraryEditor";
+import { WeatherChip } from "@/components/app/Weather";
+import { formatMoney } from "@/lib/budget";
+import { formatCalendarDate } from "@/lib/dates";
+import type { Itinerary, ItineraryDay, ItineraryItem, ItemKind, SlotTime } from "@/lib/itinerary";
+import { isWetDay, type DayWeather } from "@/lib/live/weather";
+
+const KIND_ICON: Record<ItemKind, LucideIcon> = {
+  sight: Landmark,
+  restaurant: UtensilsCrossed,
+  stop: Car,
+};
+
+const TIME_ICONS: Record<SlotTime, LucideIcon> = {
+  Morning: Sunrise,
+  Lunch: Coffee,
+  Afternoon: Sun,
+  Dinner: UtensilsCrossed,
+  Evening: Moon,
+};
+
+/** One day of the itinerary: its weather, a timeline of stops and the editing controls. */
+export function DayCard({
+  day,
+  dayIndex,
+  itinerary,
+  weather,
+  style,
+}: {
+  day: ItineraryDay;
+  dayIndex: number;
+  itinerary: Itinerary;
+  weather: DayWeather | undefined;
+  style?: CSSProperties;
+}) {
+  return (
+    <section className="surface-card animate-rise overflow-hidden" style={style}>
+      <header className="flex items-center gap-3 border-b border-border px-5 py-3.5">
+        <span className="tabular grid size-9 shrink-0 place-items-center rounded-lg border border-border font-mono text-[13px] text-muted-foreground">
+          {day.day}
+        </span>
+        <div className="min-w-0 flex-1">
+          <p className="eyebrow">
+            {formatCalendarDate(day.date, { weekday: "long", month: "short", day: "numeric" })}
+          </p>
+          <h2 className="line-clamp-2 text-[15px] leading-tight font-semibold">{day.title}</h2>
+        </div>
+        {weather && <WeatherChip day={weather} className="hidden shrink-0 sm:inline-flex" />}
+      </header>
+      {weather && (
+        <div className="flex flex-wrap items-center gap-2 border-b border-border px-5 py-2 sm:hidden">
+          <WeatherChip day={weather} />
+        </div>
+      )}
+      {weather && isWetDay(weather) && (
+        <p className="border-b border-border bg-shield-soft px-5 py-2 text-xs">
+          {weather.label}{" "}
+          {weather.source === "forecast" ? "in the forecast" : "is common on this date"} — have an
+          indoor backup (a museum, market or long lunch) ready for outdoor stops.
+        </p>
+      )}
+      <ol className="relative px-5 py-3">
+        {day.items.map((item, idx) => (
+          <ItemRow
+            key={item.id}
+            item={item}
+            last={idx === day.items.length - 1}
+            itinerary={itinerary}
+            dayIndex={dayIndex}
+          />
+        ))}
+        {day.items.length === 0 && (
+          <li className="py-3 text-sm text-muted-foreground">Free day — wander as you like.</li>
+        )}
+      </ol>
+      <div className="px-5 pb-4">
+        <AddItemButton dayIndex={dayIndex} itinerary={itinerary} />
+      </div>
+    </section>
+  );
+}
+
+function ItemRow({
+  item,
+  last,
+  itinerary,
+  dayIndex,
+}: {
+  item: ItineraryItem;
+  last: boolean;
+  itinerary: Itinerary;
+  dayIndex: number;
+}) {
+  const Icon = KIND_ICON[item.kind] ?? Landmark;
+  const TimeIcon = TIME_ICONS[item.time] ?? Sun;
+  return (
+    <li className="group relative flex gap-3 py-3">
+      {!last && (
+        <span className="absolute top-11 bottom-0 left-[15px] w-px bg-border" aria-hidden />
+      )}
+      <span className="relative grid size-8 shrink-0 place-items-center rounded-full border border-border bg-card text-foreground/80">
+        <Icon className="size-3.5" strokeWidth={1.8} />
+      </span>
+      <div className="min-w-0 flex-1">
+        <p className="eyebrow inline-flex items-center gap-1">
+          <TimeIcon className="size-3" aria-hidden /> {item.time}
+        </p>
+        <p className="mt-0.5 text-sm leading-snug font-medium">
+          {item.name}
+          <SourceTag item={item} />
+        </p>
+        <p className="text-xs text-muted-foreground">
+          {item.area}
+          {item.note ? ` · ${item.note}` : ""}
+        </p>
+        {(item.rating || item.mapsUrl) && (
+          <p className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
+            {item.rating ? (
+              <span className="tabular inline-flex items-center gap-1 font-semibold">
+                <Star className="size-3 fill-current text-gold" aria-hidden />{" "}
+                {item.rating.toFixed(1)}
+                {item.ratingCount ? (
+                  <span className="font-normal text-muted-foreground">
+                    ({item.ratingCount.toLocaleString()} reviews)
+                  </span>
+                ) : null}
+              </span>
+            ) : null}
+            {item.mapsUrl && (
+              <a
+                href={item.mapsUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1 font-semibold text-primary underline-offset-2 hover:underline"
+              >
+                Open in Google Maps <ExternalLink className="size-3" aria-hidden />
+              </a>
+            )}
+          </p>
+        )}
+      </div>
+      <div className="flex shrink-0 items-start gap-1">
+        <span className="pt-1.5">
+          <CostChip item={item} />
+        </span>
+        <ItemActions item={item} itinerary={itinerary} dayIndex={dayIndex} />
+      </div>
+    </li>
+  );
+}
+
+/** The plan's label says where suggestions came from; the traveler's own stops are marked here. */
+function SourceTag({ item }: { item: ItineraryItem }) {
+  if (!item.custom) return null;
+  return (
+    <span className="ml-2 inline-flex -translate-y-px items-center rounded-[5px] border border-border px-1.5 text-[10px] font-medium text-muted-foreground">
+      Yours
+    </span>
+  );
+}
+
+function CostChip({ item }: { item: ItineraryItem }) {
+  if (item.costSource === "unknown") {
+    return <span className="text-xs text-muted-foreground">Price not listed</span>;
+  }
+  if (item.costPerPerson === 0) {
+    return <span className="text-xs font-medium text-success">Free</span>;
+  }
+  const approx = item.costSource === "price-level" ? "~" : "";
+  return (
+    <span
+      className="tabular text-xs font-medium text-foreground"
+      title={item.costSource === "price-level" ? "Estimated from the listing's $ level" : undefined}
+    >
+      {approx}
+      {formatMoney(item.costPerPerson)}/pp
+    </span>
+  );
+}
