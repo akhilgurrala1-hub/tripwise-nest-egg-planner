@@ -3,6 +3,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import {
   Bookmark,
   CalendarCheck,
+  Coins,
   Compass,
   LayoutDashboard,
   LogOut,
@@ -10,6 +11,7 @@ import {
   Monitor,
   Moon,
   Route as RouteIcon,
+  Ruler,
   Settings2,
   Sun,
   Ticket,
@@ -29,12 +31,17 @@ import {
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { useTheme, type ThemePref } from "@/lib/theme";
 import { usePersonalizedSample } from "@/lib/live/use-home";
+import { setLocalePrefs, useLocale } from "@/lib/live/use-locale";
+import { CURRENCIES } from "@/lib/locale";
 import { useTrip } from "@/lib/trip-store";
 
 const NAV: {
@@ -63,7 +70,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="glass sticky top-0 z-40 border-b border-border">
+      <header className="glass sticky top-0 z-40 border-b border-border print:hidden">
         <div className="mx-auto flex h-14 max-w-6xl items-center justify-between gap-4 px-4">
           <Link to="/" className="flex items-center rounded-md" aria-label="Waypoint home">
             <Logo />
@@ -107,7 +114,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       </main>
 
       <nav
-        className="glass pb-safe fixed inset-x-0 bottom-0 z-40 border-t border-border md:hidden"
+        className="glass pb-safe fixed inset-x-0 bottom-0 z-40 border-t border-border md:hidden print:hidden"
         aria-label="Main"
       >
         <div
@@ -217,15 +224,19 @@ const THEME_OPTIONS: { id: ThemePref; label: string; icon: LucideIcon }[] = [
 
 function ThemeToggle() {
   const { pref, setPref } = useTheme();
+  const { currency, prefs, autoUnits, autoCurrency } = useLocale();
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button size="icon" variant="ghost" className="size-9" aria-label="Change theme">
+        <Button size="icon" variant="ghost" className="size-9" aria-label="Display settings">
           <Sun className="dark:hidden" />
           <Moon className="hidden dark:block" />
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-40">
+      <DropdownMenuContent align="end" className="w-56">
+        <DropdownMenuLabel className="text-xs font-normal text-muted-foreground">
+          Theme
+        </DropdownMenuLabel>
         {THEME_OPTIONS.map(({ id, label, icon: Icon }) => (
           <DropdownMenuItem
             key={id}
@@ -235,6 +246,52 @@ function ThemeToggle() {
             <Icon className="size-4" /> {label}
           </DropdownMenuItem>
         ))}
+        <DropdownMenuSeparator />
+        <DropdownMenuLabel className="text-xs font-normal text-muted-foreground">
+          Units
+        </DropdownMenuLabel>
+        {(
+          [
+            ["auto", `Automatic (${autoUnits === "metric" ? "°C, km" : "°F, mi"})`],
+            ["imperial", "°F and miles"],
+            ["metric", "°C and kilometers"],
+          ] as const
+        ).map(([id, label]) => (
+          <DropdownMenuItem
+            key={id}
+            onClick={() => setLocalePrefs({ units: id })}
+            className={cn(prefs.units === id && "font-semibold text-primary")}
+          >
+            <Ruler className="size-4" /> {label}
+          </DropdownMenuItem>
+        ))}
+        <DropdownMenuSeparator />
+        <DropdownMenuSub>
+          <DropdownMenuSubTrigger>
+            <Coins className="size-4" /> Show prices in {currency}
+          </DropdownMenuSubTrigger>
+          <DropdownMenuSubContent className="max-h-72 overflow-y-auto">
+            <DropdownMenuItem
+              onClick={() => setLocalePrefs({ currency: "auto" })}
+              className={cn(prefs.currency === "auto" && "font-semibold text-primary")}
+            >
+              Automatic ({autoCurrency})
+            </DropdownMenuItem>
+            {CURRENCIES.map((c) => (
+              <DropdownMenuItem
+                key={c}
+                onClick={() => setLocalePrefs({ currency: c })}
+                className={cn(prefs.currency === c && "font-semibold text-primary")}
+              >
+                {c}
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuSubContent>
+        </DropdownMenuSub>
+        <p className="px-2 pt-1 pb-1.5 text-[11px] leading-snug text-muted-foreground">
+          Budgets are worked out in US dollars; other currencies show an approximate conversion at
+          today&apos;s rate.
+        </p>
       </DropdownMenuContent>
     </DropdownMenu>
   );

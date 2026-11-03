@@ -1,3 +1,4 @@
+import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
@@ -8,7 +9,9 @@ import { addDays, buildRealItinerary, fromAiPlan } from "@/lib/itinerary";
 import { destinationQuery } from "@/lib/live/place";
 import { useTripWeather } from "@/lib/live/use-live";
 import { getDestinationPlaces } from "@/lib/places/destination-places.functions";
-import type { DestinationPlacesResult } from "@/lib/places/types";
+import { fetchLandmarks, fetchRestaurants } from "@/lib/live/open-data";
+import { destinationPoint } from "@/lib/live/use-open-data";
+import type { DestinationPlacesResult, RealPlace } from "@/lib/places/types";
 import { currentTrip, planKey, tripActions, useTrip } from "@/lib/trip-store";
 
 /** The AI planner usually answers in 15–40s; past this we stop waiting and keep the current plan. */
@@ -17,8 +20,10 @@ const PLACES_TIMEOUT_MS = 30_000;
 
 /** Map lookups are billed, so identical searches in one session reuse the first answer. */
 const placesCache = new Map<string, DestinationPlacesResult>();
+/** Open-data lookups are free but shared services, so they're reused too. */
+const openCache = new Map<string, { sights: RealPlace[]; restaurants: RealPlace[] }>();
 
-export type PlannerJob = "ai" | "places" | null;
+export type PlannerJob = "ai" | "places" | "open" | null;
 
 const label = (list: readonly { id: string; label: string }[], id: string) =>
   list.find((x) => x.id === id)?.label ?? id;
@@ -37,6 +42,7 @@ export function keptNote(kept: number) {
  */
 export function usePlanner() {
   const { trip, dest, shape, totals } = useTrip();
+  const queryClient = useQueryClient();
   const prefs = usePreferences();
   const weather = useTripWeather();
   const [job, setJob] = useState<PlannerJob>(null);
@@ -177,6 +183,73 @@ export function usePlanner() {
     }
   };
 
+  /** Real landmarks (Wikipedia) and restaurants (OpenStreetMap): free, for everyone. */
+  const planWithOpenData = async () => {
+    const key = planKey(currentTrip());
+    const { ctrl, done } = start("open", PLACES_TIMEOUT_MS);
+    try {
+      const where = await destinationPoint(
+        queryClient,
+        dest,
+        trip.setup.origin,
+        trip.setup.destinationPoint,
+      );
+      if (!where) {
+        toast.error("We couldn't find that destination on the map. Check its spelling.");
+        return;
+      }
+      const cacheKey = `open:${where.point.lat.toFixed(3)},${where.point.lon.toFixed(3)}`;
+      let places = openCache.get(cacheKey);
+      if (!places) {
+        const [sights, restaurants] = await Promise.allSettled([
+          fetchLandmarks(where.point, where.near, ctrl.signal),
+          fetchRestaurants(where.point, where.near, ctrl.signal),
+        ]);
+        places = {
+          sights: sights.status === "fulfilled" ? sights.value : [],
+          restaurants: restaurants.status === "fulfilled" ? restaurants.value : [],
+        };
+        if (places.sights.length + places.restaurants.length > 0) openCache.set(cacheKey, places);
+      }
+      if (ctrl.signal.aborted) return failed(ctrl, "", planWithOpenData);
+      if (places.sights.length + places.restaurants.length === 0) {
+        toast.error(
+          "No landmarks or restaurants came back for this place. Try again in a moment.",
+          {
+            action: { label: "Try again", onClick: planWithOpenData },
+          },
+        );
+        return;
+      }
+      const found = places;
+      land(
+        () =>
+          tripActions.setItineraryFor(
+            key,
+            buildRealItinerary({
+              sights: found.sights,
+              restaurants: found.restaurants,
+              destName: dest.name,
+              days: Math.min(14, shape.days),
+              startDate: trip.setup.startDate,
+              interests: trip.setup.interests,
+              tripType: trip.setup.tripType,
+              source: "open",
+            }),
+          ),
+        `Built from ${found.sights.length} real landmarks and ${found.restaurants.length} restaurants nearby`,
+      );
+    } catch {
+      failed(
+        ctrl,
+        "Couldn't reach Wikipedia or OpenStreetMap. Your current plan is unchanged.",
+        planWithOpenData,
+      );
+    } finally {
+      done();
+    }
+  };
+
   const cancel = () => {
     controller.current?.abort("cancelled");
     controller.current = null;
@@ -184,5 +257,5 @@ export function usePlanner() {
     toast("Stopped. Your current plan is unchanged.");
   };
 
-  return { job, busy: job !== null, planWithAi, planWithRealPlaces, cancel };
+  return { job, busy: job !== null, planWithAi, planWithRealPlaces, planWithOpenData, cancel };
 }

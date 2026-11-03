@@ -10,6 +10,8 @@ export interface HomePlace extends GeoPoint {
   /** "Charlotte, NC" */
   label: string;
   source: "profile" | "device" | "approximate";
+  /** ISO country code, when known */
+  country?: string;
 }
 
 const STORAGE_KEY = "waypoint.home";
@@ -28,7 +30,13 @@ export function parseVisitorGeo(header: string | null): HomePlace | null {
     const region = typeof g["regionCode"] === "string" ? g["regionCode"] : "";
     const label =
       country === "US" && region ? `${city}, ${region}` : country ? `${city}, ${country}` : city;
-    return { label: label.slice(0, 80), lat, lon, source: "approximate" };
+    return {
+      label: label.slice(0, 80),
+      lat,
+      lon,
+      source: "approximate",
+      ...(country ? { country } : {}),
+    };
   } catch {
     return null;
   }
@@ -38,14 +46,16 @@ export function parseVisitorGeo(header: string | null): HomePlace | null {
 export async function reverseGeocode(
   point: GeoPoint,
   signal?: AbortSignal,
-): Promise<string | null> {
+): Promise<{ label: string; country: string } | null> {
   const u = new URL("https://api.bigdatacloud.net/data/reverse-geocode-client");
   u.searchParams.set("latitude", point.lat.toFixed(4));
   u.searchParams.set("longitude", point.lon.toFixed(4));
   u.searchParams.set("localityLanguage", "en");
   const res = await fetch(u.toString(), signal ? { signal } : {});
   if (!res.ok) return null;
-  return labelFromReverse(await res.json());
+  const body = (await res.json()) as Record<string, unknown>;
+  const label = labelFromReverse(body);
+  return label ? { label, country: String(body["countryCode"] ?? "") } : null;
 }
 
 export function labelFromReverse(body: unknown): string | null {

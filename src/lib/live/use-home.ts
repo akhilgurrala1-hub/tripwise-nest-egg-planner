@@ -42,7 +42,13 @@ export function useHomePlace() {
   });
 
   const fromProfile: HomePlace | null = profile.data?.[0]
-    ? { label: homeCity, lat: profile.data[0].lat, lon: profile.data[0].lon, source: "profile" }
+    ? {
+        label: homeCity,
+        lat: profile.data[0].lat,
+        lon: profile.data[0].lon,
+        source: "profile",
+        country: profile.data[0].countryCode,
+      }
     : null;
   const place = fromProfile ?? device ?? approx.data ?? null;
 
@@ -50,10 +56,13 @@ export function useHomePlace() {
     setLocating(true);
     try {
       const point = await devicePosition();
-      const label =
-        (await reverseGeocode(point).catch(() => null)) ??
-        `${point.lat.toFixed(2)}, ${point.lon.toFixed(2)}`;
-      const p: HomePlace = { ...point, label, source: "device" };
+      const named = await reverseGeocode(point).catch(() => null);
+      const p: HomePlace = {
+        ...point,
+        label: named?.label ?? `${point.lat.toFixed(2)}, ${point.lon.toFixed(2)}`,
+        source: "device",
+        ...(named?.country ? { country: named.country } : {}),
+      };
       saveDevicePlace(p);
       setDevice(p);
       return p;

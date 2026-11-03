@@ -17,6 +17,8 @@ import { Button } from "@/components/ui/button";
 import { formatCalendarDate } from "@/lib/dates";
 import { useTripWeather } from "@/lib/live/use-live";
 import { isWetDay, summarize, type DayWeather, type WeatherKind } from "@/lib/live/weather";
+import { tempValue } from "@/lib/locale";
+import { useLocale } from "@/lib/live/use-locale";
 import { cn } from "@/lib/utils";
 
 export const WEATHER_ICON: Record<WeatherKind, LucideIcon> = {
@@ -41,6 +43,7 @@ function clock(t: string | null): string {
 /** Compact weather for one itinerary day. */
 export function WeatherChip({ day, className }: { day: DayWeather; className?: string }) {
   const Icon = WEATHER_ICON[day.kind];
+  const { units } = useLocale();
   return (
     <span
       className={cn(
@@ -53,7 +56,7 @@ export function WeatherChip({ day, className }: { day: DayWeather; className?: s
     >
       <Icon className="size-3.5" strokeWidth={1.8} />
       <span className="tabular">
-        {day.highF}° / {day.lowF}°
+        {tempValue(day.highF, units)}° / {tempValue(day.lowF, units)}°
       </span>
       {day.precipChance !== null && day.precipChance >= 20 && (
         <span className="tabular inline-flex items-center gap-0.5 text-primary">
@@ -71,6 +74,7 @@ export function WeatherChip({ day, className }: { day: DayWeather; className?: s
 /** Trip-long weather card for the dashboard. */
 export function WeatherCard({ className }: { className?: string }) {
   const w = useTripWeather();
+  const { units } = useLocale();
   const days = w.weather?.days ?? [];
   const wet = days.filter(isWetDay);
   const anyForecast = days.some((d) => d.source === "forecast");
@@ -82,7 +86,7 @@ export function WeatherCard({ className }: { className?: string }) {
           <h2 className="text-[15px] font-semibold">Weather</h2>
           <p className="text-sm text-muted-foreground">
             {w.status === "ready" && days.length > 0
-              ? `${w.placeLabel} · ${summarize(days)}`
+              ? `${w.placeLabel} · ${summarize(days, units)}`
               : w.placeLabel || "Your destination"}
           </p>
         </div>
@@ -155,7 +159,10 @@ export function WeatherCard({ className }: { className?: string }) {
                   />
                   <p className="text-[11px] leading-tight">{d.label}</p>
                   <p className="tabular mt-1 text-sm font-medium">
-                    {d.highF}° <span className="font-normal text-muted-foreground">{d.lowF}°</span>
+                    {tempValue(d.highF, units)}°{" "}
+                    <span className="font-normal text-muted-foreground">
+                      {tempValue(d.lowF, units)}°
+                    </span>
                   </p>
                   {d.precipChance !== null && (
                     <p className="tabular text-[11px] text-primary">

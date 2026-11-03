@@ -13,6 +13,7 @@ import {
   type TripType,
 } from "@/lib/demo-data";
 import type { GeoPlace } from "@/lib/live/geocode";
+import { useLocale } from "@/lib/live/use-locale";
 import { interestLabel, recommendDestinations, type Suggestion } from "@/lib/recommend";
 import { cn } from "@/lib/utils";
 
@@ -50,10 +51,11 @@ export function DestinationPicker({
   onPick: (id: string) => void;
   onCustom: (text: string, place: GeoPlace | null) => void;
 }) {
+  const { units } = useLocale();
   const list: Suggestion[] =
     tripType === "staycation"
       ? DESTINATIONS.filter((d) => d.bestFor.includes("staycation")).map(toSuggestion)
-      : recommendDestinations({ from, tripType, interests, limit: 5 });
+      : recommendDestinations({ from, tripType, interests, limit: 5, units });
   // Keep the current pick visible even when it's no longer a top suggestion.
   if (
     destinationId !== CUSTOM_DESTINATION_ID &&

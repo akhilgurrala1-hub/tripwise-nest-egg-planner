@@ -195,13 +195,15 @@ export async function fetchTripWeather(opts: {
 }
 
 /** Short summary for a whole trip: "Highs 58–66°F · rain likely on 2 of 4 days". */
-export function summarize(days: DayWeather[]): string {
+export function summarize(days: DayWeather[], units: "imperial" | "metric" = "imperial"): string {
   if (days.length === 0) return "";
-  const highs = days.map((d) => d.highF);
+  const conv = (f: number) => (units === "metric" ? Math.round(((f - 32) * 5) / 9) : f);
+  const highs = days.map((d) => conv(d.highF));
   const lo = Math.min(...highs);
   const hi = Math.max(...highs);
   const wet = days.filter(isWetDay).length;
-  const temp = lo === hi ? `Highs near ${hi}°F` : `Highs ${lo}–${hi}°F`;
+  const unit = units === "metric" ? "°C" : "°F";
+  const temp = lo === hi ? `Highs near ${hi}${unit}` : `Highs ${lo}–${hi}${unit}`;
   const of = days.length;
   return wet === 0
     ? `${temp} · mostly dry`

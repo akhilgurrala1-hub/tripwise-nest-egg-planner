@@ -2,6 +2,7 @@
  * Destination suggestions for one traveler: places that suit the trip type, at
  * a sensible distance from where they start, that match what they enjoy.
  */
+import { formatDistance, type Units } from "./locale";
 import { CATALOG, CRUISES, driveLabel, milesBetween, roadMiles, type GeoPoint } from "./catalog";
 import {
   CRUISE_PREFIX,
@@ -83,7 +84,7 @@ export function distanceFit(tripType: TripType, miles: number): number {
     case "rail":
       return band([80, 350], [40, 600]);
     case "flight":
-      return band([450, 2600], [300, 5200]);
+      return band([450, 3600], [300, 9500]);
     case "cruise":
       // Closer ports are easier: full marks within a day's drive.
       return miles <= 450 ? 3 : miles <= 900 ? 2 : 1;
@@ -101,8 +102,9 @@ export function recommendDestinations(opts: {
   tripType: TripType;
   interests: Interest[];
   limit?: number;
+  units?: Units;
 }): Suggestion[] {
-  const { from, tripType, interests, limit = 6 } = opts;
+  const { from, tripType, interests, limit = 6, units = "imperial" } = opts;
   if (tripType === "staycation") return [];
   const pool = tripType === "cruise" ? [...FEATURED, ...SHIPS] : [...FEATURED, ...PLACES];
   const scored = pool
@@ -130,18 +132,18 @@ export function recommendDestinations(opts: {
       region: c.region,
       tagline: c.tagline,
       miles,
-      distanceLabel: miles === null ? null : distanceText(tripType, miles),
+      distanceLabel: miles === null ? null : distanceText(tripType, miles, units),
       matches,
       featured: c.featured,
     };
   });
 }
 
-function distanceText(tripType: TripType, miles: number): string {
-  if (tripType === "flight") return `${Math.round(miles / 1.25).toLocaleString("en-US")} mi away`;
+function distanceText(tripType: TripType, miles: number, units: Units): string {
+  if (tripType === "flight") return `${formatDistance(miles / 1.25, units)} away`;
   if (tripType === "cruise")
     return miles < 15 ? "Sails from your city" : `${driveLabel(miles)} to the port`;
-  if (tripType === "rail") return `About ${miles.toLocaleString("en-US")} mi by rail`;
+  if (tripType === "rail") return `About ${formatDistance(miles, units)} by rail`;
   return driveLabel(miles);
 }
 

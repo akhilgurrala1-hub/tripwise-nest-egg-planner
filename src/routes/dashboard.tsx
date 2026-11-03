@@ -2,9 +2,10 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowRight, Check, Lock, Undo2 } from "lucide-react";
 import { toast } from "sonner";
 
-import { CATEGORY_COLOR_VAR, PriceSourceBadge } from "@/components/app/bits";
+import { ApproxMoney, CATEGORY_COLOR_VAR, PriceSourceBadge } from "@/components/app/bits";
 import { AnimatedMoney, stagger } from "@/components/app/motion";
 import { PageHeader } from "@/components/app/TripHeader";
+import { DestinationCard } from "@/components/app/DestinationIntro";
 import { WeatherCard } from "@/components/app/Weather";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth-context";
@@ -37,7 +38,7 @@ export const Route = createFileRoute("/dashboard")({
 });
 
 function Dashboard() {
-  const { trip, totals, savings, applied, potentialSavings, shape } = useTrip();
+  const { trip, dest, totals, savings, applied, potentialSavings, shape } = useTrip();
   const style = TRAVEL_STYLES.find((s) => s.id === trip.setup.style);
 
   const breakdown = CATEGORIES.map((c) => ({ cat: c, value: totals.categories[c] }))
@@ -68,6 +69,11 @@ function Dashboard() {
                 {totals.overBudget ? "−" : ""}
                 <AnimatedMoney value={Math.abs(totals.remaining)} />
               </p>
+              <ApproxMoney
+                usd={Math.abs(totals.remaining)}
+                suffix={totals.overBudget ? "over" : "left"}
+                className="mt-1 block text-sm"
+              />
               <p className="tabular mt-3 text-sm text-muted-foreground">
                 {formatMoney(totals.planned)} planned of {formatMoney(totals.spendable)}
                 <span className="px-1.5 text-border">/</span>
@@ -224,7 +230,10 @@ function Dashboard() {
           </section>
         </div>
 
-        <WeatherCard className="animate-rise" />
+        <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)]">
+          <DestinationCard dest={dest} origin={trip.setup.origin} className="animate-rise" />
+          <WeatherCard className="animate-rise" />
+        </div>
       </div>
     </div>
   );
@@ -238,7 +247,7 @@ function NextSteps() {
   const { user } = useAuth();
   const roadTrip = trip.setup.tripType === "road-trip";
   const live = liveCategories(trip.inputs, trip.overrides, trip.live).length > 0;
-  const realPlan = trip.itinerary?.source === "google" || trip.itinerary?.source === "ai";
+  const realPlan = !!trip.itinerary && trip.itinerary.source !== "demo";
   const steps: { title: string; done: boolean; to: StepTo; cta: string }[] = [
     { title: "Plan the trip", done: !trip.isSample, to: "/", cta: "Start planning" },
     { title: "Check live prices", done: live, to: "/budget", cta: "Open budget" },

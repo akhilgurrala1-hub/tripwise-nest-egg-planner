@@ -1,8 +1,9 @@
 import { ArrowRight, CalendarDays, CloudSun, MapPin, Users } from "lucide-react";
 import type { CSSProperties } from "react";
 
-import { CATEGORY_COLOR_VAR } from "@/components/app/bits";
+import { ApproxMoney, CATEGORY_COLOR_VAR } from "@/components/app/bits";
 import { AnimatedMoney } from "@/components/app/motion";
+import { DestinationPhoto } from "@/components/app/DestinationIntro";
 import { TRIP_COLOR } from "@/components/app/trip-colors";
 import { formatDateRange } from "@/components/app/TripHeader";
 import { TRIP_ICONS } from "@/components/app/TripTypePicker";
@@ -15,6 +16,7 @@ import {
   type TripShape,
 } from "@/lib/budget";
 import { tripTypeInfo, type DemoDestination } from "@/lib/demo-data";
+import { useLocale } from "@/lib/live/use-locale";
 import { useWeatherFor } from "@/lib/live/use-live";
 import { summarize } from "@/lib/live/weather";
 import type { TripSetup } from "@/lib/trip-store";
@@ -47,6 +49,7 @@ export function TripPreview({
   const Icon = TRIP_ICONS[form.tripType];
   const color = TRIP_COLOR[form.tripType];
   const weather = useWeatherFor(dest, form.origin, form.startDate, form.endDate);
+  const { units } = useLocale();
   const days = weather.weather?.days ?? [];
   const spendable = Math.max(0, form.totalBudget - form.emergencyFund);
   const left = spendable - totals.planned;
@@ -68,6 +71,12 @@ export function TripPreview({
         <span className="ml-auto text-xs font-normal text-muted-foreground">Preview</span>
       </div>
       <div className="p-5">
+        <DestinationPhoto
+          dest={dest}
+          origin={form.origin}
+          showText={false}
+          className="-mx-1 mb-4"
+        />
         <p key={destLabel} className="animate-pop text-[19px] leading-tight font-semibold">
           {destLabel}
         </p>
@@ -99,7 +108,7 @@ export function TripPreview({
           {weather.status === "ready" && days.length > 0 && (
             <li className="animate-pop flex items-center gap-2">
               <CloudSun />
-              <span className="truncate">{summarize(days)}</span>
+              <span className="truncate">{summarize(days, units)}</span>
             </li>
           )}
         </ul>
@@ -109,6 +118,7 @@ export function TripPreview({
             <p className="text-[13px] text-muted-foreground">Estimated cost</p>
             <AnimatedMoney value={totals.planned} className="text-[22px] font-semibold" />
           </div>
+          <ApproxMoney usd={totals.planned} className="block text-right text-xs" />
           <div className="mt-2 flex h-1.5 overflow-hidden rounded-full bg-muted">
             {cats.map(({ c, v }) => (
               <span
