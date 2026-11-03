@@ -90,13 +90,6 @@ export function WeatherCard({ className }: { className?: string }) {
               : w.placeLabel || "Your destination"}
           </p>
         </div>
-        <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
-          <span className="relative flex size-1.5">
-            <span className="absolute inline-flex size-full animate-ping rounded-full bg-success opacity-50" />
-            <span className="relative inline-flex size-1.5 rounded-full bg-success" />
-          </span>
-          Live
-        </span>
       </div>
 
       {w.status === "loading" && (
@@ -180,7 +173,7 @@ export function WeatherCard({ className }: { className?: string }) {
             <p className="mt-3 text-xs text-foreground">
               <Umbrella className="mr-1 inline size-3.5 -translate-y-px text-primary" />
               Wet weather is likely on{" "}
-              {wet.map((d) => formatCalendarDate(d.date, { weekday: "long" })).join(", ")} — keep an
+              {wet.map((d) => formatCalendarDate(d.date, { weekday: "long" })).join(", ")}. Keep an
               indoor plan for those days.
             </p>
           )}

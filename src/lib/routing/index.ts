@@ -35,7 +35,7 @@ export function whyItMatches(stop: RouteStop, interests: Interest[], travelers: 
     const labels = matched.map((m) => INTERESTS.find((x) => x.id === m)?.label.toLowerCase() ?? m);
     reasons.push(`Matches your interest in ${labels.join(" & ")}`);
   }
-  if (stop.costPerPerson === 0) reasons.push("Free — keeps your budget intact");
+  if (stop.costPerPerson === 0) reasons.push("Free, so it keeps your budget intact");
   if (stop.tags.includes("hidden-gem")) reasons.push("Off the beaten path");
   if (stop.extraMinutes <= 10) reasons.push("Quick detour");
   if (travelers >= 3 && stop.tags.includes("family"))

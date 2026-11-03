@@ -22,12 +22,12 @@ import { cn } from "@/lib/utils";
 export const Route = createFileRoute("/_authenticated/profile")({
   head: () => ({
     meta: [
-      { title: "Profile & preferences — Waypoint" },
+      { title: "Profile & preferences | Waypoint" },
       {
         name: "description",
         content: "Your home city, airport, travel style and interests, used to plan new trips.",
       },
-      { property: "og:title", content: "Profile & preferences — Waypoint" },
+      { property: "og:title", content: "Profile & preferences | Waypoint" },
       { property: "og:description", content: "Tell Waypoint how you like to travel." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
@@ -257,7 +257,7 @@ function Chip({
       aria-pressed={active}
       onClick={onClick}
       className={cn(
-        "min-h-10 rounded-full border px-4 py-2 text-sm font-semibold transition-colors",
+        "min-h-10 rounded-lg border px-4 py-2 text-sm font-semibold transition-colors",
         active
           ? "border-primary bg-primary text-primary-foreground"
           : "border-border bg-background hover:bg-secondary",

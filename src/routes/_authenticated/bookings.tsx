@@ -23,13 +23,13 @@ import { cn } from "@/lib/utils";
 export const Route = createFileRoute("/_authenticated/bookings")({
   head: () => ({
     meta: [
-      { title: "Bookings — Waypoint" },
+      { title: "Bookings | Waypoint" },
       {
         name: "description",
         content:
           "Compare live hotel and flight prices, reserve on the provider's site and keep every confirmation in one place.",
       },
-      { property: "og:title", content: "Bookings — Waypoint" },
+      { property: "og:title", content: "Bookings | Waypoint" },
       {
         property: "og:description",
         content: "Hotels, flights and rental cars for your trip, with confirmations tracked.",

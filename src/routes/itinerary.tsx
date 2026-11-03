@@ -14,14 +14,13 @@ import {
 import { useState } from "react";
 import { toast } from "sonner";
 
-import { DemoBadge } from "@/components/app/bits";
+import { SourceNote } from "@/components/app/bits";
 import { DayCard } from "@/components/app/itinerary/DayCard";
 import { PlanCosts } from "@/components/app/itinerary/PlanCosts";
 import { usePlanner } from "@/components/app/itinerary/use-planner";
 import { LogoMark } from "@/components/app/Logo";
 import { stagger } from "@/components/app/motion";
 import { PageHeader } from "@/components/app/TripHeader";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -39,13 +38,13 @@ import { cn } from "@/lib/utils";
 export const Route = createFileRoute("/itinerary")({
   head: () => ({
     meta: [
-      { title: "Your itinerary — Waypoint" },
+      { title: "Your itinerary | Waypoint" },
       {
         name: "description",
         content:
           "A personalized day-by-day plan with sightseeing stops, restaurants and estimated costs.",
       },
-      { property: "og:title", content: "Your itinerary — Waypoint" },
+      { property: "og:title", content: "Your itinerary | Waypoint" },
       {
         property: "og:description",
         content:
@@ -183,7 +182,7 @@ function ItineraryPage() {
               <LogoMark loading className="size-7 shrink-0" />
               <p className="min-w-0 flex-1">
                 {planner.job === "ai"
-                  ? "Planning around your interests, budget and weather — this can take up to a minute."
+                  ? "Planning around your interests, budget and weather. This can take up to a minute."
                   : planner.job === "open"
                     ? "Looking up landmarks on Wikipedia and restaurants on OpenStreetMap…"
                     : "Finding well-reviewed places near your destination…"}{" "}
@@ -247,26 +246,13 @@ function ItineraryPage() {
 function PlanSourceBadge({ source }: { source: "demo" | "ai" | "google" | "open" }) {
   if (source === "open")
     return (
-      <Badge variant="secondary" className="whitespace-normal">
-        <span className="size-1.5 rounded-full bg-success" /> Real landmarks from Wikipedia and
-        restaurants from OpenStreetMap · prices not listed
-      </Badge>
+      <SourceNote label="Real places from Wikipedia and OpenStreetMap. Prices aren't listed." />
     );
   if (source === "google")
-    return (
-      <Badge variant="secondary" className="whitespace-normal">
-        <span className="size-1.5 rounded-full bg-success" /> Real places from Google Maps · costs
-        are estimates
-      </Badge>
-    );
+    return <SourceNote label="Real places from Google Maps. Costs are estimates." />;
   if (source === "ai")
-    return (
-      <Badge variant="secondary" className="whitespace-normal">
-        <span className="size-1.5 rounded-full bg-primary" /> Suggested plan · places and prices are
-        unverified estimates
-      </Badge>
-    );
-  return <DemoBadge label="Demo itinerary · example places & prices" />;
+    return <SourceNote label="Suggested plan. Double-check places and prices before you go." />;
+  return <SourceNote label="Example plan. Tap Use real places for real spots near you." />;
 }
 
 /** Stops picked on the Road trip page, shown above day one. */
@@ -343,7 +329,7 @@ function RefinePlan({ busy, onRefine }: { busy: boolean; onRefine: (text: string
             if (e.key === "Enter") submit(text);
           }}
           maxLength={300}
-          placeholder="Refine this plan — e.g. no museums on day 2, cheaper lunches"
+          placeholder="Refine this plan, e.g. no museums on day 2, cheaper lunches"
           aria-label="What should change in the plan?"
           className="h-9 min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
         />

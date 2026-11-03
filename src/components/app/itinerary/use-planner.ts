@@ -185,10 +185,10 @@ export function usePlanner() {
       land(
         () => tripActions.setItineraryFor(key, plan),
         instructions
-          ? "Plan updated — double-check details before you go"
+          ? "Plan updated. Double-check details before you go"
           : grounded > 0
-            ? `Plan ready — ${grounded} stop${grounded === 1 ? "" : "s"} matched real places on the map`
-            : "Plan ready — double-check details before you go",
+            ? `Plan ready: ${grounded} stop${grounded === 1 ? "" : "s"} matched real places on the map`
+            : "Plan ready. Double-check details before you go",
       );
     } catch {
       failed(ctrl, "Couldn't reach the AI planner. Your current plan is unchanged.", () =>

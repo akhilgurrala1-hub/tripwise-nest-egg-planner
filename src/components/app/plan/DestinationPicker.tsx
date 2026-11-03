@@ -121,8 +121,8 @@ export function DestinationPicker({
           active={destinationId === CUSTOM_DESTINATION_ID}
           onClick={() => onPick(CUSTOM_DESTINATION_ID)}
           title="Somewhere else"
-          meta="Any real place"
-          detail={<span>Live weather, places and distance</span>}
+          meta="Anywhere in the world"
+          detail={<span>Distance and costs worked out for you</span>}
           note="Type a city, park or port"
           icon={<MapPin className="size-4" />}
         />
@@ -143,9 +143,6 @@ export function DestinationPicker({
           {error && <p className="mt-1.5 text-xs text-destructive">{error}</p>}
         </div>
       )}
-      <p className="mt-2 text-[11px] text-muted-foreground">
-        Real places; prices are demo estimates until you check live prices.
-      </p>
     </div>
   );
 }

@@ -222,7 +222,7 @@ export const DESTINATIONS: DemoDestination[] = [
         area: "Old Town",
         costPerPerson: 15,
         interests: ["arts", "nightlife"],
-        note: "Live bluegrass — check this week's lineup",
+        note: "Live bluegrass. Check this week's lineup",
         evening: true,
       },
       {
@@ -264,7 +264,7 @@ export const DESTINATIONS: DemoDestination[] = [
         area: "West beach",
         costPerPerson: 0,
         interests: ["beaches", "family", "nature"],
-        note: "Free — go early for easier parking",
+        note: "Free. Go early for easier parking",
       },
       {
         name: "Dune State Park Boardwalk",
@@ -347,7 +347,7 @@ export const DESTINATIONS: DemoDestination[] = [
         area: "National park",
         costPerPerson: 0,
         interests: ["nature", "adventure"],
-        note: "3 mi round trip — bring water",
+        note: "3 mi round trip. Bring water",
       },
       {
         name: "Dinosaur Track Site",
@@ -554,7 +554,7 @@ export const DESTINATIONS: DemoDestination[] = [
         area: "Port of call",
         costPerPerson: 0,
         interests: ["beaches", "nature", "family"],
-        note: "Free — bring towels from the ship",
+        note: "Free. Bring towels from the ship",
       },
       {
         name: "Old Town Walking Tour",
@@ -590,7 +590,7 @@ export const DESTINATIONS: DemoDestination[] = [
         area: "Cruise line's island",
         costPerPerson: 180,
         interests: ["beaches"],
-        note: "Reserve early — sells out",
+        note: "Reserve early, it sells out",
       },
     ],
     restaurants: [
@@ -627,7 +627,7 @@ export const DESTINATIONS: DemoDestination[] = [
         area: "Scenic cruising",
         costPerPerson: 0,
         interests: ["nature", "family"],
-        note: "Dress warm — bring binoculars",
+        note: "Dress warm and bring binoculars",
       },
       {
         name: "Rainforest Trail Walk",
@@ -701,7 +701,7 @@ export const DESTINATIONS: DemoDestination[] = [
         area: "Downtown",
         costPerPerson: 0,
         interests: ["arts", "history", "family"],
-        note: "Free days vary — check the schedule",
+        note: "Free days vary, so check the schedule",
       },
       {
         name: "Riverside Trail & Picnic",
@@ -715,7 +715,7 @@ export const DESTINATIONS: DemoDestination[] = [
         area: "Market square",
         costPerPerson: 0,
         interests: ["food", "shopping"],
-        note: "Usually weekend mornings — check dates",
+        note: "Usually weekend mornings. Check dates",
       },
       {
         name: "Indoor Climbing Gym",

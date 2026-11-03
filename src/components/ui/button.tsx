@@ -18,6 +18,8 @@ const buttonVariants = cva(
         link: "text-primary underline-offset-4 hover:underline",
         // Primary call to action: solid ink, inverts in dark mode.
         hero: "bg-ink text-ink-foreground hover:opacity-90",
+        // "Go" actions that move the trip forward (Plan trip, Start planning).
+        go: "bg-go text-go-foreground shadow-[0_1px_2px_oklch(0.3_0.1_152/0.25)] hover:bg-go-deep",
         ink: "bg-ink text-ink-foreground hover:opacity-90",
         shield: "bg-shield text-shield-foreground hover:opacity-90",
         success:

@@ -449,38 +449,37 @@ const SAVING_COPY: Record<
 > = {
   picnic: {
     title: "Pack picnic lunches",
-    detail: () => "Swap one restaurant meal a day for groceries — meals budget drops 30%.",
+    detail: () => "Swap one restaurant meal a day for groceries. Meals budget drops 30%.",
     assumption:
       "Lowers your daily meal budget. Restaurant picks in your itinerary stay as they are.",
   },
   snacks: {
     title: "Stock up at a grocery store",
-    detail: () =>
-      "Buy snacks in bulk before you leave instead of at gas stations — about half off.",
+    detail: () => "Buy snacks in bulk before you leave instead of at gas stations, about half off.",
     assumption: "Halves your daily snack budget.",
   },
   refill: {
     title: "Bring refillable bottles",
-    detail: () => "Fill up at your stay instead of buying bottled drinks — about 75% off.",
+    detail: () => "Fill up at your stay instead of buying bottled drinks, about 75% off.",
     assumption: "Cuts your daily drinks budget to a quarter.",
   },
   lodging: {
     title: "Choose a value stay",
     detail: (dest) =>
       dest.nightly.budget === 0
-        ? "Skip the hotel and sleep at home — the classic staycation move."
-        : `Switch to the demo budget-tier rate of ${formatMoney(dest.nightly.budget)}/night for the same nights.`,
+        ? "Skip the hotel and sleep at home, the classic staycation move."
+        : `Switch to a value rate of about ${formatMoney(dest.nightly.budget)}/night for the same nights.`,
     assumption: "Changes your lodging assumption to a lower nightly rate. Dates stay the same.",
   },
   fares: {
     title: "Travel midweek",
-    detail: () => "Tuesday–Wednesday departures are often cheaper — about 15% off fares (example).",
+    detail: () => "Tuesday and Wednesday departures are often cheaper, about 15% off fares.",
     assumption:
       "Assumes you can move your travel days to midweek. Your dates in Waypoint aren't changed.",
   },
   parking: {
     title: "Park once & walk",
-    detail: () => "Use free or off-peak lots and explore on foot — about half off parking.",
+    detail: () => "Use free or off-peak lots and explore on foot, about half off parking.",
     assumption: "Halves your daily parking budget.",
   },
   tolls: {
@@ -490,7 +489,7 @@ const SAVING_COPY: Record<
   },
   "free-days": {
     title: "Mix in free attractions",
-    detail: () => "Trade a paid activity for parks, free museum days and markets — about 25% off.",
+    detail: () => "Trade a paid activity for parks, free museum days and markets, about 25% off.",
     assumption:
       "Lowers your activities budget. Swap paid stops in your itinerary yourself to match.",
   },

@@ -1,15 +1,28 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { ArrowRight, Minus, Plus } from "lucide-react";
+import {
+  ArrowRight,
+  CalendarDays,
+  MapPin,
+  Minus,
+  Plus,
+  Route as RouteIcon,
+  Sparkles,
+  Wallet,
+  type LucideIcon,
+} from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 
 import { InterestChips, NumberField } from "@/components/app/bits";
-import { Segmented, stagger } from "@/components/app/motion";
+import { stagger } from "@/components/app/motion";
+import { TripScenery } from "@/components/app/Illustrations";
 import { DestinationPicker } from "@/components/app/plan/DestinationPicker";
 import { OriginField } from "@/components/app/plan/OriginField";
+import { STYLE_LOOK, StylePicker } from "@/components/app/plan/StylePicker";
 import { TripAssistant } from "@/components/app/plan/TripAssistant";
 import { TripPreview } from "@/components/app/plan/TripPreview";
+import { TRIP_COLOR } from "@/components/app/trip-colors";
 import { TripTypePicker } from "@/components/app/TripTypePicker";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -27,7 +40,6 @@ import { destinationForNewStart } from "@/lib/recommend";
 import {
   CUSTOM_DESTINATION_ID,
   INTERESTS,
-  TRAVEL_STYLES,
   destinationFor,
   modeForTripType,
   travelPoint,
@@ -51,13 +63,13 @@ import { cn } from "@/lib/utils";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Waypoint — Plan your next trip on any budget" },
+      { title: "Waypoint | Plan your next trip on any budget" },
       {
         name: "description",
         content:
           "Pick a destination, dates, travelers and budget. Waypoint builds a smart budget and itinerary for road trips, getaways and staycations.",
       },
-      { property: "og:title", content: "Waypoint — Plan your next trip on any budget" },
+      { property: "og:title", content: "Waypoint | Plan your next trip on any budget" },
       {
         property: "og:description",
         content:
@@ -141,7 +153,9 @@ function Welcome() {
     update({ startDate, endDate: addDays(startDate, length - 1) });
   };
   const reserveError =
-    form.emergencyFund > form.totalBudget ? "Reserve can't be more than your total budget" : "";
+    form.emergencyFund > form.totalBudget
+      ? "The emergency fund can't be more than your total budget"
+      : "";
   const destError =
     form.destinationId === CUSTOM_DESTINATION_ID && !form.customDestination.trim()
       ? "Type a destination"
@@ -224,7 +238,7 @@ function Welcome() {
       : destError
         ? [destError, "Destination"]
         : reserveError
-          ? [reserveError, "Emergency reserve"]
+          ? [reserveError, "Emergency fund"]
           : form.totalBudget <= 0
             ? ["Add a total budget to continue", "Total budget"]
             : null;
@@ -261,19 +275,22 @@ function Welcome() {
     !touched.current && home.place?.source === "approximate" && form.origin === home.place.label;
 
   return (
-    <div className="mx-auto max-w-6xl px-4 pt-10 pb-10 sm:pt-14">
-      <header className="animate-rise max-w-2xl">
-        <p className="eyebrow">New trip</p>
-        <h1 className="mt-2 text-[34px] leading-[1.1] font-semibold sm:text-[44px]">
-          Plan a trip, to the dollar.
-        </h1>
-        <p className="mt-3 max-w-md text-[15px] text-muted-foreground">
-          Tell Waypoint what you have in mind, or set it up step by step. It builds the budget,
-          keeps a reserve aside and lays out each day.
-        </p>
+    <div className="mx-auto max-w-6xl px-4 pt-6 pb-10 sm:pt-10">
+      <header className="animate-rise grid items-center gap-6 sm:grid-cols-[minmax(0,1fr)_260px] lg:grid-cols-[minmax(0,1fr)_340px] lg:gap-10">
+        <div>
+          <p className="eyebrow text-primary">New trip</p>
+          <h1 className="mt-2 text-[30px] leading-[1.1] font-semibold sm:text-[44px]">
+            Plan a trip, to the dollar.
+          </h1>
+          <p className="mt-3 max-w-md text-[15px] text-muted-foreground">
+            Describe your trip or fill in the steps below. Waypoint builds the budget, keeps an
+            emergency fund aside and plans each day.
+          </p>
+        </div>
+        <TripScenery className="hidden sm:block" />
       </header>
 
-      <div className="mt-10 grid gap-8 lg:grid-cols-[minmax(0,1fr)_340px] lg:gap-10">
+      <div className="mt-6 grid gap-8 sm:mt-8 lg:grid-cols-[minmax(0,1fr)_340px] lg:gap-10">
         <div className="min-w-0">
           <div className="animate-rise" style={stagger(1)}>
             <TripAssistant
@@ -286,23 +303,23 @@ function Welcome() {
                 destPicked.current = true;
                 reserveTouched.current = false;
                 setForm(next);
-                toast("Filled in below — adjust anything, then plan the trip.");
+                toast("Filled in below. Adjust anything, then plan the trip.");
                 document.getElementById("plan-steps")?.scrollIntoView({ behavior: "smooth" });
               }}
             />
           </div>
 
-          <div
-            id="plan-steps"
-            className="mt-10 flex items-center gap-3 text-xs text-muted-foreground"
-          >
-            <span className="h-px flex-1 bg-border" />
-            or set it up step by step
-            <span className="h-px flex-1 bg-border" />
-          </div>
+          <h2 id="plan-steps" className="mt-10 scroll-mt-24 text-lg font-semibold">
+            Plan it yourself
+          </h2>
 
-          <form id="plan-form" onSubmit={submit} noValidate className="mt-8 divide-y divide-border">
-            <Section n={1} title="Trip" style={stagger(2)}>
+          <form id="plan-form" onSubmit={submit} noValidate className="mt-2 divide-y divide-border">
+            <Section
+              icon={RouteIcon}
+              color={TRIP_COLOR[form.tripType]}
+              title="Trip"
+              style={stagger(2)}
+            >
               <TripTypePicker
                 tripType={form.tripType}
                 mode={form.transportMode}
@@ -314,7 +331,8 @@ function Welcome() {
             </Section>
 
             <Section
-              n={2}
+              icon={MapPin}
+              color="var(--brand-coral)"
               title={
                 form.tripType === "cruise"
                   ? "Cruise"
@@ -329,11 +347,7 @@ function Welcome() {
                 value={form.origin}
                 approximate={approximate}
                 found={typedMatch}
-                label={
-                  form.tripType === "staycation"
-                    ? "Your home city — for live weather and places"
-                    : "Starting from"
-                }
+                label={form.tripType === "staycation" ? "Your home city" : "Starting from"}
                 onChange={(origin, point) => update({ origin, originPoint: point })}
               />
               <div className="mt-6">
@@ -360,9 +374,15 @@ function Welcome() {
               </div>
             </Section>
 
-            <Section n={3} title="When & who" style={stagger(3)}>
-              <div className="grid gap-4 sm:grid-cols-[1fr_auto]">
-                <div>
+            <Section
+              icon={CalendarDays}
+              color="oklch(0.66 0.15 62)"
+              title="When & who"
+              style={stagger(3)}
+            >
+              <div className="flex flex-wrap items-start gap-x-3 gap-y-4">
+                <div className="min-w-0 flex-1 basis-64">
+                  <p className="mb-1.5 text-[13px] text-muted-foreground">Dates</p>
                   <div className="grid grid-cols-2 gap-2">
                     <Input
                       type="date"
@@ -393,8 +413,9 @@ function Welcome() {
                         : `${shape.days} days, ${shape.nights} night${shape.nights === 1 ? "" : "s"}`)}
                   </p>
                 </div>
-                <div>
-                  <div className="flex h-11 items-center gap-1 rounded-lg border border-input bg-card px-1">
+                <div className="flex w-full items-center justify-between gap-3 sm:block sm:w-auto">
+                  <p className="text-[13px] text-muted-foreground sm:mb-1.5">Travelers</p>
+                  <div className="flex h-11 items-center rounded-lg border border-input bg-card">
                     <Button
                       type="button"
                       variant="ghost"
@@ -408,9 +429,11 @@ function Welcome() {
                     </Button>
                     <span
                       key={form.travelers}
-                      className="animate-pop tabular w-16 text-center text-[15px] font-medium"
+                      aria-live="polite"
+                      aria-label={`${form.travelers} ${form.travelers === 1 ? "traveler" : "travelers"}`}
+                      className="animate-pop tabular w-7 text-center text-[15px] font-semibold"
                     >
-                      {form.travelers} {form.travelers === 1 ? "person" : "people"}
+                      {form.travelers}
                     </span>
                     <Button
                       type="button"
@@ -428,20 +451,18 @@ function Welcome() {
               </div>
             </Section>
 
-            <Section n={4} title="Style" style={stagger(4)}>
-              <Segmented
-                ariaLabel="Travel style"
-                columns={3}
-                size="lg"
-                value={form.style}
-                onChange={(v) => update({ style: v })}
-                options={TRAVEL_STYLES.map((t) => ({ value: t.id, label: t.label, hint: t.blurb }))}
-              />
+            <Section
+              icon={Sparkles}
+              color={STYLE_LOOK[form.style].color}
+              title="Style"
+              style={stagger(4)}
+            >
+              <StylePicker value={form.style} onChange={(style) => update({ style })} />
               <p className="mt-5 mb-2.5 text-sm text-muted-foreground">Interests</p>
               <InterestChips value={form.interests} onToggle={toggleInterest} />
             </Section>
 
-            <Section n={5} title="Budget" style={stagger(5)}>
+            <Section icon={Wallet} color="var(--go)" title="Budget" style={stagger(5)}>
               <div className="grid gap-4 sm:grid-cols-2">
                 <div>
                   <Label className="text-[13px] font-normal text-muted-foreground">
@@ -483,10 +504,10 @@ function Welcome() {
                 </div>
                 <div>
                   <Label className="text-[13px] font-normal text-muted-foreground">
-                    Protected reserve
+                    Emergency fund
                   </Label>
                   <NumberField
-                    aria-label="Emergency reserve"
+                    aria-label="Emergency fund"
                     prefix="$"
                     step={25}
                     value={form.emergencyFund}
@@ -497,14 +518,7 @@ function Welcome() {
                       update({ emergencyFund: n });
                     }}
                   />
-                  <p
-                    className={cn(
-                      "mt-2 text-xs",
-                      reserveError ? "text-destructive" : "text-muted-foreground",
-                    )}
-                  >
-                    {reserveError || "Set aside for emergencies. Never counted as spending money."}
-                  </p>
+                  {reserveError && <p className="mt-2 text-xs text-destructive">{reserveError}</p>}
                 </div>
               </div>
             </Section>
@@ -527,8 +541,8 @@ function Welcome() {
       </div>
 
       {/* Phones and tablets: summary + action pinned while scrolling */}
-      <div className="sticky bottom-20 z-20 mt-6 md:bottom-4 lg:hidden">
-        <div className="glass flex items-center justify-between gap-4 rounded-xl border border-border p-2 pl-4 shadow-lift">
+      <div className="sticky bottom-[calc(4.5rem+env(safe-area-inset-bottom))] z-20 mt-6 md:bottom-4 lg:hidden">
+        <div className="flex items-center justify-between gap-3 rounded-xl border border-border bg-card p-2 pl-4 shadow-lift">
           <div className="min-w-0 text-sm">
             <p className="truncate font-medium">{destLabel}</p>
             <p className="tabular truncate text-xs text-muted-foreground">
@@ -537,26 +551,26 @@ function Welcome() {
               {distance ? ` · ${distance}` : ""} · about {formatMoney(estimate.planned)}
             </p>
           </div>
-          <Button type="submit" form="plan-form" variant="hero" size="lg" className="shrink-0 px-5">
+          <Button type="submit" form="plan-form" variant="go" size="lg" className="shrink-0 px-5">
             Plan trip <ArrowRight />
           </Button>
         </div>
       </div>
-      <p className="mt-4 text-center text-xs text-muted-foreground">
-        Weather and places are live. Prices are demo estimates until you check live prices.
-      </p>
     </div>
   );
 }
 
 function Section({
-  n,
+  icon: Icon,
+  color,
   title,
   aside,
   children,
   style,
 }: {
-  n: number;
+  icon: LucideIcon;
+  /** The section's accent color (CSS color) */
+  color: string;
   title: string;
   aside?: string;
   children: React.ReactNode;
@@ -564,14 +578,20 @@ function Section({
 }) {
   return (
     <section
-      className="animate-rise grid gap-4 py-8 first:pt-0 sm:grid-cols-[120px_1fr] sm:gap-8"
+      className="animate-rise grid gap-4 py-7 sm:grid-cols-[132px_1fr] sm:gap-8"
       style={style}
     >
-      <div className="flex items-baseline gap-3 sm:block">
-        <p className="tabular font-mono text-xs text-muted-foreground">
-          {String(n).padStart(2, "0")}
-        </p>
-        <h2 className="text-[15px] font-semibold sm:mt-1">{title}</h2>
+      <div className="flex items-center gap-2.5 sm:block">
+        <span
+          className="grid size-8 place-items-center rounded-lg transition-colors duration-300"
+          style={{
+            color,
+            background: `color-mix(in oklab, ${color} 14%, transparent)`,
+          }}
+        >
+          <Icon className="size-4" />
+        </span>
+        <h2 className="text-[15px] font-semibold sm:mt-2">{title}</h2>
         {aside && <p className="ml-auto text-xs text-muted-foreground sm:mt-1 sm:ml-0">{aside}</p>}
       </div>
       <div className="min-w-0">{children}</div>

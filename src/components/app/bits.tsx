@@ -2,6 +2,14 @@ import {
   Bus,
   Check,
   Cookie,
+  FerrisWheel,
+  Landmark,
+  Moon,
+  Mountain,
+  Palette,
+  ShoppingBag,
+  Trees,
+  Waves,
   MapPinned,
   Car,
   Droplets,
@@ -15,9 +23,8 @@ import {
   Ship,
   type LucideIcon,
 } from "lucide-react";
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useState, type CSSProperties, type ReactNode } from "react";
 
-import { Badge } from "@/components/ui/badge";
 import type { Category } from "@/lib/budget";
 import { INTERESTS, type Interest } from "@/lib/demo-data";
 import { formatApprox } from "@/lib/locale";
@@ -58,36 +65,23 @@ export const CATEGORY_COLOR_VAR: Record<Category, string> = {
   misc: "var(--cat-misc)",
 };
 
-/** "Demo prices" until live prices feed the budget, then says how much of it is live. */
+/** "Estimated" until live prices feed the budget, then says which amounts are live. */
 export function PriceSourceBadge({ className }: { className?: string }) {
   const { trip } = useTrip();
   const live = liveCategories(trip.inputs, trip.overrides, trip.live);
   if (live.length === 0)
-    return <DemoBadge label="Demo prices" {...(className ? { className } : {})} />;
+    return <SourceNote label="Estimated" {...(className ? { className } : {})} />;
   const names = live.map((c) =>
     c === "accommodations" ? "hotel" : c === "transportation" ? "flights" : c,
   );
   return (
-    <Badge variant="secondary" className={className}>
-      <span className="size-1.5 rounded-full bg-success" />
-      Live {names.join(" & ")} · rest demo
-    </Badge>
+    <SourceNote label={`Live ${names.join(" & ")} prices`} {...(className ? { className } : {})} />
   );
 }
 
-export function DemoBadge({
-  label = "Demo data",
-  className,
-}: {
-  label?: string;
-  className?: string;
-}) {
-  return (
-    <Badge variant="demo" className={className}>
-      <span className="size-1.5 rounded-full bg-muted-foreground/50" />
-      {label}
-    </Badge>
-  );
+/** A quiet line saying where numbers or places come from (examples, estimates, live). */
+export function SourceNote({ label, className }: { label: string; className?: string }) {
+  return <p className={cn("text-[11px] text-muted-foreground", className)}>{label}</p>;
 }
 
 /** Numeric input that lets people clear and retype freely, committing on change. */
@@ -187,6 +181,20 @@ export function SectionTitle({
 }
 
 /** Interest toggles, the same on every page that asks. */
+/** Each interest's icon and color (mid-tone, readable on light and dark). */
+export const INTEREST_STYLE: Record<Interest, { icon: LucideIcon; color: string }> = {
+  nature: { icon: Trees, color: "oklch(0.58 0.14 150)" },
+  food: { icon: UtensilsCrossed, color: "oklch(0.63 0.16 50)" },
+  history: { icon: Landmark, color: "oklch(0.58 0.1 75)" },
+  beaches: { icon: Waves, color: "oklch(0.6 0.12 215)" },
+  arts: { icon: Palette, color: "oklch(0.6 0.18 350)" },
+  adventure: { icon: Mountain, color: "oklch(0.6 0.17 28)" },
+  family: { icon: FerrisWheel, color: "oklch(0.66 0.15 95)" },
+  nightlife: { icon: Moon, color: "oklch(0.55 0.17 285)" },
+  shopping: { icon: ShoppingBag, color: "oklch(0.58 0.17 320)" },
+};
+
+/** What the traveler enjoys: a grid of colored tiles they can toggle. */
 export function InterestChips({
   value,
   onToggle,
@@ -197,30 +205,39 @@ export function InterestChips({
   className?: string;
 }) {
   return (
-    <div className={cn("flex flex-wrap gap-1.5", className)}>
+    <div className={cn("grid grid-cols-2 gap-2 sm:grid-cols-3", className)}>
       {INTERESTS.map((i) => {
         const active = value.includes(i.id);
+        const { icon: Icon, color } = INTEREST_STYLE[i.id];
         return (
           <button
             key={i.id}
             type="button"
             aria-pressed={active}
             onClick={() => onToggle(i.id)}
+            style={{ "--tile": color } as CSSProperties}
             className={cn(
-              "inline-flex h-9 items-center gap-1.5 rounded-lg border px-3 text-[13px] font-medium transition-[background-color,border-color,color,transform] duration-150 active:scale-[0.97]",
+              "flex h-11 items-center gap-2.5 rounded-lg border px-2.5 text-left text-[13px] font-medium transition-[background-color,border-color,transform] duration-150 active:scale-[0.98]",
               active
-                ? "border-foreground bg-foreground text-background"
-                : "border-border bg-card text-foreground hover:border-muted-foreground/40",
+                ? "border-[var(--tile)] bg-[color-mix(in_oklab,var(--tile)_10%,var(--card))]"
+                : "border-border bg-card hover:border-[color-mix(in_oklab,var(--tile)_45%,var(--border))]",
             )}
           >
-            <Check
+            <span
               className={cn(
-                "size-3.5 transition-[width,opacity] duration-200",
-                active ? "w-3.5 opacity-100" : "-mr-1.5 w-0 opacity-0",
+                "grid size-7 shrink-0 place-items-center rounded-md transition-colors duration-150",
+                active
+                  ? "bg-[var(--tile)] text-white"
+                  : "bg-[color-mix(in_oklab,var(--tile)_14%,transparent)] text-[var(--tile)]",
               )}
-              aria-hidden
-            />
-            {i.label}
+            >
+              {active ? (
+                <Check className="size-4" strokeWidth={2.5} />
+              ) : (
+                <Icon className="size-4" />
+              )}
+            </span>
+            <span className="min-w-0 truncate">{i.label}</span>
           </button>
         );
       })}

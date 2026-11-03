@@ -42,7 +42,7 @@ export interface AiItineraryRequest {
   activityBudgetPerPerson: number;
   foodBudgetPerPersonDay: number;
   weather: string[];
-  /** Real places near the destination ("Name — what it is"), to ground the plan */
+  /** Real places near the destination ("Name (what it is)"), to ground the plan */
   places: string[];
   /** Dates to know about, e.g. public holidays */
   notes: string[];
@@ -66,7 +66,8 @@ When weather is given, plan around it: put indoor sights on days with rain, snow
 When a list of real nearby places is given, build the plan from those exact names wherever they fit the traveler's interests, and don't make up specific venue names; if you need something the list doesn't have, describe the kind of place instead (e.g. "Neighborhood bakery").
 When public holidays are given, expect closures and crowds on those days: favor outdoor sights and markets that stay open, and say so in a tip.
 Return exactly the number of days asked for, in order.
-When the traveler asks for changes to their current plan, make those changes and keep everything they didn't ask to change.`;
+When the traveler asks for changes to their current plan, make those changes and keep everything they didn't ask to change.
+Write plainly, like a friend who knows the place. Never use em dashes.`;
 
 function describeError(err: unknown): { status: number; error: string } {
   const e = err as {
@@ -193,7 +194,7 @@ export async function generateAiItinerary(
       return {
         ok: false,
         status: 504,
-        error: "The AI planner took too long. Your current plan is unchanged — try again.",
+        error: "The AI planner took too long. Your current plan is unchanged. Try again.",
       };
     console.error("AI itinerary failed", err);
     return { ok: false, ...describeError(err) };

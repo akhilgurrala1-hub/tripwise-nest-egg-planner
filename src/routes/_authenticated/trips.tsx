@@ -26,12 +26,12 @@ import { tripActions, useTrip, type TripState } from "@/lib/trip-store";
 export const Route = createFileRoute("/_authenticated/trips")({
   head: () => ({
     meta: [
-      { title: "Saved trips — Waypoint" },
+      { title: "Saved trips | Waypoint" },
       {
         name: "description",
         content: "Open, rename, copy and delete the trips saved to your Waypoint account.",
       },
-      { property: "og:title", content: "Saved trips — Waypoint" },
+      { property: "og:title", content: "Saved trips | Waypoint" },
       {
         property: "og:description",
         content: "All your planned trips and budgets, saved to your account.",

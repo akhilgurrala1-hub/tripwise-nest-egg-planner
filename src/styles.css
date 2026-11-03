@@ -57,6 +57,14 @@
   --color-demo: var(--demo);
   --color-demo-soft: var(--demo-soft);
   --color-brand-coral: var(--brand-coral);
+  --color-go: var(--go);
+  --color-go-deep: var(--go-deep);
+  --color-go-foreground: var(--go-foreground);
+  --color-go-soft: var(--go-soft);
+  --color-style-budget: var(--style-budget);
+  --color-style-comfort: var(--style-comfort);
+  --color-style-luxury: var(--style-luxury);
+  --color-art-sky: var(--art-sky);
   --color-trip-road: var(--trip-road);
   --color-trip-flight: var(--trip-flight);
   --color-trip-cruise: var(--trip-cruise);
@@ -133,6 +141,20 @@
   --ink: oklch(0.2 0.008 260);
   --ink-foreground: oklch(0.985 0 0);
   --on-image: oklch(0.99 0 0);
+
+  /* "Go" actions (Plan trip, Start planning): green, white text at AA contrast. */
+  --go: oklch(0.53 0.15 152);
+  --go-deep: oklch(0.47 0.14 152);
+  --go-foreground: oklch(0.99 0 0);
+  --go-soft: oklch(0.96 0.03 152);
+
+  /* Travel styles: Savvy green, Comfort blue, Luxe violet. */
+  --style-budget: oklch(0.52 0.13 160);
+  --style-comfort: oklch(0.55 0.18 258);
+  --style-luxury: oklch(0.52 0.2 310);
+
+  /* Illustrations */
+  --art-sky: oklch(0.95 0.03 240);
 
   /* Trip types: each kind of trip has its own hue (scenes, the trip chip, suggestions). */
   --trip-road: oklch(0.55 0.2 264);
@@ -222,6 +244,17 @@
   --ink: oklch(0.96 0.002 260);
   --ink-foreground: oklch(0.16 0.004 260);
   --on-image: oklch(0.99 0 0);
+
+  --go: oklch(0.6 0.15 152);
+  --go-deep: oklch(0.55 0.14 152);
+  --go-foreground: oklch(0.16 0.02 152);
+  --go-soft: oklch(0.28 0.05 152);
+
+  --style-budget: oklch(0.74 0.13 160);
+  --style-comfort: oklch(0.72 0.14 258);
+  --style-luxury: oklch(0.72 0.15 310);
+
+  --art-sky: oklch(0.27 0.04 250);
 
   --trip-road: oklch(0.7 0.15 264);
   --trip-flight: oklch(0.74 0.12 232);
@@ -347,10 +380,9 @@
   color: var(--color-muted-foreground);
 }
 
+/* Bars that sit over content (header, phone tab bar): solid, so nothing shows through. */
 @utility glass {
-  background-color: color-mix(in oklab, var(--background) 84%, transparent);
-  backdrop-filter: blur(14px) saturate(1.4);
-  -webkit-backdrop-filter: blur(14px) saturate(1.4);
+  background-color: var(--background);
 }
 
 @utility pb-safe {
@@ -612,5 +644,17 @@ a:focus-visible > .logo .logo-ripple {
   [data-sonner-toaster],
   .intro {
     display: none !important;
+  }
+}
+
+/*
+ * iPhone Safari zooms the page into any field with text under 16px and leaves it
+ * zoomed, which cuts the layout off. Unlayered, so it wins over text-sm etc.
+ */
+@media (max-width: 767px) {
+  input,
+  textarea,
+  select {
+    font-size: 16px;
   }
 }

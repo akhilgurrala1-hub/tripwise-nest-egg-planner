@@ -57,7 +57,7 @@ export interface TripChatRequest {
   /** The traveler's country (ISO code) and the currency they think in */
   country: string;
   currency: string;
-  /** Real places Waypoint suggests from their home, "Name (Region) — trip type, distance" */
+  /** Real places Waypoint suggests from their home, "Name (Region): trip type, distance" */
   nearby: string[];
 }
 
@@ -71,7 +71,7 @@ Each turn:
 - If destination, dates and travelers are all known, set ready=true, give a one- or two-sentence summary in "reply", and ask nothing more (questions = []).
 - Otherwise set ready=false and ask at most 3 short questions, most important first, each with 2–4 short tappable answer options (e.g. "Just me", "2 people", "Family of 4").
 - If they don't know where to go, offer 3 "ideas": real places in "City, ST" form (or a departure port city for cruises) that fit their starting city, the season, their interests and trip type, each with a short "why" (under 12 words). Otherwise ideas = [].
-Rules: today's date is given; resolve "next weekend", "in March" etc. to real dates that are not in the past (a month without days = a 4-day trip starting the first Friday). Weekend = Friday to Sunday. A road trip or staycation starts from their home city when they don't say otherwise. Destination is "City, ST" for US places, "City, Country" elsewhere. Dates are YYYY-MM-DD. Keep "reply" under 50 words, warm and plain — no emoji, no markdown.`;
+Rules: today's date is given; resolve "next weekend", "in March" etc. to real dates that are not in the past (a month without days = a 4-day trip starting the first Friday). Weekend = Friday to Sunday. A road trip or staycation starts from their home city when they don't say otherwise. Destination is "City, ST" for US places, "City, Country" elsewhere. Dates are YYYY-MM-DD. Keep "reply" under 50 words, warm and plain. No emoji, no markdown, no em dashes.`;
 
 function requestSignal(clientSignal?: AbortSignal): AbortSignal | undefined {
   if (typeof AbortSignal === "undefined" || typeof AbortSignal.timeout !== "function")

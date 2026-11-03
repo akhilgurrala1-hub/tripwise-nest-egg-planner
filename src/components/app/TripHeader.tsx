@@ -1,10 +1,12 @@
 import { Link } from "@tanstack/react-router";
-import { CalendarDays, ChevronDown, Info, MapPin, Pencil, Users } from "lucide-react";
-import { useState, type ReactNode } from "react";
+import { ArrowRight, CalendarDays, ChevronDown, Info, MapPin, Pencil, Users } from "lucide-react";
+import { useState, type CSSProperties, type ReactNode } from "react";
 import { toast } from "sonner";
 
+import { MapArt } from "./Illustrations";
 import { TRIP_COLOR } from "./trip-colors";
 import { TRIP_ICONS, TripTypePicker } from "./TripTypePicker";
+import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { formatCalendarDate } from "@/lib/dates";
 import { tripTypeInfo } from "@/lib/demo-data";
@@ -33,28 +35,54 @@ export function PageHeader({
   title,
   children,
   showTrip = true,
+  sampleBanner = "line",
 }: {
   eyebrow: string;
   title: string;
   children?: ReactNode;
   /** Account pages aren't about the current trip */
   showTrip?: boolean;
+  /** How loudly to say this is the sample trip: a full card (Overview) or one line */
+  sampleBanner?: "card" | "line";
 }) {
   const { trip } = useTrip();
+  const sample = showTrip && trip.isSample;
   return (
-    <div className="mx-auto max-w-6xl px-4 pt-8 sm:pt-10">
-      {showTrip && trip.isSample && (
-        <p className="mb-6 flex items-center gap-2 text-[13px] text-muted-foreground print:hidden">
-          <Info className="size-3.5 shrink-0" />
-          <span>
-            You're looking at a sample trip.{" "}
-            <Link
-              to="/"
-              className="font-medium text-foreground underline decoration-border underline-offset-4 hover:decoration-foreground"
-            >
-              Plan your own
+    <div className="mx-auto max-w-6xl px-4 pt-6 sm:pt-10">
+      {sample && sampleBanner === "card" && (
+        <section className="animate-rise mb-7 grid items-center gap-4 overflow-hidden rounded-2xl border border-[color-mix(in_oklab,var(--go)_30%,var(--border))] bg-[color-mix(in_oklab,var(--go)_7%,var(--card))] p-5 grid-cols-[72px_1fr] sm:grid-cols-[140px_1fr_auto] sm:gap-6 sm:p-6 print:hidden">
+          <MapArt className="w-[72px] sm:w-[140px]" />
+          <div className="min-w-0">
+            <h2 className="text-lg leading-snug font-semibold sm:text-xl">
+              This is a sample trip. Make it yours.
+            </h2>
+            <p className="mt-1 max-w-lg text-sm text-muted-foreground">
+              Pick where you're going, your dates and your budget. Everything on these pages updates
+              to match.
+            </p>
+          </div>
+          <Button
+            asChild
+            variant="go"
+            size="lg"
+            className="col-span-2 w-full sm:col-span-1 sm:w-auto"
+          >
+            <Link to="/">
+              Plan your own trip <ArrowRight />
             </Link>
-          </span>
+          </Button>
+        </section>
+      )}
+      {sample && sampleBanner === "line" && (
+        <p className="mb-5 flex flex-wrap items-center gap-x-2 gap-y-1 text-[13px] text-muted-foreground print:hidden">
+          <Info className="size-3.5 shrink-0" />
+          You're looking at a sample trip.
+          <Link
+            to="/"
+            className="inline-flex items-center gap-1 font-semibold text-go hover:underline hover:underline-offset-4"
+          >
+            Plan your own <ArrowRight className="size-3.5" />
+          </Link>
         </p>
       )}
       <div className="flex flex-wrap items-end justify-between gap-4">
@@ -72,7 +100,7 @@ export function PageHeader({
 function TripBar() {
   const { trip, dest, shape } = useTrip();
   return (
-    <div className="mt-3 flex flex-wrap items-center gap-1.5 text-[13px]">
+    <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-[13px]">
       <TripTypeChip />
       <Chip icon={<MapPin />}>{dest.name}</Chip>
       <Chip icon={<CalendarDays />}>
@@ -87,7 +115,7 @@ function TripBar() {
       </Chip>
       <Link
         to="/"
-        className="inline-flex h-8 items-center gap-1.5 rounded-lg px-2 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground print:hidden"
+        className="inline-flex h-8 items-center gap-1.5 rounded-md px-1 font-medium text-primary transition-colors hover:underline hover:underline-offset-4 print:hidden"
       >
         <Pencil className="size-3.5" /> Edit trip
       </Link>
@@ -97,7 +125,7 @@ function TripBar() {
 
 function Chip({ icon, children }: { icon: ReactNode; children: ReactNode }) {
   return (
-    <span className="tabular inline-flex h-8 max-w-full items-center gap-1.5 rounded-lg border border-border bg-card px-2.5 [&>svg]:size-3.5 [&>svg]:shrink-0 [&>svg]:text-muted-foreground">
+    <span className="tabular inline-flex max-w-full items-center gap-1.5 [&>svg]:size-4 [&>svg]:shrink-0 [&>svg]:text-muted-foreground">
       {icon}
       <span className="truncate">{children}</span>
     </span>
@@ -111,7 +139,10 @@ function TripTypeChip() {
   const Icon = TRIP_ICONS[trip.setup.tripType];
   return (
     <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-border bg-card px-2.5 font-medium transition-colors hover:border-muted-foreground/40 data-[state=open]:border-primary data-[state=open]:ring-3 data-[state=open]:ring-primary/12">
+      <PopoverTrigger
+        style={{ "--tile": TRIP_COLOR[trip.setup.tripType] } as CSSProperties}
+        className="inline-flex h-8 items-center gap-1.5 rounded-md bg-[color-mix(in_oklab,var(--tile)_12%,transparent)] px-2.5 font-semibold transition-colors hover:bg-[color-mix(in_oklab,var(--tile)_20%,transparent)] data-[state=open]:ring-2 data-[state=open]:ring-[var(--tile)]"
+      >
         <Icon
           className="size-3.5"
           style={{ color: TRIP_COLOR[trip.setup.tripType] }}
@@ -126,7 +157,7 @@ function TripTypeChip() {
         className="w-[min(420px,calc(100vw-2rem))] rounded-xl p-3"
       >
         <p className="px-1 pb-2.5 text-[13px] text-muted-foreground">
-          Switch trip type — the budget is re-estimated for it.
+          Switch trip type. The budget updates to match.
         </p>
         <TripTypePicker
           compact

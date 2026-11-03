@@ -13,8 +13,17 @@ const KINDS: ItemKind[] = ["sight", "restaurant", "stop"];
 const MAX_ITEMS_PER_DAY = 6;
 const MAX_COST = 1500;
 
+/** Em dashes (and spaced en dashes) read as machine-written; plain punctuation instead. */
+export function plainDashes(text: string): string {
+  return text
+    .replace(/\s*—\s*/g, ", ")
+    .replace(/\s+–\s+/g, ", ")
+    .replace(/,\s*([.,;:!?])/g, "$1")
+    .replace(/^,\s*/, "");
+}
+
 const clip = (s: unknown, n: number) => {
-  const t = String(s ?? "")
+  const t = plainDashes(String(s ?? ""))
     .replace(/\s+/g, " ")
     .trim();
   return t.length > n ? `${t.slice(0, n - 1).trimEnd()}…` : t;
@@ -45,7 +54,7 @@ export function matchRealPlace(name: string, places: RealPlace[]): RealPlace | n
 
 /** Real nearby places as short lines for the prompt ("British Museum — Museum in London"). */
 export function placeLines(sights: RealPlace[], restaurants: RealPlace[]): string[] {
-  const line = (p: RealPlace) => clip(`${p.name} — ${p.typeLabel}`, 140);
+  const line = (p: RealPlace) => clip(`${p.name} (${p.typeLabel})`, 140);
   return [...sights.slice(0, 25).map(line), ...restaurants.slice(0, 15).map(line)];
 }
 
