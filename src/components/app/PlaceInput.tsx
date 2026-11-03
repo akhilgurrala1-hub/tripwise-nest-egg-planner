@@ -3,6 +3,7 @@ import { Loader2, MapPin } from "lucide-react";
 import { useEffect, useId, useState } from "react";
 
 import { Input } from "@/components/ui/input";
+import type { GeoPlace } from "@/lib/live/geocode";
 import { geocodeQuery } from "@/lib/live/use-live";
 import { cn } from "@/lib/utils";
 
@@ -14,10 +15,13 @@ export function PlaceInput({
   id,
   autoFocus,
   className,
+  onPickPlace,
   "aria-label": ariaLabel,
 }: {
   value: string;
   onChange: (v: string) => void;
+  /** Called with the real place (and its coordinates) when a suggestion is chosen */
+  onPickPlace?: (place: GeoPlace) => void;
   placeholder?: string;
   id?: string;
   autoFocus?: boolean;
@@ -40,8 +44,10 @@ export function PlaceInput({
   );
   const show = open && value.trim().length >= 2 && (options.length > 0 || q.isFetching);
 
-  const pick = (label: string) => {
+  const pick = (place: GeoPlace) => {
+    const label = place.label;
     onChange(label);
+    onPickPlace?.(place);
     setOpen(false);
     setActive(-1);
   };
@@ -77,7 +83,7 @@ export function PlaceInput({
             setActive((a) => Math.max(-1, a - 1));
           } else if (e.key === "Enter" && active >= 0 && options[active]) {
             e.preventDefault();
-            pick(options[active].label);
+            pick(options[active]);
           } else if (e.key === "Escape") setOpen(false);
         }}
         className={className}
@@ -100,7 +106,7 @@ export function PlaceInput({
               aria-selected={i === active}
               onMouseDown={(e) => {
                 e.preventDefault();
-                pick(p.label);
+                pick(p);
               }}
               className={cn(
                 "flex min-h-11 cursor-pointer items-center gap-2 px-3 py-2 text-sm",

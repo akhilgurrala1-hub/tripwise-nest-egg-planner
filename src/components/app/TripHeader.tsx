@@ -3,6 +3,7 @@ import { CalendarDays, ChevronDown, Info, MapPin, Pencil, Users } from "lucide-r
 import { useState, type ReactNode } from "react";
 import { toast } from "sonner";
 
+import { TRIP_COLOR } from "./trip-colors";
 import { TRIP_ICONS, TripTypePicker } from "./TripTypePicker";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { formatCalendarDate } from "@/lib/dates";
@@ -111,7 +112,11 @@ function TripTypeChip() {
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-border bg-card px-2.5 font-medium transition-colors hover:border-muted-foreground/40 data-[state=open]:border-primary data-[state=open]:ring-3 data-[state=open]:ring-primary/12">
-        <Icon className="size-3.5 text-primary" strokeWidth={2} />
+        <Icon
+          className="size-3.5"
+          style={{ color: TRIP_COLOR[trip.setup.tripType] }}
+          strokeWidth={2}
+        />
         {tripTypeInfo(trip.setup.tripType).label}
         <ChevronDown className="size-3.5 text-muted-foreground" />
       </PopoverTrigger>

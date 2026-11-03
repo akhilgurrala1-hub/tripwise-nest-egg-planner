@@ -1,3 +1,12 @@
+import {
+  catalogCruise,
+  catalogPlace,
+  roadMiles,
+  type CatalogCruise,
+  type CatalogPlace,
+  type GeoPoint,
+} from "./catalog";
+
 // DEMONSTRATION DATA ONLY.
 // Every price, venue, and distance below is an illustrative example, not live data.
 // Replace with real travel-data integrations before relying on any figure.
@@ -156,6 +165,8 @@ export interface DemoDestination {
   port?: string;
   /** A real town at the heart of the area, used for live weather. Prices above stay demo data. */
   anchor?: { name: string; lat: number; lon: number };
+  /** Where a cruise departs, for distances from home */
+  portPoint?: GeoPoint;
 }
 
 export const DESTINATIONS: DemoDestination[] = [
@@ -518,6 +529,7 @@ export const DESTINATIONS: DemoDestination[] = [
     id: "caribbean-cruise",
     anchor: { name: "Nassau, Bahamas", lat: 25.0443, lon: -77.3504 },
     port: "Miami, FL",
+    portPoint: { lat: 25.7781, lon: -80.1794 },
     name: "Bahamas & Caribbean",
     region: "Cruise from Miami, FL",
     tagline: "Island hops with your cabin & meals included",
@@ -592,6 +604,7 @@ export const DESTINATIONS: DemoDestination[] = [
     id: "alaska-cruise",
     anchor: { name: "Juneau, AK", lat: 58.3019, lon: -134.4197 },
     port: "Seattle, WA",
+    portPoint: { lat: 47.6125, lon: -122.3542 },
     name: "Alaska Inside Passage",
     region: "Cruise from Seattle, WA",
     tagline: "Glaciers, whales & rainforest ports",
@@ -814,7 +827,113 @@ export function buildCustomDestination(name: string): DemoDestination {
   };
 }
 
+// ---------- Suggested real places (catalog.ts) with demo prices ----------
+
+export const PLACE_PREFIX = "place:";
+export const CRUISE_PREFIX = "cruise:";
+
+const TIER_NIGHTLY: Record<CatalogPlace["tier"], Tiered> = {
+  value: { budget: 79, comfort: 139, luxury: 279 },
+  mid: { budget: 95, comfort: 169, luxury: 349 },
+  premium: { budget: 129, comfort: 229, luxury: 479 },
+};
+const TIER_FOOD: Record<CatalogPlace["tier"], Tiered> = {
+  value: { budget: 30, comfort: 52, luxury: 105 },
+  mid: { budget: 34, comfort: 60, luxury: 120 },
+  premium: { budget: 40, comfort: 72, luxury: 145 },
+};
+const TIER_ACTIVITIES: Record<CatalogPlace["tier"], Tiered> = {
+  value: { budget: 20, comfort: 60, luxury: 160 },
+  mid: { budget: 25, comfort: 70, luxury: 180 },
+  premium: { budget: 35, comfort: 90, luxury: 240 },
+};
+const TIER_CRUISE: Record<CatalogCruise["tier"], Tiered> = {
+  value: { budget: 75, comfort: 130, luxury: 340 },
+  mid: { budget: 90, comfort: 155, luxury: 400 },
+  premium: { budget: 120, comfort: 200, luxury: 480 },
+};
+
+/** A real suggested place, priced with demo estimates for its cost level. */
+export function buildCatalogDestination(place: CatalogPlace): DemoDestination {
+  const base = buildCustomDestination(place.town);
+  return {
+    ...base,
+    id: PLACE_PREFIX + place.id,
+    name: place.name,
+    region: place.region,
+    tagline: place.tagline,
+    bestFor: place.types,
+    nightly: TIER_NIGHTLY[place.tier],
+    foodPerPersonDay: TIER_FOOD[place.tier],
+    activitiesPerPerson: TIER_ACTIVITIES[place.tier],
+    parkingPerDay: place.tier === "premium" ? 28 : place.tier === "mid" ? 15 : 8,
+    anchor: { name: place.town, lat: place.lat, lon: place.lon },
+  };
+}
+
+export function buildCatalogCruise(c: CatalogCruise): DemoDestination {
+  const base = buildCustomDestination(c.callTown);
+  return {
+    ...base,
+    id: CRUISE_PREFIX + c.id,
+    name: c.name,
+    region: `From ${c.port}`,
+    tagline: c.tagline,
+    bestFor: ["cruise"],
+    port: c.port,
+    portPoint: c.portPoint,
+    cruisePerNight: TIER_CRUISE[c.tier],
+    nightly: TIER_NIGHTLY[c.tier],
+    parkingPerDay: 22,
+    anchor: { name: c.callTown, lat: c.callPoint.lat, lon: c.callPoint.lon },
+  };
+}
+
+/** Example round-trip fares per person for a one-way distance, so far places cost more to reach. */
+export function faresForDistance(oneWayMiles: number): DemoDestination["fares"] {
+  const m = Math.max(0, oneWayMiles);
+  return {
+    flight: Math.round(Math.min(950, 140 + m * 0.11) / 5) * 5,
+    train: Math.round(Math.min(600, 30 + m * 0.24) / 5) * 5,
+    bus: Math.round(Math.min(350, 20 + m * 0.13) / 5) * 5,
+  };
+}
+
+/** The point a trip travels to: the departure port for cruises, otherwise the destination town. */
+export function travelPoint(dest: DemoDestination, typed?: GeoPoint | null): GeoPoint | null {
+  if (dest.portPoint) return dest.portPoint;
+  if (dest.anchor) return { lat: dest.anchor.lat, lon: dest.anchor.lon };
+  return dest.id === CUSTOM_DESTINATION_ID ? (typed ?? null) : null;
+}
+
+/**
+ * The destination for a trip setup, with its drive distance and example fares
+ * worked out from where the traveler starts (when we know both places).
+ */
+export function destinationFor(s: {
+  destinationId: string;
+  customDestination: string;
+  originPoint?: GeoPoint | null | undefined;
+  destinationPoint?: GeoPoint | null | undefined;
+}): DemoDestination {
+  const dest = getDestination(s.destinationId, s.customDestination);
+  if (!s.originPoint || dest.id === "hometown") return dest;
+  const to = travelPoint(dest, s.destinationPoint);
+  if (!to) return dest;
+  const oneWay = roadMiles(s.originPoint, to);
+  if (oneWay < 10) return dest;
+  return { ...dest, roundTripMiles: oneWay * 2, fares: faresForDistance(oneWay) };
+}
+
 export function getDestination(id: string, customName = ""): DemoDestination {
   if (id === CUSTOM_DESTINATION_ID) return buildCustomDestination(customName);
+  if (id.startsWith(PLACE_PREFIX)) {
+    const place = catalogPlace(id.slice(PLACE_PREFIX.length));
+    if (place) return buildCatalogDestination(place);
+  }
+  if (id.startsWith(CRUISE_PREFIX)) {
+    const cruise = catalogCruise(id.slice(CRUISE_PREFIX.length));
+    if (cruise) return buildCatalogCruise(cruise);
+  }
   return DESTINATIONS.find((d) => d.id === id) ?? DESTINATIONS[0]!;
 }

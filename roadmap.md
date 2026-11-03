@@ -19,6 +19,15 @@
 - [x] P4 Itinerary editing: add, edit, swap, reorder, undo remove
 - [x] Tests + browser checks (two tabs, delayed/cancelled/timed-out AI, mobile, both themes)
 
+## Personal & booking (done)
+
+- [x] Trips start where the traveler is (profile, device on request, or approximate city)
+- [x] Suggestions ranked by distance, trip type and interests (50+ real places, 8 cruise ports)
+- [x] Drive miles and example fares from the real start point
+- [x] AI trip assistant: asks what it needs, suggests places, builds the trip
+- [x] Book step: per-trip checklist with pre-filled provider searches, confirmations and spend vs. budget
+- [x] Live trip preview on the Plan page; trip-type colors
+
 ## Organization & motion (done)
 
 - [x] Nav in flow order: Plan, Overview, Budget, Itinerary, Road trip

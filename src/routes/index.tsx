@@ -1,15 +1,20 @@
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { ArrowRight, MapPin, Minus, Plus } from "lucide-react";
+import { ArrowRight, Minus, Plus } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 
 import { InterestChips, NumberField } from "@/components/app/bits";
 import { Segmented, stagger } from "@/components/app/motion";
-import { PlaceInput } from "@/components/app/PlaceInput";
+import { DestinationPicker } from "@/components/app/plan/DestinationPicker";
+import { OriginField } from "@/components/app/plan/OriginField";
+import { TripAssistant } from "@/components/app/plan/TripAssistant";
+import { TripPreview } from "@/components/app/plan/TripPreview";
 import { TripTypePicker } from "@/components/app/TripTypePicker";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { setupFromDraft, type TripDraft } from "@/lib/assistant";
 import {
   calculateBudget,
   defaultEmergencyFund,
@@ -17,18 +22,27 @@ import {
   formatMoney,
   tripShape,
 } from "@/lib/budget";
+import { driveLabel, roadMiles, type GeoPoint } from "@/lib/catalog";
 import {
   CUSTOM_DESTINATION_ID,
-  DESTINATIONS,
   INTERESTS,
   TRAVEL_STYLES,
-  getDestination,
+  destinationFor,
   modeForTripType,
+  travelPoint,
   tripTypeInfo,
   type TripType,
 } from "@/lib/demo-data";
 import { addDays, dateRangeError, inclusiveDays, isIsoDate, todayIso } from "@/lib/dates";
-import { destinationForTripType, tripActions, useTrip, type TripSetup } from "@/lib/trip-store";
+import { useHomePlace } from "@/lib/live/use-home";
+import { geocodeQuery, useHydrated } from "@/lib/live/use-live";
+import {
+  destinationForTripType,
+  suggestedBudget,
+  tripActions,
+  useTrip,
+  type TripSetup,
+} from "@/lib/trip-store";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/")({
@@ -57,12 +71,15 @@ const BUDGET_PRESETS = [500, 1000, 2500, 5000];
 
 function Welcome() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const hydrated = useHydrated();
   const { trip } = useTrip();
+  const home = useHomePlace();
   const [form, setForm] = useState<TripSetup>(trip.setup);
   const touched = useRef(false);
   const reserveTouched = useRef(false);
 
-  // Pick up a saved trip once it loads from this device.
+  // Pick up a saved (or personalized sample) trip until the traveler starts editing.
   useEffect(() => {
     if (!touched.current) setForm(trip.setup);
   }, [trip.setup]);
@@ -71,6 +88,16 @@ function Welcome() {
     touched.current = true;
     setForm((f) => ({ ...f, ...patch }));
   };
+
+  // Where the trip starts, as a point: picked/located, else the typed city looked up.
+  const originGeo = useQuery({
+    ...geocodeQuery(form.origin),
+    enabled: hydrated && !form.originPoint && form.origin.trim().length >= 2,
+  });
+  const originPoint: GeoPoint | null =
+    form.originPoint ??
+    (originGeo.data?.[0] ? { lat: originGeo.data[0].lat, lon: originGeo.data[0].lon } : null);
+  const effective: TripSetup = { ...form, originPoint };
 
   const shape = tripShape(form.startDate, form.endDate, form.travelers);
   const dateError =
@@ -90,28 +117,30 @@ function Welcome() {
       ? "Type a destination"
       : "";
 
-  const suggested = useMemo(() => {
-    const dest = getDestination(form.destinationId, form.customDestination);
-    const totals = calculateBudget(
-      defaultInputs(dest, form.style, form.tripType, form.travelers, form.transportMode),
+  const dest = destinationFor(effective);
+  const estimate = useMemo(
+    () =>
+      calculateBudget(
+        defaultInputs(dest, form.style, form.tripType, form.travelers, form.transportMode),
+        shape,
+        form.totalBudget,
+        Math.min(form.emergencyFund, form.totalBudget),
+      ),
+    [
+      dest,
+      form.style,
+      form.tripType,
+      form.travelers,
+      form.transportMode,
+      form.totalBudget,
+      form.emergencyFund,
       shape,
-      0,
-      0,
-    );
-    // Planned spend plus the protected reserve (10% of the budget unless the traveler set their own).
-    return reserveTouched.current
-      ? Math.ceil((totals.planned + form.emergencyFund) / 50) * 50
-      : Math.ceil(totals.planned / 0.9 / 50) * 50;
-  }, [
-    form.destinationId,
-    form.customDestination,
-    form.style,
-    form.tripType,
-    form.travelers,
-    form.transportMode,
-    form.emergencyFund,
-    shape,
-  ]);
+    ],
+  );
+  const suggested = suggestedBudget(
+    effective,
+    reserveTouched.current ? form.emergencyFund : undefined,
+  );
 
   const setBudget = (totalBudget: number) =>
     update(
@@ -120,14 +149,8 @@ function Welcome() {
         : { totalBudget, emergencyFund: defaultEmergencyFund(totalBudget) },
     );
 
-  // Only destinations that suit the chosen trip type ("Somewhere else" is always offered).
-  const orderedDestinations = useMemo(
-    () => DESTINATIONS.filter((d) => d.bestFor.includes(form.tripType)),
-    [form.tripType],
-  );
-
   const setTripType = (tripType: TripType) => {
-    const { destinationId } = destinationForTripType(form, tripType);
+    const { destinationId } = destinationForTripType(effective, tripType);
     update({
       tripType,
       destinationId,
@@ -142,6 +165,27 @@ function Welcome() {
         : [...form.interests, id],
     });
 
+  /** A typed destination's real location, for distances (best effort, never blocks). */
+  const locateCustom = async (setup: TripSetup): Promise<TripSetup> => {
+    if (setup.destinationId !== CUSTOM_DESTINATION_ID || setup.destinationPoint) return setup;
+    try {
+      const found = await Promise.race([
+        queryClient.fetchQuery(geocodeQuery(setup.customDestination)),
+        new Promise<never>((_, rej) => setTimeout(() => rej(new Error("slow")), 2500)),
+      ]);
+      const p = found[0];
+      return p ? { ...setup, destinationPoint: { lat: p.lat, lon: p.lon } } : setup;
+    } catch {
+      return setup;
+    }
+  };
+
+  const start = async (setup: TripSetup) => {
+    tripActions.startTrip(await locateCustom(setup));
+    toast.success("Your trip plan is ready");
+    navigate({ to: "/dashboard" });
+  };
+
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
     if (dateError || destError || reserveError) {
@@ -152,283 +196,308 @@ function Welcome() {
       toast.error("Add a total budget to continue");
       return;
     }
-    tripActions.startTrip(form);
-    toast.success("Your trip plan is ready");
-    navigate({ to: "/dashboard" });
+    void start(effective);
   };
 
-  const dest = getDestination(form.destinationId, form.customDestination);
+  const fromDraft = (draft: TripDraft) => setupFromDraft(draft, effective, todayIso());
+
   const destLabel =
     form.destinationId === CUSTOM_DESTINATION_ID
       ? form.customDestination.trim() || "Somewhere else"
       : dest.name;
+  const to = travelPoint(dest, form.destinationPoint);
+  const miles = originPoint && to ? roadMiles(originPoint, to) : null;
+  const distance =
+    miles === null || miles < 10
+      ? null
+      : form.tripType === "flight"
+        ? `${Math.round(miles / 1.25).toLocaleString("en-US")} mi`
+        : form.tripType === "cruise"
+          ? `${driveLabel(miles)} to the port`
+          : driveLabel(miles);
+  const fromLabel = form.origin.split(",")[0]?.trim() || "home";
+  const approximate =
+    !touched.current && home.place?.source === "approximate" && form.origin === home.place.label;
 
   return (
-    <form onSubmit={submit} noValidate className="mx-auto max-w-2xl px-4 pt-10 pb-10 sm:pt-16">
-      <header className="animate-rise">
+    <div className="mx-auto max-w-6xl px-4 pt-10 pb-10 sm:pt-14">
+      <header className="animate-rise max-w-2xl">
         <p className="eyebrow">New trip</p>
         <h1 className="mt-2 text-[34px] leading-[1.1] font-semibold sm:text-[44px]">
           Plan a trip, to the dollar.
         </h1>
         <p className="mt-3 max-w-md text-[15px] text-muted-foreground">
-          Pick how you're traveling, where and when. Waypoint builds the budget, keeps a reserve
-          aside and lays out each day.
+          Tell Waypoint what you have in mind, or set it up step by step. It builds the budget,
+          keeps a reserve aside and lays out each day.
         </p>
       </header>
 
-      <div className="mt-12 divide-y divide-border">
-        <Section n={1} title="Trip" style={stagger(1)}>
-          <TripTypePicker
-            tripType={form.tripType}
-            mode={form.transportMode}
-            onTripType={setTripType}
-            onMode={(m) => update({ transportMode: m })}
-            from={form.origin.split(",")[0]?.trim() || "Home"}
-            to={destLabel}
-          />
-        </Section>
-
-        <Section
-          n={2}
-          title={
-            form.tripType === "cruise"
-              ? "Cruise"
-              : form.tripType === "staycation"
-                ? "Home base"
-                : "Destination"
-          }
-          aside="Example places, demo prices"
-          style={stagger(2)}
-        >
-          <div className="grid gap-2 sm:grid-cols-2" role="radiogroup" aria-label="Destination">
-            {orderedDestinations.map((d) => (
-              <OptionRow
-                key={d.id}
-                active={form.destinationId === d.id}
-                onClick={() => update({ destinationId: d.id })}
-                title={d.name}
-                meta={d.region}
-                detail={
-                  d.cruisePerNight
-                    ? `from ${formatMoney(d.cruisePerNight.budget)} / person / night`
-                    : d.nightly.budget === 0
-                      ? "No lodging needed"
-                      : `from ${formatMoney(d.nightly.budget)} / night`
-                }
-              />
-            ))}
-            <OptionRow
-              active={form.destinationId === CUSTOM_DESTINATION_ID}
-              onClick={() => update({ destinationId: CUSTOM_DESTINATION_ID })}
-              title="Somewhere else"
-              meta="Any real place"
-              detail="Live weather and places"
-              icon={<MapPin className="size-4" />}
+      <div className="mt-10 grid gap-8 lg:grid-cols-[minmax(0,1fr)_340px] lg:gap-10">
+        <div className="min-w-0">
+          <div className="animate-rise" style={stagger(1)}>
+            <TripAssistant
+              homeCity={form.origin}
+              onBuild={(draft) => void start(fromDraft(draft))}
+              onFill={(draft) => {
+                const next = fromDraft(draft);
+                touched.current = true;
+                reserveTouched.current = false;
+                setForm(next);
+                toast("Filled in below — adjust anything, then plan the trip.");
+                document.getElementById("plan-steps")?.scrollIntoView({ behavior: "smooth" });
+              }}
             />
           </div>
-          {form.destinationId === CUSTOM_DESTINATION_ID && (
-            <div className="animate-pop mt-3">
-              <PlaceInput
-                autoFocus
-                aria-label="Destination"
-                placeholder={
-                  form.tripType === "cruise"
-                    ? "Departure port, e.g. Galveston, TX"
-                    : "e.g. Chattanooga, TN"
-                }
-                value={form.customDestination}
-                onChange={(v) => update({ customDestination: v })}
-                className="h-11"
+
+          <div
+            id="plan-steps"
+            className="mt-10 flex items-center gap-3 text-xs text-muted-foreground"
+          >
+            <span className="h-px flex-1 bg-border" />
+            or set it up step by step
+            <span className="h-px flex-1 bg-border" />
+          </div>
+
+          <form id="plan-form" onSubmit={submit} noValidate className="mt-8 divide-y divide-border">
+            <Section n={1} title="Trip" style={stagger(2)}>
+              <TripTypePicker
+                tripType={form.tripType}
+                mode={form.transportMode}
+                onTripType={setTripType}
+                onMode={(m) => update({ transportMode: m })}
+                from={form.origin.split(",")[0]?.trim() || "Home"}
+                to={destLabel}
               />
-              {destError && <p className="mt-1.5 text-xs text-destructive">{destError}</p>}
-            </div>
-          )}
-          <div className="mt-5">
-            <Label htmlFor="origin" className="text-[13px] font-normal text-muted-foreground">
-              {form.tripType === "staycation"
-                ? "Your home city — for live weather and places"
-                : "Starting from (optional)"}
-            </Label>
-            <div className="mt-1.5">
-              <PlaceInput
+            </Section>
+
+            <Section
+              n={2}
+              title={
+                form.tripType === "cruise"
+                  ? "Cruise"
+                  : form.tripType === "staycation"
+                    ? "Home base"
+                    : "Destination"
+              }
+              style={stagger(3)}
+            >
+              <OriginField
                 id="origin"
-                placeholder="City, e.g. Charlotte, NC"
                 value={form.origin}
-                onChange={(v) => update({ origin: v })}
-                className="h-11"
+                approximate={approximate}
+                label={
+                  form.tripType === "staycation"
+                    ? "Your home city — for live weather and places"
+                    : "Starting from"
+                }
+                onChange={(origin, point) => update({ origin, originPoint: point })}
               />
-            </div>
-          </div>
-        </Section>
-
-        <Section n={3} title="When & who" style={stagger(3)}>
-          <div className="grid gap-4 sm:grid-cols-[1fr_auto]">
-            <div>
-              <div className="grid grid-cols-2 gap-2">
-                <Input
-                  type="date"
-                  aria-label="Start date"
-                  value={form.startDate}
-                  min={todayIso()}
-                  onChange={(e) => setStartDate(e.target.value)}
-                  className="h-11"
-                />
-                <Input
-                  type="date"
-                  aria-label="End date"
-                  value={form.endDate}
-                  min={form.startDate}
-                  onChange={(e) => update({ endDate: e.target.value })}
-                  className="h-11"
+              <div className="mt-6">
+                <DestinationPicker
+                  tripType={form.tripType}
+                  interests={form.interests}
+                  destinationId={form.destinationId}
+                  customDestination={form.customDestination}
+                  from={originPoint}
+                  fromLabel={fromLabel}
+                  error={destError}
+                  onPick={(destinationId) => update({ destinationId })}
+                  onCustom={(customDestination, place) =>
+                    update({
+                      customDestination,
+                      destinationPoint: place ? { lat: place.lat, lon: place.lon } : null,
+                    })
+                  }
                 />
               </div>
-              <p
-                className={cn(
-                  "mt-1.5 text-xs",
-                  dateError ? "text-destructive" : "text-muted-foreground",
-                )}
-              >
-                {dateError ||
-                  (shape.days === 1
-                    ? "Day trip, no overnight stay"
-                    : `${shape.days} days, ${shape.nights} night${shape.nights === 1 ? "" : "s"}`)}
-              </p>
-            </div>
-            <div>
-              <div className="flex h-11 items-center gap-1 rounded-lg border border-input bg-card px-1">
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  className="size-9"
-                  aria-label="Fewer travelers"
-                  disabled={form.travelers <= 1}
-                  onClick={() => update({ travelers: Math.max(1, form.travelers - 1) })}
-                >
-                  <Minus />
-                </Button>
-                <span
-                  key={form.travelers}
-                  className="animate-pop tabular w-16 text-center text-[15px] font-medium"
-                >
-                  {form.travelers} {form.travelers === 1 ? "person" : "people"}
-                </span>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  className="size-9"
-                  aria-label="More travelers"
-                  disabled={form.travelers >= 12}
-                  onClick={() => update({ travelers: Math.min(12, form.travelers + 1) })}
-                >
-                  <Plus />
-                </Button>
-              </div>
-            </div>
-          </div>
-        </Section>
+            </Section>
 
-        <Section n={4} title="Style" style={stagger(4)}>
-          <Segmented
-            ariaLabel="Travel style"
-            columns={3}
-            size="lg"
-            value={form.style}
-            onChange={(v) => update({ style: v })}
-            options={TRAVEL_STYLES.map((t) => ({ value: t.id, label: t.label, hint: t.blurb }))}
-          />
-          <p className="mt-5 mb-2.5 text-sm text-muted-foreground">Interests</p>
-          <InterestChips value={form.interests} onToggle={toggleInterest} />
-        </Section>
-
-        <Section n={5} title="Budget" style={stagger(5)}>
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div>
-              <Label className="text-[13px] font-normal text-muted-foreground">Total budget</Label>
-              <NumberField
-                aria-label="Total budget"
-                prefix="$"
-                value={form.totalBudget}
-                onChange={setBudget}
-                step={50}
-                className="mt-1.5 h-12"
-                inputClassName="text-xl"
-              />
-              <div className="mt-2 flex flex-wrap gap-1.5">
-                {BUDGET_PRESETS.map((p) => (
-                  <button
-                    key={p}
-                    type="button"
-                    onClick={() => setBudget(p)}
+            <Section n={3} title="When & who" style={stagger(3)}>
+              <div className="grid gap-4 sm:grid-cols-[1fr_auto]">
+                <div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <Input
+                      type="date"
+                      aria-label="Start date"
+                      value={form.startDate}
+                      min={todayIso()}
+                      onChange={(e) => setStartDate(e.target.value)}
+                      className="h-11"
+                    />
+                    <Input
+                      type="date"
+                      aria-label="End date"
+                      value={form.endDate}
+                      min={form.startDate}
+                      onChange={(e) => update({ endDate: e.target.value })}
+                      className="h-11"
+                    />
+                  </div>
+                  <p
                     className={cn(
-                      "tabular h-7 rounded-md border px-2 text-xs font-medium transition-colors active:scale-[0.97]",
-                      form.totalBudget === p
-                        ? "border-foreground text-foreground"
-                        : "border-border text-muted-foreground hover:text-foreground",
+                      "mt-1.5 text-xs",
+                      dateError ? "text-destructive" : "text-muted-foreground",
                     )}
                   >
-                    {formatMoney(p)}
-                  </button>
-                ))}
-                <button
-                  type="button"
-                  onClick={() => setBudget(suggested)}
-                  className="tabular h-7 rounded-md px-2 text-xs font-medium text-primary transition-colors hover:bg-accent active:scale-[0.97]"
-                >
-                  Suggested {formatMoney(suggested)}
-                </button>
+                    {dateError ||
+                      (shape.days === 1
+                        ? "Day trip, no overnight stay"
+                        : `${shape.days} days, ${shape.nights} night${shape.nights === 1 ? "" : "s"}`)}
+                  </p>
+                </div>
+                <div>
+                  <div className="flex h-11 items-center gap-1 rounded-lg border border-input bg-card px-1">
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="size-9"
+                      aria-label="Fewer travelers"
+                      disabled={form.travelers <= 1}
+                      onClick={() => update({ travelers: Math.max(1, form.travelers - 1) })}
+                    >
+                      <Minus />
+                    </Button>
+                    <span
+                      key={form.travelers}
+                      className="animate-pop tabular w-16 text-center text-[15px] font-medium"
+                    >
+                      {form.travelers} {form.travelers === 1 ? "person" : "people"}
+                    </span>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="size-9"
+                      aria-label="More travelers"
+                      disabled={form.travelers >= 12}
+                      onClick={() => update({ travelers: Math.min(12, form.travelers + 1) })}
+                    >
+                      <Plus />
+                    </Button>
+                  </div>
+                </div>
               </div>
-            </div>
-            <div>
-              <Label className="text-[13px] font-normal text-muted-foreground">
-                Protected reserve
-              </Label>
-              <NumberField
-                aria-label="Emergency reserve"
-                prefix="$"
-                step={25}
-                value={form.emergencyFund}
-                className="mt-1.5 h-12"
-                inputClassName="text-xl"
-                onChange={(n) => {
-                  reserveTouched.current = true;
-                  update({ emergencyFund: n });
-                }}
+            </Section>
+
+            <Section n={4} title="Style" style={stagger(4)}>
+              <Segmented
+                ariaLabel="Travel style"
+                columns={3}
+                size="lg"
+                value={form.style}
+                onChange={(v) => update({ style: v })}
+                options={TRAVEL_STYLES.map((t) => ({ value: t.id, label: t.label, hint: t.blurb }))}
               />
-              <p
-                className={cn(
-                  "mt-2 text-xs",
-                  reserveError ? "text-destructive" : "text-muted-foreground",
-                )}
-              >
-                {reserveError || "Set aside for emergencies. Never counted as spending money."}
-              </p>
-            </div>
+              <p className="mt-5 mb-2.5 text-sm text-muted-foreground">Interests</p>
+              <InterestChips value={form.interests} onToggle={toggleInterest} />
+            </Section>
+
+            <Section n={5} title="Budget" style={stagger(5)}>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div>
+                  <Label className="text-[13px] font-normal text-muted-foreground">
+                    Total budget
+                  </Label>
+                  <NumberField
+                    aria-label="Total budget"
+                    prefix="$"
+                    value={form.totalBudget}
+                    onChange={setBudget}
+                    step={50}
+                    className="mt-1.5 h-12"
+                    inputClassName="text-xl"
+                  />
+                  <div className="mt-2 flex flex-wrap gap-1.5">
+                    {BUDGET_PRESETS.map((p) => (
+                      <button
+                        key={p}
+                        type="button"
+                        onClick={() => setBudget(p)}
+                        className={cn(
+                          "tabular h-7 rounded-md border px-2 text-xs font-medium transition-colors active:scale-[0.97]",
+                          form.totalBudget === p
+                            ? "border-foreground text-foreground"
+                            : "border-border text-muted-foreground hover:text-foreground",
+                        )}
+                      >
+                        {formatMoney(p)}
+                      </button>
+                    ))}
+                    <button
+                      type="button"
+                      onClick={() => setBudget(suggested)}
+                      className="tabular h-7 rounded-md px-2 text-xs font-medium text-primary transition-colors hover:bg-accent active:scale-[0.97]"
+                    >
+                      Suggested {formatMoney(suggested)}
+                    </button>
+                  </div>
+                </div>
+                <div>
+                  <Label className="text-[13px] font-normal text-muted-foreground">
+                    Protected reserve
+                  </Label>
+                  <NumberField
+                    aria-label="Emergency reserve"
+                    prefix="$"
+                    step={25}
+                    value={form.emergencyFund}
+                    className="mt-1.5 h-12"
+                    inputClassName="text-xl"
+                    onChange={(n) => {
+                      reserveTouched.current = true;
+                      update({ emergencyFund: n });
+                    }}
+                  />
+                  <p
+                    className={cn(
+                      "mt-2 text-xs",
+                      reserveError ? "text-destructive" : "text-muted-foreground",
+                    )}
+                  >
+                    {reserveError || "Set aside for emergencies. Never counted as spending money."}
+                  </p>
+                </div>
+              </div>
+            </Section>
+          </form>
+        </div>
+
+        <aside className="hidden lg:block">
+          <div className="sticky top-20 animate-rise" style={stagger(2)}>
+            <TripPreview
+              form={effective}
+              dest={dest}
+              destLabel={destLabel}
+              shape={shape}
+              totals={estimate}
+              distance={distance}
+              formId="plan-form"
+            />
           </div>
-        </Section>
+        </aside>
       </div>
 
-      {/* Summary + action, pinned while scrolling */}
-      <div className="sticky bottom-20 z-20 mt-6 md:bottom-4">
+      {/* Phones and tablets: summary + action pinned while scrolling */}
+      <div className="sticky bottom-20 z-20 mt-6 md:bottom-4 lg:hidden">
         <div className="glass flex items-center justify-between gap-4 rounded-xl border border-border p-2 pl-4 shadow-lift">
           <div className="min-w-0 text-sm">
             <p className="truncate font-medium">{destLabel}</p>
             <p className="tabular truncate text-xs text-muted-foreground">
-              {tripTypeInfo(form.tripType).label} · {shape.days} day{shape.days > 1 ? "s" : ""} ·{" "}
-              {formatMoney(Math.max(0, form.totalBudget - form.emergencyFund))} to spend
+              {tripTypeInfo(form.tripType).label} ·{" "}
+              {shape.days === 1 ? "day trip" : `${shape.days} days`}
+              {distance ? ` · ${distance}` : ""} · about {formatMoney(estimate.planned)}
             </p>
           </div>
-          <Button type="submit" variant="hero" size="lg" className="shrink-0 px-5">
+          <Button type="submit" form="plan-form" variant="hero" size="lg" className="shrink-0 px-5">
             Plan trip <ArrowRight />
           </Button>
         </div>
       </div>
       <p className="mt-4 text-center text-xs text-muted-foreground">
-        Weather is live. Sign in for real places and routes. Prices are demo estimates until you
-        check live prices.
+        Weather and places are live. Prices are demo estimates until you check live prices.
       </p>
-    </form>
+    </div>
   );
 }
 
@@ -459,59 +528,5 @@ function Section({
       </div>
       <div className="min-w-0">{children}</div>
     </section>
-  );
-}
-
-function OptionRow({
-  active,
-  onClick,
-  title,
-  meta,
-  detail,
-  icon,
-}: {
-  active: boolean;
-  onClick: () => void;
-  title: string;
-  meta: string;
-  detail: string;
-  icon?: React.ReactNode;
-}) {
-  return (
-    <button
-      type="button"
-      role="radio"
-      aria-checked={active}
-      onClick={onClick}
-      className={cn(
-        "group relative flex items-start gap-3 rounded-xl border p-3.5 text-left transition-[border-color,background-color,box-shadow,transform] duration-200 active:scale-[0.99]",
-        active
-          ? "border-primary bg-card ring-3 ring-primary/12"
-          : "border-border bg-card hover:border-muted-foreground/40",
-      )}
-    >
-      <span
-        className={cn(
-          "mt-0.5 grid size-4 shrink-0 place-items-center rounded-full border transition-colors duration-200",
-          active ? "border-primary bg-primary" : "border-input",
-        )}
-        aria-hidden
-      >
-        <span
-          className={cn(
-            "size-1.5 rounded-full bg-primary-foreground transition-transform duration-200",
-            active ? "scale-100" : "scale-0",
-          )}
-        />
-      </span>
-      <span className="min-w-0 flex-1">
-        <span className="flex items-center gap-1.5 text-sm font-medium">
-          {icon}
-          {title}
-        </span>
-        <span className="mt-0.5 block text-xs text-muted-foreground">{meta}</span>
-        <span className="tabular mt-2 block text-xs text-foreground/80">{detail}</span>
-      </span>
-    </button>
   );
 }

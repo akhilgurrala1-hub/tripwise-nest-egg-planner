@@ -1,4 +1,6 @@
-import { useEffect, useId, useLayoutEffect, useRef } from "react";
+import { useEffect, useId, useLayoutEffect, useRef, type CSSProperties } from "react";
+
+import { TRIP_COLOR } from "./trip-colors";
 
 import type { TransportMode, TripType } from "@/lib/demo-data";
 import { cn } from "@/lib/utils";
@@ -67,9 +69,10 @@ export function TravelScene({
   return (
     <div
       className={cn(
-        "relative overflow-hidden rounded-xl border border-border bg-card select-none",
+        "relative overflow-hidden rounded-xl border border-border bg-[color-mix(in_oklab,var(--trip)_7%,var(--card))] transition-[background-color] duration-500 select-none",
         className,
       )}
+      style={{ "--trip": TRIP_COLOR[tripType] } as CSSProperties}
     >
       {caption && (
         <p key={playKey} className="animate-pop px-3.5 pt-2.5 text-[13px] text-muted-foreground">
@@ -189,7 +192,7 @@ function Route({ d, width }: { d: string; width: number }) {
       strokeDasharray="1 1"
       strokeDashoffset={0}
       strokeLinecap="round"
-      className="stroke-primary"
+      className="stroke-(--trip)"
       strokeWidth={width}
     />
   );
@@ -198,7 +201,7 @@ function Route({ d, width }: { d: string; width: number }) {
 function Endpoints({ y }: { y: number }) {
   return (
     <>
-      <circle cx={ORIGIN_X} cy={y} r={5} className="fill-card stroke-primary" strokeWidth={2.5} />
+      <circle cx={ORIGIN_X} cy={y} r={5} className="fill-card stroke-(--trip)" strokeWidth={2.5} />
       <circle
         data-part="ripple"
         cx={DEST_X}
@@ -241,7 +244,7 @@ function Water() {
       <path
         d={wavePath(WATER + 6)}
         fill="none"
-        className="scene-wave stroke-primary/45"
+        className="scene-wave stroke-(--trip)/45"
         strokeWidth={1.5}
         strokeLinecap="round"
       />
@@ -273,7 +276,7 @@ function CarShape() {
     <g>
       <path
         d="M -27 -7 L -27 -12 Q -27 -15 -24 -15.6 L -16 -16.6 L -9.5 -23 Q -8 -24.6 -5.5 -24.6 L 8 -24.6 Q 10.5 -24.6 12 -23 L 18 -16.6 L 25 -15.4 Q 28 -14.6 28 -11.5 L 28 -7 Q 28 -5 26 -5 L -25 -5 Q -27 -5 -27 -7 Z"
-        className="fill-primary"
+        className="fill-(--trip)"
       />
       <path d="M -12.5 -17.2 L -7 -22.6 L 0.5 -22.6 L 0.5 -17.2 Z" className="fill-card" />
       <path d="M 2.5 -17.2 L 2.5 -22.6 L 8.2 -22.6 L 13.6 -17.2 Z" className="fill-card" />
@@ -287,7 +290,7 @@ function CarShape() {
 function BusShape() {
   return (
     <g>
-      <rect x={-31} y={-28} width={62} height={23} rx={4} className="fill-primary" />
+      <rect x={-31} y={-28} width={62} height={23} rx={4} className="fill-(--trip)" />
       {[-27, -18, -9, 0, 9].map((x) => (
         <rect key={x} x={x} y={-24.5} width={7} height={7} rx={1.2} className="fill-card" />
       ))}
@@ -302,12 +305,12 @@ function BusShape() {
 function TrainShape() {
   return (
     <g>
-      <rect x={-40} y={-25} width={33} height={20} rx={3.5} className="fill-primary" />
+      <rect x={-40} y={-25} width={33} height={20} rx={3.5} className="fill-(--trip)" />
       {[-36, -26, -16].map((x) => (
         <rect key={x} x={x} y={-21.5} width={7} height={7} rx={1.2} className="fill-card" />
       ))}
       <rect x={-8} y={-11} width={4} height={2} className="fill-foreground" />
-      <path d="M -4 -5 L -4 -25 L 16 -25 Q 30 -25 33 -10 L 34 -5 Z" className="fill-primary" />
+      <path d="M -4 -5 L -4 -25 L 16 -25 Q 30 -25 33 -10 L 34 -5 Z" className="fill-(--trip)" />
       <rect x={0} y={-21.5} width={8} height={7} rx={1.2} className="fill-card" />
       <path d="M 15 -21.5 L 21 -21.5 Q 26 -21 28.5 -14.5 L 15 -14.5 Z" className="fill-card" />
       {[-33, -14, 3, 23].map((x) => (
@@ -322,12 +325,12 @@ function PlaneShape() {
     <g transform="scale(0.85)">
       <path
         d="M -22 0 L -18 -2.6 L 17 -2.6 Q 26 -2.4 29 0 Q 26 2.4 17 2.6 L -18 2.6 Z"
-        className="fill-primary"
+        className="fill-(--trip)"
       />
-      <path d="M 2 -2 L -8 -19 L -2.5 -19 L 12 -2 Z" className="fill-primary" />
-      <path d="M 2 2 L -8 19 L -2.5 19 L 12 2 Z" className="fill-primary" />
-      <path d="M -15 -2 L -21 -9 L -17.5 -9 L -9 -2 Z" className="fill-primary" />
-      <path d="M -15 2 L -21 9 L -17.5 9 L -9 2 Z" className="fill-primary" />
+      <path d="M 2 -2 L -8 -19 L -2.5 -19 L 12 -2 Z" className="fill-(--trip)" />
+      <path d="M 2 2 L -8 19 L -2.5 19 L 12 2 Z" className="fill-(--trip)" />
+      <path d="M -15 -2 L -21 -9 L -17.5 -9 L -9 -2 Z" className="fill-(--trip)" />
+      <path d="M -15 2 L -21 9 L -17.5 9 L -9 2 Z" className="fill-(--trip)" />
       <circle cx={21} cy={0} r={1.3} className="fill-card" />
     </g>
   );
@@ -356,9 +359,9 @@ function ShipShape() {
         strokeWidth={1.5}
       />
       {[-19, -12, -5, 2, 9].map((x) => (
-        <rect key={x} x={x} y={-18} width={4} height={3} rx={0.8} className="fill-primary/70" />
+        <rect key={x} x={x} y={-18} width={4} height={3} rx={0.8} className="fill-(--trip)/70" />
       ))}
-      <path d="M -36 -12 L 37 -12 L 28 2 L -29 2 Z" className="fill-primary" />
+      <path d="M -36 -12 L 37 -12 L 28 2 L -29 2 Z" className="fill-(--trip)" />
       {[-22, -12, -2, 8, 18].map((x) => (
         <circle key={x} cx={x} cy={-6} r={1.3} className="fill-card" />
       ))}
@@ -387,7 +390,13 @@ function HomeScene() {
         strokeWidth={2}
         strokeLinecap="round"
       />
-      <circle cx={520} cy={58} r={9} className="fill-primary/20 stroke-primary" strokeWidth={1.5} />
+      <circle
+        cx={520}
+        cy={58}
+        r={9}
+        className="fill-(--trip)/20 stroke-(--trip)"
+        strokeWidth={1.5}
+      />
       <line
         x1={0}
         y1={GROUND}
@@ -408,12 +417,12 @@ function HomeScene() {
         <path
           d="M 426 54 L 462 27 L 498 54"
           fill="none"
-          className="stroke-primary"
+          className="stroke-(--trip)"
           strokeWidth={4}
           strokeLinecap="round"
           strokeLinejoin="round"
         />
-        <rect x={455} y={60} width={14} height={18} rx={1.5} className="fill-primary" />
+        <rect x={455} y={60} width={14} height={18} rx={1.5} className="fill-(--trip)" />
         <rect
           data-part="window"
           x={440}

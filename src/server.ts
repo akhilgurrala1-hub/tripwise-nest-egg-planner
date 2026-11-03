@@ -44,11 +44,44 @@ function isH3SwallowedErrorBody(body: string): boolean {
   }
 }
 
+/** Request header carrying the visitor's approximate location (see src/lib/live/location.ts). */
+const GEO_HEADER = "x-waypoint-visitor-geo";
+
+/**
+ * Cloudflare attaches the visitor's approximate city to each request (`request.cf`).
+ * It's passed on as an internal header so the app can suggest a starting point
+ * without asking a third party. Anything a client sent under that name is replaced.
+ */
+function withVisitorGeo(request: Request): Request {
+  const cf = (request as Request & { cf?: Record<string, unknown> }).cf;
+  if (!cf) return request;
+  const headers = new Headers(request.headers);
+  headers.delete(GEO_HEADER);
+  const lat = Number(cf["latitude"]);
+  const lon = Number(cf["longitude"]);
+  if (Number.isFinite(lat) && Number.isFinite(lon)) {
+    headers.set(
+      GEO_HEADER,
+      encodeURIComponent(
+        JSON.stringify({
+          city: cf["city"] ?? "",
+          regionCode: cf["regionCode"] ?? "",
+          region: cf["region"] ?? "",
+          country: cf["country"] ?? "",
+          lat,
+          lon,
+        }),
+      ),
+    );
+  }
+  return new Request(request, { headers });
+}
+
 export default {
   async fetch(request: Request, env: unknown, ctx: unknown) {
     try {
       const handler = await getServerEntry();
-      const response = await handler.fetch(request, env, ctx);
+      const response = await handler.fetch(withVisitorGeo(request), env, ctx);
       return await normalizeCatastrophicSsrResponse(response);
     } catch (error) {
       console.error(error);

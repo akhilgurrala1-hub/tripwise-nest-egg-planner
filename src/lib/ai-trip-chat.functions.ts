@@ -1,0 +1,56 @@
+import { createServerFn } from "@tanstack/react-start";
+import { z } from "zod";
+
+import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+
+const draft = z
+  .object({
+    destination: z.string().max(120).nullable(),
+    origin: z.string().max(120).nullable(),
+    startDate: z.string().max(10).nullable(),
+    endDate: z.string().max(10).nullable(),
+    nights: z.number().int().min(0).max(30).nullable(),
+    travelers: z.number().int().min(1).max(20).nullable(),
+    tripType: z.enum(["road-trip", "flight", "cruise", "rail", "staycation"]).nullable(),
+    transportMode: z.enum(["car", "rental-car", "flight", "train", "bus"]).nullable(),
+    style: z.enum(["budget", "comfort", "luxury"]).nullable(),
+    totalBudget: z.number().min(0).max(1_000_000).nullable(),
+    interests: z
+      .array(
+        z.enum([
+          "nature",
+          "food",
+          "history",
+          "beaches",
+          "arts",
+          "adventure",
+          "family",
+          "nightlife",
+          "shopping",
+        ]),
+      )
+      .max(9),
+  })
+  .nullable();
+
+const inputSchema = z.object({
+  messages: z
+    .array(z.object({ role: z.enum(["user", "assistant"]), content: z.string().min(1).max(1200) }))
+    .min(1)
+    .max(16),
+  today: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  homeCity: z.string().max(120),
+  draft,
+});
+
+/** Signed-in only: every turn spends AI credits, so it is never callable anonymously. */
+export const tripChat = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) => inputSchema.parse(data))
+  .handler(async ({ data }) => {
+    const [{ runTripChat }, { getRequest }] = await Promise.all([
+      import("./ai/trip-chat.server"),
+      import("@tanstack/react-start/server"),
+    ]);
+    return runTripChat(data, getRequest()?.signal);
+  });
