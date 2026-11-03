@@ -99,7 +99,9 @@ export function TripAssistant({
   const [state, setState] = useState<Saved>({ turns: [], draft: null, pending: "" });
   const [text, setText] = useState("");
   const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<{ message: string; retry: string } | null>(null);
+  const [error, setError] = useState<{ message: string; retry: string; detail?: string } | null>(
+    null,
+  );
   const controller = useRef<AbortController | null>(null);
   const threadEnd = useRef<HTMLDivElement>(null);
   const loaded = useRef(false);
@@ -158,7 +160,11 @@ export function TripAssistant({
         },
       });
       if (!res.ok) {
-        setError({ message: res.error, retry: content });
+        setError({
+          message: res.error,
+          retry: content,
+          ...(res.detail ? { detail: res.detail } : {}),
+        });
         setState((s) => ({ ...s, turns: s.turns.slice(0, -1) }));
         return;
       }
@@ -313,8 +319,18 @@ export function TripAssistant({
       )}
 
       {error && (
-        <div className="flex items-center justify-between gap-3 border-t border-border px-4 py-2.5 text-sm text-destructive">
-          <span>{error.message}</span>
+        <div
+          role="alert"
+          className="flex items-center justify-between gap-3 border-t border-border px-4 py-2.5 text-sm text-destructive"
+        >
+          <span className="min-w-0">
+            {error.message}
+            {error.detail && (
+              <span className="mt-0.5 block text-xs break-words text-muted-foreground">
+                Details: {error.detail}
+              </span>
+            )}
+          </span>
           <Button size="sm" variant="outline" onClick={() => send(error.retry)}>
             Try again
           </Button>

@@ -3,20 +3,30 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 // The AI SDK is replaced with a scripted model so no credits are spent.
 const sdk = vi.hoisted(() => ({
   answers: [] as unknown[],
-  calls: [] as { messages: unknown[] }[],
+  calls: [] as { messages: unknown[]; model: string }[],
 }));
 vi.mock("ai", async (orig) => ({
   ...(await orig<typeof import("ai")>()),
-  streamText: (opts: { messages: unknown[] }) => {
-    sdk.calls.push({ messages: opts.messages });
+  generateText: async (opts: { messages: unknown[]; model: { modelId: string } }) => {
+    sdk.calls.push({ messages: opts.messages, model: opts.model.modelId });
     const next = sdk.answers.shift();
-    return { output: next instanceof Error ? Promise.reject(next) : Promise.resolve(next) };
+    if (next instanceof Error) throw next;
+    return { output: next };
   },
 }));
 
 import { planProblems } from "@/lib/ai-quality";
+import { aiErrorInfo, fallbackModels } from "@/lib/ai/gateway.server";
 import { DEFAULT_MODEL, effortFor, modelFor } from "@/lib/ai/models.server";
 import { generateAiItinerary, type AiItineraryRequest } from "@/lib/ai/itinerary-ai.server";
+import { runTripChat } from "@/lib/ai/trip-chat.server";
+
+/** An error shaped like the AI SDK's APICallError. */
+const apiError = (statusCode: number, message: string) =>
+  Object.assign(new Error(`HTTP ${statusCode}`), {
+    statusCode,
+    responseBody: JSON.stringify({ error: { message } }),
+  });
 
 const item = (name: string, kind = "sight", costPerPerson = 0, time = "Morning") => ({
   time,
@@ -131,5 +141,110 @@ describe("the AI planner's review pass", () => {
     sdk.answers.push({ days: [good(1)], tips: ["First"] }, new Error("gateway hiccup"));
     const b = await generateAiItinerary(REQ);
     expect(b.ok && b.itinerary.tips).toEqual(["First"]);
+  });
+});
+
+const CHAT = {
+  messages: [{ role: "user" as const, content: "A weekend in Asheville for 2" }],
+  today: "2026-11-03",
+  homeCity: "Charlotte, NC",
+  draft: null,
+  country: "US",
+  currency: "USD",
+  nearby: [],
+};
+const ANSWER = {
+  reply: "Sounds good.",
+  ready: false,
+  questions: [],
+  ideas: [],
+  trip: {
+    destination: "Asheville, NC",
+    origin: null,
+    startDate: null,
+    endDate: null,
+    nights: null,
+    travelers: 2,
+    tripType: null,
+    transportMode: null,
+    style: null,
+    totalBudget: null,
+    interests: [],
+  },
+};
+
+describe("when the AI service fails", () => {
+  beforeEach(() => {
+    sdk.answers = [];
+    sdk.calls = [];
+    vi.stubEnv("LOVABLE_API_KEY", "test-key");
+  });
+
+  it("tries the plain chat API, then a fallback model, before giving up", async () => {
+    sdk.answers.push(
+      apiError(400, "Unsupported parameter"),
+      apiError(404, "Model not found"),
+      ANSWER,
+    );
+    const res = await runTripChat(CHAT);
+    expect(res.ok).toBe(true);
+    expect(sdk.calls.map((c) => c.model)).toEqual([
+      DEFAULT_MODEL,
+      DEFAULT_MODEL,
+      fallbackModels()[0],
+    ]);
+  });
+
+  it("says why when every attempt fails", async () => {
+    for (let i = 0; i < 4; i++)
+      sdk.answers.push(apiError(404, "Model openai/gpt-6-astra not found"));
+    const res = await runTripChat(CHAT);
+    expect(res).toMatchObject({
+      ok: false,
+      status: 404,
+      error: "The assistant couldn't answer. Try again.",
+      detail: "Model openai/gpt-6-astra not found",
+    });
+  });
+
+  it("doesn't retry (or spend more) when credits run out or it's rate limited", async () => {
+    sdk.answers.push(apiError(402, "Not enough credits"));
+    const a = await runTripChat(CHAT);
+    expect(sdk.calls).toHaveLength(1);
+    expect(a).toMatchObject({ ok: false, status: 402 });
+    expect(!a.ok && a.error).toContain("out of AI credits");
+
+    sdk.calls = [];
+    sdk.answers.push(apiError(429, "Slow down"));
+    const b = await runTripChat(CHAT);
+    expect(sdk.calls).toHaveLength(1);
+    expect(b).toMatchObject({ ok: false, status: 429 });
+  });
+
+  it("explains a workspace without AI access", async () => {
+    for (let i = 0; i < 4; i++) sdk.answers.push(apiError(403, "AI is disabled"));
+    const res = await runTripChat(CHAT);
+    expect(!res.ok && res.error).toContain("Turn on Lovable AI");
+  });
+
+  it("reads the service's message without echoing secrets", () => {
+    expect(aiErrorInfo(apiError(401, "Invalid key sk-abcdefghijklmnopqrstu"))).toEqual({
+      status: 401,
+      detail: "Invalid key [hidden]",
+    });
+    expect(aiErrorInfo(new Error("socket hang up"))).toEqual({
+      status: 500,
+      detail: "socket hang up",
+    });
+  });
+
+  it("the itinerary planner falls back the same way", async () => {
+    sdk.answers.push(apiError(404, "Model not found"), {
+      days: [good(1), good(2)],
+      tips: [],
+    });
+    const res = await generateAiItinerary(REQ);
+    expect(res.ok).toBe(true);
+    expect(sdk.calls).toHaveLength(2);
   });
 });

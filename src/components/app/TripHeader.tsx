@@ -3,7 +3,7 @@ import { ArrowRight, CalendarDays, ChevronDown, Info, MapPin, Pencil, Users } fr
 import { useState, type CSSProperties, type ReactNode } from "react";
 import { toast } from "sonner";
 
-import { MapArt } from "./Illustrations";
+import { RouteMark } from "./Illustrations";
 import { TRIP_COLOR } from "./trip-colors";
 import { TRIP_ICONS, TripTypePicker } from "./TripTypePicker";
 import { Button } from "@/components/ui/button";
@@ -50,8 +50,8 @@ export function PageHeader({
   return (
     <div className="mx-auto max-w-6xl px-4 pt-6 sm:pt-10">
       {sample && sampleBanner === "card" && (
-        <section className="animate-rise mb-7 grid items-center gap-4 overflow-hidden rounded-2xl border border-[color-mix(in_oklab,var(--go)_30%,var(--border))] bg-[color-mix(in_oklab,var(--go)_7%,var(--card))] p-5 grid-cols-[72px_1fr] sm:grid-cols-[140px_1fr_auto] sm:gap-6 sm:p-6 print:hidden">
-          <MapArt className="w-[72px] sm:w-[140px]" />
+        <section className="surface-card animate-rise mb-7 grid grid-cols-[56px_1fr] items-center gap-4 p-5 sm:grid-cols-[72px_1fr_auto] sm:gap-6 sm:p-6 print:hidden">
+          <RouteMark className="w-14 sm:w-[72px]" />
           <div className="min-w-0">
             <h2 className="text-lg leading-snug font-semibold sm:text-xl">
               This is a sample trip. Make it yours.

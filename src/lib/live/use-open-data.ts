@@ -17,14 +17,38 @@ export function wikiQuery(dest: DemoDestination, origin: string): string {
   return dest.anchor?.name ?? dest.name;
 }
 
-/** Photo and introduction for a destination (Wikipedia, free). */
+/**
+ * What to search for a destination's photo, best first. An area like "Blue Ridge
+ * Mountains" is tried by its own name before its main town, so the photo shows
+ * the mountains rather than a downtown street.
+ */
+export function photoQueries(dest: DemoDestination, origin: string): string[] {
+  const main = wikiQuery(dest, origin).trim();
+  const own =
+    dest.id !== "custom" && dest.id !== "hometown" && !dest.port && !dest.id.startsWith("place:")
+      ? dest.name.trim()
+      : "";
+  return [...new Set([own, main].filter((q) => q.length >= 2))];
+}
+
+/** Photo and introduction for a destination (Wikipedia, free), checked to be about that place. */
 export function useDestinationSummary(dest: DemoDestination, origin: string) {
   const hydrated = useHydrated();
-  const q = wikiQuery(dest, origin).trim();
+  const queries = photoQueries(dest, origin);
+  const near =
+    dest.anchor && dest.id !== "custom" && dest.id !== "hometown"
+      ? { lat: dest.anchor.lat, lon: dest.anchor.lon }
+      : null;
   return useQuery({
-    queryKey: ["live", "wiki-summary", q.toLowerCase()],
-    queryFn: ({ signal }) => fetchPlaceSummary(q, signal),
-    enabled: hydrated && q.length >= 2,
+    queryKey: ["live", "wiki-summary", queries.join("|").toLowerCase(), near?.lat, near?.lon],
+    queryFn: async ({ signal }) => {
+      for (const q of queries) {
+        const found = await fetchPlaceSummary(q, signal, near);
+        if (found) return found;
+      }
+      return null;
+    },
+    enabled: hydrated && queries.length > 0,
     staleTime: 7 * 24 * 60 * 60 * 1000,
     retry: 1,
   });

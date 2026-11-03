@@ -1,12 +1,9 @@
-import { createOpenAI } from "@ai-sdk/openai";
-import { Output, streamText, type ModelMessage } from "ai";
+import { generateText, Output, type ModelMessage } from "ai";
 import { z } from "zod";
 
 import { planProblems } from "../ai-quality";
-import { modelFor, reasoningOptions } from "./models.server";
-import { createLovableAiGatewayRunIdFetch } from "./run-id.server";
+import { aiAttempts, aiErrorInfo, withFallbacks } from "./gateway.server";
 
-const GATEWAY_URL = "https://ai.gateway.lovable.dev/v1";
 /** A review pass only starts if the first answer came back within this, so both fit in the timeout. */
 const REPAIR_DEADLINE_MS = 40_000;
 
@@ -58,7 +55,9 @@ export interface AiItineraryRequest {
 }
 
 export type AiItineraryResult =
-  { ok: true; itinerary: AiItinerary } | { ok: false; status: number; error: string };
+  | { ok: true; itinerary: AiItinerary }
+  /** `detail` is the AI service's own reason, shown small so problems can be reported */
+  | { ok: false; status: number; error: string; detail?: string };
 
 const INSTRUCTIONS = `You are Waypoint, a friendly travel planner focused on budget-friendly vacations, road trips and staycations, while still delighting luxury travelers.
 Create a realistic day-by-day itinerary. Each day has 4-5 items: a Morning stop, Lunch, an Afternoon stop, Dinner, and optionally an Evening item.
@@ -74,41 +73,30 @@ Return exactly the number of days asked for, in order.
 When the traveler asks for changes to their current plan, make those changes and keep everything they didn't ask to change.
 Write plainly, like a friend who knows the place. Never use em dashes.`;
 
-function describeError(err: unknown): { status: number; error: string } {
-  const e = err as {
-    statusCode?: number;
-    status?: number;
-    message?: string;
-    cause?: unknown;
-    responseBody?: string;
-  };
-  const status =
-    e?.statusCode ??
-    e?.status ??
-    (e?.cause as { statusCode?: number } | undefined)?.statusCode ??
-    500;
-  let safe = "";
-  try {
-    const body = e?.responseBody ? JSON.parse(e.responseBody) : null;
-    safe = body?.message || body?.error?.message || "";
-  } catch {
-    /* not JSON */
-  }
+function describeError(err: unknown): { status: number; error: string; detail: string } {
+  const { status, detail } = aiErrorInfo(err);
   if (status === 402)
     return {
       status,
-      error: safe || "AI credits have run out. Add credits to keep generating itineraries.",
+      detail,
+      error: "The workspace is out of AI credits. Add credits in Lovable to keep planning with AI.",
     };
   if (status === 429)
     return {
       status,
+      detail,
       error: "The AI planner is busy right now. Please wait a moment and try again.",
     };
-  if (status === 403)
-    return { status, error: safe || "AI planning isn't available for this workspace right now." };
+  if (status === 401 || status === 403)
+    return {
+      status,
+      detail,
+      error: "AI isn't enabled for this workspace. Turn on Lovable AI in the project settings.",
+    };
   return {
     status,
-    error: safe || "The AI planner couldn't create an itinerary. Your current plan is unchanged.",
+    detail,
+    error: "The AI planner couldn't create an itinerary. Your current plan is unchanged.",
   };
 }
 
@@ -129,14 +117,6 @@ export async function generateAiItinerary(
 ): Promise<AiItineraryResult> {
   const apiKey = process.env["LOVABLE_API_KEY"];
   if (!apiKey) return { ok: false, status: 401, error: "AI planning isn't configured yet." };
-
-  const runIdFetch = createLovableAiGatewayRunIdFetch();
-  const provider = createOpenAI({
-    baseURL: GATEWAY_URL,
-    apiKey,
-    headers: { "Lovable-API-Key": apiKey, "X-Lovable-AIG-SDK": "vercel-ai-sdk" },
-    fetch: runIdFetch.fetch,
-  });
 
   const prompt = [
     `Destination: ${req.destination}${req.region ? ` (${req.region})` : ""}`,
@@ -169,18 +149,26 @@ export async function generateAiItinerary(
 
   const started = Date.now();
   const abortSignal = requestSignal(clientSignal);
-  const model = provider.responses(modelFor("planner"));
-  const ask = async (messages: ModelMessage[]) => {
-    const result = streamText({
-      ...(abortSignal ? { abortSignal } : {}),
-      model,
-      instructions: INSTRUCTIONS,
-      messages,
-      output: Output.object({ schema: aiItinerarySchema }),
-      providerOptions: reasoningOptions("planner"),
-    });
-    return result.output;
-  };
+  // Whichever attempt answers first is used again for the review pass.
+  let attempts = aiAttempts(apiKey, "planner");
+  const ask = (messages: ModelMessage[]) =>
+    withFallbacks(
+      attempts,
+      async (attempt) => {
+        // generateText (not streaming) so gateway errors keep their status and message.
+        const result = await generateText({
+          ...(abortSignal ? { abortSignal } : {}),
+          model: attempt.model,
+          instructions: INSTRUCTIONS,
+          messages,
+          output: Output.object({ schema: aiItinerarySchema }),
+          ...(attempt.providerOptions ? { providerOptions: attempt.providerOptions } : {}),
+        });
+        attempts = attempts.slice(attempts.indexOf(attempt));
+        return result.output;
+      },
+      abortSignal,
+    );
   const want = {
     days: req.days,
     activityBudgetPerPerson: req.activityBudgetPerPerson,
@@ -224,7 +212,10 @@ export async function generateAiItinerary(
     }
     return { ok: true, itinerary: output };
   } catch (err) {
-    if ((err as { name?: string })?.name === "TimeoutError")
+    if (
+      (err as { name?: string })?.name === "TimeoutError" ||
+      (abortSignal?.aborted && !clientSignal?.aborted)
+    )
       return {
         ok: false,
         status: 504,

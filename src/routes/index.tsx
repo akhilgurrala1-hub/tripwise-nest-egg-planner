@@ -16,13 +16,12 @@ import { toast } from "sonner";
 
 import { InterestChips, NumberField } from "@/components/app/bits";
 import { stagger } from "@/components/app/motion";
-import { TripScenery } from "@/components/app/Illustrations";
+import { RouteMap } from "@/components/app/Illustrations";
 import { DestinationPicker } from "@/components/app/plan/DestinationPicker";
 import { OriginField } from "@/components/app/plan/OriginField";
-import { STYLE_LOOK, StylePicker } from "@/components/app/plan/StylePicker";
+import { StylePicker } from "@/components/app/plan/StylePicker";
 import { TripAssistant } from "@/components/app/plan/TripAssistant";
 import { TripPreview } from "@/components/app/plan/TripPreview";
-import { TRIP_COLOR } from "@/components/app/trip-colors";
 import { TripTypePicker } from "@/components/app/TripTypePicker";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -289,7 +288,7 @@ function Welcome() {
             emergency fund aside and plans each day.
           </p>
         </div>
-        <TripScenery className="hidden sm:block" />
+        <RouteMap className="hidden sm:block" />
       </header>
 
       <div className="mt-6 grid gap-8 sm:mt-8 lg:grid-cols-[minmax(0,1fr)_340px] lg:gap-10">
@@ -316,12 +315,7 @@ function Welcome() {
           </h2>
 
           <form id="plan-form" onSubmit={submit} noValidate className="mt-2 divide-y divide-border">
-            <Section
-              icon={RouteIcon}
-              color={TRIP_COLOR[form.tripType]}
-              title="Trip"
-              style={stagger(2)}
-            >
+            <Section icon={RouteIcon} title="Trip" style={stagger(2)}>
               <TripTypePicker
                 tripType={form.tripType}
                 mode={form.transportMode}
@@ -334,7 +328,6 @@ function Welcome() {
 
             <Section
               icon={MapPin}
-              color="var(--brand-coral)"
               title={
                 form.tripType === "cruise"
                   ? "Cruise"
@@ -376,12 +369,7 @@ function Welcome() {
               </div>
             </Section>
 
-            <Section
-              icon={CalendarDays}
-              color="oklch(0.66 0.15 62)"
-              title="When & who"
-              style={stagger(3)}
-            >
+            <Section icon={CalendarDays} title="When & who" style={stagger(3)}>
               <div className="flex flex-wrap items-start gap-x-3 gap-y-4">
                 <div className="min-w-0 flex-1 basis-64">
                   <p className="mb-1.5 text-[13px] text-muted-foreground">Dates</p>
@@ -453,18 +441,13 @@ function Welcome() {
               </div>
             </Section>
 
-            <Section
-              icon={Sparkles}
-              color={STYLE_LOOK[form.style].color}
-              title="Style"
-              style={stagger(4)}
-            >
+            <Section icon={Sparkles} title="Style" style={stagger(4)}>
               <StylePicker value={form.style} onChange={(style) => update({ style })} />
               <p className="mt-5 mb-2.5 text-sm text-muted-foreground">Interests</p>
               <InterestChips value={form.interests} onToggle={toggleInterest} />
             </Section>
 
-            <Section icon={Wallet} color="var(--go)" title="Budget" style={stagger(5)}>
+            <Section icon={Wallet} title="Budget" style={stagger(5)}>
               <div className="grid gap-4 sm:grid-cols-2">
                 <div>
                   <Label className="text-[13px] font-normal text-muted-foreground">
@@ -564,15 +547,12 @@ function Welcome() {
 
 function Section({
   icon: Icon,
-  color,
   title,
   aside,
   children,
   style,
 }: {
   icon: LucideIcon;
-  /** The section's accent color (CSS color) */
-  color: string;
   title: string;
   aside?: string;
   children: React.ReactNode;
@@ -584,13 +564,7 @@ function Section({
       style={style}
     >
       <div className="flex items-center gap-2.5 sm:block">
-        <span
-          className="grid size-8 place-items-center rounded-lg transition-colors duration-300"
-          style={{
-            color,
-            background: `color-mix(in oklab, ${color} 14%, transparent)`,
-          }}
-        >
+        <span className="grid size-8 place-items-center rounded-lg bg-[color-mix(in_oklab,var(--primary)_9%,transparent)] text-primary">
           <Icon className="size-4" />
         </span>
         <h2 className="text-[15px] font-semibold sm:mt-2">{title}</h2>

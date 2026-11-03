@@ -2,6 +2,9 @@ import { describe, expect, it } from "vitest";
 
 import { cleanAiPlan, mergePlaces, placeLines } from "@/lib/ai-quality";
 import { buildRealItinerary } from "@/lib/itinerary";
+import { getDestination } from "@/lib/demo-data";
+import { parseSummary } from "@/lib/live/open-data";
+import { photoQueries } from "@/lib/live/use-open-data";
 import {
   listingToPlace,
   parseGuide,
@@ -297,5 +300,65 @@ describe("plans from the travel guide", () => {
       priceText: "Adults $29.95, children $19.95",
       costPerPerson: 29.95,
     });
+  });
+});
+
+describe("destination photos show the right place", () => {
+  const page = (index: number, title: string, extra: Record<string, unknown> = {}) => ({
+    index,
+    title,
+    extract: `${title} is a place.`,
+    fullurl: `https://en.wikipedia.org/wiki/${title}`,
+    thumbnail: { source: `https://img/${title}.jpg` },
+    ...extra,
+  });
+  const ASHEVILLE = { lat: 35.5951, lon: -82.5515 };
+
+  it("skips a film or album that shares the name", () => {
+    const s = parseSummary({
+      query: {
+        pages: {
+          a: page(1, "Nashville (film)", { description: "1975 film by Robert Altman" }),
+          b: page(2, "Nashville, Tennessee", { description: "Capital city of Tennessee" }),
+        },
+      },
+    });
+    expect(s?.title).toBe("Nashville, Tennessee");
+  });
+
+  it("prefers the article whose location matches the destination", () => {
+    const s = parseSummary(
+      {
+        query: {
+          pages: {
+            a: page(1, "Asheville, Ohio", { coordinates: [{ lat: 39.6, lon: -82.9 }] }),
+            b: page(2, "Asheville, North Carolina", {
+              coordinates: [{ lat: 35.6, lon: -82.55 }],
+            }),
+          },
+        },
+      },
+      ASHEVILLE,
+    );
+    expect(s?.title).toBe("Asheville, North Carolina");
+    expect(s?.image).toBe("https://img/Asheville, North Carolina.jpg");
+  });
+
+  it("returns nothing rather than a photo of somewhere else", () => {
+    const far = {
+      query: {
+        pages: {
+          a: page(1, "Springfield, Illinois", { coordinates: [{ lat: 39.8, lon: -89.6 }] }),
+        },
+      },
+    };
+    expect(parseSummary(far, ASHEVILLE)).toBeNull();
+  });
+
+  it("tries an area by its own name before its main town", () => {
+    expect(photoQueries(getDestination("blue-ridge"), "")).toEqual([
+      "Blue Ridge Mountains",
+      "Asheville, NC",
+    ]);
   });
 });

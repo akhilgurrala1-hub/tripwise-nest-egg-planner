@@ -1,195 +1,143 @@
 /**
- * Spot illustrations: flat, colorful scenes that give pages some life. Purely
- * decorative (aria-hidden), inline SVG so they cost no requests and stay crisp.
- * Fixed colors are mid-tones that read on light and dark; the sky follows the theme.
+ * Decorative line art in the brand's language: a route drawn from a hollow origin
+ * ring to the coral destination dot (the logo's motif) over quiet map contours.
+ * Inline SVG (no requests, crisp at any size), theme-aware through tokens, and
+ * aria-hidden because it carries no information.
  */
 import { useId } from "react";
 
 import { cn } from "@/lib/utils";
 
-const C = {
-  blue: "#2457E6",
-  blueDeep: "#1A3FB0",
-  coral: "#FF6B4A",
-  sun: "#FFC145",
-  hillFar: "#9AD1C2",
-  hillMid: "#5DBB8A",
-  hillNear: "#3E9E6E",
-  tree: "#2F7D57",
-  road: "#3B3F4A",
-  cloud: "#FFFFFF",
-};
+const CONTOURS = [
+  "M-20 150 C 40 120, 90 160, 150 135 S 260 95, 380 120",
+  "M-20 175 C 50 150, 100 185, 170 160 S 280 125, 380 148",
+  "M-20 125 C 30 95, 80 130, 140 108 S 250 65, 380 92",
+  "M-20 98 C 35 72, 85 100, 135 82 S 245 40, 380 64",
+  "M-20 200 C 60 180, 120 210, 190 188 S 300 158, 380 176",
+];
 
-/** A road winding through hills to a destination pin, with a plane overhead and a packed bag. */
-export function TripScenery({ className }: { className?: string }) {
-  const clip = useId();
+/** A wide map panel with the route, for page headers. */
+export function RouteMap({ className }: { className?: string }) {
+  const id = useId();
+  const clip = `${id}-clip`;
+  const grid = `${id}-grid`;
+  const route = "M54 168 C 92 150, 104 108, 146 104 S 204 132, 236 106 S 270 58, 304 54";
   return (
     <svg
-      viewBox="0 0 360 200"
+      viewBox="0 0 360 220"
       aria-hidden
       focusable="false"
       className={cn("h-auto w-full", className)}
     >
       <defs>
         <clipPath id={clip}>
-          <rect x="0" y="0" width="360" height="200" rx="20" />
+          <rect width="360" height="220" rx="16" />
         </clipPath>
+        <pattern id={grid} width="24" height="24" patternUnits="userSpaceOnUse">
+          <path d="M24 0H0V24" fill="none" stroke="var(--border)" strokeWidth="1" />
+        </pattern>
       </defs>
       <g clipPath={`url(#${clip})`}>
-        <rect width="360" height="200" fill="var(--art-sky)" />
-        <circle cx="292" cy="56" r="24" fill={C.sun} />
-        <circle cx="292" cy="56" r="34" fill={C.sun} opacity="0.18" />
-        <g fill={C.cloud} opacity="0.92">
-          <rect x="58" y="40" width="58" height="14" rx="7" />
-          <rect x="72" y="30" width="30" height="16" rx="8" />
-          <rect x="196" y="70" width="44" height="11" rx="5.5" />
+        <rect width="360" height="220" fill="var(--card)" />
+        <rect width="360" height="220" fill={`url(#${grid})`} opacity="0.55" />
+        <g fill="none" stroke="var(--muted-foreground)" strokeWidth="1" opacity="0.18">
+          {CONTOURS.map((d) => (
+            <path key={d} d={d} />
+          ))}
         </g>
-
-        {/* Plane on a dotted path */}
+        {/* A river, as a map would show it */}
         <path
-          d="M24 118 C 90 64, 170 40, 238 30"
+          d="M200 230 C 196 196, 222 182, 214 150 S 236 112, 262 104"
           fill="none"
-          stroke={C.blue}
+          stroke="var(--primary)"
+          strokeWidth="3"
+          opacity="0.12"
+          strokeLinecap="round"
+        />
+
+        {/* The route */}
+        <path
+          d={route}
+          fill="none"
+          stroke="var(--primary)"
+          strokeWidth="6"
+          opacity="0.1"
+          strokeLinecap="round"
+        />
+        <path
+          d={route}
+          fill="none"
+          stroke="var(--primary)"
           strokeWidth="2"
-          strokeDasharray="3 7"
-          strokeLinecap="round"
-          opacity="0.6"
-        />
-        <g transform="translate(246 28) rotate(-14)" fill={C.blue}>
-          <path d="M-16 0 Q-16 -3 -12 -3 L12 -3 Q18 -2 19 0 Q18 2 12 3 L-12 3 Q-16 3 -16 0 Z" />
-          <path d="M-2 -2 L-10 -14 L-5 -14 L6 -2 Z" />
-          <path d="M-2 2 L-10 14 L-5 14 L6 2 Z" />
-          <path d="M-13 -1 L-17 -8 L-13.5 -8 L-9 -1 Z" />
-        </g>
-
-        {/* Hills */}
-        <path
-          d="M0 150 L70 86 L118 126 L182 70 L250 136 L304 100 L360 140 V200 H0 Z"
-          fill={C.hillFar}
-        />
-        <path d="M182 70 L200 87 L190 92 L182 84 L172 94 L163 88 Z" fill={C.cloud} opacity="0.85" />
-        <path
-          d="M0 170 C 70 140, 130 150, 200 160 C 260 168, 300 150, 360 156 V200 H0 Z"
-          fill={C.hillMid}
-        />
-        <path d="M0 188 C 90 172, 200 182, 360 176 V200 H0 Z" fill={C.hillNear} />
-
-        {/* Trees */}
-        <g fill={C.tree}>
-          <path d="M300 160 l8 -22 l8 22 z" />
-          <path d="M314 162 l6 -16 l6 16 z" />
-          <path d="M96 168 l7 -19 l7 19 z" />
-        </g>
-
-        {/* Road to the destination */}
-        <path
-          d="M128 204 C 150 180, 214 182, 232 166 C 248 152, 236 146, 252 138"
-          fill="none"
-          stroke={C.road}
-          strokeWidth="13"
+          strokeDasharray="1 7"
           strokeLinecap="round"
         />
-        <path
-          d="M128 204 C 150 180, 214 182, 232 166 C 248 152, 236 146, 252 138"
-          fill="none"
-          stroke="#fff"
-          strokeWidth="1.6"
-          strokeDasharray="5 6"
-          opacity="0.85"
-        />
-
-        {/* Car */}
-        <g transform="translate(180 158)">
-          <path d="M3 8 L9 1 H23 L29 8 Z" fill={C.coral} />
-          <rect x="0" y="7" width="34" height="11" rx="4" fill={C.coral} />
-          <path d="M11 3 H17 V8 H8 Z M19 3 H22 L26 8 H19 Z" fill="#fff" opacity="0.85" />
-          <circle cx="8" cy="18.5" r="3.6" fill={C.road} />
-          <circle cx="26" cy="18.5" r="3.6" fill={C.road} />
-        </g>
-
-        {/* Destination pin */}
-        <g transform="translate(254 104)">
-          <ellipse cx="0" cy="32" rx="9" ry="2.6" fill="#000" opacity="0.12" />
-          <path
-            d="M0 30 C -10 18, -13 12, -13 5 A 13 13 0 0 1 13 5 C 13 12, 10 18, 0 30 Z"
-            fill={C.coral}
+        {/* Stops along the way */}
+        {[
+          [146, 104],
+          [236, 106],
+        ].map(([x, y]) => (
+          <circle
+            key={`${x}`}
+            cx={x}
+            cy={y}
+            r="3.5"
+            fill="var(--card)"
+            stroke="var(--primary)"
+            strokeWidth="1.5"
           />
-          <circle cx="0" cy="5" r="4.8" fill="#fff" />
-        </g>
-
-        {/* Suitcase */}
-        <g transform="translate(30 132)">
-          <rect
-            x="13"
-            y="0"
-            width="18"
-            height="11"
-            rx="4"
-            fill="none"
-            stroke={C.blueDeep}
-            strokeWidth="3.5"
-          />
-          <rect x="0" y="8" width="44" height="36" rx="7" fill={C.blue} />
-          <rect x="0" y="20" width="44" height="5" fill={C.sun} />
-          <rect x="9" y="8" width="3" height="36" fill={C.blueDeep} opacity="0.5" />
-          <rect x="32" y="8" width="3" height="36" fill={C.blueDeep} opacity="0.5" />
-        </g>
+        ))}
+        {/* Origin ring and destination dot, as in the logo */}
+        <circle cx="54" cy="168" r="7" fill="var(--card)" stroke="var(--primary)" strokeWidth="3" />
+        <circle cx="304" cy="54" r="16" fill="var(--brand-coral)" opacity="0.14" />
+        <circle cx="304" cy="54" r="7.5" fill="var(--brand-coral)" />
       </g>
+      <rect x="0.5" y="0.5" width="359" height="219" rx="15.5" fill="none" stroke="var(--border)" />
     </svg>
   );
 }
 
-/** A folded map with a dotted route from a ring to a pin, and a compass. */
-export function MapArt({ className }: { className?: string }) {
+/** A compact square version, for cards and banners. */
+export function RouteMark({ className }: { className?: string }) {
+  const route = "M18 62 C 30 50, 30 36, 44 34 S 60 24, 64 16";
   return (
     <svg
-      viewBox="0 0 170 120"
+      viewBox="0 0 80 80"
       aria-hidden
       focusable="false"
       className={cn("h-auto w-full", className)}
     >
-      <g transform="translate(8 14)">
-        <path d="M0 8 L40 0 V84 L0 92 Z" fill="#CFE0FF" />
-        <path d="M40 0 L80 8 V92 L40 84 Z" fill="#BFE6D3" />
-        <path d="M80 8 L120 0 V84 L80 92 Z" fill="#CFE0FF" />
-        <path d="M40 0 L80 8 V92 L40 84 Z" fill="#000" opacity="0.05" />
-        <path
-          d="M8 44 C 18 30, 30 38, 34 46"
-          fill="none"
-          stroke="#7FB3F0"
-          strokeWidth="3"
-          strokeLinecap="round"
-        />
-        <path
-          d="M86 64 C 96 56, 108 60, 114 54"
-          fill="none"
-          stroke="#7FB3F0"
-          strokeWidth="3"
-          strokeLinecap="round"
-        />
-        <path
-          d="M16 72 C 30 46, 58 74, 70 48 S 96 28, 102 20"
-          fill="none"
-          stroke={C.coral}
-          strokeWidth="2.5"
-          strokeDasharray="1 6"
-          strokeLinecap="round"
-        />
-        <circle cx="16" cy="72" r="5" fill="#fff" stroke={C.blue} strokeWidth="3" />
-        <g transform="translate(102 2)">
-          <path
-            d="M0 20 C -7 12, -9 8, -9 3.5 A 9 9 0 0 1 9 3.5 C 9 8, 7 12, 0 20 Z"
-            fill={C.coral}
-          />
-          <circle cx="0" cy="3.5" r="3.2" fill="#fff" />
-        </g>
+      <rect
+        x="0.5"
+        y="0.5"
+        width="79"
+        height="79"
+        rx="14"
+        fill="var(--card)"
+        stroke="var(--border)"
+      />
+      <g fill="none" stroke="var(--muted-foreground)" strokeWidth="0.8" opacity="0.2">
+        <path d="M-4 54 C 16 44, 30 58, 50 48 S 72 36, 84 40" />
+        <path d="M-4 36 C 14 26, 30 40, 48 30 S 70 18, 84 22" />
       </g>
-      <g transform="translate(146 92)">
-        <circle r="17" fill={C.sun} />
-        <circle r="12" fill="#fff" />
-        <path d="M0 -10 L3.5 0 L0 10 L-3.5 0 Z" fill={C.coral} />
-        <path d="M0 0 L3.5 0 L0 10 L-3.5 0 Z" fill={C.road} />
-      </g>
+      <path
+        d={route}
+        fill="none"
+        stroke="var(--primary)"
+        strokeWidth="1.8"
+        strokeDasharray="1 5"
+        strokeLinecap="round"
+      />
+      <circle
+        cx="18"
+        cy="62"
+        r="4.5"
+        fill="var(--card)"
+        stroke="var(--primary)"
+        strokeWidth="2.2"
+      />
+      <circle cx="64" cy="16" r="9" fill="var(--brand-coral)" opacity="0.15" />
+      <circle cx="64" cy="16" r="4.5" fill="var(--brand-coral)" />
     </svg>
   );
 }
