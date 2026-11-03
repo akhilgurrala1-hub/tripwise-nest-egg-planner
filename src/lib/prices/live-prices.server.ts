@@ -12,6 +12,8 @@ import {
   type LivePricesResult,
 } from "./live";
 
+import { priceKey } from "./keys.server";
+
 const SERPAPI = "https://serpapi.com/search.json";
 const EIA = "https://api.eia.gov/v2/petroleum/pri/gnd/data/";
 
@@ -237,8 +239,8 @@ const reason = (r: PromiseRejectedResult) =>
   r.reason instanceof PriceError ? r.reason.message : "A price service didn't respond.";
 
 export async function fetchLivePrices(req: LivePricesRequest): Promise<LivePricesResult> {
-  const serp = process.env["SERPAPI_API_KEY"];
-  const eia = process.env["EIA_API_KEY"];
+  const serp = priceKey("serpapi")?.key;
+  const eia = priceKey("eia")?.key;
   if (!serp && !eia) return { ok: false, error: "Live prices aren't connected yet." };
   const notes: string[] = [];
   const missing = (label: string) => Promise.reject(new PriceError(`${label}: not connected.`));

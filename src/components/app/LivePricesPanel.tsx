@@ -7,6 +7,7 @@ import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PriceKeyCheck } from "@/components/app/PriceKeyCheck";
 import { usePreferences } from "@/lib/account";
 import { useAuth } from "@/lib/auth-context";
 import { formatMoney } from "@/lib/budget";
@@ -124,11 +125,12 @@ export function LivePricesPanel({ className }: { className?: string }) {
         )}
       </div>
 
-      {connected && !anyConnected && (
-        <p className="mt-3 rounded-lg bg-muted px-3 py-2 text-xs leading-snug text-muted-foreground">
-          Live hotel, flight and gas prices need a price-data connection that isn't set up for this
-          app yet, so these amounts stay estimates.
-        </p>
+      {connected && (
+        <PriceKeyCheck
+          connected={connected.gas || connected.flights || connected.hotels}
+          signedIn={!!user}
+          className="mt-3"
+        />
       )}
       {user && anyConnected && notConnected.length > 0 && (
         <p className="mt-3 text-xs text-muted-foreground">
