@@ -23,6 +23,7 @@ import {
   tripShape,
 } from "@/lib/budget";
 import { driveLabel, roadMiles, type GeoPoint } from "@/lib/catalog";
+import { destinationForNewStart } from "@/lib/recommend";
 import {
   CUSTOM_DESTINATION_ID,
   INTERESTS,
@@ -101,6 +102,32 @@ function Welcome() {
     form.originPoint ??
     (originGeo.data?.[0] ? { lat: originGeo.data[0].lat, lon: originGeo.data[0].lon } : null);
   const effective: TripSetup = { ...form, originPoint };
+  const typedMatch = form.originPoint
+    ? null
+    : originGeo.data
+      ? (originGeo.data[0]?.label ?? "none")
+      : null;
+
+  // A new start point moves the destination to one that suits it, until the traveler picks one.
+  const destPicked = useRef(false);
+  const originKey = originPoint
+    ? `${originPoint.lat.toFixed(2)},${originPoint.lon.toFixed(2)}`
+    : "";
+  const lastOrigin = useRef(originKey);
+  useEffect(() => {
+    if (originKey === lastOrigin.current) return;
+    lastOrigin.current = originKey;
+    if (!originPoint || !touched.current || destPicked.current) return;
+    const next = destinationForNewStart({
+      destinationId: form.destinationId,
+      tripType: form.tripType,
+      interests: form.interests,
+      from: originPoint,
+    });
+    if (next) setForm((f) => ({ ...f, destinationId: next }));
+    // Only the start point should trigger this.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [originKey]);
 
   const shape = tripShape(form.startDate, form.endDate, form.travelers);
   const dateError =
@@ -256,6 +283,7 @@ function Welcome() {
               onFill={(draft) => {
                 const next = fromDraft(draft);
                 touched.current = true;
+                destPicked.current = true;
                 reserveTouched.current = false;
                 setForm(next);
                 toast("Filled in below — adjust anything, then plan the trip.");
@@ -300,6 +328,7 @@ function Welcome() {
                 id="origin"
                 value={form.origin}
                 approximate={approximate}
+                found={typedMatch}
                 label={
                   form.tripType === "staycation"
                     ? "Your home city — for live weather and places"
@@ -316,13 +345,17 @@ function Welcome() {
                   from={originPoint}
                   fromLabel={fromLabel}
                   error={destError}
-                  onPick={(destinationId) => update({ destinationId })}
-                  onCustom={(customDestination, place) =>
+                  onPick={(destinationId) => {
+                    destPicked.current = true;
+                    update({ destinationId });
+                  }}
+                  onCustom={(customDestination, place) => {
+                    destPicked.current = true;
                     update({
                       customDestination,
                       destinationPoint: place ? { lat: place.lat, lon: place.lon } : null,
-                    })
-                  }
+                    });
+                  }}
                 />
               </div>
             </Section>
