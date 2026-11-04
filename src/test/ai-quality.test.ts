@@ -192,7 +192,7 @@ describe("assistant answers are checked before they're shown", () => {
       origin: null,
       startDate: null,
       endDate: null,
-      nights: 45.6,
+      nights: 900.6,
       travelers: 0,
       tripType: null,
       transportMode: null,
@@ -213,7 +213,7 @@ describe("assistant answers are checked before they're shown", () => {
     expect(a.questions[0]!.options).toEqual(["2 people", "Just me", "Family of 4", "Group"]);
     expect(a.ideas).toEqual([{ name: "Austin, TX", why: "Live music" }]);
     expect(a.trip.travelers).toBe(1);
-    expect(a.trip.nights).toBe(30);
+    expect(a.trip.nights).toBe(364);
     expect(a.trip.totalBudget).toBeNull();
     expect(a.trip.interests).toEqual(["food"]);
   });

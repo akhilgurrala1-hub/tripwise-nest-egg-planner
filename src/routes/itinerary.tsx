@@ -10,7 +10,7 @@ import {
   Wand2,
   X,
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
 import { SourceNote } from "@/components/app/bits";
@@ -57,6 +57,26 @@ export const Route = createFileRoute("/itinerary")({
   component: ItineraryPage,
 });
 
+/** Long trips: show the first days at once and the rest in quick steps, so the page opens fast. */
+const FIRST_DAYS = 10;
+const MORE_DAYS = 20;
+
+function useProgressiveCount(total: number): number {
+  const [shown, setShown] = useState(Math.min(total, FIRST_DAYS));
+  useEffect(() => {
+    if (shown >= total) return;
+    const id = window.setTimeout(() => setShown((n) => Math.min(total, n + MORE_DAYS)), 30);
+    return () => window.clearTimeout(id);
+  }, [shown, total]);
+  // Printing needs every day, right away.
+  useEffect(() => {
+    const all = () => setShown(total);
+    window.addEventListener("beforeprint", all);
+    return () => window.removeEventListener("beforeprint", all);
+  }, [total]);
+  return Math.min(shown, total);
+}
+
 function ItineraryPage() {
   const { trip, shape } = useTrip();
   const { user } = useAuth();
@@ -64,6 +84,7 @@ function ItineraryPage() {
   const planner = usePlanner();
   const holidays = useTripHolidays();
   const itin = trip.itinerary;
+  const shown = useProgressiveCount(itin?.days.length ?? 0);
 
   return (
     <div>
@@ -205,20 +226,24 @@ function ItineraryPage() {
               </Button>
             </div>
           ) : (
-            itin.days.map((day, di) => (
-              <DayCard
-                key={day.day}
-                day={day}
-                dayIndex={di}
-                itinerary={itin}
-                weather={weather.byDate.get(day.date)}
-                holiday={holidays.find((h) => h.date === day.date)?.name}
-                style={stagger(di)}
-              />
-            ))
+            itin.days
+              .slice(0, shown)
+              .map((day, di) => (
+                <DayCard
+                  key={day.day}
+                  day={day}
+                  dayIndex={di}
+                  itinerary={itin}
+                  weather={weather.byDate.get(day.date)}
+                  holiday={holidays.find((h) => h.date === day.date)?.name}
+                  style={stagger(di)}
+                />
+              ))
           )}
-          {shape.days > 14 && (
-            <p className="text-xs text-muted-foreground">Plans cover the first 14 days.</p>
+          {itin && shown < itin.days.length && (
+            <p className="py-4 text-center text-xs text-muted-foreground" aria-live="polite">
+              Loading days {shown + 1} to {itin.days.length}…
+            </p>
           )}
         </div>
 

@@ -13,6 +13,13 @@ import {
 } from "@/lib/demo-data";
 import type { GeoPoint } from "@/lib/catalog";
 import type { CityLeg } from "@/lib/multi-city";
+import {
+  SINGLE_REQUEST_DAYS,
+  joinChunkPlans,
+  planChunks,
+  shareOf,
+  type PlanChunk,
+} from "@/lib/ai-chunks";
 import { cleanAiPlan, groundedCount, mergePlaces, placeLines, planLines } from "@/lib/ai-quality";
 import { coveredLabels } from "@/lib/budget";
 import { inclusiveDays } from "@/lib/dates";
@@ -37,6 +44,8 @@ import { currentTrip, planKey, tripActions, useTrip } from "@/lib/trip-store";
 
 /** The AI planner usually answers in 15–40s; past this we stop waiting and keep the current plan. */
 export const AI_TIMEOUT_MS = 90_000;
+/** Parts of a long trip planned at the same time. */
+const PARALLEL_PARTS = 3;
 const PLACES_TIMEOUT_MS = 30_000;
 
 /** Map lookups are billed, so identical searches in one session reuse the first answer. */
@@ -105,7 +114,7 @@ export function usePlanner() {
           mealBudgetPerPersonDay: totals.categories.food / shape.travelers / shape.days,
         }),
       ),
-      Math.min(14, shape.days),
+      shape.days,
       trip.setup.startDate,
       source,
       tips,
@@ -242,8 +251,14 @@ export function usePlanner() {
    */
   const planWithAi = async (instructions = "") => {
     const key = planKey(currentTrip());
-    const { ctrl, done } = start("ai", AI_TIMEOUT_MS);
-    const days = Math.min(14, shape.days);
+    // Long trips are planned in parts (a few at a time), each part in one city.
+    const long = shape.days > SINGLE_REQUEST_DAYS;
+    const chunks: (PlanChunk | null)[] = long ? planChunks(legs, shape.days) : [null];
+    const { ctrl, done } = start("ai", AI_TIMEOUT_MS * Math.ceil(chunks.length / PARALLEL_PARTS));
+    if (long)
+      toast.message(`Planning all ${shape.days} days in ${chunks.length} parts`, {
+        description: "Long trips take a minute or two. Your current plan stays until it's done.",
+      });
     try {
       // Grounding is free and best-effort: a slow lookup never holds up the plan.
       // Every city's places on a multi-city trip, each line marked with its city.
@@ -255,90 +270,161 @@ export function usePlanner() {
       ]);
       const real = perCity?.[0] ?? null;
       const realPlaces = (perCity ?? []).flatMap((p) => (p ? [...p.sights, ...p.restaurants] : []));
+      const cityOf = (leg: CityLeg) => leg.name.split(",")[0]!.trim();
       const placeList = multi
         ? legs.flatMap((leg, i) => {
             const p = perCity?.[i];
-            const city = leg.name.split(",")[0]!.trim();
             return p
               ? placeLines(p.sights, p.restaurants)
                   .slice(0, Math.floor(40 / legs.length))
-                  .map((line) => `${city}: ${line}`.slice(0, 260))
+                  .map((line) => `${cityOf(leg)}: ${line}`.slice(0, 260))
               : [];
           })
         : real
           ? placeLines(real.sights, real.restaurants)
           : [];
-      const res = await createAiItinerary({
-        signal: ctrl.signal,
-        data: {
-          destination: destinationQuery(dest, trip.setup.origin, prefs?.home_city),
-          region: [dest.region, country && country !== "US" ? country : ""]
-            .filter(Boolean)
-            .join(", ")
-            .slice(0, 120),
-          origin: trip.setup.origin,
-          tripType: label(TRIP_TYPES, trip.setup.tripType),
-          style: label(TRAVEL_STYLES, trip.setup.style),
-          days,
-          startDate: trip.setup.startDate,
-          travelers: shape.travelers,
-          interests: trip.setup.interests.map((i) => label(INTERESTS, i)),
-          activityBudgetPerPerson: totals.categories.activities / shape.travelers,
-          foodBudgetPerPersonDay: totals.categories.food / shape.travelers / shape.days,
-          weather: Array.from({ length: days }, (_, i) => {
-            const w = weather.byDate.get(addDays(trip.setup.startDate, i));
-            if (!w) return "";
-            const rain = w.precipChance !== null ? `, ${w.precipChance}% chance of rain` : "";
-            const sunset = w.sunset ? `, sunset ${clock(w.sunset)}` : "";
-            return `Day ${i + 1}: ${w.label}, high ${w.highF}°F, low ${w.lowF}°F${rain}${sunset} (${w.source === "forecast" ? "forecast" : "typical for the date"})`;
-          })
-            .filter(Boolean)
-            .map((w) => w.slice(0, 120)),
-          places: placeList,
-          cities: multi
-            ? legs.map((l) => {
-                const from = l.arriveDay + 1;
-                const to = Math.min(days, l.arriveDay + l.days);
-                const span = to > from ? `Days ${from}-${to}` : `Day ${from}`;
-                return `${span}: ${l.name}${l.arriveDay > 0 ? " (arrive on the first of these days)" : ""}`;
-              })
+      const weatherLine = (dayIndex: number, n: number) => {
+        const w = weather.byDate.get(addDays(trip.setup.startDate, dayIndex));
+        if (!w) return "";
+        const rain = w.precipChance !== null ? `, ${w.precipChance}% chance of rain` : "";
+        const sunset = w.sunset ? `, sunset ${clock(w.sunset)}` : "";
+        return `Day ${n}: ${w.label}, high ${w.highF}°F, low ${w.lowF}°F${rain}${sunset} (${w.source === "forecast" ? "forecast" : "typical for the date"})`.slice(
+          0,
+          120,
+        );
+      };
+      const holidayLines = (from: number, days: number) =>
+        holidays.flatMap((h) => {
+          const day = (inclusiveDays(trip.setup.startDate, h.date) ?? 0) - from;
+          return day >= 1 && day <= days
+            ? [`Day ${day} (${h.date}) is ${h.name}, a public holiday: expect closures and crowds.`]
+            : [];
+        });
+      const region = [dest.region, country && country !== "US" ? country : ""]
+        .filter(Boolean)
+        .join(", ")
+        .slice(0, 120);
+      const common = {
+        origin: trip.setup.origin,
+        tripType: label(TRIP_TYPES, trip.setup.tripType),
+        style: label(TRAVEL_STYLES, trip.setup.style),
+        travelers: shape.travelers,
+        interests: trip.setup.interests.map((i) => label(INTERESTS, i)),
+        foodBudgetPerPersonDay: totals.categories.food / shape.travelers / shape.days,
+        covered: coveredLabels(trip.setup.coverage),
+        instructions: instructions.trim().slice(0, 300),
+      };
+
+      /** The request for the whole trip (up to two weeks), or for one part of a long one. */
+      const requestFor = (c: PlanChunk | null) => {
+        if (!c) {
+          const days = shape.days;
+          return {
+            ...common,
+            destination: destinationQuery(dest, trip.setup.origin, prefs?.home_city),
+            region,
+            days,
+            startDate: trip.setup.startDate,
+            activityBudgetPerPerson: totals.categories.activities / shape.travelers,
+            weather: Array.from({ length: days }, (_, i) => weatherLine(i, i + 1)).filter(Boolean),
+            places: placeList,
+            cities: multi
+              ? legs.map((l) => {
+                  const from = l.arriveDay + 1;
+                  const to = Math.min(days, l.arriveDay + l.days);
+                  const span = to > from ? `Days ${from}-${to}` : `Day ${from}`;
+                  return `${span}: ${l.name}${l.arriveDay > 0 ? " (arrive on the first of these days)" : ""}`;
+                })
+              : [],
+            // Travel-guide advice for every city (the first city's first), within the request's limits.
+            guide: legs
+              .flatMap((leg, i) =>
+                (perCity?.[i]?.tips ?? []).map(
+                  (t) => `${multi ? `${cityOf(leg)}, ` : ""}${t.topic}: ${t.text}`,
+                ),
+              )
+              .slice(0, 4)
+              .map((t) => t.slice(0, 360)),
+            notes: [...holidayLines(0, days), ...tripFacts()]
+              .slice(0, 10)
+              .map((n) => n.slice(0, 160)),
+            current: instructions ? planLines(trip.itinerary).slice(0, 80) : [],
+          };
+        }
+        const leg = legs[c.city]!;
+        const found = perCity?.[c.city];
+        const k = chunks.indexOf(c);
+        const part = trip.itinerary
+          ? { ...trip.itinerary, days: trip.itinerary.days.slice(c.from, c.from + c.days) }
+          : null;
+        return {
+          ...common,
+          destination: leg.main
+            ? destinationQuery(dest, trip.setup.origin, prefs?.home_city)
+            : leg.name,
+          region: leg.main ? region : "",
+          days: c.days,
+          startDate: addDays(trip.setup.startDate, c.from),
+          activityBudgetPerPerson:
+            ((totals.categories.activities / shape.travelers) * c.days) / shape.days,
+          weather: Array.from({ length: c.days }, (_, i) => weatherLine(c.from + i, i + 1)).filter(
+            Boolean,
+          ),
+          // Each part of a long stay gets its own share of the places, so parts don't repeat.
+          places: found
+            ? shareOf(placeLines(found.sights, found.restaurants), c.part, c.parts).slice(0, 40)
             : [],
-          // Travel-guide advice for every city (the first city's first), within the request's limits.
-          guide: legs
-            .flatMap((leg, i) =>
-              (perCity?.[i]?.tips ?? []).map(
-                (t) => `${multi ? `${leg.name.split(",")[0]}, ` : ""}${t.topic}: ${t.text}`,
-              ),
-            )
+          cities: [],
+          guide: (found?.tips ?? [])
+            .map((t) => `${t.topic}: ${t.text}`)
             .slice(0, 4)
             .map((t) => t.slice(0, 360)),
-          covered: coveredLabels(trip.setup.coverage),
           notes: [
-            ...holidays.map((h) => {
-              const day = inclusiveDays(trip.setup.startDate, h.date) ?? 0;
-              return `Day ${day} (${h.date}) is ${h.name}, a public holiday: expect closures and crowds.`;
-            }),
-            ...tripFacts(),
+            `Part ${k + 1} of ${chunks.length} of a ${shape.days}-day trip: days ${c.from + 1}-${c.from + c.days}${multi ? ` in ${cityOf(leg)}` : ""}. Plan only these ${c.days} days (numbered from Day 1); other parts cover the rest, so use the places listed here.`,
+            ...(c.travelDay
+              ? [
+                  `Day 1 here is the journey from ${cityOf(legs[c.city - 1]!)}: start it with a Morning "stop" item for the trip (costPerPerson 0).`,
+                ]
+              : []),
+            ...holidayLines(c.from, c.days),
+            ...(k === 0 ? tripFacts() : tripFacts().filter((f) => !/^Flights/.test(f))),
           ]
             .slice(0, 10)
             .map((n) => n.slice(0, 160)),
-          instructions: instructions.trim().slice(0, 300),
-          current: instructions ? planLines(trip.itinerary).slice(0, 80) : [],
-        },
-      });
-      if (ctrl.signal.aborted) return failed(ctrl, "", () => planWithAi(instructions));
-      if (!res.ok) {
-        toast.error(res.error, {
-          ...(res.detail ? { description: `Details: ${res.detail}` } : {}),
-          action: { label: "Try again", onClick: () => planWithAi(instructions) },
-        });
-        return;
+          current: instructions ? planLines(part).slice(0, 80) : [],
+        };
+      };
+
+      // A few parts at a time: quick, without asking the AI service for too much at once.
+      const results: Awaited<ReturnType<typeof createAiItinerary>>[] = [];
+      for (let i = 0; i < chunks.length; i += PARALLEL_PARTS) {
+        const batch = await Promise.all(
+          chunks
+            .slice(i, i + PARALLEL_PARTS)
+            .map((c) => createAiItinerary({ signal: ctrl.signal, data: requestFor(c) })),
+        );
+        if (ctrl.signal.aborted) return failed(ctrl, "", () => planWithAi(instructions));
+        const bad = batch.find((r) => !r.ok);
+        if (bad && !bad.ok) {
+          toast.error(bad.error, {
+            ...(bad.detail ? { description: `Details: ${bad.detail}` } : {}),
+            action: { label: "Try again", onClick: () => planWithAi(instructions) },
+          });
+          return;
+        }
+        results.push(...batch);
       }
-      const plan = cleanAiPlan(res.itinerary, {
-        days,
-        startDate: trip.setup.startDate,
-        realPlaces,
+      const plans = results.map((r, i) => {
+        const c = chunks[i] ?? null;
+        return cleanAiPlan(r.ok ? r.itinerary : { days: [], tips: [] }, {
+          days: c ? c.days : shape.days,
+          startDate: c ? addDays(trip.setup.startDate, c.from) : trip.setup.startDate,
+          realPlaces,
+        });
       });
+      const plan = long
+        ? joinChunkPlans(chunks as PlanChunk[], plans, trip.setup.startDate)
+        : plans[0]!;
       if (plan.days.every((d) => d.items.length === 0)) {
         toast.error("The AI planner sent back an empty plan. Your current plan is unchanged.", {
           action: { label: "Try again", onClick: () => planWithAi(instructions) },
@@ -429,7 +515,7 @@ export function usePlanner() {
               sights: places.sights,
               restaurants: places.restaurants,
               destName: dest.name,
-              days: Math.min(14, shape.days),
+              days: shape.days,
               startDate: trip.setup.startDate,
               interests: trip.setup.interests,
               tripType: trip.setup.tripType,
@@ -499,7 +585,7 @@ export function usePlanner() {
               sights: found.sights,
               restaurants: found.restaurants,
               destName: dest.name,
-              days: Math.min(14, shape.days),
+              days: shape.days,
               startDate: trip.setup.startDate,
               interests: trip.setup.interests,
               tripType: trip.setup.tripType,

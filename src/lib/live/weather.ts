@@ -63,6 +63,25 @@ export function lastYear(iso: string): string {
   return isIsoDate(candidate) ? candidate : `${y}-02-28`;
 }
 
+/** The same date `n` years earlier (Feb 29 becomes Feb 28 in other years). */
+export function yearsEarlier(iso: string, n: number): string {
+  const y = Number(iso.slice(0, 4)) - n;
+  const candidate = `${y}-${iso.slice(5)}`;
+  return isIsoDate(candidate) ? candidate : `${y}-02-28`;
+}
+
+/**
+ * How many years back the record for a stretch of dates is: last year, or more
+ * for a trip planned well ahead, so the record has already happened (the archive
+ * runs about a week behind).
+ */
+export function recordYearsBack(endDate: string, today: string): number {
+  const latest = addDays(today, -7);
+  let n = 1;
+  while (yearsEarlier(endDate, n) > latest && n < 10) n++;
+  return n;
+}
+
 export interface WeatherPlan {
   forecast: { start: string; end: string } | null;
   typical: { start: string; end: string } | null;
@@ -147,6 +166,8 @@ export async function fetchTripWeather(opts: {
   signal?: AbortSignal;
 }): Promise<TripWeather> {
   const plan = planWeather(opts.startDate, opts.endDate, opts.today);
+  // Planned a year or more ahead: use the latest year whose record exists.
+  const back = plan.typical ? recordYearsBack(plan.typical.end, opts.today) : 1;
   const common = {
     latitude: String(opts.lat),
     longitude: String(opts.lon),
@@ -174,12 +195,12 @@ export async function fetchTripWeather(opts: {
           {
             ...common,
             daily: "weather_code,temperature_2m_max,temperature_2m_min,precipitation_sum",
-            start_date: lastYear(plan.typical.start),
-            end_date: lastYear(plan.typical.end),
+            start_date: yearsEarlier(plan.typical.start, back),
+            end_date: yearsEarlier(plan.typical.end, back),
           },
           opts.signal,
         )
-          .then((b) => parseDaily(b, "typical", 1))
+          .then((b) => parseDaily(b, "typical", back))
           // Last year's record is a nice-to-have next to a live forecast: a failure there must not
           // hide the forecast. When it's all there is, the failure is reported so it can be retried.
           .catch((err: unknown) => {

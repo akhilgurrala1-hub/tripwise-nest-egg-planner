@@ -249,7 +249,7 @@ export function cleanChatAnswer(a: ChatAnswer): ChatAnswer {
   const nights =
     t.nights === null || !Number.isFinite(t.nights)
       ? null
-      : Math.min(30, Math.max(0, Math.round(t.nights)));
+      : Math.min(364, Math.max(0, Math.round(t.nights)));
   const budget =
     t.totalBudget === null || !Number.isFinite(t.totalBudget) || t.totalBudget <= 0
       ? null
@@ -286,7 +286,7 @@ export function cleanChatAnswer(a: ChatAnswer): ChatAnswer {
       cities: (Array.isArray(t.cities) ? t.cities : [])
         .map((c) => ({
           name: clip(String(c?.name ?? ""), 120),
-          nights: Math.min(30, Math.max(1, Math.round(Number(c?.nights) || 1))),
+          nights: Math.min(364, Math.max(1, Math.round(Number(c?.nights) || 1))),
         }))
         .filter((c) => c.name)
         .slice(0, 8),

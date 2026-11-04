@@ -115,7 +115,10 @@ export function useTripHolidays() {
   const hydrated = useHydrated();
   const country = useTripCountry();
   const { startDate, endDate } = trip.setup;
-  const years = [...new Set([startDate.slice(0, 4), endDate.slice(0, 4)])].map(Number);
+  // Every calendar year the trip touches (a long trip can span several).
+  const first = Number(startDate.slice(0, 4));
+  const last = Math.min(first + 2, Number(endDate.slice(0, 4)) || first);
+  const years = Array.from({ length: Math.max(1, last - first + 1) }, (_, i) => first + i);
   const q = useQuery({
     queryKey: ["live", "holidays", country, years.join(",")],
     queryFn: async ({ signal }) =>

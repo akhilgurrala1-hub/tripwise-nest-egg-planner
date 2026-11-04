@@ -15,8 +15,8 @@ export interface Limit {
 const HOUR = 60 * 60 * 1000;
 
 export const LIMITS = {
-  /** Generating or refining a day-by-day plan */
-  aiPlan: { max: 20, windowMs: HOUR },
+  /** Generating or refining a day-by-day plan (a long trip is planned in parts, each counts) */
+  aiPlan: { max: 60, windowMs: HOUR },
   /** Turns with the trip assistant */
   aiChat: { max: 80, windowMs: HOUR },
   /** Real places in the destination (Google Maps) */
