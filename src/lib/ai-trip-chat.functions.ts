@@ -9,7 +9,7 @@ const draft = z
     origin: z.string().max(120).nullable(),
     startDate: z.string().max(10).nullable(),
     endDate: z.string().max(10).nullable(),
-    nights: z.number().int().min(0).max(30).nullable(),
+    nights: z.number().int().min(0).max(364).nullable(),
     travelers: z.number().int().min(1).max(20).nullable(),
     tripType: z.enum(["road-trip", "flight", "cruise", "rail", "staycation"]).nullable(),
     transportMode: z.enum(["car", "rental-car", "flight", "train", "bus"]).nullable(),
@@ -42,7 +42,7 @@ const draft = z
     transferCost: z.number().min(0).max(5000).nullable().default(null),
     // Older saved conversations predate multi-city trips and cabins.
     cities: z
-      .array(z.object({ name: z.string().max(120), nights: z.number().min(0).max(30) }))
+      .array(z.object({ name: z.string().max(120), nights: z.number().min(0).max(364) }))
       .max(8)
       .default([]),
     cabin: z.enum(["economy", "premium", "business", "first"]).nullable().default(null),

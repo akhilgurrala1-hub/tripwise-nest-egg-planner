@@ -43,6 +43,7 @@ import {
   type Itinerary,
   type ItineraryItem,
 } from "./itinerary";
+import { MAX_TRIP_DAYS } from "./dates";
 import {
   addItem,
   keepCustomItems,
@@ -422,7 +423,7 @@ function repairDates(trip: TripState): TripState {
   const valid = (d: string) => /^\d{4}-\d{2}-\d{2}$/.test(d) && Number(d.slice(0, 4)) >= 2000;
   const staleSample = trip.isSample && startDate < todayIso();
   if (valid(startDate) && valid(endDate) && endDate >= startDate && !staleSample) return trip;
-  const days = Math.min(14, Math.max(1, tripShape(startDate, endDate, 1).days));
+  const days = Math.min(MAX_TRIP_DAYS, Math.max(1, tripShape(startDate, endDate, 1).days));
   const start = addDays(todayIso(), 30);
   const setup = { ...trip.setup, startDate: start, endDate: addDays(start, days - 1) };
   const dest = destinationFor(setup);

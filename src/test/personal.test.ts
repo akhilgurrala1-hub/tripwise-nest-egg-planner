@@ -173,7 +173,7 @@ describe("assistant drafts become trips", () => {
     ).toContain("dates");
   });
 
-  it("works out end dates from nights and caps trips at two weeks", () => {
+  it("works out end dates from nights and keeps long trips whole (up to a year)", () => {
     const start = addDays(today, 10);
     expect(draftDates(draft({ startDate: start, nights: 3 }), today)).toEqual({
       startDate: start,
@@ -181,7 +181,10 @@ describe("assistant drafts become trips", () => {
     });
     expect(
       draftDates(draft({ startDate: start, endDate: addDays(start, 40) }), today)!.endDate,
-    ).toBe(addDays(start, 13));
+    ).toBe(addDays(start, 40));
+    expect(
+      draftDates(draft({ startDate: start, endDate: addDays(start, 900) }), today)!.endDate,
+    ).toBe(addDays(start, 364));
     expect(draftDates(draft({ startDate: start, endDate: addDays(start, -1) }), today)).toBeNull();
   });
 

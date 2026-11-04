@@ -39,7 +39,8 @@ export function todayIso(): string {
   return new Date().toISOString().slice(0, 10);
 }
 
-export const MAX_TRIP_DAYS = 14;
+/** A trip can last up to a year (long stays, gap years, slow travel). */
+export const MAX_TRIP_DAYS = 365;
 
 /** Human-readable problem with a date range, or "" when it's fine. */
 export function dateRangeError(start: string, end: string, maxDays = MAX_TRIP_DAYS): string {
@@ -48,7 +49,7 @@ export function dateRangeError(start: string, end: string, maxDays = MAX_TRIP_DA
   if (!isIsoDate(end)) return "The end date isn't a real date";
   if (end < start) return "The end date is before the start date";
   const days = inclusiveDays(start, end)!;
-  if (days > maxDays) return `Trips can be up to ${maxDays} days for now`;
+  if (days > maxDays) return `Trips can be up to ${maxDays} days`;
   return "";
 }
 

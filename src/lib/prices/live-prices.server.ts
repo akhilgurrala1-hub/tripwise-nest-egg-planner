@@ -21,8 +21,11 @@ import {
   type PriceCache,
 } from "./cache.server";
 import { priceKey } from "./keys.server";
+import { addDays } from "../dates";
 
 const SERPAPI = "https://serpapi.com/search.json";
+/** How far ahead fares and hotel rooms are usually listed. */
+export const BOOKING_WINDOW_DAYS = 330;
 const EIA = "https://api.eia.gov/v2/petroleum/pri/gnd/data/";
 
 export interface LivePricesRequest {
@@ -467,18 +470,25 @@ export async function fetchLivePrices(
   const eia = priceKey("eia")?.key;
   if (!serp && !eia) return { ok: false, error: "Live prices aren't connected yet." };
   const notes: string[] = [];
+  // Fares and rooms are only listed about 11 months ahead: don't spend searches before then.
+  const tooEarly =
+    req.startDate > addDays(new Date().toISOString().slice(0, 10), BOOKING_WINDOW_DAYS);
+  if (tooEarly && (req.includeFlights || req.includeHotels))
+    notes.push(
+      "Airlines and hotels usually list prices about 11 months ahead, so live fares and rooms for these dates aren't out yet. The estimates stay until then.",
+    );
   const missing = (label: string) => Promise.reject(new PriceError(`${label}: not connected.`));
 
   const [gas, hotels, flights] = await Promise.allSettled([
     eia ? gasQuote(req.destination, eia, cache) : missing("Gas prices"),
-    req.endDate <= req.startDate || !req.includeHotels
+    req.endDate <= req.startDate || !req.includeHotels || tooEarly
       ? Promise.resolve(null)
       : serp
         ? (req.cities?.length ?? 0) > 1
           ? multiCityHotels(req, serp, cache)
           : hotelQuote(req, serp, cache)
         : missing("Hotel prices"),
-    req.includeFlights
+    req.includeFlights && !tooEarly
       ? serp
         ? (req.cities?.length ?? 0) > 1
           ? multiCityFlights(req, serp, cache)
