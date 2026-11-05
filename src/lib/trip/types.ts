@@ -5,7 +5,14 @@
 import type { BookingRecord } from "../booking";
 import type { BudgetInputs, Overrides, SavingId, TripCoverage } from "../budget";
 import type { GeoPoint } from "../catalog";
-import type { Cabin, Interest, TransportMode, TravelStyle, TripType } from "../demo-data";
+import type {
+  Cabin,
+  FlightStops,
+  Interest,
+  TransportMode,
+  TravelStyle,
+  TripType,
+} from "../demo-data";
 import type { Itinerary } from "../itinerary";
 import type { TripCity } from "../multi-city";
 import type { LivePrices } from "../prices/live";
@@ -34,6 +41,10 @@ export interface TripSetup {
   cities?: TripCity[] | null;
   /** Flight cabin (economy when unset); fares scale with it */
   cabin?: Cabin | null;
+  /** Stops they'll take on flights (any when unset): live searches and booking links follow it */
+  flightStops?: FlightStops | null;
+  /** The traveler's passport (ISO country), for entry rules and layovers; home country when unset */
+  passport?: string | null;
   /**
    * The budget was chosen by Waypoint, not typed by the traveler: it follows the
    * trip's costs (new cities, cabin, trip type) until the traveler sets their own.

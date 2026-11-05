@@ -166,7 +166,7 @@ export function readPeople(text: string): PeopleFacts {
     (m = rest.match(
       /\b(honeymoon|anniversary|babymoon|romantic|the 2 of us|both of us|me and my (?:wife|husband|partner|girlfriend|boyfriend|fiance|fiancee|spouse|other half|significant other)|my (?:wife|husband|partner|girlfriend|boyfriend|fiance|fiancee|spouse) and (?:i|me)|couples? (?:trip|getaway)|a couple|us 2|we 2)\b/,
     )) &&
-    !/\b(and|with) (our|my|the) (kids?|children|son|daughter|baby|family|parents|friends)\b/.test(
+    !/\b(and|with) (our|my|the) (\d+ )?(kids?|children|sons?|daughters?|baby|babies|family|parents|friends)\b/.test(
       rest,
     )
   ) {

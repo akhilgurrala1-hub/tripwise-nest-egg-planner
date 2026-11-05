@@ -32,6 +32,15 @@ export interface HotelQuote {
   searchUrl: string;
 }
 
+/** A connection on the way: where, for how long, and whether it runs overnight. */
+export interface Layover {
+  /** Airport code ("IST") */
+  code: string;
+  name: string;
+  minutes: number;
+  overnight: boolean;
+}
+
 export interface FlightOption {
   airlines: string[];
   stops: number;
@@ -40,6 +49,8 @@ export interface FlightOption {
   arrives: string;
   /** Round trip, per person */
   perPerson: number;
+  /** The outbound flight's connections (none for nonstop) */
+  layovers?: Layover[];
 }
 
 export interface FlightQuote {

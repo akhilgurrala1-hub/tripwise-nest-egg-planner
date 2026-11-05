@@ -124,6 +124,8 @@ export function questionField(q: string): AskField | null {
   )
     return "travelers";
   if (/\bbudget\b|\bspend\b|\bprice range\b|\bhow much\b/.test(t)) return "budget";
+  if (/\bnon ?stop\b|\bdirect\b|\bstops?\b|\blayovers?\b|\bconnections?\b|\bstopovers?\b/.test(t))
+    return "stops";
   if (/\bcabin\b|\bclass\b|\beconomy\b|\bbusiness\b/.test(t)) return "cabin";
   if (/\b(drive|fly|flying|driving|train|bus|get there|getting there|transport)\b/.test(t))
     return "transport";
@@ -244,6 +246,7 @@ export function reconcile(
   if (d.tripType && t.tripType !== d.tripType) t.tripType = d.tripType;
   if (d.transportMode && !t.transportMode) t.transportMode = d.transportMode;
   if (d.cabin && t.cabin !== d.cabin) t.cabin = d.cabin;
+  if (d.stops && t.stops !== d.stops) t.stops = d.stops;
   if (d.style && !t.style) t.style = d.style;
   for (const i of d.interests) if (!t.interests.includes(i)) t.interests.push(i);
   for (const k of ["lodging", "meals", "activities", "localTransport"] as const)
@@ -263,6 +266,7 @@ export function reconcile(
   if (t.origin) known.add("origin");
   if (t.totalBudget) known.add("budget");
   if (t.cabin) known.add("cabin");
+  if (t.stops) known.add("stops");
   if (t.style) known.add("style");
   if (t.interests.length) known.add("interests");
   if (t.tripType) known.add("transport");
@@ -327,6 +331,10 @@ export function factLines(u: Understanding): string[] {
     );
   if (d.tripType) out.push(`Trip type: ${d.tripType}`);
   if (d.cabin) out.push(`Cabin: ${d.cabin}`);
+  if (d.stops)
+    out.push(
+      `Flight stops: ${d.stops === "nonstop" ? "nonstop only" : d.stops === "one" ? "one stop at most" : "any"}`,
+    );
   if (d.style) out.push(`Style: ${d.style}`);
   if (d.interests.length) out.push(`Interests: ${d.interests.join(", ")}`);
   const cov = Object.entries(d.covered)

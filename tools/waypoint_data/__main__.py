@@ -5,13 +5,14 @@
 - airports [CSV]: rebuild airports.json from OurAirports' airports.csv
 - regions [COUNTRIES REGIONS]: rebuild countries.json and states.json
 - prompts [--check]: write the trip assistant's 10,000-case test set
+- visas [CSV] [--updated DATE]: rebuild visas.json from the Passport Index dataset
 """
 
 import argparse
 import sys
 from pathlib import Path
 
-from . import airports, checks, jsonfile, paths, prompts, regions
+from . import airports, checks, jsonfile, paths, prompts, regions, visas
 
 
 def load_all() -> dict:
@@ -23,6 +24,7 @@ def load_all() -> dict:
         "countries": jsonfile.load(paths.COUNTRIES),
         "states": jsonfile.load(paths.STATES),
         "aliases": jsonfile.load(paths.ALIASES),
+        "visas": jsonfile.load(paths.VISAS),
     }
 
 
@@ -93,6 +95,15 @@ def cmd_prompts(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_visas(args: argparse.Namespace) -> int:
+    if not args.csv:
+        print(f"Download the table first:\n  curl -sLo visas.csv {visas.SOURCE_URL}")
+        return 2
+    rows = visas.build(Path(args.csv), args.updated)
+    print(f"wrote {len(rows) - 1} passports to {paths.VISAS.relative_to(paths.REPO)}")
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="waypoint_data", description=__doc__.splitlines()[0])
     sub = parser.add_subparsers(dest="command", required=True)
@@ -110,6 +121,10 @@ def main(argv: list[str] | None = None) -> int:
     pr = sub.add_parser("prompts", help="write the trip assistant's test set")
     pr.add_argument("--check", action="store_true", help="only check it's current")
     pr.set_defaults(run=cmd_prompts)
+    vi = sub.add_parser("visas", help="rebuild visas.json from the Passport Index dataset")
+    vi.add_argument("csv", nargs="?", help="path to passport-index-tidy-iso2.csv")
+    vi.add_argument("--updated", default="2026-02-17", help="the dataset's last-updated date")
+    vi.set_defaults(run=cmd_visas)
     args = parser.parse_args(argv)
     return args.run(args)
 

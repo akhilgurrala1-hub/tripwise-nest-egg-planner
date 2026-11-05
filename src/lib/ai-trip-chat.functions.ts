@@ -46,6 +46,7 @@ const draft = z
       .max(8)
       .default([]),
     cabin: z.enum(["economy", "premium", "business", "first"]).nullable().default(null),
+    stops: z.enum(["any", "one", "nonstop"]).nullable().default(null),
   })
   .nullable();
 

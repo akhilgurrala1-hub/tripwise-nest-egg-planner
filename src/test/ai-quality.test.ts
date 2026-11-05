@@ -203,6 +203,7 @@ describe("assistant answers are checked before they're shown", () => {
       transferCost: null,
       cities: [],
       cabin: null,
+      stops: null,
     },
   };
 

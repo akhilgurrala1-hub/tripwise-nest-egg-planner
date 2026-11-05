@@ -83,28 +83,29 @@ export function readMoney(text: string): MoneyFacts {
       new RegExp(`\\b${CUE}\\s*(?:is\\s*|of\\s*|at\\s*)?${NUM}\\b`),
       /\b(\d+(?:\.\d+)?)\s*(k|grand|thousand)\b/,
     ];
-    for (const [i, re] of patterns.entries()) {
-      const m = rest.match(re);
-      if (!m) continue;
-      const after = rest.slice(m.index! + m[0].length);
-      if (UNIT_AFTER.test(after)) continue;
-      if (TIME_AFTER.test(after) && i >= 2 && Number(m[1]) < 50) continue;
-      let amount: number;
-      let currency = "USD";
-      if (i === 0) {
-        amount = value(m[2]!, m[3]);
-        currency = SYMBOL[m[1]!] ?? "USD";
-      } else if (i === 1) {
-        amount = value(m[1]!, m[2]);
-        currency = WORD[m[3]!] ?? "USD";
-      } else if (i === 2) {
-        amount = value(m[1]!, m[2]);
-        // "about 3" or "around 10" alone are rarely money.
-        if (amount < 50) continue;
-      } else amount = value(m[1]!, "k");
-      if (amount < 20 && !m[0].includes("k")) continue;
-      found.push({ amount, currency, index: m.index!, length: m[0].length });
-      break;
+    // Every match of each pattern: "max 1 stop ... budget 400" skips the first and reads the second.
+    outer: for (const [i, re] of patterns.entries()) {
+      for (const m of rest.matchAll(new RegExp(re.source, "g"))) {
+        const after = rest.slice(m.index! + m[0].length);
+        if (UNIT_AFTER.test(after)) continue;
+        if (TIME_AFTER.test(after) && i >= 2 && Number(m[1]) < 50) continue;
+        let amount: number;
+        let currency = "USD";
+        if (i === 0) {
+          amount = value(m[2]!, m[3]);
+          currency = SYMBOL[m[1]!] ?? "USD";
+        } else if (i === 1) {
+          amount = value(m[1]!, m[2]);
+          currency = WORD[m[3]!] ?? "USD";
+        } else if (i === 2) {
+          amount = value(m[1]!, m[2]);
+          // "about 3" or "around 10" alone are rarely money.
+          if (amount < 50) continue;
+        } else amount = value(m[1]!, "k");
+        if (amount < 20 && !m[0].includes("k")) continue;
+        found.push({ amount, currency, index: m.index!, length: m[0].length });
+        break outer;
+      }
     }
   }
   const hit = found[0];

@@ -151,6 +151,7 @@ const draft = (patch: Partial<TripDraft>): TripDraft => ({
   transferCost: null,
   cities: [],
   cabin: null,
+  stops: null,
   ...patch,
 });
 

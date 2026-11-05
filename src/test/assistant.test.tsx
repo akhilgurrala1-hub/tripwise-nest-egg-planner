@@ -38,6 +38,7 @@ const empty = {
   transferCost: null,
   cities: [],
   cabin: null,
+  stops: null,
 };
 
 beforeEach(() => {

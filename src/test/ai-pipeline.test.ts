@@ -175,6 +175,7 @@ const ANSWER = {
     transferCost: null,
     cities: [],
     cabin: null,
+    stops: null,
   },
 };
 

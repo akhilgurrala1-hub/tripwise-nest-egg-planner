@@ -13,6 +13,7 @@ import { LivePricesPanel } from "@/components/app/LivePricesPanel";
 import { AnimatedMoney, stagger } from "@/components/app/motion";
 import { PageHeader } from "@/components/app/TripHeader";
 import { CabinPicker } from "@/components/app/plan/CabinPicker";
+import { StopsPicker } from "@/components/app/plan/StopsPicker";
 import {
   Accordion,
   AccordionContent,
@@ -306,11 +307,18 @@ function CategoryRow({ cat }: { cat: Category }) {
       fields = (
         <>
           {i.transportMode === "flight" && (
-            <CabinPicker
-              value={trip.setup.cabin}
-              onChange={(cabin) => tripActions.setCabin(cabin)}
-              className="col-span-full flex flex-wrap items-center gap-x-4 gap-y-2"
-            />
+            <>
+              <CabinPicker
+                value={trip.setup.cabin}
+                onChange={(cabin) => tripActions.setCabin(cabin)}
+                className="col-span-full flex flex-wrap items-center gap-x-4 gap-y-2"
+              />
+              <StopsPicker
+                value={trip.setup.flightStops}
+                onChange={(stops) => tripActions.setFlightStops(stops)}
+                className="col-span-full flex flex-wrap items-center gap-x-4 gap-y-2"
+              />
+            </>
           )}
           {fareMode && (
             <InputCell

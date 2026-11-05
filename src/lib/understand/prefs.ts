@@ -3,7 +3,14 @@
  * style, interests, what's already taken care of, and whether they don't know
  * where to go yet ("idk", "surprise me", "somewhere warm").
  */
-import type { Cabin, Interest, TransportMode, TravelStyle, TripType } from "../demo-data";
+import type {
+  Cabin,
+  FlightStops,
+  Interest,
+  TransportMode,
+  TravelStyle,
+  TripType,
+} from "../demo-data";
 
 export interface Covered {
   lodging: boolean;
@@ -16,6 +23,8 @@ export interface PrefFacts {
   tripType?: TripType;
   transportMode?: TransportMode;
   cabin?: Cabin;
+  /** Stops they'll take on flights */
+  stops?: FlightStops;
   style?: TravelStyle;
   interests: Interest[];
   covered: Partial<Covered>;
@@ -145,6 +154,30 @@ export function readPrefs(text: string): PrefFacts {
   )
     out.cabin = "economy";
 
+  // Stops on flights.
+  if (
+    has(
+      t,
+      /\b(non ?stop|direct)( flights?| only| please| if possible)?\b|\bno (layovers?|stops|connections|stopovers?)\b|\bwithout (a |any )?(layovers?|stops?|connections?|stopovers?)\b|\bhate (layovers|connections)\b/,
+    ) &&
+    !has(t, /\b(non ?stop|direct) (is not|isnt|not) (needed|necessary|required)\b/)
+  )
+    out.stops = "nonstop";
+  else if (
+    has(
+      t,
+      /\b(1|one) (stop|layover|connection|stopover)s? (max|at most|is fine|is ok|is okay|okay|ok|fine)\b|\b(max(imum)?|at most|no more than|up to) (1|one) (stop|layover|connection|stopover)s?\b|\b(1|one) stop max\b/,
+    )
+  )
+    out.stops = "one";
+  else if (
+    has(
+      t,
+      /\b(stops|layovers?|connections?|stopovers?) (are |is )?(fine|ok|okay|no problem|not a problem)\b|\bdo not mind (stops|layovers?|connections?|a layover|a stopover)\b|\b(any|any number of) stops\b|\b(long )?layovers? (are |is )?(fine|ok|okay)\b|\bcheapest (flight|option|one)?\s*(even )?(with|if it has) (stops|layovers?)\b/,
+    )
+  )
+    out.stops = "any";
+
   // Style.
   if (
     has(
@@ -173,7 +206,32 @@ export function readPrefs(text: string): PrefFacts {
 
   // What's taken care of.
   const family =
-    /\b(stay(ing)? with|crash(ing)? (with|at)|at) (my |our )?(parents|mom|dad|family|grand(ma|pa|parents)|aunt|uncle|cousins?|friends?|brother|sister|in laws|folks)s?('s)?( place| house| apartment| condo)?\b/;
+    /\b(stay(ing)? (with|at)|crash(ing)? (with|at|on)|at) (a |my |our |some )?(parents|mom|dad|family|grand(ma|pa|parents)|aunt|uncle|cousins?|friends?|brother|sister|in laws|folks|relatives?|boyfriend|girlfriend|partner)s?('s)?( place| house| apartment| condo| couch)?\b/;
+  // "no hotel needed", "we don't need a hotel", "the hotel is paid by work",
+  // "we already have an airbnb": nothing to pay for a place to stay.
+  const STAY =
+    "(hotels?|accommodations?|lodging|a place to stay|place to stay|rooms?|airbnbs?|stays?|housing)";
+  const noStay = [
+    new RegExp(
+      `\\b(do not|did not|will not|wont|no|never) (need|want|require|book|pay for)( a| an| any)? ${STAY}\\b`,
+    ),
+    new RegExp(`\\bno ${STAY}( needed| required| necessary| please)?\\b`),
+    new RegExp(`\\bwithout( a| any)? ${STAY}\\b`),
+    new RegExp(
+      `\\b${STAY} (is |are |will be )?(already )?(covered|paid( for)?|booked|taken care of|sorted|included|comped|free|on (my|our|the) (company|work|job|employer))\\b`,
+    ),
+    new RegExp(
+      `\\b(work|my company|the company|my job|my employer|the conference|the university|school) (is )?(pays?|paying|covers?|covering|gives?|provides?|providing|booked|books)( for)?( the| my| our)? ${STAY}\\b`,
+    ),
+    /\b(already|we|i) (have|got|booked|paid for|reserved) (a |an |the |our |my )?(place|hotel|airbnb|room|accommodation|rental|condo|cabin|villa|apartment)\b.*\b(already|paid|booked)\b|\balready (have|booked|got|paid for|reserved) (a |an |the |our |my )?(place|hotel|airbnb|room|accommodation|rental|condo|cabin|villa|apartment|lodging|stay)\b/,
+    /\b(couch ?surf(ing)?|sleep(ing)? (in|at) (my|our|the) (car|van|rv|camper)|living in (my|our) (van|rv))\b/,
+  ];
+  // A question ("is the hotel booked?") isn't saying it's taken care of.
+  const asking =
+    /\b(is|are|was|were) (the |my |our )?(hotels?|rooms?|airbnb|stay|accommodations?) (already )?(booked|paid|covered)\b/.test(
+      t,
+    );
+  if (!asking && noStay.some((re) => re.test(t))) out.covered.lodging = true;
   if (
     has(t, family) ||
     has(

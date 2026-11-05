@@ -91,6 +91,7 @@ export function LivePricesPanel({ className }: { className?: string }) {
           originAirport: air.codes[0] ?? "",
           destinationAirport: /^[A-Z]{3}$/.test(destAirport) ? destAirport : (air.codes[1] ?? ""),
           cabin: trip.setup.cabin ?? "economy",
+          stops: trip.setup.flightStops ?? "any",
           // Multi-city: each city's own nights, so every leg and stay is priced.
           cities:
             legs.length > 1

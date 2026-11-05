@@ -143,3 +143,27 @@ describe("entry rules name the country", () => {
     expect(entry.title).toBe("Entry rules for Italy");
   });
 });
+
+describe("entry rules for their passport", () => {
+  it("says what this passport needs, with the source date", () => {
+    const entry = prepChecklist({
+      startDate: "2027-06-10",
+      endDate: "2027-06-20",
+      homeCountry: "US",
+      destCountry: "IT",
+      destName: "Rome",
+      destCountryName: "Italy",
+      tripType: "flight",
+      transportMode: "flight",
+      totalBudget: 2000,
+      entry: {
+        passportName: "United States",
+        text: "visa-free for up to 90 days",
+        updated: "2026-02-17",
+      },
+    }).find((p) => p.key === "prep-entry")!;
+    expect(entry.detail).toMatch(
+      /On a United States passport: visa-free for up to 90 days \(Passport Index, 2026-02-17\)/,
+    );
+  });
+});

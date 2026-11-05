@@ -12,6 +12,7 @@ RULES = DATA / "rules.json"
 COUNTRIES = DATA / "countries.json"
 STATES = DATA / "states.json"
 ALIASES = DATA / "place-aliases.json"
+VISAS = DATA / "visas.json"
 
 #: Files whose layout `fmt` owns (rules.json is small and hand-formatted).
-RECORD_FILES = (AIRPORTS, PLACES, CRUISES, COUNTRIES, STATES, ALIASES)
+RECORD_FILES = (AIRPORTS, PLACES, CRUISES, COUNTRIES, STATES, ALIASES, VISAS)

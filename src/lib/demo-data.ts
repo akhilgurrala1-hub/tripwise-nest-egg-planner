@@ -896,6 +896,16 @@ export function buildCatalogCruise(c: CatalogCruise): DemoDestination {
 }
 
 /** Flight cabins, with how much more each typically costs than economy (estimates). */
+/** How many stops they'll take on a flight: any, one at most, or nonstop only. */
+export type FlightStops = "any" | "one" | "nonstop";
+export const FLIGHT_STOPS: { id: FlightStops; label: string; short: string }[] = [
+  { id: "any", label: "Any number of stops", short: "Any" },
+  { id: "one", label: "One stop at most", short: "1 stop max" },
+  { id: "nonstop", label: "Nonstop only", short: "Nonstop" },
+];
+export const flightStopsInfo = (s: FlightStops | null | undefined) =>
+  FLIGHT_STOPS.find((x) => x.id === (s ?? "any"))!;
+
 export type Cabin = "economy" | "premium" | "business" | "first";
 export const CABINS: { id: Cabin; label: string; short: string; multiplier: number }[] = [
   { id: "economy", label: "Economy", short: "Economy", multiplier: 1 },

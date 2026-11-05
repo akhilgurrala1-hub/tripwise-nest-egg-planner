@@ -214,3 +214,87 @@ describe("checking the AI's answers", () => {
     expect(lines.some((l) => /Travelers: 2/.test(l))).toBe(true);
   });
 });
+
+describe("no hotel means no hotel money", () => {
+  it("leaves lodging out of the budget, the booking list and the plan", async () => {
+    const { setupFromDraft } = await import("@/lib/assistant");
+    const { buildTrip, sampleSetup } = await import("@/lib/trip-store");
+    const { calculateBudget, tripShape } = await import("@/lib/budget");
+    const { bookingPlan } = await import("@/lib/booking");
+    const { destinationFor } = await import("@/lib/demo-data");
+    const u = understand(
+      [
+        {
+          role: "user",
+          content: "Rome then Florence for a week in May, 2 of us, we don't need a hotel",
+        },
+      ],
+      ctx,
+    );
+    const setup = setupFromDraft(u.draft, sampleSetup(), ctx.today);
+    const trip = buildTrip(setup);
+    const shape = tripShape(setup.startDate, setup.endDate, setup.travelers);
+    const totals = calculateBudget(trip.inputs, shape, setup.totalBudget, setup.emergencyFund);
+    expect(totals.categories.accommodations).toBe(0);
+    expect(
+      bookingPlan(trip, destinationFor(setup), shape, totals).some((i) => i.kind === "hotel"),
+    ).toBe(false);
+  });
+
+  it("keeps hotels for people who want one", () => {
+    for (const m of [
+      "we need a hotel near the beach",
+      "find me a hotel in rome",
+      "is the hotel booked?",
+      "we have a hotel in mind",
+    ])
+      expect(understand([{ role: "user", content: m }], ctx).draft.covered.lodging).toBe(false);
+  });
+});
+
+describe("nonstop or stops", () => {
+  const stops = (m: string) => understand([{ role: "user", content: m }], ctx).draft.stops;
+  it("reads how they feel about stops", () => {
+    expect(stops("Tokyo in April for a week, nonstop flights only")).toBe("nonstop");
+    expect(stops("london in may, 2 of us, no layovers please")).toBe("nonstop");
+    expect(stops("direct flight to cancun next month")).toBe("nonstop");
+    expect(stops("bali for 2 weeks, one stop max")).toBe("one");
+    expect(stops("rome in june, 1 layover is fine")).toBe("one");
+    expect(stops("cheapest flights to lisbon, layovers are fine")).toBe("any");
+    expect(stops("paris in march, i dont mind stops")).toBe("any");
+    expect(stops("paris in march")).toBeNull();
+  });
+
+  it("asks once for a flight, and every tap answer is understood", () => {
+    const first = chat("Tokyo for a week in April, just me").answer;
+    expect(first.fields).toContain("stops");
+    const q = first.questions[first.fields.indexOf("stops")]!;
+    const want = ["nonstop", "one", "any"];
+    q.options.forEach((o, i) =>
+      expect(chat("Tokyo for a week in April, just me", o).u.draft.stops).toBe(want[i]),
+    );
+  });
+
+  it("goes from the conversation to the trip and its booking links", async () => {
+    const { setupFromDraft } = await import("@/lib/assistant");
+    const { buildTrip, sampleSetup } = await import("@/lib/trip-store");
+    const { calculateBudget, tripShape } = await import("@/lib/budget");
+    const { bookingPlan } = await import("@/lib/booking");
+    const { destinationFor } = await import("@/lib/demo-data");
+    const u = understand(
+      [{ role: "user", content: "Tokyo for a week in April, just me, nonstop only" }],
+      ctx,
+    );
+    const setup = setupFromDraft(u.draft, { ...sampleSetup(), origin: "Charlotte, NC" }, ctx.today);
+    expect(setup.flightStops).toBe("nonstop");
+    const trip = buildTrip(setup);
+    const shape = tripShape(setup.startDate, setup.endDate, setup.travelers);
+    const totals = calculateBudget(trip.inputs, shape, setup.totalBudget, setup.emergencyFund);
+    const flight = bookingPlan(trip, destinationFor(setup), shape, totals, "", ["CLT", "HND"]).find(
+      (i) => i.key === "flight",
+    )!;
+    expect(flight.detail).toMatch(/Nonstop only/);
+    expect(flight.links[0]!.url).toMatch(/nonstop/i);
+    expect(flight.links.find((l) => l.label === "KAYAK")!.url).toMatch(/fs=stops=0/);
+  });
+});

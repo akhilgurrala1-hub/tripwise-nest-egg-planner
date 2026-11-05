@@ -50,7 +50,7 @@ const MONTH =
   "(january|february|march|april|may|june|july|august|september|october|november|december|jan|feb|mar|apr|jun|jul|aug|sept|sep|oct|nov|dec)";
 /** A day of the month, never a count ("september 9 people", "july 3 grand"). */
 const DAYNUM =
-  "(\\d{1,2})(?:st|nd|rd|th)?(?!\\d|\\s*-?\\s*(?:people|persons?|ppl|adults?|kids?|children|nights?|nites|days?|weeks?|months?|of us|friends|buddies|couples|guests|travell?ers|stars?|grand|thousand|k\\b|dollars|bucks|euros?|pounds?|%))";
+  "(\\d{1,2})(?:st|nd|rd|th)?(?!\\d|\\s*-?\\s*(?:people|persons?|ppl|adults?|kids?|children|nights?|nites|days?|weeks?|months?|of us|friends|buddies|couples|guests|travell?ers|stars?|grand|thousand|k|dollars|bucks|euros?|pounds?)\\b|\\s*%)";
 const WEEKDAYS: Record<string, number> = {
   sunday: 0,
   sun: 0,
@@ -255,7 +255,7 @@ export function readWhen(text: string, today: string): WhenFacts {
   if (!exact.length) {
     // "march 3 - 7", "march 3 to april 2", "march 3rd, 2027", "from june 1 until june 8"
     const re = new RegExp(
-      `\\b${MONTH}\\.? ${DAYNUM}(?:,? (20\\d\\d))?(?:\\s*(?:-|to|through|thru|until|and|till)\\s*(?:${MONTH}\\.? )?${DAYNUM}(?:,? (20\\d\\d))?)?\\b`,
+      `\\b${MONTH}\\.? ${DAYNUM}(?:,? (20[2-4]\\d)(?!\\s*(?:dollars|bucks|k\\b|usd|euros?|pounds?|budget)))?(?:\\s*(?:-|to|through|thru|until|and|till)\\s*(?:${MONTH}\\.? )?${DAYNUM}(?:,? (20[2-4]\\d)(?!\\s*(?:dollars|bucks|k\\b|usd|euros?|pounds?|budget)))?)?\\b`,
     );
     const m = rest.match(re);
     if (m && !(m[1] === "may" && !m[2])) {
@@ -275,7 +275,7 @@ export function readWhen(text: string, today: string): WhenFacts {
   if (!exact.length) {
     // "3rd of march", "3-7 march", "14 feb to 20 feb"
     const re = new RegExp(
-      `(?<!(?:group|party|family|team|crew|squad) of )\\b${DAYNUM}(?:\\s*(?:-|to|through|until)\\s*${DAYNUM})? (?:of )?${MONTH}\\b(?:,? (20\\d\\d))?(?:\\s*(?:-|to|through|until)\\s*${DAYNUM} (?:of )?${MONTH}\\b)?`,
+      `(?<!(?:group|party|family|team|crew|squad) of )\\b${DAYNUM}(?:\\s*(?:-|to|through|until)\\s*${DAYNUM})? (?:of )?${MONTH}\\b(?:,? (20[2-4]\\d)(?!\\s*(?:dollars|bucks|k\\b|usd|euros?|pounds?|budget)))?(?:\\s*(?:-|to|through|until)\\s*${DAYNUM} (?:of )?${MONTH}\\b)?`,
     );
     const m = rest.match(re);
     if (m) {
@@ -406,7 +406,7 @@ export function readWhen(text: string, today: string): WhenFacts {
   // 4. Months: "in march", "early june", "march 2027", "next april".
   if (!out.startDate) {
     const re = new RegExp(
-      `\\b(?:(early|mid|late|end of|beginning of|start of|the end of) )?(?:(next|this) )?${MONTH}\\b(?:,? (20\\d\\d))?`,
+      `\\b(?:(early|mid|late|end of|beginning of|start of|the end of) )?(?:(next|this) )?${MONTH}\\b(?:,? (20[2-4]\\d)(?!\\s*(?:dollars|bucks|k\\b|usd|euros?|pounds?|budget)))?`,
       "g",
     );
     for (const m of rest.matchAll(re)) {

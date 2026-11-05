@@ -28,6 +28,7 @@ export type AskField =
   | "interests"
   | "budget"
   | "cabin"
+  | "stops"
   | "transport";
 
 export interface LocalQuestion {
@@ -96,6 +97,7 @@ export const emptyDraft = (): TripDraft => ({
   transferCost: null,
   cities: [],
   cabin: null,
+  stops: null,
 });
 
 const BARE_NUMBER =
@@ -274,6 +276,7 @@ export function understand(
     if (p.tripType) draft.tripType = p.tripType;
     if (p.transportMode) draft.transportMode = p.transportMode;
     if (p.cabin) draft.cabin = p.cabin;
+    if (p.stops) draft.stops = p.stops;
     if (p.style) draft.style = p.style;
     for (const i of p.interests) if (!draft.interests.includes(i)) draft.interests.push(i);
     for (const k of ["lodging", "meals", "activities", "localTransport"] as const)
@@ -281,6 +284,12 @@ export function understand(
     if (p.unsure && !cities.length) u.unsure = true;
     // Answering "where?" with a kind of place ("mountains", "a big city") means ideas, please.
     if (asked.includes("destination") && !cities.length) u.unsure = true;
+    if (
+      asked.includes("stops") &&
+      !p.stops &&
+      /^\s*(any|cheapest|whatever|do not care|does not matter|either)\b/.test(text)
+    )
+      draft.stops = "any";
     if (asked.includes("cabin") && !p.cabin) {
       const c = text.match(/^\s*(economy|premium|business|first)\b/)?.[1];
       if (c) draft.cabin = c as TripDraft["cabin"];
@@ -631,6 +640,12 @@ export function planQuestions(
       question: "What do you want to do there?",
       options: ["Great food", "Outdoors and hiking", "Museums and history", "Nightlife"],
     });
+  if (d.tripType === "flight" && !d.stops && !answered.has("stops"))
+    optional.push({
+      field: "stops",
+      question: "Nonstop only, or are stops OK?",
+      options: ["Nonstop only", "One stop is fine", "Any, cheapest"],
+    });
   if (d.tripType === "flight" && !d.cabin && !answered.has("cabin"))
     optional.push({
       field: "cabin",
@@ -650,6 +665,11 @@ export function planQuestions(
       options: ["Under $1,000", "About $2,500", "$5,000 or more", "Work it out for me"],
     });
 
+  // On a flight, how they fly (stops, cabin) shapes the booking most, so it comes first.
+  if (d.tripType === "flight") {
+    const rank = (f: AskField) => (f === "stops" ? 0 : f === "cabin" ? 1 : 2);
+    optional.sort((a, b) => rank(a.field) - rank(b.field));
+  }
   const required = qs.slice(0, max);
   // While basics are missing, at most one extra; once ready, up to two to go deeper.
   const room = required.length ? Math.min(1, max - required.length) : 2;

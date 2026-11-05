@@ -316,6 +316,11 @@ STYLES = [
     ("5 star", "luxury"), ("treat ourselves", "luxury"), ("comfortable", "comfort"),
     ("mid range", "comfort"), ("nice but not crazy", "comfort"),
 ]  # fmt: skip
+STOPS = [
+    ("nonstop only", "nonstop"), ("direct flights", "nonstop"), ("no layovers", "nonstop"),
+    ("one stop max", "one"), ("1 layover is fine", "one"), ("max 1 stop", "one"),
+    ("layovers are fine", "any"), ("dont mind stops", "any"),
+]  # fmt: skip
 CABINS = [
     ("business class", "business"),
     ("first class", "first"),
@@ -524,6 +529,10 @@ def case_single(rng: random.Random, pools: Pools, today: date) -> dict:
         text, cabin = rng.choice(CABINS)
         parts.append(text)
         exp["cabin"] = cabin
+    if rng.random() < 0.12 and place.country not in ("", "US"):
+        text, stops = rng.choice(STOPS)
+        parts.append(text)
+        exp["stops"] = stops
     if rng.random() < 0.15 and place.country == "US":
         text, tt = rng.choice(TRIP_TYPES)
         parts.append(text)
@@ -622,8 +631,7 @@ def case_origin(rng: random.Random, pools: Pools, today: date) -> dict:
 def case_covered(rng: random.Random, pools: Pools, today: date) -> dict:
     dest = rng.choice(pools.domestic)
     t = typed(dest, rng)
-    form = rng.randint(0, 3)
-    text, cov = [
+    forms = [
         (
             f"going home to {t} for christmas, staying with my parents",
             {"lodging": True, "meals": True},
@@ -631,7 +639,14 @@ def case_covered(rng: random.Random, pools: Pools, today: date) -> dict:
         (f"visiting {t}, staying with friends", {"lodging": True}),
         (f"{t} for a week, just need the flight", {"activities": True}),
         (f"staying with my family in {t} for thanksgiving", {"lodging": True, "meals": True}),
-    ][form]  # fmt: skip
+        (f"{t} for a week, we don't need a hotel", {"lodging": True}),
+        (f"{t} next month, no hotel needed", {"lodging": True}),
+        (f"{t} for 3 nights, dont need accommodation", {"lodging": True}),
+        (f"work trip to {t}, the hotel is paid by work", {"lodging": True}),
+        (f"{t} for 5 nights, we already booked an airbnb", {"lodging": True}),
+        (f"{t}, staying with a friend", {"lodging": True}),
+    ]
+    text, cov = forms[rng.randrange(len(forms))]
     exp: dict = {"dest": plain(dest.town), "covered": cov}
     if rng.random() < 0.5:
         text += ", just me"
