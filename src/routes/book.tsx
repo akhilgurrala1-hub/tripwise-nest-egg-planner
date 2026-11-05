@@ -49,6 +49,10 @@ import { tripActions, useTrip } from "@/lib/trip-store";
 import { useAirports, useTripAirports } from "@/lib/live/use-airports";
 import { useHomePlace } from "@/lib/live/use-home";
 import { countryName, countryOfPlace } from "@/lib/understand/gazetteer";
+import { LayoverHelper } from "@/components/app/LayoverHelper";
+import { durationLabel } from "@/lib/layovers";
+import { useVisas } from "@/lib/live/use-visas";
+import { entryRule, entryText } from "@/lib/visas";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/book")({
@@ -96,6 +100,9 @@ function BookPage() {
   const firstPlace = legs[0]?.name ?? dest.name;
   const destCountry = dest.country ?? countryOfPlace(firstPlace, airports);
   const homeCountry = home?.country ?? "US";
+  const passport = trip.setup.passport ?? homeCountry;
+  const visas = useVisas();
+  const entry = visas && destCountry ? entryRule(visas, passport, destCountry) : null;
   const abroad = !!destCountry && destCountry !== homeCountry;
   const today = todayIso();
   const groups = bookingTimeline(items, trip.bookings, {
@@ -111,6 +118,10 @@ function BookPage() {
     destCountry,
     destName: firstPlace,
     destCountryName: countryName(destCountry),
+    entry:
+      entry && visas
+        ? { passportName: countryName(passport), text: entryText(entry), updated: visas.updated }
+        : null,
     tripType: trip.setup.tripType,
     transportMode: trip.setup.transportMode,
     totalBudget: trip.setup.totalBudget,
@@ -181,6 +192,7 @@ function BookPage() {
             promises.
           </p>
           {prep.length > 0 && <PrepList items={prep} />}
+          {trip.setup.transportMode === "flight" && <LayoverHelper homeCountry={homeCountry} />}
           <LivePricesPanel className="animate-rise" />
         </div>
 
@@ -365,7 +377,14 @@ function BookingCard({
         }))
       : item.key === "flight" && trip.live?.flights
         ? trip.live.flights.options.slice(0, 2).map((f) => ({
-            name: f.airlines.join(" + "),
+            // "Turkish Airlines · via IST 9h 20m": where they'd connect, and for how long.
+            name: `${f.airlines.join(" + ")}${
+              f.stops === 0
+                ? " · nonstop"
+                : f.layovers?.length
+                  ? ` · via ${f.layovers.map((l) => `${l.code} ${durationLabel(l.minutes)}`).join(", ")}`
+                  : ` · ${f.stops} stop${f.stops === 1 ? "" : "s"}`
+            }`,
             price: `${formatMoney(f.perPerson)} pp`,
             url: trip.live!.flights!.bookingUrl ?? "",
           }))

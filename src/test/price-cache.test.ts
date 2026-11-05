@@ -175,3 +175,52 @@ describe("live prices reuse a recent identical search", () => {
     expect(again.ok && again.prices.flights?.perPerson).toBe(240);
   });
 });
+
+describe("flight searches follow the stops choice and keep layovers", () => {
+  beforeEach(() => vi.stubEnv("SERPAPI_API_KEY", "test-key"));
+  afterEach(() => {
+    vi.unstubAllEnvs();
+    vi.unstubAllGlobals();
+  });
+
+  it("asks for nonstop only and reads each connection", async () => {
+    const urls: URL[] = [];
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (url: string) => {
+        const u = new URL(url);
+        urls.push(u);
+        return json({
+          best_flights: [
+            {
+              price: 1400,
+              total_duration: 1300,
+              flights: [{ airline: "Turkish" }, { airline: "Turkish" }],
+              layovers: [
+                { duration: 560, name: "Istanbul Airport", id: "IST", overnight: true },
+                { duration: -5, name: "Broken", id: "XX" },
+              ],
+            },
+          ],
+        });
+      }),
+    );
+
+    const res = await fetchLivePrices(
+      {
+        ...REQ,
+        includeHotels: false,
+        originAirport: "ORD",
+        destinationAirport: "BKK",
+        stops: "nonstop",
+        startDate: "2026-12-14",
+        endDate: "2026-12-20",
+      },
+      memoryCache(),
+    );
+    expect(urls[0]!.searchParams.get("stops")).toBe("1");
+    expect(res.ok && res.prices.flights?.options[0]?.layovers).toEqual([
+      { code: "IST", name: "Istanbul Airport", minutes: 560, overnight: true },
+    ]);
+  });
+});

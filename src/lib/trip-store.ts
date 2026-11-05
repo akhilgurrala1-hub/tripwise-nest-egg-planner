@@ -162,6 +162,13 @@ export const tripActions = {
     return fitted.note;
   },
   /** Fly in another cabin: fares follow, and so does a budget Waypoint chose. */
+  /** Which passport they travel on: entry rules and layover advice follow it. */
+  setPassport(passport: string) {
+    setState((s) => ({
+      ...s,
+      setup: { ...s.setup, passport: passport.slice(0, 2).toUpperCase() },
+    }));
+  },
   /** Nonstop only, one stop at most, or any: live flight searches and booking links follow it. */
   setFlightStops(flightStops: FlightStops) {
     setState((s) => ({ ...s, setup: { ...s.setup, flightStops } }));

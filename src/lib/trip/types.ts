@@ -43,6 +43,8 @@ export interface TripSetup {
   cabin?: Cabin | null;
   /** Stops they'll take on flights (any when unset): live searches and booking links follow it */
   flightStops?: FlightStops | null;
+  /** The traveler's passport (ISO country), for entry rules and layovers; home country when unset */
+  passport?: string | null;
   /**
    * The budget was chosen by Waypoint, not typed by the traveler: it follows the
    * trip's costs (new cities, cabin, trip type) until the traveler sets their own.

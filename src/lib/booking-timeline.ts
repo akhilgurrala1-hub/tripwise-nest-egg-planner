@@ -132,6 +132,8 @@ export interface PrepContext {
   destName: string;
   /** The destination country's name ("Italy"), for the entry-rules line */
   destCountryName?: string;
+  /** What their passport needs there, from the visa table ("visa-free for up to 90 days") */
+  entry?: { passportName: string; text: string; updated: string } | null;
   tripType: string;
   transportMode: string;
   /** The trip's total budget, to suggest insurance for big trips */
@@ -167,8 +169,9 @@ export function prepChecklist(c: PrepContext): PrepItem[] {
     out.push({
       key: "prep-entry",
       title: `Entry rules for ${where}`,
-      detail:
-        "Check visas, electronic travel permits and any health rules before you book flights.",
+      detail: c.entry
+        ? `On a ${c.entry.passportName} passport: ${c.entry.text} (Passport Index, ${c.entry.updated}). Rules change, so confirm before you book flights.`
+        : "Check visas, electronic travel permits and any health rules before you book flights.",
       links:
         c.homeCountry === "US"
           ? [

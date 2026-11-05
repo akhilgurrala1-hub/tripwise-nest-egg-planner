@@ -193,12 +193,15 @@ def check_aliases(aliases: Sequence[Sequence[str]]) -> list[str]:
 
 
 def check_all(data: Record) -> list[str]:
+    from .visas import check_visas
+
     """Every check over the loaded files: airports, places, cruises (keys as in paths)."""
     rules = data["rules"]
     return (
         check_airports(data["airports"])
         + check_countries(data["countries"], data["states"])
         + check_aliases(data["aliases"])
+        + check_visas(data["visas"])
         + check_places(data["places"], rules, data["airports"])
         + check_cruises(data["cruises"], rules)
     )

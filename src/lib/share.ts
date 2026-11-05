@@ -23,7 +23,7 @@ export function sharedTripPayload(trip: TripState): SharedTrip {
     ...rest
   } = trip;
   // The start city's name is enough; exact coordinates can be someone's home or dorm.
-  const { originPoint: _originPoint, ...setup } = rest.setup;
+  const { originPoint: _originPoint, passport: _passport, ...setup } = rest.setup;
   return { ...rest, setup };
 }
 
@@ -114,7 +114,7 @@ export function cleanSharedTrip(raw: unknown): SharedTrip | null {
   if (typeof s.startDate !== "string" || typeof s.endDate !== "string") return null;
   if (!t.roadTrip || typeof t.roadTrip !== "object") return null;
   const travelers = Math.min(MAX_TRAVELERS, Math.max(1, Math.round(Number(s.travelers) || 1)));
-  const { originPoint: _originPoint, ...setup } = s;
+  const { originPoint: _originPoint, passport: _passport, ...setup } = s;
   return {
     version: t.version ?? 6,
     setup: { ...setup, travelers },
