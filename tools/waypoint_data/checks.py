@@ -64,8 +64,8 @@ def check_airports(rows: Sequence[Sequence[Any]]) -> list[str]:
             out.append(f"{where}: code isn't three capital letters")
         if not valid_point(lat, lon):
             out.append(f"{where}: location is off the map")
-        if size not in ("L", "M"):
-            out.append(f"{where}: size must be L or M")
+        if size not in ("H", "L", "M"):
+            out.append(f"{where}: size must be H, L or M")
         if not COUNTRY.fullmatch(str(country)):
             out.append(f"{where}: country isn't a two-letter code")
         if not str(name).strip():

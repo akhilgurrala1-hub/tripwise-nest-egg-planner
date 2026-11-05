@@ -20,7 +20,7 @@ export type AirportRow = [
   string,
   number,
   number,
-  "L" | "M",
+  "H" | "L" | "M",
   string,
   string,
   string,
@@ -37,6 +37,8 @@ export interface Airport {
   lon: number;
   /** Large hubs have the most flights (and usually the best fares) */
   large: boolean;
+  /** The city's main international airport, where it has more than one large one */
+  hub: boolean;
   /** State or province code in the US, Canada and Australia ("NC"), else "" */
   region: string;
   /** Other names for the town ("Firenze" for Florence) */
@@ -57,7 +59,8 @@ export const toAirport = ([
   code,
   lat,
   lon,
-  large: size === "L",
+  large: size !== "M",
+  hub: size === "H",
   city,
   country,
   name,
@@ -82,8 +85,14 @@ export interface NearbyAirport extends Airport {
 
 /** How much nearer a small airport must be to beat a big one (big hubs mean more flights). */
 const HUB_BONUS_MILES = 45;
+/** And a city's main hub beats its other large airports unless they're much nearer (FCO, not Ciampino). */
+const MAIN_HUB_BONUS_MILES = 30;
 /** Further than this, there's no airport for the place (a remote island, a park far from any). */
 export const MAX_AIRPORT_MILES: number = rules.maxAirportMiles;
+
+/** Miles, less the bonus a bigger airport earns. */
+const reach = (a: NearbyAirport) =>
+  a.miles - (a.large ? HUB_BONUS_MILES : 0) - (a.hub ? MAIN_HUB_BONUS_MILES : 0);
 
 /**
  * Airports near a place, best first: a large hub within reach beats a nearer
@@ -106,10 +115,7 @@ export function airportsNear(
     })
     .map((a) => ({ ...a, miles: Math.round(milesBetween(point, a)) }))
     .filter((a) => a.miles <= maxMiles)
-    .sort(
-      (a, b) =>
-        a.miles - (a.large ? HUB_BONUS_MILES : 0) - (b.miles - (b.large ? HUB_BONUS_MILES : 0)),
-    )
+    .sort((a, b) => reach(a) - reach(b))
     .slice(0, limit);
 }
 
@@ -177,7 +183,11 @@ export function airportByName(airports: readonly Airport[], name: string): Airpo
         : a.country === country || plain(a.name).includes(hint) || a.country.toLowerCase() === hint,
   );
   const pool = narrowed.length ? narrowed : matches;
-  return [...pool].sort((x, y) => Number(y.large) - Number(x.large))[0] ?? null;
+  return (
+    [...pool].sort(
+      (x, y) => Number(y.hub) - Number(x.hub) || Number(y.large) - Number(x.large),
+    )[0] ?? null
+  );
 }
 
 /** "ORD · Chicago O'Hare International Airport, 14 mi away" */

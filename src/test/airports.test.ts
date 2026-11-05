@@ -95,3 +95,11 @@ describe("airports by name, with states", () => {
     expect(airportByName(airports, "Paris, France")?.code).toMatch(/CDG|ORY/);
   });
 });
+
+describe("a city's main airport", () => {
+  it("flies Rome from Fiumicino and Chicago from O'Hare", () => {
+    expect(airportFor(airports, at(41.9, 12.5))?.code).toBe("FCO");
+    expect(airportFor(airports, at(41.88, -87.63))?.code).toBe("ORD");
+    expect(airportFor(airports, at(51.51, -0.13))?.code).toBe("LHR");
+  });
+});

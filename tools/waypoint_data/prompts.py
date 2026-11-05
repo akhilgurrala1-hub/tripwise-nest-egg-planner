@@ -412,7 +412,7 @@ def build_pools() -> Pools:
     # Big airports' towns, typed plainly, when the name means only that town.
     by_key: dict[str, set[tuple[str, str]]] = {}
     for a in airports:
-        if a[3] != "L" or not a[4]:
+        if a[3] not in ("H", "L") or not a[4]:
             continue
         by_key.setdefault(plain(a[4]), set()).add((a[4], a[5]))
     for key, towns in sorted(by_key.items()):

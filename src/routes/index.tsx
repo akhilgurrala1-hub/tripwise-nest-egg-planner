@@ -1,16 +1,17 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { ArrowRight, Minus, Plus } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 
 import { InterestChips, NumberField } from "@/components/app/bits";
 import { stagger } from "@/components/app/motion";
-import { RouteMap } from "@/components/app/Illustrations";
 import { DestinationPicker } from "@/components/app/plan/DestinationPicker";
 import { CoveragePicker } from "@/components/app/plan/CoveragePicker";
 import { OriginField } from "@/components/app/plan/OriginField";
 import { StylePicker } from "@/components/app/plan/StylePicker";
+import { Inspiration } from "@/components/app/plan/Inspiration";
+import { formatDateRange } from "@/components/app/TripHeader";
 import { TripAssistant } from "@/components/app/plan/TripAssistant";
 import { TripPreview } from "@/components/app/plan/TripPreview";
 import { TripTypePicker } from "@/components/app/TripTypePicker";
@@ -36,17 +37,20 @@ import {
   CUSTOM_DESTINATION_ID,
   INTERESTS,
   destinationFor,
+  getDestination,
   modeForTripType,
   travelPoint,
   tripTypeInfo,
   type TripType,
 } from "@/lib/demo-data";
 import { addDays, dateRangeError, inclusiveDays, isIsoDate, todayIso } from "@/lib/dates";
+import { markJustPlanned } from "@/lib/just-planned";
 import { useHomePlace } from "@/lib/live/use-home";
 import { useLocale } from "@/lib/live/use-locale";
 import { formatDistance } from "@/lib/locale";
 import { geocodeQuery, useDebouncedValue, useHydrated } from "@/lib/live/use-live";
 import {
+  currentTrip,
   destinationForTripType,
   suggestedBudget,
   tripActions,
@@ -81,7 +85,7 @@ function Welcome() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const hydrated = useHydrated();
-  const { trip } = useTrip();
+  const { trip, place: tripPlace } = useTrip();
   const home = useHomePlace();
   const { units } = useLocale();
   const [form, setForm] = useState<TripSetup>(trip.setup);
@@ -89,6 +93,22 @@ function Welcome() {
   const reserveTouched = useRef(false);
   // Waypoint picks the budget from the trip's costs until the traveler types their own.
   const [budgetOwn, setBudgetOwn] = useState(!trip.isSample && !trip.setup.budgetAuto);
+  // Phones: the pinned "Plan trip" bar waits until the manual steps, so the first screen
+  // has one thing to do (describe the trip) instead of two.
+  const [showBar, setShowBar] = useState(false);
+  useEffect(() => {
+    const el = document.getElementById("plan-steps");
+    if (!el || typeof IntersectionObserver === "undefined") {
+      setShowBar(true);
+      return;
+    }
+    const io = new IntersectionObserver(
+      ([e]) => setShowBar(!!e && (e.isIntersecting || e.boundingClientRect.top < 0)),
+      { rootMargin: "0px 0px -15% 0px" },
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
 
   // Pick up a saved (or personalized sample) trip until the traveler starts editing.
   useEffect(() => {
@@ -238,8 +258,8 @@ function Welcome() {
   const start = async (setup: TripSetup) => {
     // The budget is fitted after the places are found, so real distances never push it negative.
     const note = tripActions.startTrip(await locateAll(setup));
+    markJustPlanned(currentTrip().id);
     if (note) toast.message("Budget set to cover your trip", { description: note, duration: 9000 });
-    else toast.success("Your trip plan is ready");
     navigate({ to: "/dashboard" });
   };
 
@@ -292,24 +312,37 @@ function Welcome() {
 
   return (
     <div className="mx-auto max-w-6xl px-4 pt-6 pb-10 sm:pt-10">
-      <header className="animate-rise grid items-center gap-6 sm:grid-cols-[minmax(0,1fr)_260px] lg:grid-cols-[minmax(0,1fr)_340px] lg:gap-10">
-        <div>
-          <p className="eyebrow">New trip</p>
-          <h1 className="title-display mt-3 text-[46px] sm:text-[64px] lg:text-[72px]">
-            Plan a trip, <em className="text-primary">to the dollar.</em>
-          </h1>
-          <p className="mt-4 max-w-md text-[16px] leading-relaxed text-muted-foreground">
-            Describe your trip or fill in the steps below. Waypoint builds the budget, keeps an
-            emergency fund aside and plans each day.
-          </p>
-        </div>
-        <RouteMap className="hidden sm:block" />
-      </header>
-
-      <div className="mt-6 grid gap-8 sm:mt-8 lg:grid-cols-[minmax(0,1fr)_340px] lg:gap-10">
+      <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_340px] lg:gap-10">
         <div className="min-w-0">
-          <div className="animate-rise" style={stagger(1)}>
+          {/* A trip in progress: one tap back to it (unfinished things pull people back). */}
+          {!trip.isSample && (
+            <Link
+              to="/dashboard"
+              className="group animate-rise mb-6 flex items-center justify-between gap-3 rounded-xl border border-border bg-card px-4 py-3 text-sm transition-colors hover:border-primary"
+            >
+              <span className="min-w-0">
+                <span className="eyebrow block">Pick up where you left off</span>
+                <span className="mt-0.5 block truncate font-medium">
+                  {tripPlace} · {formatDateRange(trip.setup.startDate, trip.setup.endDate)}
+                </span>
+              </span>
+              <ArrowRight className="size-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5" />
+            </Link>
+          )}
+          {/* One question first: everything else on the page is optional detail. */}
+          <header className="animate-rise">
+            <p className="eyebrow">New trip</p>
+            <h1 className="title-display mt-3 text-[44px] sm:text-[64px] lg:text-[76px]">
+              Where to <em className="text-primary">next?</em>
+            </h1>
+            <p className="mt-3 max-w-lg text-[16px] leading-relaxed text-muted-foreground sm:text-[17px]">
+              Say it however you like. Waypoint works out the budget to the dollar, plans the days
+              and lists what to book.
+            </p>
+          </header>
+          <div className="animate-rise mt-6" style={stagger(1)}>
             <TripAssistant
+              variant="hero"
               homeCity={form.origin}
               from={originPoint}
               onBuild={(draft) => void start(fromDraft(draft))}
@@ -325,6 +358,35 @@ function Welcome() {
               }}
             />
           </div>
+
+          <Inspiration
+            setup={effective}
+            from={originPoint}
+            fromLabel={fromLabel === "home" ? "home" : fromLabel}
+            nights={shape.nights}
+            onPick={(destinationId, tripType) => {
+              destPicked.current = true;
+              touched.current = true;
+              update({
+                tripType,
+                destinationId,
+                customDestination: "",
+                destinationPoint: null,
+                cities: [],
+                transportMode: modeForTripType(tripType, form.transportMode),
+              });
+              toast(
+                `${getDestination(destinationId).name} it is. Adjust anything below, then plan the trip.`,
+                {
+                  action: {
+                    label: "See the plan",
+                    onClick: () =>
+                      document.getElementById("plan-steps")?.scrollIntoView({ behavior: "smooth" }),
+                  },
+                },
+              );
+            }}
+          />
 
           <h2
             id="plan-steps"
@@ -573,7 +635,13 @@ function Welcome() {
       </div>
 
       {/* Phones and tablets: summary + action pinned while scrolling */}
-      <div className="sticky bottom-[calc(4.5rem+env(safe-area-inset-bottom))] z-20 mt-6 md:bottom-4 lg:hidden">
+      <div
+        inert={!showBar}
+        className={cn(
+          "sticky bottom-[calc(4.5rem+env(safe-area-inset-bottom))] z-20 mt-6 transition-[opacity,translate] duration-300 ease-[var(--ease-out-quint)] md:bottom-4 lg:hidden",
+          showBar ? "opacity-100" : "pointer-events-none translate-y-3 opacity-0",
+        )}
+      >
         <div className="flex items-center justify-between gap-3 rounded-xl border border-border bg-card p-2 pl-4 shadow-lift">
           <div className="min-w-0 text-sm">
             <p className="truncate font-medium">{routeText}</p>
