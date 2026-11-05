@@ -15,7 +15,8 @@ import {
 import { addDays, isIsoDate, MAX_TRIP_DAYS } from "./dates";
 import { defaultEmergencyFund, MAX_TRAVELERS, type TripCoverage } from "./budget";
 import { MAX_CITIES, type TripCity } from "./multi-city";
-import { suggestedBudget, type TripSetup } from "./trip-store";
+import { suggestedBudget } from "./trip/budget-fit";
+import type { TripSetup } from "./trip/types";
 
 export type { TripDraft };
 
@@ -178,7 +179,7 @@ export function setupFromDraft(draft: TripDraft, base: TripSetup, today: string)
     cabin: draft.cabin ?? base.cabin ?? null,
   };
   // The traveler's number when they gave one; otherwise Waypoint picks it from the
-  // trip's costs (and keeps it covering the trip, see fitBudget in trip-store).
+  // trip's costs (and keeps it covering the trip, see fitBudget in trip/budget-fit).
   const stated = draft.totalBudget && draft.totalBudget > 0 ? Math.round(draft.totalBudget) : 0;
   const totalBudget = stated || suggestedBudget(next);
   return {

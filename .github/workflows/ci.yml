@@ -39,3 +39,30 @@ jobs:
 
       - name: Build
         run: bun run build
+
+  # The data in src/data (airports, places, cruises) is built and checked by the
+  # Python tools in tools/: valid ids, coordinates, vocabulary, an airport for every
+  # place suggested for flights, and the canonical one-record-per-line layout.
+  data:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: tools
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.13"
+
+      - name: Lint and format
+        run: |
+          uv run --locked ruff check .
+          uv run --locked ruff format --check .
+
+      - name: Tests
+        run: uv run --locked pytest
+
+      - name: Check data files
+        run: uv run --locked python -m waypoint_data check

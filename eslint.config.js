@@ -6,7 +6,7 @@ import reactRefresh from "eslint-plugin-react-refresh";
 import tseslint from "typescript-eslint";
 
 export default tseslint.config(
-  { ignores: ["dist", ".output", ".vinxi"] },
+  { ignores: ["dist", ".output", ".vinxi", "tools/.venv"] },
   {
     extends: [js.configs.recommended, ...tseslint.configs.recommended],
     files: ["**/*.{ts,tsx}"],
@@ -34,6 +34,28 @@ export default tseslint.config(
       ],
       "react-refresh/only-export-components": ["warn", { allowConstantExport: true }],
       "@typescript-eslint/no-unused-vars": "off",
+    },
+  },
+  {
+    // Code that runs in the browser never imports server-only modules (secrets,
+    // service keys, paid API calls). Types are fine: they vanish at build time.
+    // Server code is reached through `createServerFn` in `*.functions.ts`.
+    files: ["src/**/*.{ts,tsx}"],
+    ignores: ["src/**/*.server.ts", "src/**/*.functions.ts", "src/server.ts", "src/test/**"],
+    rules: {
+      "@typescript-eslint/no-restricted-imports": [
+        "error",
+        {
+          patterns: [
+            {
+              group: ["**/*.server", "**/*.server.ts"],
+              allowTypeImports: true,
+              message:
+                "Browser code can't import server-only modules. Call a server function from a `*.functions.ts` file instead (type imports are fine).",
+            },
+          ],
+        },
+      ],
     },
   },
   eslintPluginPrettier,

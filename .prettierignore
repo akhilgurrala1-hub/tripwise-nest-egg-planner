@@ -8,3 +8,6 @@ bun.lock
 routeTree.gen.ts
 # Lovable manages a block in this file
 AGENTS.md
+# Data files keep the one-record-per-line layout written by tools/waypoint_data (fmt)
+src/data/*.json
+tools/.venv

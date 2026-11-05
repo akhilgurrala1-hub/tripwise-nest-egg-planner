@@ -11,7 +11,11 @@
     "lint": "eslint .",
     "format": "prettier --write .",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit -p .",
+    "data:check": "cd tools && uv run python -m waypoint_data check",
+    "data:test": "cd tools && uv run pytest && uv run ruff check . && uv run ruff format --check .",
+    "check": "bun run typecheck && bun run lint && bun run test && bun run data:test"
   },
   "overrides": {
     "rolldown": "1.2.1"

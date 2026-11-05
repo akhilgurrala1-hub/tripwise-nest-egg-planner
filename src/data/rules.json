@@ -1,0 +1,10 @@
+{
+  "interests": ["nature", "food", "history", "beaches", "arts", "adventure", "family", "nightlife", "shopping"],
+  "tripTypes": ["road-trip", "flight", "cruise", "rail", "staycation"],
+  "placeTripTypes": ["road-trip", "flight", "rail"],
+  "tiers": ["value", "mid", "premium"],
+  "maxAirportMiles": 220,
+  "textLimits": { "name": 40, "town": 80, "region": 60, "tagline": 60 },
+  "placeFields": ["id", "name", "town", "region", "lat", "lon", "tagline", "tags", "types", "tier", "country"],
+  "cruiseFields": ["id", "name", "tagline", "port", "portPoint", "callTown", "callPoint", "tier", "tags", "country"]
+}
