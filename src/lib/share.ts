@@ -6,7 +6,7 @@
  * price listings.
  */
 import { MAX_TRAVELERS } from "./budget";
-import type { TripState } from "./trip-store";
+import type { TripState } from "./trip/types";
 
 export const SHARE_PATH = "/shared";
 

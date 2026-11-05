@@ -1,9 +1,15 @@
 import { describe, expect, it } from "vitest";
 
-import { AIRPORT_ROWS } from "@/lib/airports-data";
-import { airportByCode, airportFor, airportsNear, toAirport } from "@/lib/airports";
+import rows from "@/data/airports.json";
+import {
+  airportByCode,
+  airportFor,
+  airportsNear,
+  toAirport,
+  type AirportRow,
+} from "@/lib/airports";
 
-const airports = AIRPORT_ROWS.map(toAirport);
+const airports = (rows as unknown as AirportRow[]).map(toAirport);
 const at = (lat: number, lon: number) => ({ lat, lon });
 
 describe("finding the airport for a place", () => {

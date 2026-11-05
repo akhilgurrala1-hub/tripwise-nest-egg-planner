@@ -3,11 +3,15 @@
  * scripts/airports.py), so finding the airport for a city never depends on a
  * search: the nearest real airport to a place, by distance, preferring big ones.
  *
- * The table is ~90 KB gzipped, so it's loaded on demand (`loadAirports`) and kept
- * out of the first page load. The finding logic is pure and works on any list.
+ * The table (`src/data/airports.json`, built by `python -m waypoint_data airports`)
+ * is ~90 KB gzipped, so it's loaded on demand (`loadAirports`) and kept out of the
+ * first page load. The finding logic is pure and works on any list.
  */
+import rules from "../data/rules.json";
 import { milesBetween, type GeoPoint } from "./catalog";
-import type { AirportRow } from "./airports-data";
+
+/** One row of the table: [IATA, lat, lon, size (L large, M medium), city, country, name] */
+export type AirportRow = [string, number, number, "L" | "M", string, string, string];
 
 export interface Airport {
   code: string;
@@ -34,7 +38,9 @@ let all: Promise<Airport[]> | null = null;
 
 /** Every airport, loaded once. */
 export function loadAirports(): Promise<Airport[]> {
-  all ??= import("./airports-data").then((m) => m.AIRPORT_ROWS.map(toAirport));
+  all ??= import("../data/airports.json").then((m) =>
+    (m.default as unknown as AirportRow[]).map(toAirport),
+  );
   return all;
 }
 
@@ -46,7 +52,7 @@ export interface NearbyAirport extends Airport {
 /** How much nearer a small airport must be to beat a big one (big hubs mean more flights). */
 const HUB_BONUS_MILES = 45;
 /** Further than this, there's no airport for the place (a remote island, a park far from any). */
-export const MAX_AIRPORT_MILES = 220;
+export const MAX_AIRPORT_MILES: number = rules.maxAirportMiles;
 
 /**
  * Airports near a place, best first: a large hub within reach beats a nearer

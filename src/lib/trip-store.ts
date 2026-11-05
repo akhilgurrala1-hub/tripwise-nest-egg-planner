@@ -1,49 +1,37 @@
+/**
+ * The current trip: one client-side store persisted to localStorage, kept in sync
+ * across tabs, with every change made through `tripActions`. The pure parts live in
+ * `src/lib/trip/` (shape, building, budget fitting, migrations, the derived view)
+ * and are re-exported here, so pages import everything trip-related from one place.
+ */
 import { useSyncExternalStore } from "react";
 
 import {
-  applySaving,
   applyCoverage,
-  calculateBudget,
-  defaultEmergencyFund,
-  defaultInputs,
-  formatMoney,
+  applySaving,
   modeDefaults,
-  reductionPlan,
   SAVING_CATEGORY,
-  savingsOpportunities,
-  stopCost,
   tripShape,
   type BudgetInputs,
   type Category,
-  type Overrides,
   type SavingId,
-  type TripCoverage,
 } from "./budget";
-import type { GeoPoint } from "./catalog";
+import { todayIso } from "./dates";
 import {
-  CUSTOM_DESTINATION_ID,
-  DESTINATIONS,
   destinationFor,
-  travelPoint,
-  type Cabin,
   modeForTripType,
   tripTypeInfo,
-  upgradeTripType,
-  type Interest,
+  type Cabin,
   type TransportMode,
-  type TravelStyle,
   type TripType,
 } from "./demo-data";
-import { citySchedule, cleanCities, routeLabel, type CityLeg, type TripCity } from "./multi-city";
 import { recommendDestinations } from "./recommend";
 import {
-  addDays,
   fitToCoverage,
   generateTripItinerary,
   type Itinerary,
   type ItineraryItem,
 } from "./itinerary";
-import { MAX_TRIP_DAYS } from "./dates";
 import {
   addItem,
   keepCustomItems,
@@ -58,353 +46,27 @@ import {
 import type { BookingRecord } from "./booking";
 import type { LivePrices } from "./prices/live";
 import type { RouteStop } from "./routing/types";
+import {
+  buildTrip,
+  destinationForTripType,
+  newTripId,
+  planKey,
+  sampleSetup,
+  SAMPLE_TRIP_ID,
+  tripLegs,
+} from "./trip/build";
+import { fitBudget, plannedNow, rebudget, tidy } from "./trip/budget-fit";
+import { migrate, repairDates } from "./trip/migrate";
+import type { CloudLink, RoadTripPlan, TripSetup, TripState } from "./trip/types";
+import { viewTrip, type TripView } from "./trip/view";
 
-export interface TripSetup {
-  destinationId: string;
-  customDestination: string;
-  origin: string;
-  tripType: TripType;
-  style: TravelStyle;
-  transportMode: TransportMode;
-  startDate: string;
-  endDate: string;
-  travelers: number;
-  interests: Interest[];
-  totalBudget: number;
-  emergencyFund: number;
-  /** Where the traveler starts, when known (from their location or a place they picked) */
-  originPoint?: GeoPoint | null;
-  /** A typed destination's real location, when it could be found */
-  destinationPoint?: GeoPoint | null;
-  /** What they don't pay for (staying with family...) and getting to the airport; see applyCoverage */
-  coverage?: TripCoverage | null;
-  /** Multi-city: the cities after the destination, in order, with nights in each */
-  cities?: TripCity[] | null;
-  /** Flight cabin (economy when unset); fares scale with it */
-  cabin?: Cabin | null;
-  /**
-   * The budget was chosen by Waypoint, not typed by the traveler: it follows the
-   * trip's costs (new cities, cabin, trip type) until the traveler sets their own.
-   */
-  budgetAuto?: boolean;
-}
-
-export interface RoadTripPlan {
-  origin: string;
-  destination: string;
-  /** Money set aside for stops & detours */
-  stopBudget: number;
-  interests: Interest[];
-  maxDetourMinutes: number;
-  includedStops: RouteStop[];
-}
-
-/** Link between the local trip and its copy in the signed-in user's account. */
-export interface CloudLink {
-  id: string;
-  revision: number;
-  name: string;
-  savedAt: string;
-}
-
-export interface TripState {
-  version: 6;
-  /** Stable for the life of one trip (kept through edits and trip-type switches, new for each trip started or opened). */
-  id: string;
-  isSample: boolean;
-  setup: TripSetup;
-  inputs: BudgetInputs;
-  overrides: Overrides;
-  emergencyFund: number;
-  appliedSavings: Partial<Record<SavingId, Partial<BudgetInputs>>>;
-  itinerary: Itinerary | null;
-  roadTrip: RoadTripPlan;
-  /** Last live price lookup applied to this trip */
-  live: LivePrices | null;
-  cloud: CloudLink | null;
-  /** What's been booked (on providers' sites), by booking checklist item */
-  bookings: Record<string, BookingRecord>;
-}
+export * from "./trip/types";
+export * from "./trip/build";
+export * from "./trip/budget-fit";
+export * from "./trip/migrate";
+export * from "./trip/view";
 
 const STORAGE_KEY = "waypoint.trip.v1";
-export const SAMPLE_TRIP_ID = "sample";
-
-function todayIso() {
-  return new Date().toISOString().slice(0, 10);
-}
-
-export function newTripId(): string {
-  const c = typeof globalThis !== "undefined" ? globalThis.crypto : undefined;
-  if (c?.randomUUID) return c.randomUUID();
-  return `t-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
-}
-
-function defaultRoadTrip(setup: TripSetup, destName: string): RoadTripPlan {
-  return {
-    origin: setup.origin,
-    destination: destName,
-    stopBudget: Math.max(50, Math.round((setup.totalBudget * 0.1) / 25) * 25),
-    interests: setup.interests,
-    maxDetourMinutes: 20,
-    includedStops: [],
-  };
-}
-
-export function buildTrip(input: TripSetup, isSample = false, id?: string): TripState {
-  const setup = { ...input, transportMode: modeForTripType(input.tripType, input.transportMode) };
-  const dest = destinationFor(setup);
-  const shape = tripShape(setup.startDate, setup.endDate, setup.travelers);
-  return {
-    version: 6,
-    id: id ?? (isSample ? SAMPLE_TRIP_ID : newTripId()),
-    isSample,
-    setup,
-    inputs: applyCoverage(
-      defaultInputs(dest, setup.style, setup.tripType, setup.travelers, setup.transportMode),
-      setup.coverage,
-    ),
-    overrides: {},
-    emergencyFund: Math.min(Math.max(0, setup.emergencyFund), setup.totalBudget),
-    appliedSavings: {},
-    itinerary: fitToCoverage(
-      generateTripItinerary({
-        dest,
-        days: shape.days,
-        startDate: setup.startDate,
-        interests: setup.interests,
-        style: setup.style,
-        tripType: setup.tripType,
-        legs: tripLegs(setup),
-      }),
-      setup.coverage,
-    ),
-    roadTrip: defaultRoadTrip(setup, dest.name),
-    live: null,
-    cloud: null,
-    bookings: {},
-  };
-}
-
-/**
- * The cities of a trip in order with their nights and travel days (one entry for
- * a single-destination trip). Cruises and staycations are always one place.
- */
-export function tripLegs(setup: TripSetup): CityLeg[] {
-  const dest = destinationFor(setup);
-  const shape = tripShape(setup.startDate, setup.endDate, setup.travelers);
-  const single = setup.tripType === "cruise" || setup.tripType === "staycation";
-  return citySchedule(
-    shape.nights,
-    { name: dest.name, point: travelPoint(dest, setup.destinationPoint) },
-    single ? [] : cleanCities(setup.cities),
-  );
-}
-
-/** Round a needed amount up to a tidy budget. */
-const tidy = (n: number) => Math.ceil(n / 50) * 50;
-
-/** Planned spending for a trip's current inputs (custom amounts and stops included). */
-function plannedNow(s: TripState): number {
-  const shape = tripShape(s.setup.startDate, s.setup.endDate, s.setup.travelers);
-  return calculateBudget(s.inputs, shape, 0, 0, s.overrides, stopsTotalFor(s)).planned;
-}
-
-/**
- * Keep a Waypoint-chosen budget covering the trip. "set" re-fits it (the trip's
- * shape changed: cities, cabin, trip type, travel); "raise" only ever raises it
- * (a real price or a custom amount came in), so savings still show as money left.
- * A budget the traveler typed is never touched.
- */
-function rebudget(s: TripState, mode: "set" | "raise"): TripState {
-  if (!s.setup.budgetAuto) return s;
-  const planned = plannedNow(s);
-  const reserveFollows = s.emergencyFund === defaultEmergencyFund(s.setup.totalBudget);
-  let total = reserveFollows ? tidy(planned / 0.9) : tidy(planned + s.emergencyFund);
-  if (mode === "raise" && s.setup.totalBudget >= planned + s.emergencyFund) return s;
-  if (mode === "raise") total = Math.max(total, s.setup.totalBudget);
-  const emergencyFund = reserveFollows ? defaultEmergencyFund(total) : s.emergencyFund;
-  return { ...s, setup: { ...s.setup, totalBudget: total, emergencyFund }, emergencyFund };
-}
-
-/**
- * The budget a new trip starts with. Waypoint picks it from the trip's estimated
- * costs plus an emergency fund, unless the traveler gave one that covers the trip.
- * A trip never starts over budget: a budget that's too small is raised to what the
- * trip needs, and `note` says so in plain words.
- */
-export function fitBudget(setup: TripSetup): { setup: TripSetup; note: string | null } {
-  const chosenReserve =
-    setup.emergencyFund > 0 && setup.emergencyFund !== defaultEmergencyFund(setup.totalBudget)
-      ? setup.emergencyFund
-      : undefined;
-  const need = suggestedBudget(setup, chosenReserve);
-  const auto = (totalBudget: number): TripSetup => ({
-    ...setup,
-    totalBudget,
-    emergencyFund: chosenReserve ?? defaultEmergencyFund(totalBudget),
-    budgetAuto: true,
-  });
-  if (setup.budgetAuto || !(setup.totalBudget > 0)) return { setup: auto(need), note: null };
-  const dest = destinationFor(setup);
-  const shape = tripShape(setup.startDate, setup.endDate, setup.travelers);
-  const planned = calculateBudget(
-    applyCoverage(
-      defaultInputs(dest, setup.style, setup.tripType, setup.travelers, setup.transportMode),
-      setup.coverage,
-    ),
-    shape,
-    0,
-    0,
-  ).planned;
-  if (planned + setup.emergencyFund <= setup.totalBudget) return { setup, note: null };
-  const fixed = auto(Math.max(need, tidy(planned + (chosenReserve ?? 0))));
-  return {
-    setup: fixed,
-    note: `${formatMoney(setup.totalBudget)} doesn't cover this trip, so the budget is set to ${formatMoney(fixed.totalBudget)}: about what it costs, plus an emergency fund. You can change it on the Budget page, and Ways to spend less shows where to save.`,
-  };
-}
-
-/**
- * A budget that covers the default estimate for this setup plus a 10% reserve,
- * rounded up to $50 (or the planned spend plus a reserve the traveler chose).
- */
-export function suggestedBudget(setup: TripSetup, reserve?: number): number {
-  const dest = destinationFor(setup);
-  const shape = tripShape(setup.startDate, setup.endDate, setup.travelers);
-  const planned = calculateBudget(
-    applyCoverage(
-      defaultInputs(dest, setup.style, setup.tripType, setup.travelers, setup.transportMode),
-      setup.coverage,
-    ),
-    shape,
-    0,
-    0,
-  ).planned;
-  return reserve !== undefined
-    ? Math.ceil((planned + reserve) / 50) * 50
-    : Math.ceil(planned / 0.9 / 50) * 50;
-}
-
-export function sampleSetup(): TripSetup {
-  const start = addDays(todayIso(), 30);
-  return {
-    destinationId: "blue-ridge",
-    customDestination: "",
-    origin: "Charlotte, NC",
-    tripType: "road-trip",
-    style: "comfort",
-    transportMode: "car",
-    startDate: start,
-    endDate: addDays(start, 3),
-    travelers: 2,
-    interests: ["nature", "food"],
-    totalBudget: 2000,
-    emergencyFund: defaultEmergencyFund(2000),
-  };
-}
-
-/** Inputs added after a trip was saved get their "not used" values. */
-const NEW_INPUT_DEFAULTS = { cruisePerNight: 0, portFeesPerPerson: 0, gratuitiesPerNight: 0 };
-
-/**
- * Upgrade trips saved by earlier versions of the app (also used for trips loaded from an account).
- * v4 split trips into separate types: old "Getaway" trips become fly-away, train & bus or road trips
- * by how they travel. v5 gave every trip a stable id; v6 added the booking checklist.
- */
-export function migrate(raw: unknown): TripState | null {
-  const v4 = migrateToV4(raw);
-  if (!v4) return null;
-  const id =
-    typeof v4.id === "string" && v4.id ? v4.id : v4.isSample ? SAMPLE_TRIP_ID : newTripId();
-  const bookings =
-    v4.bookings && typeof v4.bookings === "object" && !Array.isArray(v4.bookings)
-      ? v4.bookings
-      : {};
-  return { ...v4, version: 6, id, bookings };
-}
-
-type V4Trip = Omit<TripState, "version" | "id" | "bookings"> & {
-  version: 4 | 5 | 6;
-  id?: string;
-  bookings?: Record<string, BookingRecord>;
-};
-
-function migrateToV4(raw: unknown): V4Trip | null {
-  const s = raw as Partial<Omit<TripState, "version">> & { version?: number };
-  if (!s || typeof s !== "object" || !s.setup || !s.inputs) return null;
-  if (s.version === 4 || s.version === 5 || s.version === 6)
-    return { ...(s as V4Trip), live: s.live ?? null, cloud: s.cloud ?? null };
-  if (s.version === 2 || s.version === 3) {
-    const old = s as unknown as V4Trip;
-    const mode = old.inputs.transportMode ?? old.setup.transportMode ?? "car";
-    const tripType = upgradeTripType(old.setup.tripType, mode);
-    return {
-      ...old,
-      version: 4 as const,
-      setup: { ...old.setup, tripType, transportMode: mode },
-      inputs: { ...NEW_INPUT_DEFAULTS, ...old.inputs },
-      live: (s.version === 3 ? old.live : null) ?? null,
-      cloud: (s.version === 3 ? old.cloud : null) ?? null,
-    };
-  }
-  if (s.version !== 1) return null;
-  const setup: TripSetup = {
-    ...(s.setup as TripSetup),
-    tripType: upgradeTripType(s.setup.tripType, "car"),
-    transportMode: "car",
-    emergencyFund: s.emergencyFund ?? defaultEmergencyFund(s.setup.totalBudget),
-  };
-  const dest = destinationFor(setup);
-  const fresh = defaultInputs(dest, setup.style, setup.tripType, setup.travelers, "car");
-  return {
-    version: 4 as const,
-    isSample: !!s.isSample,
-    setup,
-    inputs: { ...fresh, ...s.inputs, transportMode: "car" },
-    overrides: s.overrides ?? {},
-    emergencyFund: setup.emergencyFund,
-    appliedSavings: s.appliedSavings ?? {},
-    itinerary: s.itinerary ?? null,
-    roadTrip: defaultRoadTrip(setup, dest.name),
-    live: null,
-    cloud: null,
-  };
-}
-
-/** Destination to use after switching trip type, and why it changed (empty when it didn't). */
-export function destinationForTripType(
-  setup: TripSetup,
-  tripType: TripType,
-): { destinationId: string; reason: string } {
-  const { destinationId } = setup;
-  if (destinationId === CUSTOM_DESTINATION_ID) return { destinationId, reason: "" };
-  if (tripType === "staycation") {
-    return destinationId === "hometown"
-      ? { destinationId, reason: "" }
-      : { destinationId: "hometown", reason: "A staycation is planned around your home city." };
-  }
-  const current = destinationFor(setup);
-  if (current.bestFor.includes(tripType)) return { destinationId, reason: "" };
-  // The best fit for the new kind of trip from where the traveler starts.
-  const next =
-    recommendDestinations({
-      from: setup.originPoint ?? null,
-      tripType,
-      interests: setup.interests,
-      limit: 1,
-    })[0]?.id ??
-    DESTINATIONS.find((d) => d.bestFor.includes(tripType))?.id ??
-    DESTINATIONS[0]!.id;
-  const nextName = destinationFor({ ...setup, destinationId: next }).name;
-  const label = tripTypeInfo(tripType).label.toLowerCase();
-  return {
-    destinationId: next,
-    reason:
-      destinationId === "hometown"
-        ? `We picked ${nextName} for your ${label}.`
-        : `${current.name} isn't a ${label} destination, so we picked ${nextName}.`,
-  };
-}
 
 // Built lazily: edge runtimes freeze the clock at 1970 during module load,
 // which is what produced "Jan 31 – Feb 3, 1970" sample dates.
@@ -415,31 +77,6 @@ function getSample(): TripState {
   const trip = buildTrip(sampleSetup(), true);
   if (!day.startsWith("1970")) sampleCache = { day, trip };
   return trip;
-}
-
-/** Saved trips with missing or epoch-era dates (and sample trips whose dates have passed) get moved to valid future dates, keeping their length. */
-function repairDates(trip: TripState): TripState {
-  const { startDate, endDate } = trip.setup;
-  const valid = (d: string) => /^\d{4}-\d{2}-\d{2}$/.test(d) && Number(d.slice(0, 4)) >= 2000;
-  const staleSample = trip.isSample && startDate < todayIso();
-  if (valid(startDate) && valid(endDate) && endDate >= startDate && !staleSample) return trip;
-  const days = Math.min(MAX_TRIP_DAYS, Math.max(1, tripShape(startDate, endDate, 1).days));
-  const start = addDays(todayIso(), 30);
-  const setup = { ...trip.setup, startDate: start, endDate: addDays(start, days - 1) };
-  const dest = destinationFor(setup);
-  return {
-    ...trip,
-    setup,
-    itinerary: generateTripItinerary({
-      dest,
-      days,
-      startDate: start,
-      interests: setup.interests,
-      style: setup.style,
-      tripType: setup.tripType,
-      legs: tripLegs(setup),
-    }),
-  };
 }
 
 let state: TripState | null = null;
@@ -506,37 +143,6 @@ function getSnapshot() {
 
 function getServerSnapshot() {
   return getSample();
-}
-
-export function stopsTotalFor(trip: TripState): number {
-  const total = trip.roadTrip.includedStops.reduce(
-    (s, stop) => s + stopCost(stop, trip.setup.travelers, trip.inputs),
-    0,
-  );
-  return Math.round(total * 100) / 100;
-}
-
-/** The trip as stored in an account: everything except the account link and this device's trip id. */
-export function tripForSaving(trip: TripState): Omit<TripState, "cloud" | "id"> {
-  const { cloud: _cloud, id: _id, ...rest } = trip;
-  return { ...rest, isSample: false };
-}
-
-/**
- * What a generated plan depends on. A plan requested for one key is only applied
- * while the trip still has that key — switching trips, trip type, destination or
- * dates mid-request discards the stale answer instead of landing it on the wrong trip.
- */
-export function planKey(trip: TripState): string {
-  const s = trip.setup;
-  return [
-    trip.id,
-    s.tripType,
-    s.destinationId,
-    s.customDestination.trim().toLowerCase(),
-    s.startDate,
-    s.endDate,
-  ].join("|");
 }
 
 /** The current trip, read outside React (e.g. right before saving). */
@@ -881,60 +487,6 @@ export const tripActions = {
   },
 };
 
-/** Everything the pages show about a trip, computed from its state. */
-function derive(trip: TripState) {
-  const dest = destinationFor(trip.setup);
-  const shape = tripShape(trip.setup.startDate, trip.setup.endDate, trip.setup.travelers);
-  const stopsTotal = stopsTotalFor(trip);
-  const totals = calculateBudget(
-    trip.inputs,
-    shape,
-    trip.setup.totalBudget,
-    trip.emergencyFund,
-    trip.overrides,
-    stopsTotal,
-  );
-  const applied = Object.keys(trip.appliedSavings) as SavingId[];
-  const savings = savingsOpportunities(
-    trip.inputs,
-    shape,
-    trip.overrides,
-    stopsTotal,
-    dest,
-    applied,
-  );
-  const potentialSavings = Math.round(savings.reduce((s, t) => s + t.totalSavings * 100, 0)) / 100;
-  const cuts = reductionPlan(
-    trip.inputs,
-    shape,
-    trip.setup.totalBudget,
-    trip.emergencyFund,
-    trip.overrides,
-    stopsTotal,
-  );
-  const legs = tripLegs(trip.setup);
-  /** What to call the trip: the destination, or the route of a multi-city trip */
-  const place = legs.length > 1 ? routeLabel(legs) : dest.name;
-  return {
-    trip,
-    dest,
-    shape,
-    totals,
-    savings,
-    applied,
-    potentialSavings,
-    cuts,
-    stopsTotal,
-    legs,
-    place,
-  };
-}
-
-export type TripView = ReturnType<typeof derive>;
-
-/** The same view for a trip that isn't the current one (e.g. a shared link's preview). */
-export const viewTrip = (trip: TripState): TripView => derive(trip);
-
 // Many components read the trip at once; the budget, savings and cut plan are worked out once per change, not once per component.
 const derived = new WeakMap<TripState, TripView>();
 
@@ -942,7 +494,7 @@ export function useTrip(): TripView {
   const trip = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
   let view = derived.get(trip);
   if (!view) {
-    view = derive(trip);
+    view = viewTrip(trip);
     derived.set(trip, view);
   }
   return view;

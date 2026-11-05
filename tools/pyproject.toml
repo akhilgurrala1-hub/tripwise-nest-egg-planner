@@ -1,0 +1,26 @@
+[project]
+name = "waypoint-data"
+version = "0.1.0"
+description = "Waypoint's data tooling: builds, formats and checks the data files in src/data."
+requires-python = ">=3.11"
+# The tools themselves use only the standard library.
+dependencies = []
+
+[dependency-groups]
+dev = ["pytest>=8.3", "ruff>=0.8"]
+
+[tool.uv]
+# Scripts, not an installable package: run them with `uv run python -m waypoint_data`.
+package = false
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+addopts = "-q"
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "SIM", "RUF"]

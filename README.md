@@ -36,3 +36,28 @@ cd <repository-name>
 npm i
 npm run dev
 ```
+
+### Checks
+
+```sh
+bun run check        # types, lint, unit tests and the data tools
+bun run data:check   # just the data files in src/data
+```
+
+The data tools in `tools/` are Python (standard library only) and use [uv](https://docs.astral.sh/uv/):
+
+```sh
+cd tools
+uv run pytest
+uv run python -m waypoint_data check
+uv run python -m waypoint_data fmt
+curl -sLo airports.csv https://raw.githubusercontent.com/davidmegginson/ourairports-data/main/airports.csv
+uv run python -m waypoint_data airports airports.csv
+```
+
+## Layout
+
+- `src/routes`: pages. `src/components`: UI. `src/lib`: the app's logic, pure and tested (`src/test`).
+- `src/lib/trip/`: the trip's shape, building, budget fitting, migrations and derived view; `src/lib/trip-store.ts` holds the current trip.
+- `*.server.ts`: server-only code (AI, maps, prices, rate limits); reached from the browser only through `*.functions.ts` server functions.
+- `src/data/`: reference data as JSON (airports, places, cruises, rules), built and checked by `tools/`.
