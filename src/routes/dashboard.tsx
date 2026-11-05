@@ -10,6 +10,7 @@ import { AnimatedMoney, stagger } from "@/components/app/motion";
 import { ShareTripButton } from "@/components/app/ShareTrip";
 import { PageHeader } from "@/components/app/TripHeader";
 import { DestinationCard, DestinationHero } from "@/components/app/DestinationIntro";
+import { TripReady } from "@/components/app/TripReady";
 import { WeatherCard } from "@/components/app/Weather";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth-context";
@@ -88,12 +89,14 @@ function Dashboard() {
       </PageHeader>
 
       <div className="mx-auto mt-8 max-w-6xl space-y-4 px-4">
+        <TripReady />
+        {/* The place first, large, like a travel magazine: then the money. */}
+        <DestinationHero
+          dest={dest}
+          origin={trip.setup.origin}
+          className="aspect-[4/3] w-full sm:aspect-[21/9] sm:max-h-[400px]"
+        />
         <div className="flex flex-col gap-4 lg:flex-row">
-          <DestinationHero
-            dest={dest}
-            origin={trip.setup.origin}
-            className="h-[220px] shrink-0 sm:h-[300px] lg:order-2 lg:h-auto lg:w-[400px]"
-          />
           {/* Balance */}
           <section className="surface-card animate-rise min-w-0 flex-1 p-5 sm:p-7">
             <div className="grid gap-6 sm:grid-cols-[1fr_auto] sm:items-end">
@@ -394,7 +397,9 @@ function NextSteps() {
         <div>
           <h2 className="title-display text-[28px]">Checklist</h2>
           <p className="tabular mt-0.5 text-[13px] text-muted-foreground">
-            {next ? `${doneCount} of ${steps.length} done` : "All set. Have a great trip."}
+            {next
+              ? `${doneCount} of ${steps.length} done${next ? `. Next: ${next.title.toLowerCase()}` : ""}`
+              : "All set. Have a great trip."}
           </p>
         </div>
         {next && (
@@ -408,6 +413,20 @@ function NextSteps() {
             )}
           </Button>
         )}
+      </div>
+      {/* How far along: progress people can see makes the next step easier to take. */}
+      <div
+        role="progressbar"
+        aria-label="Trip checklist"
+        aria-valuemin={0}
+        aria-valuemax={steps.length}
+        aria-valuenow={doneCount}
+        className="mt-4 h-1.5 overflow-hidden rounded-[3px] bg-muted"
+      >
+        <div
+          className="h-full rounded-[3px] bg-success transition-[width] duration-700 ease-[var(--ease-out-quint)]"
+          style={{ width: `${(100 * doneCount) / steps.length}%` }}
+        />
       </div>
       <ol className="mt-4 flex items-center">
         {steps.map((s, i) => (
@@ -451,11 +470,6 @@ function NextSteps() {
           </li>
         ))}
       </ol>
-      {next && (
-        <p className="mt-3 text-[13px] text-muted-foreground lg:hidden">
-          Next: {next.title.toLowerCase()}
-        </p>
-      )}
     </section>
   );
 }

@@ -277,3 +277,13 @@ def names_for(code: str, municipality: str, name: str, keywords: str) -> tuple[s
     if m and " " not in m.group(1) and m.group(1) != town and m.group(1) not in extra:
         extra.append(m.group(1))
     return (town or "")[:50], extra[:4]
+
+
+#: The main international airport where a city has more than one large one, so
+#: searches use the airport most flights go through (Rome is FCO, not Ciampino).
+PRIMARY_HUBS = frozenset(
+    """FCO CDG LHR JFK ORD MXP HND ICN PVG PEK SVO EZE GRU GIG IST BKK TPE KIX IAH DFW IAD
+    ARN OSL YUL YYZ YVR LAX SFO MIA ATL DEN SEA BOS MEX AMS FRA MUC MAD BCN LIS DUB ZRH VIE
+    CPH HEL ATH DXB DOH SIN HKG SYD MEL AKL JNB CPT CAI DEL BOM MNL CGK KUL SGN HAN LIM BOG
+    SCL PHL CLT MSP DTW PHX LAS MCO HNL SLC EDI MAN BRU WAW PRG BUD""".split()  # noqa: SIM905
+)

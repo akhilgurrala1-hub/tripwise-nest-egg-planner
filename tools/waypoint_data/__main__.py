@@ -63,7 +63,7 @@ def cmd_airports(args: argparse.Namespace) -> int:
         print(f"Download the table first:\n  curl -sLo airports.csv {airports.SOURCE_URL}")
         return 2
     rows = airports.build(Path(args.csv))
-    large = sum(1 for r in rows if r[3] == "L")
+    large = sum(1 for r in rows if r[3] in ("H", "L"))
     print(f"wrote {len(rows)} airports ({large} large) to {paths.AIRPORTS.relative_to(paths.REPO)}")
     return 0
 

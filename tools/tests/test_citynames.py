@@ -24,3 +24,21 @@ def test_suburbs_and_metro_codes():
 def test_town_from_a_plain_airport_name():
     assert citynames.names_for("QQQ", "", "Seville Airport", "")[0] == "Seville"
     assert citynames.clean_town("Paris (Roissy-en-France, Val-d'Oise)") == ["Paris"]
+
+
+def test_main_hubs_are_marked():
+    from waypoint_data import airports
+
+    rec = {
+        "type": "large_airport",
+        "scheduled_service": "yes",
+        "latitude_deg": "41.8",
+        "longitude_deg": "12.25",
+        "municipality": "Rome",
+        "iso_country": "IT",
+        "name": "Rome Fiumicino",
+        "iso_region": "IT-62",
+        "keywords": "",
+    }
+    assert airports.row_for({**rec, "iata_code": "FCO"})[3] == "H"
+    assert airports.row_for({**rec, "iata_code": "CIA"})[3] == "L"

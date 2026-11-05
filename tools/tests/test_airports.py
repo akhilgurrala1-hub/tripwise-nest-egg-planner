@@ -30,7 +30,7 @@ def test_keeps_bookable_airports_only():
         "ORD",
         41.979,
         -87.905,
-        "L",
+        "H",  # Chicago's main hub
         "Chicago",
         "US",
         "Chicago O'Hare International",

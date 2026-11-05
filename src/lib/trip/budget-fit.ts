@@ -18,7 +18,7 @@ import type { TripSetup, TripState } from "./types";
 export const tidy = (n: number) => Math.ceil(n / 50) * 50;
 
 /** What a setup's default estimate costs (covered costs left out), before any budget. */
-function estimatedSpend(setup: TripSetup): number {
+export function estimatedSpend(setup: TripSetup): number {
   const dest = destinationFor(setup);
   const shape = tripShape(setup.startDate, setup.endDate, setup.travelers);
   const inputs = applyCoverage(

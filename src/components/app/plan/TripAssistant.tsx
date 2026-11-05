@@ -54,10 +54,21 @@ interface Saved {
 
 const STORAGE_KEY = "waypoint.assistant";
 const TIMEOUT_MS = 60_000;
-const EXAMPLES = [
-  "A long weekend in the mountains for 2 in March, under $1,500",
-  "Somewhere warm with a beach for a family of 4 this summer",
-  "A 4-night cruise from the closest port, comfortable but not fancy",
+/** Quick starts: a short label to tap, and the full message it sends. */
+const EXAMPLES: { label: string; message: string }[] = [
+  {
+    label: "Mountain weekend for 2",
+    message: "A long weekend in the mountains for 2 in March, under $1,500",
+  },
+  {
+    label: "Beach week, family of 4",
+    message: "Somewhere warm with a beach for a family of 4 this summer",
+  },
+  {
+    label: "A short cruise",
+    message: "A 4-night cruise from the closest port, comfortable but not fancy",
+  },
+  { label: "Surprise me", message: "Surprise me with somewhere new for a long weekend" },
 ];
 
 /** Places Waypoint knows well near the traveler, so the assistant's ideas can be planned in detail. */
@@ -104,8 +115,11 @@ export function TripAssistant({
   from = null,
   onBuild,
   onFill,
+  variant = "card",
 }: {
   homeCity: string;
+  /** "hero": the page's main question introduces it, so it has no heading of its own */
+  variant?: "card" | "hero";
   /** Where the traveler starts, for nearby ideas */
   from?: GeoPoint | null;
   /** Start this trip now */
@@ -265,25 +279,41 @@ export function TripAssistant({
     Extract<Turn, { role: "assistant" }> | undefined;
 
   return (
-    <section className="surface-card overflow-hidden">
-      <header className="flex items-start gap-3 px-5 pt-5 sm:px-6 sm:pt-6">
-        <div className="min-w-0 flex-1">
-          <p className="eyebrow flex items-center gap-1.5">
-            <span aria-hidden className="size-[5px] rounded-full bg-brand-coral" /> Describe it
-          </p>
-          <h2 className="mt-2 text-[19px] leading-snug font-semibold">
-            Tell us the trip in your own words
-          </h2>
-          <p className="mt-1 text-[13.5px] text-muted-foreground">
-            Waypoint asks what it needs, then builds the plan.
-          </p>
-        </div>
-        {state.turns.length > 0 && (
-          <Button variant="ghost" size="sm" onClick={reset} aria-label="Start over">
-            <RotateCcw /> <span className="hidden sm:inline">Start over</span>
-          </Button>
-        )}
-      </header>
+    <section
+      className={cn(
+        "overflow-hidden",
+        // As the page's hero, the composer itself is the card until the conversation starts.
+        variant === "hero" && state.turns.length === 0 ? "" : "surface-card",
+      )}
+    >
+      {variant === "hero" ? (
+        state.turns.length > 0 && (
+          <div className="flex justify-end px-3 pt-3">
+            <Button variant="ghost" size="sm" onClick={reset} aria-label="Start over">
+              <RotateCcw /> <span className="hidden sm:inline">Start over</span>
+            </Button>
+          </div>
+        )
+      ) : (
+        <header className="flex items-start gap-3 px-5 pt-5 sm:px-6 sm:pt-6">
+          <div className="min-w-0 flex-1">
+            <p className="eyebrow flex items-center gap-1.5">
+              <span aria-hidden className="size-[5px] rounded-full bg-brand-coral" /> Describe it
+            </p>
+            <h2 className="mt-2 text-[19px] leading-snug font-semibold">
+              Tell us the trip in your own words
+            </h2>
+            <p className="mt-1 text-[13.5px] text-muted-foreground">
+              Waypoint asks what it needs, then builds the plan.
+            </p>
+          </div>
+          {state.turns.length > 0 && (
+            <Button variant="ghost" size="sm" onClick={reset} aria-label="Start over">
+              <RotateCcw /> <span className="hidden sm:inline">Start over</span>
+            </Button>
+          )}
+        </header>
+      )}
 
       {state.turns.length > 0 && (
         <div className="max-h-[420px] space-y-3 overflow-y-auto px-4 py-4" aria-live="polite">
@@ -398,13 +428,23 @@ export function TripAssistant({
       )}
 
       <form
-        className={cn("p-4 sm:p-5", state.turns.length > 0 && "border-t border-border")}
+        className={cn(
+          variant === "hero" && state.turns.length === 0 ? "" : "p-4 sm:p-5",
+          state.turns.length > 0 && "border-t border-border",
+        )}
         onSubmit={(e) => {
           e.preventDefault();
           void send(text);
         }}
       >
-        <div className="flex flex-col gap-2 rounded-2xl border border-input bg-background/70 p-2 pl-4 transition-[border-color,box-shadow,background-color] focus-within:border-primary focus-within:bg-card focus-within:ring-4 focus-within:ring-primary/10 sm:flex-row sm:items-end">
+        <div
+          className={cn(
+            "flex flex-col gap-2 rounded-2xl border p-2 pl-4 transition-[border-color,box-shadow,background-color] focus-within:border-primary focus-within:bg-card focus-within:ring-4 focus-within:ring-primary/10 sm:flex-row sm:items-end",
+            variant === "hero" && state.turns.length === 0
+              ? "border-border bg-card shadow-[var(--shadow-soft-value)] sm:p-3 sm:pl-5"
+              : "border-input bg-background/70",
+          )}
+        >
           <textarea
             value={text}
             onChange={(e) => setText(e.target.value)}
@@ -414,15 +454,20 @@ export function TripAssistant({
                 void send(text);
               }
             }}
-            rows={state.turns.length ? 1 : 3}
+            rows={state.turns.length ? 1 : variant === "hero" ? 2 : 3}
             maxLength={1200}
             placeholder={
               state.turns.length
                 ? "Answer or add details…"
-                : "e.g. A long weekend somewhere with hiking and good food, 2 of us, about $1,200"
+                : variant === "hero"
+                  ? "Rome for a week in May, 2 of us…"
+                  : "e.g. A long weekend somewhere with hiking and good food, 2 of us, about $1,200"
             }
             aria-label="Describe your trip"
-            className="min-h-9 w-full flex-1 resize-none bg-transparent py-2 text-[15px] leading-relaxed outline-none placeholder:text-muted-foreground"
+            className={cn(
+              "min-h-9 w-full flex-1 resize-none bg-transparent py-2 leading-relaxed outline-none placeholder:text-muted-foreground",
+              variant === "hero" && !state.turns.length ? "text-[17px]" : "text-[15px]",
+            )}
           />
           <Button
             type="submit"
@@ -446,17 +491,18 @@ export function TripAssistant({
         )}
         {state.turns.length === 0 && (
           <div className="mt-4">
-            <p className="eyebrow px-1">Try one</p>
-            <ul className="mt-1.5 divide-y divide-border/70">
+            <p className="eyebrow px-1">Or start with</p>
+            <ul className="mt-2 flex flex-wrap gap-2">
               {EXAMPLES.map((ex) => (
-                <li key={ex}>
+                <li key={ex.label}>
                   <button
                     type="button"
-                    onClick={() => void send(ex)}
-                    className="group flex w-full items-start gap-2.5 px-1 py-2.5 text-left text-[14px] text-muted-foreground transition-colors hover:text-foreground"
+                    onClick={() => void send(ex.message)}
+                    title={ex.message}
+                    className="group flex h-10 items-center gap-2 rounded-lg border border-border bg-card px-3 text-[14px] transition-[border-color,transform] duration-150 hover:border-primary active:scale-[0.97]"
                   >
-                    <CornerDownRight className="mt-0.5 size-3.5 shrink-0 text-brand-coral transition-transform group-hover:translate-x-0.5" />
-                    {ex}
+                    <CornerDownRight className="size-3.5 shrink-0 text-brand-coral transition-transform group-hover:translate-x-0.5" />
+                    {ex.label}
                   </button>
                 </li>
               ))}
