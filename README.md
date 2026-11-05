@@ -53,6 +53,8 @@ uv run python -m waypoint_data check
 uv run python -m waypoint_data fmt
 curl -sLo airports.csv https://raw.githubusercontent.com/davidmegginson/ourairports-data/main/airports.csv
 uv run python -m waypoint_data airports airports.csv
+uv run python -m waypoint_data prompts   # the trip assistant's 10,000-case test set
+CORPUS_REPORT=1 bunx vitest run src/test/assistant-corpus.test.ts   # (from the repo root) accuracy per field
 ```
 
 ## Layout
@@ -60,4 +62,5 @@ uv run python -m waypoint_data airports airports.csv
 - `src/routes`: pages. `src/components`: UI. `src/lib`: the app's logic, pure and tested (`src/test`).
 - `src/lib/trip/`: the trip's shape, building, budget fitting, migrations and derived view; `src/lib/trip-store.ts` holds the current trip.
 - `*.server.ts`: server-only code (AI, maps, prices, rate limits); reached from the browser only through `*.functions.ts` server functions.
-- `src/data/`: reference data as JSON (airports, places, cruises, rules), built and checked by `tools/`.
+- `src/data/`: reference data as JSON (airports, countries, states, places, cruises, nicknames, rules), built and checked by `tools/`.
+- `src/lib/understand/`: Waypoint's own reading of trip requests (places, dates, money, groups, preferences), used by the assistant for everyone and to check the AI.

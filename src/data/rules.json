@@ -4,7 +4,8 @@
   "placeTripTypes": ["road-trip", "flight", "rail"],
   "tiers": ["value", "mid", "premium"],
   "maxAirportMiles": 220,
-  "textLimits": { "name": 40, "town": 80, "region": 60, "tagline": 60 },
+  "textLimits": {"name": 40, "town": 80, "region": 60, "tagline": 60},
   "placeFields": ["id", "name", "town", "region", "lat", "lon", "tagline", "tags", "types", "tier", "country"],
-  "cruiseFields": ["id", "name", "tagline", "port", "portPoint", "callTown", "callPoint", "tier", "tags", "country"]
+  "cruiseFields": ["id", "name", "tagline", "port", "portPoint", "callTown", "callPoint", "tier", "tags", "country"],
+  "everydayPlaceWords": ["nice", "split", "mobile", "page", "hope", "reading", "bath", "male", "sale", "orange", "mission", "eagle", "victoria", "jordan", "turkey", "states", "chile", "chad", "georgia", "march", "may", "june", "august", "best", "independence", "liberal", "normal", "wells", "darwin", "nelson", "marion", "lincoln", "jackson", "florence", "alexandria", "austin", "tyler", "logan", "bend", "eugene", "troy", "home", "here", "there", "beach", "city", "park", "lake", "island", "islands", "coast", "valley", "mountain", "mountains", "centre", "center", "university", "college", "fort", "port", "bay", "la", "atl", "dc", "sf", "rio", "reunion"]
 }

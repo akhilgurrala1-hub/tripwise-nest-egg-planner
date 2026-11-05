@@ -2,8 +2,11 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import {
   BedDouble,
   Bus,
+  CalendarPlus,
   Car,
   Check,
+  Circle,
+  CircleCheck,
   ExternalLink,
   ParkingCircle,
   Plane,
@@ -32,9 +35,20 @@ import {
   type BookingKind,
   type BookingRecord,
 } from "@/lib/booking";
+import {
+  bookingTimeline,
+  prepChecklist,
+  toICalendar,
+  tripCalendar,
+  type BookBy,
+  type PrepItem,
+} from "@/lib/booking-timeline";
 import { formatMoney } from "@/lib/budget";
+import { formatCalendarDate, todayIso } from "@/lib/dates";
 import { tripActions, useTrip } from "@/lib/trip-store";
-import { useTripAirports } from "@/lib/live/use-airports";
+import { useAirports, useTripAirports } from "@/lib/live/use-airports";
+import { useHomePlace } from "@/lib/live/use-home";
+import { countryName, countryOfPlace } from "@/lib/understand/gazetteer";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/book")({
@@ -69,12 +83,59 @@ const KIND: Record<BookingKind, { icon: LucideIcon; color: string }> = {
 const EMPTY: BookingRecord = { status: "todo", confirmation: "", price: null };
 
 function BookPage() {
-  const { trip, dest, shape, totals } = useTrip();
+  const { trip, dest, shape, totals, place: tripPlace, legs } = useTrip();
   const prefs = usePreferences();
   const air = useTripAirports(prefs?.home_airport);
+  const airports = useAirports();
+  const { place: home } = useHomePlace();
   const items = bookingPlan(trip, dest, shape, totals, prefs?.home_city ?? "", air.codes);
   const progress = bookingProgress(items, trip.bookings);
   const pct = progress.total > 0 ? progress.booked / progress.total : 0;
+
+  // Where they're going and whether that's abroad, for timing and the before-you-go list.
+  const firstPlace = legs[0]?.name ?? dest.name;
+  const destCountry = dest.country ?? countryOfPlace(firstPlace, airports);
+  const homeCountry = home?.country ?? "US";
+  const abroad = !!destCountry && destCountry !== homeCountry;
+  const today = todayIso();
+  const groups = bookingTimeline(items, trip.bookings, {
+    today,
+    startDate: trip.setup.startDate,
+    abroad,
+    country: destCountry,
+  });
+  const prep = prepChecklist({
+    startDate: trip.setup.startDate,
+    endDate: trip.setup.endDate,
+    homeCountry,
+    destCountry,
+    destName: firstPlace,
+    destCountryName: countryName(destCountry),
+    tripType: trip.setup.tripType,
+    transportMode: trip.setup.transportMode,
+    totalBudget: trip.setup.totalBudget,
+  });
+  const dueNow = groups.find((g) => g.key === "overdue")?.items.length ?? 0;
+
+  const addToCalendar = () => {
+    const ics = toICalendar(
+      tripCalendar({
+        tripId: trip.id,
+        title: `Trip: ${tripPlace}`,
+        startDate: trip.setup.startDate,
+        endDate: trip.setup.endDate,
+        groups,
+      }),
+      new Date().toISOString().replace(/[-:]/g, "").replace(/\.\d+/, ""),
+    );
+    const url = URL.createObjectURL(new Blob([ics], { type: "text/calendar" }));
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "waypoint-trip.ics";
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    toast.success("Calendar file ready: open it to add the trip and booking reminders");
+  };
 
   return (
     <div>
@@ -85,17 +146,42 @@ function BookPage() {
       </p>
 
       <div className="mx-auto mt-6 grid max-w-6xl grid-cols-1 gap-4 px-4 lg:grid-cols-[minmax(0,1fr)_320px]">
-        <div className="min-w-0 space-y-3">
-          {items.map((item, i) => (
-            <BookingCard
-              key={item.key}
-              item={item}
-              record={trip.bookings[item.key] ?? EMPTY}
-              isNext={progress.next?.key === item.key}
-              style={stagger(i)}
-            />
+        <div className="min-w-0 space-y-6">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <p className="text-sm text-muted-foreground">
+              {dueNow > 0
+                ? `${dueNow} thing${dueNow === 1 ? "" : "s"} to book now, then the rest in order.`
+                : progress.next
+                  ? "Nothing urgent. Here's what to book, in order."
+                  : "Everything's booked."}
+            </p>
+            <Button variant="outline" size="sm" onClick={addToCalendar}>
+              <CalendarPlus /> Add to calendar
+            </Button>
+          </div>
+          {groups.map((g) => (
+            <section key={g.key} aria-labelledby={`book-${g.key}`} className="space-y-3">
+              <h2 id={`book-${g.key}`} className="eyebrow">
+                {g.label}
+              </h2>
+              {g.items.map(({ item, when }, i) => (
+                <BookingCard
+                  key={item.key}
+                  item={item}
+                  when={when}
+                  record={trip.bookings[item.key] ?? EMPTY}
+                  isNext={progress.next?.key === item.key}
+                  style={stagger(i)}
+                />
+              ))}
+            </section>
           ))}
-          <LivePricesPanel className="animate-rise mt-6" />
+          <p className="text-xs text-muted-foreground">
+            Book-by dates are rules of thumb for when prices and availability usually get worse, not
+            promises.
+          </p>
+          {prep.length > 0 && <PrepList items={prep} />}
+          <LivePricesPanel className="animate-rise" />
         </div>
 
         <aside className="lg:sticky lg:top-20 lg:self-start">
@@ -153,6 +239,70 @@ function BookPage() {
   );
 }
 
+/** Passports, entry rules, insurance: the things to sort out that aren't bookings. */
+function PrepList({ items }: { items: PrepItem[] }) {
+  const { trip } = useTrip();
+  return (
+    <section aria-labelledby="book-prep" className="surface-card animate-rise p-5">
+      <h2 id="book-prep" className="title-display text-[26px] leading-tight">
+        Before you go
+      </h2>
+      <ul className="mt-3 divide-y divide-border">
+        {items.map((p) => {
+          const done = trip.bookings[p.key]?.status === "booked";
+          return (
+            <li key={p.key} className="flex gap-3 py-3">
+              <button
+                type="button"
+                aria-pressed={done}
+                aria-label={`${p.title}: ${done ? "done" : "not done yet"}`}
+                onClick={() => tripActions.setBooking(p.key, { status: done ? "todo" : "booked" })}
+                className={cn(
+                  "mt-0.5 shrink-0 transition-colors",
+                  done ? "text-success" : "text-muted-foreground hover:text-foreground",
+                )}
+              >
+                {done ? <CircleCheck className="size-5" /> : <Circle className="size-5" />}
+              </button>
+              <div className="min-w-0 flex-1">
+                <p
+                  className={cn(
+                    "text-sm font-medium",
+                    done && "text-muted-foreground line-through",
+                  )}
+                >
+                  {p.title}
+                  {p.optional && (
+                    <span className="ml-2 text-[11px] font-normal text-muted-foreground">
+                      Optional
+                    </span>
+                  )}
+                </p>
+                <p className="mt-0.5 text-xs text-muted-foreground">{p.detail}</p>
+                {p.links.length > 0 && (
+                  <div className="mt-1.5 flex flex-wrap gap-3">
+                    {p.links.map((l) => (
+                      <a
+                        key={l.label}
+                        href={safeExternalUrl(l.url)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-xs font-medium text-primary hover:underline"
+                      >
+                        {l.label}
+                      </a>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </li>
+          );
+        })}
+      </ul>
+    </section>
+  );
+}
+
 function ProgressRing({ value }: { value: number }) {
   const r = 22;
   const c = 2 * Math.PI * r;
@@ -176,11 +326,14 @@ function ProgressRing({ value }: { value: number }) {
 
 function BookingCard({
   item,
+  when,
   record,
   isNext,
   style,
 }: {
   item: BookingItem;
+  /** When to book it (none once it's booked or skipped) */
+  when: BookBy | null;
   record: BookingRecord;
   isNext: boolean;
   style?: CSSProperties;
@@ -258,6 +411,21 @@ function BookingCard({
             )}
           </div>
           <p className="mt-0.5 text-xs text-muted-foreground">{item.detail}</p>
+          {when && (
+            <p
+              className={cn(
+                "mt-1 text-xs",
+                when.urgency === "overdue" || when.urgency === "now"
+                  ? "font-medium text-coral-text"
+                  : "text-muted-foreground",
+              )}
+            >
+              {when.urgency === "overdue"
+                ? "Book as soon as you can."
+                : `Book by ${formatCalendarDate(when.by, { month: "short", day: "numeric" })}.`}{" "}
+              <span className="font-normal text-muted-foreground">{when.why}</span>
+            </p>
+          )}
           {item.stops && item.stops.length > 0 && (
             <ul className="mt-2 flex flex-wrap gap-1.5">
               {item.stops.map((s) => (

@@ -7,7 +7,7 @@ import {
   RotateCcw,
   SlidersHorizontal,
 } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import { LogoMark } from "@/components/app/Logo";
 import { stagger } from "@/components/app/motion";
@@ -18,9 +18,12 @@ import { airportFor } from "@/lib/airports";
 import { useAirports } from "@/lib/live/use-airports";
 import { cleanChatAnswer } from "@/lib/ai-quality";
 import { coverageFromDraft, draftDates, missingFields, type TripDraft } from "@/lib/assistant";
+import { understand, type AskField, type UnderstandContext } from "@/lib/understand/conversation";
+import { gazetteer } from "@/lib/understand/gazetteer";
+import { factLines, localAnswer, reconcile, type AssistantAnswer } from "@/lib/understand/reply";
 import type { GeoPoint } from "@/lib/catalog";
 import { useHomePlace } from "@/lib/live/use-home";
-import { useLocale } from "@/lib/live/use-locale";
+import { useLocale, useUsdRate } from "@/lib/live/use-locale";
 import { recommendDestinations } from "@/lib/recommend";
 import { useAuth } from "@/lib/auth-context";
 import { coveredLabels, formatMoney } from "@/lib/budget";
@@ -35,12 +38,18 @@ type Turn =
       content: string;
       questions: { question: string; options: string[] }[];
       ideas: { name: string; why: string }[];
+      /** What each question asks about, so the next answer lands in the right place */
+      fields?: AskField[];
+      /** A short line under the answer (e.g. the AI was unavailable, so Waypoint answered) */
+      note?: string;
     };
 
 interface Saved {
   turns: Turn[];
   draft: TripDraft | null;
   pending: string;
+  /** The last answer had everything needed to build the trip */
+  ready?: boolean;
 }
 
 const STORAGE_KEY = "waypoint.assistant";
@@ -77,6 +86,7 @@ function load(): Saved {
         ),
         draft: saved.draft ?? null,
         pending: typeof saved.pending === "string" ? saved.pending : "",
+        ready: !!saved.ready,
       };
   } catch {
     /* ignore */
@@ -140,22 +150,64 @@ export function TripAssistant({
   }, [state.turns.length, busy]);
 
   const today = todayIso();
+  const usdRate = useUsdRate(currency);
+  const places = useMemo(() => gazetteer(airports), [airports]);
+  const ctx: UnderstandContext = {
+    today,
+    gazetteer: places,
+    ...(homeCity ? { homeCity } : {}),
+    ...(place?.country ? { homeCountry: place.country } : {}),
+    from,
+    ...(usdRate ? { usdPer: { [currency]: 1 / usdRate } } : {}),
+  };
   const missing = missingFields(state.draft, today);
-  const ready = state.turns.length > 0 && missing.length === 0;
+  const ready = state.turns.length > 0 && !!state.ready && missing.length === 0;
+
+  /** Show an answer (Waypoint's own or the AI's, checked) as the assistant's turn. */
+  const show = (turns: Turn[], a: AssistantAnswer, note?: string) =>
+    setState((s) => ({
+      ...s,
+      draft: a.trip,
+      ready: a.ready,
+      turns: [
+        ...turns,
+        {
+          role: "assistant",
+          content: a.reply,
+          questions: a.questions.slice(0, 3),
+          ideas: a.ideas.slice(0, 3),
+          fields: a.fields,
+          ...(note ? { note } : {}),
+        },
+      ],
+    }));
 
   const send = async (message: string) => {
     const content = message.trim().slice(0, 1200);
     if (!content || busy) return;
-    if (!user) return;
     setError(null);
     const turns: Turn[] = [...state.turns, { role: "user", content }];
     setState((s) => ({ ...s, turns }));
     setText("");
+    // Waypoint reads the whole conversation itself first: free, instant, and the
+    // facts the AI's answer is checked against.
+    const conversation = turns.map((t) =>
+      t.role === "user"
+        ? { role: "user" as const, content: t.content }
+        : { role: "assistant" as const, content: t.content, fields: t.fields ?? [] },
+    );
+    const u = understand(conversation, ctx);
+    if (!user) {
+      show(turns, localAnswer(u, ctx));
+      return;
+    }
     setBusy(true);
     controller.current?.abort();
     const ctrl = new AbortController();
     controller.current = ctrl;
     const timer = setTimeout(() => ctrl.abort("timeout"), TIMEOUT_MS);
+    const fallback = (why: string) =>
+      show(turns, localAnswer(u, ctx), `${why} Waypoint answered on its own.`);
     try {
       const res = await tripChat({
         signal: ctrl.signal,
@@ -175,41 +227,25 @@ export function TripAssistant({
                 160,
               )
             : "",
+          facts: factLines(u),
         },
       });
       if (!res.ok) {
-        setError({
-          message: res.error,
-          retry: content,
-          ...(res.detail ? { detail: res.detail } : {}),
-        });
+        // The trip still moves forward: Waypoint answers, and the reason is kept for reporting.
+        setError(res.detail ? { message: res.error, retry: content, detail: res.detail } : null);
+        fallback(res.error);
+        return;
+      }
+      const userTexts = turns.filter((t) => t.role === "user").map((t) => t.content);
+      show(turns, reconcile(cleanChatAnswer(res.answer), u, ctx, userTexts));
+    } catch {
+      if (ctrl.signal.aborted && ctrl.signal.reason !== "timeout") {
         setState((s) => ({ ...s, turns: s.turns.slice(0, -1) }));
         return;
       }
-      const a = cleanChatAnswer(res.answer);
-      setState((s) => ({
-        ...s,
-        draft: a.trip,
-        turns: [
-          ...turns,
-          {
-            role: "assistant",
-            content: a.reply,
-            questions: a.ready ? [] : a.questions.slice(0, 3),
-            ideas: a.ideas.slice(0, 3),
-          },
-        ],
-      }));
-    } catch {
-      if (ctrl.signal.aborted && ctrl.signal.reason !== "timeout") return;
-      setError({
-        message:
-          ctrl.signal.reason === "timeout"
-            ? "That took too long. Try again."
-            : "Couldn't reach the assistant. Try again.",
-        retry: content,
-      });
-      setState((s) => ({ ...s, turns: s.turns.slice(0, -1) }));
+      fallback(
+        ctrl.signal.reason === "timeout" ? "The AI took too long." : "The AI couldn't be reached.",
+      );
     } finally {
       clearTimeout(timer);
       if (controller.current === ctrl) controller.current = null;
@@ -264,8 +300,12 @@ export function TripAssistant({
                 <p className="w-fit rounded-2xl rounded-bl-md bg-muted px-3.5 py-2 text-sm">
                   {t.content}
                 </p>
+                {t.note && <p className="px-1 text-xs text-muted-foreground">{t.note}</p>}
                 {t === lastAssistant && !busy && (
                   <>
+                    {ready && t.questions.length > 0 && (
+                      <p className="eyebrow px-0.5 pt-1">Optional, for a better plan</p>
+                    )}
                     {t.questions.map((q, qi) => (
                       <div key={qi} style={stagger(qi + 1)} className="animate-rise">
                         <p className="text-[13px] font-medium">{q.question}</p>
@@ -384,25 +424,26 @@ export function TripAssistant({
             aria-label="Describe your trip"
             className="min-h-9 w-full flex-1 resize-none bg-transparent py-2 text-[15px] leading-relaxed outline-none placeholder:text-muted-foreground"
           />
-          {user || authLoading ? (
-            <Button
-              type="submit"
-              size="icon"
-              variant="ink"
-              disabled={!text.trim() || busy || authLoading}
-              aria-label="Send"
-              className="size-10 shrink-0 self-end rounded-xl"
-            >
-              <ArrowUp />
-            </Button>
-          ) : (
-            <Button asChild variant="ink" className="h-10 shrink-0 self-end rounded-xl">
-              <Link to="/auth" search={{ redirect: "/" }}>
-                Sign in to ask
-              </Link>
-            </Button>
-          )}
+          <Button
+            type="submit"
+            size="icon"
+            variant="ink"
+            disabled={!text.trim() || busy}
+            aria-label="Send"
+            className="size-10 shrink-0 self-end rounded-xl"
+          >
+            <ArrowUp />
+          </Button>
         </div>
+        {!user && !authLoading && (
+          <p className="mt-2 px-1 text-xs text-muted-foreground">
+            Waypoint's own planner answers right away.{" "}
+            <Link to="/auth" search={{ redirect: "/" }} className="underline underline-offset-2">
+              Sign in
+            </Link>{" "}
+            to add AI answers too.
+          </p>
+        )}
         {state.turns.length === 0 && (
           <div className="mt-4">
             <p className="eyebrow px-1">Try one</p>
@@ -411,7 +452,7 @@ export function TripAssistant({
                 <li key={ex}>
                   <button
                     type="button"
-                    onClick={() => (user ? send(ex) : setText(ex))}
+                    onClick={() => void send(ex)}
                     className="group flex w-full items-start gap-2.5 px-1 py-2.5 text-left text-[14px] text-muted-foreground transition-colors hover:text-foreground"
                   >
                     <CornerDownRight className="mt-0.5 size-3.5 shrink-0 text-brand-coral transition-transform group-hover:translate-x-0.5" />

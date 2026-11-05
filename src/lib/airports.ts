@@ -7,11 +7,26 @@
  * is ~90 KB gzipped, so it's loaded on demand (`loadAirports`) and kept out of the
  * first page load. The finding logic is pure and works on any list.
  */
+import countryRows from "../data/countries.json";
 import rules from "../data/rules.json";
 import { milesBetween, type GeoPoint } from "./catalog";
 
-/** One row of the table: [IATA, lat, lon, size (L large, M medium), city, country, name] */
-export type AirportRow = [string, number, number, "L" | "M", string, string, string];
+/**
+ * One row of the table: [IATA, lat, lon, size (L large, M medium), town (in English),
+ * country, name, region (state or province in the US, Canada, Australia), other names
+ * for the town (its local name, the district the runway is in)].
+ */
+export type AirportRow = [
+  string,
+  number,
+  number,
+  "L" | "M",
+  string,
+  string,
+  string,
+  string?,
+  string[]?,
+];
 
 export interface Airport {
   code: string;
@@ -22,9 +37,23 @@ export interface Airport {
   lon: number;
   /** Large hubs have the most flights (and usually the best fares) */
   large: boolean;
+  /** State or province code in the US, Canada and Australia ("NC"), else "" */
+  region: string;
+  /** Other names for the town ("Firenze" for Florence) */
+  also: string[];
 }
 
-export const toAirport = ([code, lat, lon, size, city, country, name]: AirportRow): Airport => ({
+export const toAirport = ([
+  code,
+  lat,
+  lon,
+  size,
+  city,
+  country,
+  name,
+  region = "",
+  also = [],
+]: AirportRow): Airport => ({
   code,
   lat,
   lon,
@@ -32,6 +61,8 @@ export const toAirport = ([code, lat, lon, size, city, country, name]: AirportRo
   city,
   country,
   name,
+  region,
+  also,
 });
 
 let all: Promise<Airport[]> | null = null;
@@ -101,6 +132,24 @@ const plain = (x: string) =>
     .replace(/\s+/g, " ")
     .trim();
 
+let countryIndex: Map<string, string> | null = null;
+/** ISO code for a country's name or common alias ("france" → FR, "uk" → GB). */
+function countryCode(name: string): string {
+  countryIndex ??= new Map(
+    (countryRows as { code: string; name: string; aliases: string[] }[]).flatMap((c) =>
+      [c.name, ...c.aliases].map((n) => [plain(n), c.code] as const),
+    ),
+  );
+  return countryIndex.get(name) ?? "";
+}
+
+/** The town an airport serves, without the source's asides: "Paris (Roissy-en-France)" → "Paris". */
+export const airportCity = (city: string) =>
+  city
+    .replace(/\s*\(.*?\)\s*/g, " ")
+    .split("/")[0]!
+    .trim();
+
 /**
  * The airport for a place by its name when its location isn't known yet
  * ("Charlotte, NC" → CLT): the airports serving that city, a large one first.
@@ -113,16 +162,19 @@ export function airportByName(airports: readonly Airport[], name: string): Airpo
   const city = plain(parts[0] ?? "");
   if (city.length < 3) return null;
   const hint = plain(parts.slice(1).join(" "));
-  const matches = airports.filter((a) => plain(a.city) === city);
+  const matches = airports.filter(
+    (a) => plain(airportCity(a.city)) === city || a.also.some((n) => plain(n) === city),
+  );
   if (!matches.length) return null;
-  // "Portland, OR" vs "Portland, ME": a 2-letter state or a country name narrows it.
-  const us = /^[a-z]{2}$/.test(hint);
+  // "Portland, OR" vs "Portland, ME": a state code or a country narrows it.
+  const state = /^[a-z]{2,3}$/.test(hint) ? hint.toUpperCase() : "";
+  const country = countryCode(hint);
   const narrowed = matches.filter((a) =>
     !hint
       ? true
-      : us
-        ? a.country === "US"
-        : plain(a.name).includes(hint) || a.country.toLowerCase() === hint,
+      : state
+        ? a.region === state || (a.country === "US" && !a.region)
+        : a.country === country || plain(a.name).includes(hint) || a.country.toLowerCase() === hint,
   );
   const pool = narrowed.length ? narrowed : matches;
   return [...pool].sort((x, y) => Number(y.large) - Number(x.large))[0] ?? null;
