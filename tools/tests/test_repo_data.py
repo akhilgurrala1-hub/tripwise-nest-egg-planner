@@ -23,3 +23,12 @@ def test_check_command(capsys):
     assert cli.main(["check"]) == 0
     assert "src/data is fine" in capsys.readouterr().out
     assert cli.main(["fmt", "--check"]) == 0
+
+
+def test_places_people_name_are_readable(repo_data):
+    names = {c["name"] for c in repo_data["countries"]}
+    assert {"Japan", "Italy", "United Kingdom", "Mexico"} <= names
+    states = {(s[0], s[1]) for s in repo_data["states"]}
+    assert {("US", "NC"), ("US", "CA"), ("CA", "ON"), ("AU", "NSW")} <= states
+    clt = next(r for r in repo_data["airports"] if r[0] == "CLT")
+    assert clt[7] == "NC"

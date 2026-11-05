@@ -62,6 +62,8 @@ const inputSchema = z.object({
   nearby: z.array(z.string().max(120)).max(16).default([]),
   /** Their nearest airport, from Waypoint's airport table */
   homeAirport: z.string().max(160).default(""),
+  /** What Waypoint's own reader understood (src/lib/understand/reply.ts factLines) */
+  facts: z.array(z.string().max(200)).max(14).default([]),
 });
 
 /** Signed-in only: every turn spends AI credits, so it is never callable anonymously. */

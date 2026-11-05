@@ -86,3 +86,12 @@ describe("airports by city name", () => {
     expect(airportByName(airports, "Nowhereville, ZZ")).toBeNull();
   });
 });
+
+describe("airports by name, with states", () => {
+  it("tells Portland, OR from Portland, ME", async () => {
+    const { airportByName } = await import("@/lib/airports");
+    expect(airportByName(airports, "Portland, OR")?.code).toBe("PDX");
+    expect(airportByName(airports, "Portland, ME")?.code).toBe("PWM");
+    expect(airportByName(airports, "Paris, France")?.code).toMatch(/CDG|ORY/);
+  });
+});

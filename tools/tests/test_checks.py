@@ -64,15 +64,59 @@ def test_cruise_problems(cruise, rules):
 
 
 def test_airport_table_problems(airports):
-    airports.append(["ATL", 0, 0, "L", "Atlanta", "US", "Again"])
-    airports.append(["bad", 0, 200, "S", "X", "U", ""])
+    airports.append(["ATL", 0, 0, "L", "Atlanta", "US", "Again", "GA", []])
+    airports.append(["bad", 0, 200, "S", "X", "U", "", "nc", [""]])
     problems = "\n".join(checks.check_airports(airports))
     assert "airport ATL: listed twice" in problems
     assert "must be sorted" in problems
-    for expected in ("three capital letters", "off the map", "L or M", "two-letter", "name"):
+    for expected in (
+        "three capital",
+        "off the map",
+        "L or M",
+        "two-letter",
+        "name",
+        "region",
+        "list of text",
+    ):
         assert expected in problems
 
 
 def test_booleans_are_not_coordinates():
     assert not checks.valid_point(True, 0)
     assert checks.valid_point(-90, 180)
+
+
+def test_countries_and_states(repo_data):
+    assert checks.check_countries(repo_data["countries"], repo_data["states"]) == []
+    bad = checks.check_countries(
+        [
+            {"code": "us", "name": "", "aliases": None},
+            {"code": "FR", "name": "France", "aliases": []},
+        ],
+        [["ZZ", "XX", "Nowhere"]],
+    )
+    text = "\n".join(bad)
+    for expected in (
+        "two capital letters",
+        "name is missing",
+        "aliases",
+        "[country, code",
+        "US states",
+    ):
+        assert expected in text
+
+
+def test_alias_problems():
+    problems = "\n".join(
+        checks.check_aliases(
+            [["NYC", "New York, NY", "city"], ["vegas", "", "town"], ["vegas", "x", "city"], ["a"]]
+        )
+    )
+    for expected in (
+        "plain lowercase",
+        "place is missing",
+        "kind must be",
+        "listed twice",
+        "expected",
+    ):
+        assert expected in problems

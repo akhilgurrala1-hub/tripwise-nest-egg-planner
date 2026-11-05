@@ -100,7 +100,7 @@ describe("trip assistant", () => {
     expect(onBuild).toHaveBeenCalledWith(expect.objectContaining({ travelers: 2 }));
   });
 
-  it("shows the error with a retry and keeps nothing half-sent", async () => {
+  it("answers on its own when the AI can't, keeping the conversation", async () => {
     chat.fn.mockResolvedValueOnce({
       ok: false,
       status: 429,
@@ -111,21 +111,22 @@ describe("trip assistant", () => {
       target: { value: "Beach trip" },
     });
     fireEvent.click(screen.getByLabelText("Send"));
-    await screen.findByText("The assistant is busy right now.");
-    expect(screen.getByText("Try again")).toBeInTheDocument();
-    await waitFor(() => expect(screen.queryByText("Beach trip")).toBeNull());
+    await screen.findByText(/The assistant is busy right now\. Waypoint answered on its own\./);
+    expect(screen.getByText("Beach trip")).toBeInTheDocument();
+    // Waypoint's own answer asks where to go, with tap answers.
+    expect(screen.getByText("Where do you want to go?")).toBeInTheDocument();
   });
 
-  it("asks signed-out travelers to sign in, keeping their message", () => {
+  it("works signed out with Waypoint's own planner, never calling the AI", async () => {
     auth.user = null;
     render(<TripAssistant homeCity="" onBuild={vi.fn()} onFill={vi.fn()} />);
-    expect(screen.getByText("Sign in to ask")).toBeInTheDocument();
+    expect(screen.getByText("Sign in")).toBeInTheDocument();
     fireEvent.change(screen.getByLabelText("Describe your trip"), {
-      target: { value: "Ski trip" },
+      target: { value: "Ski trip to Denver next weekend, 2 of us" },
     });
-    expect(JSON.parse(window.sessionStorage.getItem("waypoint.assistant")!).pending).toBe(
-      "Ski trip",
-    );
+    fireEvent.click(screen.getByLabelText("Send"));
+    await screen.findByText(/Here's your trip: Denver/);
+    expect(screen.getByText("Build this trip")).toBeInTheDocument();
     expect(chat.fn).not.toHaveBeenCalled();
   });
 });

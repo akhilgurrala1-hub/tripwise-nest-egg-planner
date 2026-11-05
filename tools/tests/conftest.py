@@ -12,6 +12,9 @@ def repo_data():
         "places": jsonfile.load(paths.PLACES),
         "cruises": jsonfile.load(paths.CRUISES),
         "rules": jsonfile.load(paths.RULES),
+        "countries": jsonfile.load(paths.COUNTRIES),
+        "states": jsonfile.load(paths.STATES),
+        "aliases": jsonfile.load(paths.ALIASES),
     }
 
 
@@ -21,9 +24,29 @@ def rules(repo_data):
 
 
 AIRPORTS = [
-    ["ATL", 33.637, -84.428, "L", "Atlanta", "US", "Hartsfield-Jackson Atlanta International"],
-    ["AVL", 35.436, -82.542, "M", "Asheville", "US", "Asheville Regional Airport"],
-    ["KEF", 63.985, -22.606, "L", "Reykjavik", "IS", "Keflavik International Airport"],
+    [
+        "ATL",
+        33.637,
+        -84.428,
+        "L",
+        "Atlanta",
+        "US",
+        "Hartsfield-Jackson Atlanta International",
+        "GA",
+        [],
+    ],
+    ["AVL", 35.436, -82.542, "M", "Asheville", "US", "Asheville Regional Airport", "NC", []],
+    [
+        "KEF",
+        63.985,
+        -22.606,
+        "L",
+        "Reykjavik",
+        "IS",
+        "Keflavik International Airport",
+        "",
+        ["Keflavik"],
+    ],
 ]
 
 

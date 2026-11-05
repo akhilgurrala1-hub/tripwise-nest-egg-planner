@@ -71,6 +71,8 @@ export interface TripChatRequest {
   nearby: string[];
   /** Their nearest airport ("CLT (Charlotte Douglas International Airport), 8 miles away") */
   homeAirport?: string;
+  /** What Waypoint's own reader already understood from their messages (see src/lib/understand) */
+  facts?: string[];
 }
 
 export type TripChatResult =
@@ -96,6 +98,8 @@ Work out what the traveler actually pays for, and leave out what they don't:
 - transferCost: when they fly or take a train or bus, the round trip for the whole group from where they're leaving (dorm, campus, home) to the airport or station and back, in USD. Estimate it from the distance: rideshare is about $1.50 to $2.50 per mile plus $5 per ride; transit is a few dollars. Use null when there's no such leg.
 - origin is where they're leaving from (e.g. the college town with their dorm), even when they "live" at the destination. If that isn't clear, ask where they're starting from.
 - When something is covered, say what you left out in "reply", e.g. "Since you're staying at home, I only counted the flight and rides to the airport."
+Vague or short messages ("idk", "somewhere warm lol", "help", "trip"): never guess a destination. Ask what you need with tap answers people can just press, offer 3 ideas when they don't know where, and go one step at a time. A country, state or region ("Japan", "Europe", "Hawaii") is not a destination yet: ask which city, with 3 or 4 real cities there as options. "X or Y" is a choice, not a route: ask which one (or both). Once destination, dates and travelers are known, set ready=true and you may ask up to 2 short optional questions that make the plan better (budget, travel style, what they like, cabin), never ones already answered.
+Waypoint reads every message itself first; its reading is given as "Waypoint already read". Treat those facts as what the traveler said (they win over your guesses), keep every city listed there, and never ask again about anything listed as already asked.
 Rules: today's date is given; resolve "next weekend", "in March" etc. to real dates that are not in the past (a month without days = a 4-day trip starting the first Friday). Weekend = Friday to Sunday. A road trip or staycation starts from their home city when they don't say otherwise. Destination is "City, ST" for US places, "City, Country" elsewhere. Dates are YYYY-MM-DD. Keep "reply" under 50 words, warm and plain. No emoji, no markdown, no em dashes.`;
 
 function requestSignal(clientSignal?: AbortSignal): AbortSignal | undefined {
@@ -127,6 +131,9 @@ export async function runTripChat(
         ]
       : []),
     `Trip so far: ${req.draft ? JSON.stringify(req.draft) : "nothing yet"}`,
+    ...(req.facts?.length
+      ? [`Waypoint already read from their messages:\n${req.facts.map((f) => `- ${f}`).join("\n")}`]
+      : []),
   ].join("\n");
 
   const abortSignal = requestSignal(clientSignal);

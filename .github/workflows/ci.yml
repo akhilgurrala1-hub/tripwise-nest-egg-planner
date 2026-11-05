@@ -66,3 +66,8 @@ jobs:
 
       - name: Check data files
         run: uv run --locked python -m waypoint_data check
+
+      # The trip assistant's 10,000-case test set must match its generator
+      # (the TypeScript tests score the assistant against it).
+      - name: Assistant test set is current
+        run: uv run --locked python -m waypoint_data prompts --check

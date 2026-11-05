@@ -60,6 +60,20 @@ export interface BookingTrip {
 }
 
 const enc = encodeURIComponent;
+/** "2027-03-14" → "270314" (Skyscanner's date format) */
+const yymmdd = (iso: string) => iso.slice(2).replace(/-/g, "");
+const KAYAK_CABIN: Record<Cabin, string> = {
+  economy: "economy",
+  premium: "premium",
+  business: "business",
+  first: "first",
+};
+const SKYSCANNER_CABIN: Record<Cabin, string> = {
+  economy: "economy",
+  premium: "premiumeconomy",
+  business: "business",
+  first: "first",
+};
 const google = (q: string) => `https://www.google.com/search?q=${enc(q)}`;
 
 function monthYear(iso: string): string {
@@ -225,12 +239,26 @@ export function bookingPlan(
           label: "Google Flights",
           url: `https://www.google.com/travel/flights?q=${enc(`Flights to ${toCode || to}${from ? ` from ${fromCode || from}` : ""} on ${cruise ? addDays(start, -1) : start} through ${end}${cabin ? ` ${cabin.toLowerCase()} class` : ""}`)}`,
         },
-        {
-          label: "Compare fares",
-          url: google(
-            `cheap flights ${from ? `${fromCode || from} to ` : "to "}${toCode || to} ${start}`,
-          ),
-        },
+        // With both airports known, two more fare searches open on the exact route.
+        ...(fromCode && toCode
+          ? [
+              {
+                label: "KAYAK",
+                url: `https://www.kayak.com/flights/${fromCode}-${toCode}/${cruise ? addDays(start, -1) : start}/${end}/${Math.min(n, 9)}adults${s.cabin && s.cabin !== "economy" ? `/${KAYAK_CABIN[s.cabin]}` : ""}`,
+              },
+              {
+                label: "Skyscanner",
+                url: `https://www.skyscanner.com/transport/flights/${fromCode.toLowerCase()}/${toCode.toLowerCase()}/${yymmdd(cruise ? addDays(start, -1) : start)}/${yymmdd(end)}/?adultsv2=${Math.min(n, 9)}&cabinclass=${SKYSCANNER_CABIN[s.cabin ?? "economy"]}`,
+              },
+            ]
+          : [
+              {
+                label: "Compare fares",
+                url: google(
+                  `cheap flights ${from ? `${fromCode || from} to ` : "to "}${toCode || to} ${start}`,
+                ),
+              },
+            ]),
       ],
     });
   }
@@ -284,6 +312,10 @@ export function bookingPlan(
             label: "Airbnb",
             url: `https://www.airbnb.com/s/${enc(leg.name)}/homes?checkin=${inDate}&checkout=${outDate}&adults=${n}`,
           },
+          {
+            label: "Expedia",
+            url: `https://www.expedia.com/Hotel-Search?destination=${enc(leg.name)}&startDate=${inDate}&endDate=${outDate}&adults=${n}&rooms=${rooms}`,
+          },
         ],
       });
     });
@@ -308,6 +340,10 @@ export function bookingPlan(
         {
           label: "Airbnb",
           url: `https://www.airbnb.com/s/${enc(place)}/homes?checkin=${start}&checkout=${end}&adults=${n}`,
+        },
+        {
+          label: "Expedia",
+          url: `https://www.expedia.com/Hotel-Search?destination=${enc(place)}&startDate=${start}&endDate=${end}&adults=${n}&rooms=${rooms}`,
         },
       ],
     });

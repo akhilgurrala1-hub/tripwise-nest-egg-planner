@@ -52,10 +52,14 @@ def check_airports(rows: Sequence[Sequence[Any]]) -> list[str]:
     codes = [str(r[0]) if r else "" for r in rows]
     for i, row in enumerate(rows):
         where = f"airport {codes[i] or i}"
-        if len(row) != 7:
-            out.append(f"{where}: expected 7 columns, found {len(row)}")
+        if len(row) != 9:
+            out.append(f"{where}: expected 9 columns, found {len(row)}")
             continue
-        code, lat, lon, size, city, country, name = row
+        code, lat, lon, size, city, country, name, region, also = row
+        if not isinstance(also, list) or not all(isinstance(a, str) and a for a in also):
+            out.append(f"{where}: other names must be a list of text")
+        if region and not re.fullmatch(r"[A-Z]{2,3}", str(region)):
+            out.append(f"{where}: region must be a state code or empty")
         if not IATA.fullmatch(str(code)):
             out.append(f"{where}: code isn't three capital letters")
         if not valid_point(lat, lon):
@@ -149,11 +153,52 @@ def check_cruises(cruises: Sequence[Record], rules: Record) -> list[str]:
     return out
 
 
+def check_countries(countries: Sequence[Record], states: Sequence[Sequence[str]]) -> list[str]:
+    out: list[str] = []
+    codes = [str(c.get("code")) for c in countries]
+    for c in countries:
+        where = f"country {c.get('code')}"
+        if not COUNTRY.fullmatch(str(c.get("code"))):
+            out.append(f"{where}: code isn't two capital letters")
+        if not str(c.get("name") or "").strip():
+            out.append(f"{where}: name is missing")
+        if not isinstance(c.get("aliases"), list):
+            out.append(f"{where}: aliases must be a list")
+    out += [f"country {d}: listed twice" for d in _duplicates(codes)]
+    known = set(codes)
+    for s in states:
+        if len(s) != 3 or s[0] not in known or not re.fullmatch(r"[A-Z]{2,3}", str(s[1])):
+            out.append(f"state {s}: expected [country, code, name]")
+    if not any(s[0] == "US" for s in states):
+        out.append("states: the US states are missing")
+    return out
+
+
+def check_aliases(aliases: Sequence[Sequence[str]]) -> list[str]:
+    """[what people type, the place it means, "city" or "region"]."""
+    out: list[str] = []
+    for row in aliases:
+        where = f"alias {row[0] if row else row!r}"
+        if len(row) != 3:
+            out.append(f"{where}: expected [alias, place, kind]")
+            continue
+        alias, name, kind = row
+        if not re.fullmatch(r"[a-z0-9]+( [a-z0-9]+)*", str(alias)):
+            out.append(f"{where}: write the alias in plain lowercase words")
+        out += _text_problems(where, "place", name, 80)
+        if kind not in ("city", "region"):
+            out.append(f"{where}: kind must be city or region")
+    out += [f"alias {d}: listed twice" for d in _duplicates(str(r[0]) for r in aliases if r)]
+    return out
+
+
 def check_all(data: Record) -> list[str]:
     """Every check over the loaded files: airports, places, cruises (keys as in paths)."""
     rules = data["rules"]
     return (
         check_airports(data["airports"])
+        + check_countries(data["countries"], data["states"])
+        + check_aliases(data["aliases"])
         + check_places(data["places"], rules, data["airports"])
         + check_cruises(data["cruises"], rules)
     )
