@@ -32,7 +32,7 @@ describe("stable trip ids", () => {
   it("adds an id to v4 trips and keeps an existing one", () => {
     const { id: _id, ...v4 } = { ...buildTrip(sampleSetup()), version: 4 };
     const upgraded = migrate(JSON.parse(JSON.stringify(v4)))!;
-    expect(upgraded.version).toBe(6);
+    expect(upgraded.version).toBe(7);
     expect(upgraded.id).toMatch(/.+/);
     const kept = migrate(JSON.parse(JSON.stringify(upgraded)))!;
     expect(kept.id).toBe(upgraded.id);

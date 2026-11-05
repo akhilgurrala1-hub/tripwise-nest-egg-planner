@@ -2,7 +2,7 @@
  * Share a trip as a link. The whole plan (setup, budget, itinerary, road-trip stops)
  * is packed into the link's #fragment, compressed, so it needs no account, no
  * database and never reaches the server. Private details stay out: bookings and
- * confirmation numbers, the exact start location, the account link and fetched
+ * confirmation numbers, what was spent and who paid, the exact start location, the account link and fetched
  * price listings.
  */
 import { MAX_TRAVELERS } from "./budget";
@@ -11,13 +11,17 @@ import type { TripState } from "./trip/types";
 export const SHARE_PATH = "/shared";
 
 /** What goes in a link: a trip without anything private or device-specific. */
-export type SharedTrip = Omit<TripState, "id" | "cloud" | "bookings" | "live" | "isSample">;
+export type SharedTrip = Omit<
+  TripState,
+  "id" | "cloud" | "bookings" | "spending" | "live" | "isSample"
+>;
 
 export function sharedTripPayload(trip: TripState): SharedTrip {
   const {
     id: _id,
     cloud: _cloud,
     bookings: _bookings,
+    spending: _spending,
     live: _live,
     isSample: _isSample,
     ...rest
@@ -116,7 +120,7 @@ export function cleanSharedTrip(raw: unknown): SharedTrip | null {
   const travelers = Math.min(MAX_TRAVELERS, Math.max(1, Math.round(Number(s.travelers) || 1)));
   const { originPoint: _originPoint, passport: _passport, ...setup } = s;
   return {
-    version: t.version ?? 6,
+    version: t.version ?? 7,
     setup: { ...setup, travelers },
     inputs: t.inputs,
     overrides: t.overrides ?? {},

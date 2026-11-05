@@ -11,6 +11,7 @@ import {
 } from "@/components/app/bits";
 import { LivePricesPanel } from "@/components/app/LivePricesPanel";
 import { AnimatedMoney, stagger } from "@/components/app/motion";
+import { BudgetTabs } from "@/components/app/BudgetTabs";
 import { PageHeader } from "@/components/app/TripHeader";
 import { CabinPicker } from "@/components/app/plan/CabinPicker";
 import { StopsPicker } from "@/components/app/plan/StopsPicker";
@@ -75,8 +76,9 @@ function BudgetPage() {
   return (
     <div>
       <PageHeader eyebrow="Spending plan" title="Budget" />
+      <BudgetTabs current="plan" />
 
-      <div className="mx-auto mt-8 grid max-w-6xl grid-cols-1 gap-4 px-4 lg:grid-cols-[minmax(0,1fr)_340px]">
+      <div className="mx-auto mt-6 grid max-w-6xl grid-cols-1 gap-4 px-4 lg:grid-cols-[minmax(0,1fr)_340px]">
         <div className="min-w-0 space-y-4 lg:order-1">
           {/* Summary */}
           <section className="surface-card animate-rise p-5">

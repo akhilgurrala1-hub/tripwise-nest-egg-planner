@@ -17,6 +17,7 @@ import type { Itinerary } from "../itinerary";
 import type { TripCity } from "../multi-city";
 import type { LivePrices } from "../prices/live";
 import type { RouteStop } from "../routing/types";
+import type { Spending } from "../spending";
 
 export interface TripSetup {
   destinationId: string;
@@ -71,7 +72,7 @@ export interface CloudLink {
 }
 
 export interface TripState {
-  version: 6;
+  version: 7;
   /** Stable for the life of one trip (kept through edits and trip-type switches, new for each trip started or opened). */
   id: string;
   isSample: boolean;
@@ -87,4 +88,6 @@ export interface TripState {
   cloud: CloudLink | null;
   /** What's been booked (on providers' sites), by booking checklist item */
   bookings: Record<string, BookingRecord>;
+  /** What was actually spent, and who's splitting it (v7) */
+  spending: Spending;
 }

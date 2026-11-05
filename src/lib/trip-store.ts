@@ -45,6 +45,18 @@ import {
   type RemovedItem,
 } from "./itinerary-edit";
 import type { BookingRecord } from "./booking";
+import {
+  addExpense,
+  addPerson,
+  removeExpense,
+  removePerson,
+  renamePerson,
+  restoreExpense,
+  updateExpense,
+  type ExpenseDraft,
+  type RemovedExpense,
+  type Spending,
+} from "./spending";
 import type { LivePrices } from "./prices/live";
 import type { RouteStop } from "./routing/types";
 import {
@@ -199,6 +211,7 @@ export const tripActions = {
       Object.keys(s.overrides).length === 0 &&
       Object.keys(s.appliedSavings).length === 0 &&
       s.roadTrip.includedStops.length === 0 &&
+      s.spending.expenses.length === 0 &&
       !s.itinerary?.days.some((d) => d.items.some((i) => i.custom));
     const from = { lat: home.lat, lon: home.lon };
     const same =
@@ -225,9 +238,16 @@ export const tripActions = {
   },
   /** Replace the current trip with one from a shared link (as a new trip of the traveler's own). */
   openSharedTrip(
-    shared: Omit<TripState, "id" | "cloud" | "bookings" | "live" | "isSample">,
+    shared: Omit<TripState, "id" | "cloud" | "bookings" | "spending" | "live" | "isSample">,
   ): boolean {
-    const migrated = migrate({ ...shared, isSample: false, live: null, cloud: null, bookings: {} });
+    const migrated = migrate({
+      ...shared,
+      isSample: false,
+      live: null,
+      cloud: null,
+      bookings: {},
+      spending: null,
+    });
     if (!migrated) return false;
     setState(() => ({ ...repairDates(migrated), id: newTripId(), isSample: false, cloud: null }));
     return true;
@@ -494,10 +514,43 @@ export const tripActions = {
       return { ...s, bookings: { ...s.bookings, [key]: next } };
     });
   },
+  /** Log a cost actually spent. */
+  addExpense(draft: ExpenseDraft) {
+    setSpending((sp) => addExpense(sp, draft));
+  },
+  updateExpense(id: string, patch: Partial<ExpenseDraft>) {
+    setSpending((sp) => updateExpense(sp, id, patch));
+  },
+  /** Remove a logged cost; returns it so the caller can offer Undo. */
+  removeExpense(id: string): RemovedExpense | null {
+    const { spending, removed } = removeExpense(getSnapshot().spending, id);
+    if (removed) setSpending(() => spending);
+    return removed;
+  },
+  restoreExpense(removed: RemovedExpense) {
+    setSpending((sp) => restoreExpense(sp, removed));
+  },
+  /** People splitting costs (names only, kept on this trip). */
+  addPerson(name: string) {
+    setSpending((sp) => addPerson(sp, name));
+  },
+  renamePerson(id: string, name: string) {
+    setSpending((sp) => renamePerson(sp, id, name));
+  },
+  removePerson(id: string) {
+    setSpending((sp) => removePerson(sp, id));
+  },
   clearStops() {
     setState((s) => ({ ...s, roadTrip: { ...s.roadTrip, includedStops: [] } }));
   },
 };
+
+function setSpending(change: (s: Spending) => Spending) {
+  setState((s) => {
+    const spending = change(s.spending);
+    return spending === s.spending ? s : { ...s, spending };
+  });
+}
 
 // Many components read the trip at once; the budget, savings and cut plan are worked out once per change, not once per component.
 const derived = new WeakMap<TripState, TripView>();

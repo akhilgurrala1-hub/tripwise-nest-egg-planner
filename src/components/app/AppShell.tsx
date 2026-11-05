@@ -64,7 +64,9 @@ export function AppShell({ children }: { children: ReactNode }) {
   const pathname = useRouterState({ select: (r) => r.location.pathname });
   // Route stops only make sense on a road trip, so the tab appears only for one.
   const nav = NAV.filter((n) => n.to !== "/road-trip" || trip.setup.tripType === "road-trip");
-  const active = nav.find((n) => n.to === pathname)?.to;
+  // Spending is the other half of Budget, so Budget stays the current tab there.
+  const tabPath = pathname === "/spending" ? "/budget" : pathname;
+  const active = nav.find((n) => n.to === tabPath)?.to;
   const desk = useActiveIndicator<HTMLDivElement>([active, nav.length]);
   const mobile = useActiveIndicator<HTMLDivElement>([active, nav.length]);
   usePreloadTabs();
@@ -171,6 +173,7 @@ function usePreloadTabs() {
   useEffect(() => {
     const warm = () => {
       for (const { to } of NAV) void router.preloadRoute({ to }).catch(() => undefined);
+      void router.preloadRoute({ to: "/spending" }).catch(() => undefined);
     };
     const w = window as Window & {
       requestIdleCallback?: (cb: () => void, o?: { timeout: number }) => number;
