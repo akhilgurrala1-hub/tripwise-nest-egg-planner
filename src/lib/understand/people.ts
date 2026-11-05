@@ -217,6 +217,15 @@ export function readPeople(text: string): PeopleFacts {
         /\b(for|send|sending|surprise) (my|our) (parents|mom|dad|grandparents|kids)\b/.test(rest) &&
         !/\b(i|me|we|us)\b/.test(t.replace(/\bmy\b|\bour\b/g, ""));
       if (!sending) count += 1;
+      // "we ... with our 3 kids": two parents, though only the kids were counted. It's
+      // still a reading, so the assistant checks the number.
+      const onlyKids = !ONE.some(
+        (w) => new RegExp(`\\b(?:my|our|the|a|with|and)\\s+${w}\\b`).test(rest) && !KID.test(w),
+      );
+      if (out.kids && onlyKids && /\b(we|our|us)\b/.test(rest) && !sending) {
+        count += 1;
+        sure = false;
+      }
       if (/\bfamily\b/.test(rest) && count < 3) sure = false;
       set(count, sure, out.kids ? "family" : count === 2 ? "couple" : "group");
       rest = t;

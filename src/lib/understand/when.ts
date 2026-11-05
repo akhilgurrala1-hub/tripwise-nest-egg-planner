@@ -486,6 +486,14 @@ export function readWhen(text: string, today: string): WhenFacts {
     out.startKind = "relative";
   }
 
+  // "nov 12-14 then stay the weekend": the trip runs on to that Sunday.
+  if (
+    out.endDate &&
+    /\b(stay|staying|stick around|extend|through|over) (for )?the weekend\b/.test(text)
+  ) {
+    const sunday = onOrAfter(out.endDate, 0);
+    if (sunday > out.endDate) out.endDate = sunday;
+  }
   if (out.startDate && out.endDate) {
     const n = Math.round(
       (Date.parse(`${out.endDate}T12:00:00Z`) - Date.parse(`${out.startDate}T12:00:00Z`)) /

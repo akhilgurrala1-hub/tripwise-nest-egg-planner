@@ -271,6 +271,34 @@ const GOLDEN: [string, Want][] = [
     "need flights only to Puerto Rico, staying at my aunts place, Dec 20 to Jan 3, 3 of us",
     { start: "2026-12-20", nights: 14, travelers: 3, covered: ["lodging"], asks: "narrow" },
   ],
+  [
+    "We wanna do NYC over thanksgiving w/ our 3 kids. Hotel near times square",
+    { dest: "New York", start: "2026-11-25", nights: 4, travelers: 5, interests: ["family"] },
+  ],
+  [
+    "I need to go to Denver for work Nov 12-14 then stay the weekend",
+    { dest: "Denver", start: "2026-11-12", nights: 3 },
+  ],
+  [
+    "honeymoon in greece in june, santorini and mykonos, 10 nights, budget 8k",
+    { cities: ["Santorini", "Mykonos"], nights: 10, travelers: 2, budget: 8000 },
+  ],
+  [
+    "can u plan a trip 2 london from atlanta, 9 days, leaving dec 26",
+    { dest: "London", origin: "Atlanta", start: "2026-12-26", nights: 8 },
+  ],
+  [
+    "5 days in Banff in the summer, hiking, 4 friends, renting a car",
+    { dest: "Banff", nights: 4, travelers: 4, interests: ["nature"] },
+  ],
+  [
+    "taking the train from nyc to washington dc for the cherry blossoms in april",
+    { dest: "Washington", origin: "New York", tripType: "rail", asks: "length" },
+  ],
+  [
+    "Disney world with 2 kids under 5, sometime in March, 5 nights",
+    { dest: "Orlando", nights: 5, interests: ["family"] },
+  ],
 ];
 
 describe("the trip assistant understands hand-written messages", () => {
