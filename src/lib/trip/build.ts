@@ -43,7 +43,7 @@ export function buildTrip(input: TripSetup, isSample = false, id?: string): Trip
   const dest = destinationFor(setup);
   const shape = tripShape(setup.startDate, setup.endDate, setup.travelers);
   return {
-    version: 6,
+    version: 7,
     id: id ?? (isSample ? SAMPLE_TRIP_ID : newTripId()),
     isSample,
     setup,
@@ -70,6 +70,7 @@ export function buildTrip(input: TripSetup, isSample = false, id?: string): Trip
     live: null,
     cloud: null,
     bookings: {},
+    spending: { people: [], expenses: [] },
   };
 }
 

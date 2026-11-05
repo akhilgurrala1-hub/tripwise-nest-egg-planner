@@ -7,6 +7,7 @@ import type { BookingRecord } from "../booking";
 import { addDays, MAX_TRIP_DAYS, todayIso } from "../dates";
 import { destinationFor, upgradeTripType } from "../demo-data";
 import { generateTripItinerary } from "../itinerary";
+import { cleanSpending } from "../spending";
 import { defaultRoadTrip, newTripId, SAMPLE_TRIP_ID, tripLegs } from "./build";
 import type { TripSetup, TripState } from "./types";
 
@@ -16,7 +17,8 @@ const NEW_INPUT_DEFAULTS = { cruisePerNight: 0, portFeesPerPerson: 0, gratuities
 /**
  * Upgrade trips saved by earlier versions of the app (also used for trips loaded from an account).
  * v4 split trips into separate types: old "Getaway" trips become fly-away, train & bus or road trips
- * by how they travel. v5 gave every trip a stable id; v6 added the booking checklist.
+ * by how they travel. v5 gave every trip a stable id; v6 added the booking checklist;
+ * v7 added spending (what was actually spent, and who's splitting it).
  */
 export function migrate(raw: unknown): TripState | null {
   const v4 = migrateToV4(raw);
@@ -27,11 +29,12 @@ export function migrate(raw: unknown): TripState | null {
     v4.bookings && typeof v4.bookings === "object" && !Array.isArray(v4.bookings)
       ? v4.bookings
       : {};
-  return { ...v4, version: 6, id, bookings };
+  return { ...v4, version: 7, id, bookings, spending: cleanSpending(v4.spending) };
 }
 
-type V4Trip = Omit<TripState, "version" | "id" | "bookings"> & {
-  version: 4 | 5 | 6;
+type V4Trip = Omit<TripState, "version" | "id" | "bookings" | "spending"> & {
+  version: 4 | 5 | 6 | 7;
+  spending?: unknown;
   id?: string;
   bookings?: Record<string, BookingRecord>;
 };
@@ -39,7 +42,7 @@ type V4Trip = Omit<TripState, "version" | "id" | "bookings"> & {
 function migrateToV4(raw: unknown): V4Trip | null {
   const s = raw as Partial<Omit<TripState, "version">> & { version?: number };
   if (!s || typeof s !== "object" || !s.setup || !s.inputs) return null;
-  if (s.version === 4 || s.version === 5 || s.version === 6)
+  if (s.version === 4 || s.version === 5 || s.version === 6 || s.version === 7)
     return { ...(s as V4Trip), live: s.live ?? null, cloud: s.cloud ?? null };
   if (s.version === 2 || s.version === 3) {
     const old = s as unknown as V4Trip;

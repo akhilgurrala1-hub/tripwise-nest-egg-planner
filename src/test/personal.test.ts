@@ -313,7 +313,7 @@ describe("booking checklist", () => {
     const { trip } = planFor({});
     const { bookings: _b, ...old } = { ...trip, version: 5 };
     const upgraded = migrate(JSON.parse(JSON.stringify(old)))!;
-    expect(upgraded.version).toBe(6);
+    expect(upgraded.version).toBe(7);
     expect(upgraded.bookings).toEqual({});
     // The budget defaults still work for the destination it suggests.
     expect(

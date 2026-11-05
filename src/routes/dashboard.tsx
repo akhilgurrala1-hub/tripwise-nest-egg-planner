@@ -25,6 +25,8 @@ import { bookingPlan, bookingProgress } from "@/lib/booking";
 import { TRAVEL_STYLES } from "@/lib/demo-data";
 import { liveCategories } from "@/lib/live/sources";
 import { getLivePriceStatus } from "@/lib/prices/live-prices.functions";
+import { formatCalendarDate, todayIso } from "@/lib/dates";
+import { spendCategoriesFor, spendingSummary } from "@/lib/spending";
 import { tripActions, useTrip } from "@/lib/trip-store";
 import { cn } from "@/lib/utils";
 
@@ -184,6 +186,7 @@ function Dashboard() {
               </div>
             </div>
           </section>
+          <SpendingGlance />
         </div>
 
         <NextSteps />
@@ -327,6 +330,46 @@ function Dashboard() {
         </div>
       </div>
     </div>
+  );
+}
+
+/** Once the trip is under way (or costs are logged): what's spent and what's left a day. */
+function SpendingGlance() {
+  const { trip, totals } = useTrip();
+  const today = todayIso();
+  const s = spendingSummary({
+    totals,
+    cats: spendCategoriesFor(trip.setup.tripType, trip.inputs.transportMode),
+    spending: trip.spending,
+    bookings: trip.bookings,
+    startDate: trip.setup.startDate,
+    endDate: trip.setup.endDate,
+    today,
+  });
+  if (trip.isSample || (s.phase === "before" && s.logged === 0)) return null;
+  return (
+    <section
+      aria-labelledby="glance-spent"
+      className="surface-card animate-rise flex flex-col p-5 lg:w-[300px]"
+      style={stagger(1)}
+    >
+      <h2 id="glance-spent" className="eyebrow">
+        {s.phase === "during"
+          ? `Today, ${formatCalendarDate(today, { month: "short", day: "numeric" })}`
+          : "Spent so far"}
+      </h2>
+      <p className="money-display mt-2 text-[44px]">
+        <AnimatedMoney value={s.phase === "during" ? s.today : s.spent} />
+      </p>
+      <p className="tabular mt-1 text-sm text-muted-foreground">
+        {s.phase === "during" && s.perDayLeft !== null
+          ? `${formatMoney(s.perDayLeft)} a day left for ${s.daysLeft} day${s.daysLeft === 1 ? "" : "s"}`
+          : `${formatMoney(Math.abs(s.left))} ${s.over ? "over" : "left"} of ${formatMoney(s.spendable)}`}
+      </p>
+      <Button asChild variant="go" className="mt-4 lg:mt-auto">
+        <Link to="/spending">Log a cost</Link>
+      </Button>
+    </section>
   );
 }
 
