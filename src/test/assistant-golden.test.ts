@@ -299,6 +299,18 @@ const GOLDEN: [string, Want][] = [
     "Disney world with 2 kids under 5, sometime in March, 5 nights",
     { dest: "Orlando", nights: 5, interests: ["family"] },
   ],
+  [
+    "Rome for a week in May, 2 of us, we don't need a hotel",
+    { dest: "Rome", nights: 7, travelers: 2, covered: ["lodging"] },
+  ],
+  ["Denver next weekend, no hotel needed", { dest: "Denver", covered: ["lodging"] }],
+  ["Chicago next month, staying with a friend", { dest: "Chicago", covered: ["lodging"] }],
+  ["nyc for a week, hotel is paid by work", { dest: "New York", nights: 7, covered: ["lodging"] }],
+  [
+    "Miami 4 nights, we have an airbnb already paid for",
+    { dest: "Miami", nights: 4, covered: ["lodging"] },
+  ],
+  ["Boston next weekend, dont need accommodation", { dest: "Boston", covered: ["lodging"] }],
 ];
 
 describe("the trip assistant understands hand-written messages", () => {

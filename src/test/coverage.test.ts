@@ -43,6 +43,7 @@ const GOING_HOME: TripDraft = {
   transferCost: 45,
   cities: [],
   cabin: null,
+  stops: null,
 };
 
 describe("only the costs a traveler actually has", () => {

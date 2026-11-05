@@ -19,6 +19,7 @@ const inputSchema = z
     originAirport: z.string().regex(/^([A-Z]{3})?$/),
     destinationAirport: z.string().regex(/^([A-Z]{3})?$/),
     cabin: z.enum(["economy", "premium", "business", "first"]).default("economy"),
+    stops: z.enum(["any", "one", "nonstop"]).default("any"),
     cities: z
       .array(
         z.object({

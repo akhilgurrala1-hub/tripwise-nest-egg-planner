@@ -35,6 +35,7 @@ interface Case {
     budget?: number;
     style?: string;
     cabin?: string;
+    stops?: string;
     tripType?: string;
     interests?: string[];
     covered?: Record<string, boolean>;
@@ -65,6 +66,7 @@ const BAR: Record<string, number> = {
   budget: 0.995,
   style: 0.98,
   cabin: 0.98,
+  stops: 0.98,
   tripType: 0.97,
   interests: 0.97,
   covered: 0.97,
@@ -148,6 +150,7 @@ describe("the trip assistant reads 10,000 real-world messages", () => {
       if (e.budget) check("budget", d.totalBudget === e.budget, c, d.totalBudget);
       if (e.style) check("style", d.style === e.style, c, d.style);
       if (e.cabin) check("cabin", d.cabin === e.cabin, c, d.cabin);
+      if (e.stops) check("stops", d.stops === e.stops, c, d.stops);
       if (e.tripType) check("tripType", d.tripType === e.tripType, c, d.tripType);
       if (e.interests)
         check(

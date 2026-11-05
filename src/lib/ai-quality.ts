@@ -293,6 +293,7 @@ export function cleanChatAnswer(a: ChatAnswer): ChatAnswer {
       cabin: (["economy", "premium", "business", "first"] as const).includes(t.cabin as "economy")
         ? t.cabin
         : null,
+      stops: (["any", "one", "nonstop"] as const).includes(t.stops as "any") ? t.stops : null,
       // A round trip to the airport or station: never negative, never absurd.
       transferCost:
         t.transferCost === null || t.transferCost === undefined || !Number.isFinite(t.transferCost)

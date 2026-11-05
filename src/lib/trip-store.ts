@@ -22,6 +22,7 @@ import {
   modeForTripType,
   tripTypeInfo,
   type Cabin,
+  type FlightStops,
   type TransportMode,
   type TripType,
 } from "./demo-data";
@@ -161,6 +162,10 @@ export const tripActions = {
     return fitted.note;
   },
   /** Fly in another cabin: fares follow, and so does a budget Waypoint chose. */
+  /** Nonstop only, one stop at most, or any: live flight searches and booking links follow it. */
+  setFlightStops(flightStops: FlightStops) {
+    setState((s) => ({ ...s, setup: { ...s.setup, flightStops } }));
+  },
   setCabin(cabin: Cabin) {
     setState((s) => {
       const setup = { ...s.setup, cabin };

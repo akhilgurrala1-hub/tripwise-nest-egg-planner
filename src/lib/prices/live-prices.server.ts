@@ -9,6 +9,7 @@ import {
   type GasQuote,
   type HotelOption,
   type HotelQuote,
+  type Layover,
   type LivePricesResult,
 } from "./live";
 
@@ -43,9 +44,14 @@ export interface LivePricesRequest {
   destinationAirport: string;
   /** Flight cabin (economy when unset) */
   cabin?: "economy" | "premium" | "business" | "first";
+  /** Stops they'll take (any when unset) */
+  stops?: "any" | "one" | "nonstop";
   /** Multi-city: every city in order with its check-in and check-out dates */
   cities?: { name: string; checkIn: string; checkOut: string; airport?: string }[];
 }
+
+/** Google Flights' stops filter: 0 any, 1 nonstop, 2 one stop or fewer. */
+const STOPS = { any: 0, nonstop: 1, one: 2 } as const;
 
 /** Google Flights' travel_class codes. */
 const TRAVEL_CLASS = { economy: 1, premium: 2, business: 3, first: 4 } as const;
@@ -219,11 +225,28 @@ async function lookupAirport(place: string, key: string): Promise<string | null>
 interface SerpFlightGroup {
   price?: number;
   total_duration?: number;
+  /** Connections, in order: where, for how long (minutes), and whether it's overnight */
+  layovers?: { duration?: number; name?: string; id?: string; overnight?: boolean }[];
   flights?: {
     airline?: string;
     departure_airport?: { time?: string };
     arrival_airport?: { time?: string };
   }[];
+}
+
+/** Each connection: the airport code, its name, how long, and whether it's overnight. */
+export function layoversOf(g: SerpFlightGroup): Layover[] {
+  return (g.layovers ?? [])
+    .filter(
+      (l) => typeof l.duration === "number" && l.duration > 0 && /^[A-Z]{3}$/.test(l.id ?? ""),
+    )
+    .map((l) => ({
+      code: l.id!,
+      name: String(l.name ?? l.id).slice(0, 80),
+      minutes: Math.round(l.duration!),
+      overnight: !!l.overnight,
+    }))
+    .slice(0, 4);
 }
 
 async function flightQuote(
@@ -243,9 +266,16 @@ async function flightQuote(
     throw new PriceError("Flight prices: your start and destination use the same airport.");
   return cachedLookup(
     cache,
-    ["flights", from, to, req.startDate, req.endDate, req.travelers, req.cabin ?? "economy"].join(
-      "|",
-    ),
+    [
+      "flights",
+      from,
+      to,
+      req.startDate,
+      req.endDate,
+      req.travelers,
+      req.cabin ?? "economy",
+      req.stops ?? "any",
+    ].join("|"),
     PRICE_TTL.flights,
     () => loadFlights(req, from, to, key),
   );
@@ -268,6 +298,7 @@ async function loadFlights(
         type: 1,
         adults: req.travelers,
         travel_class: TRAVEL_CLASS[req.cabin ?? "economy"],
+        stops: STOPS[req.stops ?? "any"],
         currency: "USD",
         gl: "us",
         hl: "en",
@@ -289,6 +320,7 @@ async function loadFlights(
       departs: g.flights![0]!.departure_airport?.time ?? "",
       arrives: g.flights![g.flights!.length - 1]!.arrival_airport?.time ?? "",
       perPerson: perPersonFare(g.price!, req.travelers),
+      layovers: layoversOf(g),
     }))
     .sort((a, b) => a.perPerson - b.perPerson)
     .slice(0, 8);
@@ -323,7 +355,7 @@ async function oneWayLeg(
 ): Promise<Cached<{ from: string; to: string; date: string; option: FlightOption }>> {
   return cachedLookup(
     cache,
-    ["leg", from, to, date, req.travelers, req.cabin ?? "economy"].join("|"),
+    ["leg", from, to, date, req.travelers, req.cabin ?? "economy", req.stops ?? "any"].join("|"),
     PRICE_TTL.flights,
     async () => {
       const body = await getJson(
@@ -336,6 +368,7 @@ async function oneWayLeg(
             type: 2,
             adults: req.travelers,
             travel_class: TRAVEL_CLASS[req.cabin ?? "economy"],
+            stops: STOPS[req.stops ?? "any"],
             currency: "USD",
             gl: "us",
             hl: "en",

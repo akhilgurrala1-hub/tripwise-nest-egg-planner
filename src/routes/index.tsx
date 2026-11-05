@@ -11,6 +11,7 @@ import { CoveragePicker } from "@/components/app/plan/CoveragePicker";
 import { OriginField } from "@/components/app/plan/OriginField";
 import { StylePicker } from "@/components/app/plan/StylePicker";
 import { Inspiration } from "@/components/app/plan/Inspiration";
+import { StopsPicker } from "@/components/app/plan/StopsPicker";
 import { formatDateRange } from "@/components/app/TripHeader";
 import { TripAssistant } from "@/components/app/plan/TripAssistant";
 import { TripPreview } from "@/components/app/plan/TripPreview";
@@ -406,7 +407,13 @@ function Welcome() {
                 to={destLabel}
               />
               {form.transportMode === "flight" && (
-                <CabinPicker value={form.cabin} onChange={(cabin) => update({ cabin })} />
+                <>
+                  <CabinPicker value={form.cabin} onChange={(cabin) => update({ cabin })} />
+                  <StopsPicker
+                    value={form.flightStops}
+                    onChange={(flightStops) => update({ flightStops })}
+                  />
+                </>
               )}
             </Section>
 

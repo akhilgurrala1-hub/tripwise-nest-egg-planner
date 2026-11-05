@@ -5,7 +5,7 @@
  * it here. Pure, so the checklist rules are testable.
  */
 import type { BudgetTotals, TripCoverage, TripShape } from "./budget";
-import { cabinInfo, type Cabin, type DemoDestination } from "./demo-data";
+import { cabinInfo, type Cabin, type DemoDestination, type FlightStops } from "./demo-data";
 import { citySchedule, type TripCity } from "./multi-city";
 import { addDays, formatCalendarDate } from "./dates";
 import type { Itinerary } from "./itinerary";
@@ -54,6 +54,7 @@ export interface BookingTrip {
     /** Multi-city: the cities after the destination */
     cities?: TripCity[] | null;
     cabin?: Cabin | null;
+    flightStops?: FlightStops | null;
   };
   inputs: { nightlyRate: number; rooms: number };
   itinerary: Itinerary | null;
@@ -170,6 +171,12 @@ export function bookingPlan(
   const multi = legs.length > 1;
   const short = (x: string) => x.split(",")[0]!.trim();
   const cabin = s.cabin && s.cabin !== "economy" ? cabinInfo(s.cabin).label : "";
+  // Stops they'll take: in the searches (and the detail line) so results match.
+  const flightStops = s.flightStops ?? "any";
+  const stopsWords =
+    flightStops === "nonstop" ? " nonstop" : flightStops === "one" ? " 1 stop or fewer" : "";
+  const stopsNote =
+    flightStops === "nonstop" ? " · Nonstop only" : flightStops === "one" ? " · 1 stop max" : "";
 
   if (cruise) {
     items.push({
@@ -210,13 +217,13 @@ export function bookingPlan(
       key: "flight",
       kind: "flight",
       title: `Flights ${route}`,
-      detail: `Multi-city · ${when} · ${who}${cabin ? ` · ${cabin}` : ""}`,
+      detail: `Multi-city · ${when} · ${who}${cabin ? ` · ${cabin}` : ""}${stopsNote}`,
       budget: c.transportation,
       optional: false,
       links: [
         {
           label: "Google Flights",
-          url: `https://www.google.com/travel/flights?q=${enc(`Multi-city flights ${query}${cabin ? ` ${cabin.toLowerCase()} class` : ""}`)}`,
+          url: `https://www.google.com/travel/flights?q=${enc(`Multi-city${stopsWords} flights ${query}${cabin ? ` ${cabin.toLowerCase()} class` : ""}`)}`,
         },
         { label: "Compare fares", url: google(`multi-city flights ${route} ${monthYear(start)}`) },
       ],
@@ -231,24 +238,24 @@ export function bookingPlan(
       key: "flight",
       kind: "flight",
       title: fromName ? `Flights ${fromName} → ${toName}` : `Flights to ${toName}`,
-      detail: `Round trip · ${when} · ${who}${cabin ? ` · ${cabin}` : ""}`,
+      detail: `Round trip · ${when} · ${who}${cabin ? ` · ${cabin}` : ""}${stopsNote}`,
       budget: c.transportation,
       optional: false,
       links: [
         {
           label: "Google Flights",
-          url: `https://www.google.com/travel/flights?q=${enc(`Flights to ${toCode || to}${from ? ` from ${fromCode || from}` : ""} on ${cruise ? addDays(start, -1) : start} through ${end}${cabin ? ` ${cabin.toLowerCase()} class` : ""}`)}`,
+          url: `https://www.google.com/travel/flights?q=${enc(`${stopsWords.trim() ? `${stopsWords.trim()} f` : "F"}lights to ${toCode || to}${from ? ` from ${fromCode || from}` : ""} on ${cruise ? addDays(start, -1) : start} through ${end}${cabin ? ` ${cabin.toLowerCase()} class` : ""}`)}`,
         },
         // With both airports known, two more fare searches open on the exact route.
         ...(fromCode && toCode
           ? [
               {
                 label: "KAYAK",
-                url: `https://www.kayak.com/flights/${fromCode}-${toCode}/${cruise ? addDays(start, -1) : start}/${end}/${Math.min(n, 9)}adults${s.cabin && s.cabin !== "economy" ? `/${KAYAK_CABIN[s.cabin]}` : ""}`,
+                url: `https://www.kayak.com/flights/${fromCode}-${toCode}/${cruise ? addDays(start, -1) : start}/${end}/${Math.min(n, 9)}adults${s.cabin && s.cabin !== "economy" ? `/${KAYAK_CABIN[s.cabin]}` : ""}${flightStops === "nonstop" ? "?fs=stops=0" : ""}`,
               },
               {
                 label: "Skyscanner",
-                url: `https://www.skyscanner.com/transport/flights/${fromCode.toLowerCase()}/${toCode.toLowerCase()}/${yymmdd(cruise ? addDays(start, -1) : start)}/${yymmdd(end)}/?adultsv2=${Math.min(n, 9)}&cabinclass=${SKYSCANNER_CABIN[s.cabin ?? "economy"]}`,
+                url: `https://www.skyscanner.com/transport/flights/${fromCode.toLowerCase()}/${toCode.toLowerCase()}/${yymmdd(cruise ? addDays(start, -1) : start)}/${yymmdd(end)}/?adultsv2=${Math.min(n, 9)}&cabinclass=${SKYSCANNER_CABIN[s.cabin ?? "economy"]}${flightStops === "nonstop" ? "&preferDirects=true" : ""}`,
               },
             ]
           : [
