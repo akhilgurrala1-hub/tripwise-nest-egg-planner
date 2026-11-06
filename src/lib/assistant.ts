@@ -15,7 +15,9 @@ import {
 import { addDays, isIsoDate, MAX_TRIP_DAYS } from "./dates";
 import { defaultEmergencyFund, MAX_TRAVELERS, type TripCoverage } from "./budget";
 import { MAX_CITIES, type TripCity } from "./multi-city";
+import { STATE_NAMES } from "./prices/live";
 import { suggestedBudget } from "./trip/budget-fit";
+import { countryName } from "./understand/gazetteer";
 import type { TripSetup } from "./trip/types";
 
 export type { TripDraft };
@@ -28,22 +30,86 @@ const norm = (s: string) =>
     .trim();
 const city = (s: string) => norm(s.split(",")[0] ?? s);
 
+/** What comes after the comma ("Athens, GA" → "ga"), normalized. */
+const qualifierOf = (s: string) => norm(s.split(",").slice(1).join(" "));
+const STATE_BY_CODE = new Map(Object.entries(STATE_NAMES).map(([n, c]) => [c.toLowerCase(), n]));
+const COUNTRY_WORDS: Record<string, string> = {
+  usa: "US",
+  "united states": "US",
+  "united states of america": "US",
+  america: "US",
+  us: "US",
+  uk: "GB",
+  "united kingdom": "GB",
+  "great britain": "GB",
+  britain: "GB",
+  england: "GB",
+  scotland: "GB",
+  wales: "GB",
+  "northern ireland": "GB",
+};
+
+/**
+ * Every way a place's state or country can be written ("or", "oregon", "us",
+ * "united states"), so "Portland, ME" never matches Portland, Oregon.
+ */
+function qualifiersFor(town: string, region: string, country: string): Set<string> {
+  const out = new Set<string>();
+  const add = (v: string | undefined) => {
+    const q = norm(v ?? "");
+    if (!q) return;
+    out.add(q);
+    const state = STATE_BY_CODE.get(q);
+    if (state) out.add(state);
+    const code = STATE_NAMES[q];
+    if (code) out.add(code.toLowerCase());
+  };
+  add(qualifierOf(town));
+  add(region);
+  if (country) {
+    add(country);
+    add(countryName(country));
+    for (const [w, c] of Object.entries(COUNTRY_WORDS)) if (c === country) out.add(w);
+  }
+  return out;
+}
+
+/** The name either says nothing about where (just "Athens") or names this place's state or country. */
+function sameQualifier(name: string, town: string, region: string, country: string): boolean {
+  const q = qualifierOf(name);
+  return !q || qualifiersFor(town, region, country).has(q);
+}
+
 /** The destination id a typed name refers to, or null for "somewhere else". */
 export function matchDestination(name: string, tripType: TripType | null): string | null {
-  const n = norm(name);
   const c = city(name);
   if (!c) return null;
   if (tripType === "cruise") {
-    const cruise = CRUISES.find((x) => city(x.port) === c || norm(x.name) === n);
+    const cruise = CRUISES.find(
+      (x) =>
+        (city(x.port) === c && sameQualifier(name, x.port, "", x.country ?? "US")) ||
+        norm(x.name) === norm(name),
+    );
     if (cruise) return CRUISE_PREFIX + cruise.id;
-    const demo = DESTINATIONS.find((d) => d.port && city(d.port) === c);
+    const demo = DESTINATIONS.find(
+      (d) => d.port && city(d.port) === c && sameQualifier(name, d.port, "", d.country ?? "US"),
+    );
     if (demo) return demo.id;
   }
   const demo = DESTINATIONS.find(
-    (d) => d.anchor && d.id !== "hometown" && (city(d.anchor.name) === c || norm(d.name) === n),
+    (d) =>
+      d.anchor &&
+      d.id !== "hometown" &&
+      ((city(d.anchor.name) === c && sameQualifier(name, d.anchor.name, "", d.country ?? "US")) ||
+        norm(d.name) === norm(name)),
   );
   if (demo && demo.bestFor.some((t) => t !== "cruise")) return demo.id;
-  const place = CATALOG.find((p) => city(p.town) === c || norm(p.name) === n || city(p.name) === c);
+  const place = CATALOG.find(
+    (p) =>
+      norm(p.name) === norm(name) ||
+      ((city(p.town) === c || city(p.name) === c) &&
+        sameQualifier(name, p.town, p.region, p.country)),
+  );
   return place ? PLACE_PREFIX + place.id : null;
 }
 

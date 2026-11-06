@@ -10,7 +10,9 @@ import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 
 import rows from "@/data/airports.json";
+import townRows from "@/data/towns.json";
 import { toAirport, type AirportRow } from "@/lib/airports";
+import { townsFrom } from "@/lib/towns";
 import { understand, missingRequired, type ConversationTurn } from "@/lib/understand/conversation";
 import { gazetteer } from "@/lib/understand/gazetteer";
 import { localAnswer } from "@/lib/understand/reply";
@@ -50,7 +52,10 @@ const cases: Case[] = readFileSync(
   .filter(Boolean)
   .map((l) => JSON.parse(l) as Case);
 
-const g = gazetteer((rows as unknown as AirportRow[]).map(toAirport));
+const g = gazetteer(
+  (rows as unknown as AirportRow[]).map(toAirport),
+  townsFrom(townRows as unknown[]),
+);
 const town = (name: string | null | undefined) => plainName((name ?? "").split(",")[0] ?? "");
 
 /** The bar each field must clear (share of cases where it's read right). */

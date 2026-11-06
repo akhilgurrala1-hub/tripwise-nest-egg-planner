@@ -6,13 +6,14 @@
 - regions [COUNTRIES REGIONS]: rebuild countries.json and states.json
 - prompts [--check]: write the trip assistant's 10,000-case test set
 - visas [CSV] [--updated DATE]: rebuild visas.json from the Passport Index dataset
+- towns [CITIES WORDS]: rebuild towns.json from GeoNames and an English word list
 """
 
 import argparse
 import sys
 from pathlib import Path
 
-from . import airports, checks, jsonfile, paths, prompts, regions, visas
+from . import airports, checks, jsonfile, paths, prompts, regions, towns, visas
 
 
 def load_all() -> dict:
@@ -25,6 +26,7 @@ def load_all() -> dict:
         "states": jsonfile.load(paths.STATES),
         "aliases": jsonfile.load(paths.ALIASES),
         "visas": jsonfile.load(paths.VISAS),
+        "towns": jsonfile.load(paths.TOWNS),
     }
 
 
@@ -104,6 +106,25 @@ def cmd_visas(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_towns(args: argparse.Namespace) -> int:
+    if not (args.cities and args.words):
+        print(
+            "Download the tables first:\n"
+            f"  curl -sLo cities500.zip {towns.SOURCE_URL} && unzip cities500.zip\n"
+            "  and an English word list (apt-get install wamerican: /usr/share/dict/words)"
+        )
+        return 2
+    rows, missing = towns.build(Path(args.cities), Path(args.words))
+    words = sum(1 for r in rows[1:] if r[6])
+    print(
+        f"wrote {len(rows) - 1} towns ({words} also everyday words) to "
+        f"{paths.TOWNS.relative_to(paths.REPO)}"
+    )
+    if missing:
+        print("not found in the table: " + ", ".join(missing), file=sys.stderr)
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="waypoint_data", description=__doc__.splitlines()[0])
     sub = parser.add_subparsers(dest="command", required=True)
@@ -125,6 +146,10 @@ def main(argv: list[str] | None = None) -> int:
     vi.add_argument("csv", nargs="?", help="path to passport-index-tidy-iso2.csv")
     vi.add_argument("--updated", default="2026-02-17", help="the dataset's last-updated date")
     vi.set_defaults(run=cmd_visas)
+    tw = sub.add_parser("towns", help="rebuild towns.json from GeoNames")
+    tw.add_argument("cities", nargs="?", help="GeoNames cities500.txt (or geonamescache JSON)")
+    tw.add_argument("words", nargs="?", help="word list, common words in lowercase")
+    tw.set_defaults(run=cmd_towns)
     args = parser.parse_args(argv)
     return args.run(args)
 

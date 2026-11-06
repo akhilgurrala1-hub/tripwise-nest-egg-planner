@@ -2,7 +2,8 @@
  * Every place name Waypoint can recognize in a message, with the name the app
  * writes for it ("Charlotte, NC", "Kyoto, Japan", "Japan"). Built from the data in
  * src/data (countries, states, nicknames, the suggestion catalog) and, once loaded,
- * the airport table, which covers every town with scheduled flights worldwide.
+ * the airport table, which covers every town with scheduled flights worldwide, and
+ * the towns table (GeoNames), which covers the rest travelers name.
  */
 import aliasRows from "../../data/place-aliases.json";
 import rules from "../../data/rules.json";
@@ -10,6 +11,7 @@ import countryRows from "../../data/countries.json";
 import stateRows from "../../data/states.json";
 import { airportCity, type Airport } from "../airports";
 import { CATALOG, CRUISES, type GeoPoint } from "../catalog";
+import type { Town } from "../towns";
 import { DESTINATIONS } from "../demo-data";
 import { plainName } from "./text";
 
@@ -26,6 +28,8 @@ export interface PlaceCandidate {
   point: GeoPoint | null;
   /** How likely this is the place meant when a name is shared (bigger = more likely) */
   weight: number;
+  /** A town whose name is also an everyday word: only a place when clearly meant */
+  word?: boolean;
 }
 
 export interface Gazetteer {
@@ -65,11 +69,14 @@ function add(map: Map<string, PlaceCandidate[]>, key: string, c: PlaceCandidate)
   const k = strip(key);
   if (k.length < 2) return;
   const list = map.get(k);
+  // The same name in two countries is two places (Georgia the state and the country).
+  const same = (x: PlaceCandidate) =>
+    x.name === c.name && (!x.country || !c.country || x.country === c.country);
   if (!list) map.set(k, [c]);
-  else if (!list.some((x) => x.name === c.name)) list.push(c);
+  else if (!list.some(same)) list.push(c);
   else {
     // Keep the strongest reading of the same place.
-    const i = list.findIndex((x) => x.name === c.name);
+    const i = list.findIndex(same);
     if (list[i]!.weight < c.weight)
       list[i] = { ...list[i]!, ...c, point: c.point ?? list[i]!.point };
   }
@@ -79,7 +86,9 @@ const startsOf = (names: Map<string, unknown>) =>
   new Set([...names.keys()].filter((k) => k.includes(" ")).map((k) => k.split(" ")[0]!));
 
 let base: Gazetteer | null = null;
-const withAirports = new WeakMap<readonly Airport[], Gazetteer>();
+const withAirports = new WeakMap<object, WeakMap<object, Gazetteer>>();
+const NO_AIRPORTS: readonly Airport[] = [];
+const NO_TOWNS: readonly Town[] = [];
 
 function buildBase(): Gazetteer {
   const names = new Map<string, PlaceCandidate[]>();
@@ -104,11 +113,12 @@ function buildBase(): Gazetteer {
   for (const [country, code, name] of stateRows as [string, string, string][]) {
     const row: [string, string, string] = [country, code, name];
     states.set(strip(name), row);
-    if (!states.has(code.toLowerCase())) states.set(code.toLowerCase(), row);
+    // A code two countries share ("wa", "nt") means the US state, then the first listed.
+    const prev = states.get(code.toLowerCase());
+    if (!prev || (country === "US" && prev[0] !== "US")) states.set(code.toLowerCase(), row);
     const label = country === "US" ? name : `${name}, ${countryName.get(country) ?? country}`;
     add(names, name, { name: label, kind: "state", country, region: code, point: null, weight: 3 });
   }
-  // A Georgia traveler from the US means the state; the country is still listed.
   for (const p of CATALOG) {
     const cand: PlaceCandidate = {
       name: p.town,
@@ -172,16 +182,44 @@ export function airportPlaceName(a: Airport, countryName: Map<string, string>): 
   return `${city}, ${countryName.get(a.country) ?? a.country}`;
 }
 
-/** The place index, with the airport table's towns when it's loaded. */
-export function gazetteer(airports?: readonly Airport[] | null): Gazetteer {
+/**
+ * What people call an airport's town for short: "Frankfurt" for Frankfurt am Main,
+ * "Jeju" for Jeju City. Never a name that's a country or state already ("Mexico" for
+ * Mexico City), and US towns keep "City" ("Kansas City", "Atlantic City").
+ */
+export function shortForms(
+  city: string,
+  country: string,
+  g: Pick<Gazetteer, "countries" | "states">,
+): string[] {
+  const out: string[] = [];
+  const am = /^(.+?) (?:am|an der|ob der) .+$/.exec(city);
+  if (am) out.push(am[1]!);
+  const cityOf = /^(.+?) City$/.exec(city);
+  if (cityOf && country !== "US") out.push(cityOf[1]!);
+  return out.filter((s) => {
+    const k = strip(s);
+    return k.length >= 3 && !g.countries.has(k) && !g.states.has(k);
+  });
+}
+
+/** The place index, with the airport table's towns (and the towns table) when they're loaded. */
+export function gazetteer(
+  airports?: readonly Airport[] | null,
+  towns?: readonly Town[] | null,
+): Gazetteer {
   base ??= buildBase();
-  if (!airports?.length) return base;
-  const cached = withAirports.get(airports);
+  if (!airports?.length && !towns?.length) return base;
+  const key = airports?.length ? airports : NO_AIRPORTS;
+  const byTowns = withAirports.get(key) ?? new WeakMap<object, Gazetteer>();
+  withAirports.set(key, byTowns);
+  const tkey = towns?.length ? towns : NO_TOWNS;
+  const cached = byTowns.get(tkey);
   if (cached) return cached;
   const names = new Map<string, PlaceCandidate[]>();
   const codes = new Map<string, PlaceCandidate>();
   for (const [k, v] of base.names) names.set(k, [...v]);
-  for (const a of airports) {
+  for (const a of airports ?? []) {
     const city = airportCity(a.city);
     if (!city) continue;
     const cand: PlaceCandidate = {
@@ -194,10 +232,30 @@ export function gazetteer(airports?: readonly Airport[] | null): Gazetteer {
     };
     add(names, city, cand);
     for (const other of a.also) add(names, other, { ...cand, weight: cand.weight - 1 });
+    for (const short of shortForms(city, a.country, base))
+      add(names, short, { ...cand, weight: cand.weight - 0.5 });
     codes.set(a.code, cand);
   }
+  for (const t of towns ?? []) {
+    // Below any airport town; bigger towns win a shared name ("Cambridge" is the English one).
+    const cand: PlaceCandidate = {
+      name:
+        t.country === "US"
+          ? `${t.name}, ${t.region || "USA"}`
+          : `${t.name}, ${base.countryName.get(t.country) ?? t.country}`,
+      kind: "city",
+      country: t.country,
+      region: t.region,
+      point: { lat: t.lat, lon: t.lon },
+      weight: 0.4 + 0.1 * Math.log10(Math.max(1, t.popK) * 1000),
+      ...(t.word ? { word: true } : {}),
+    };
+    add(names, t.name, cand);
+    const ascii = t.name.normalize("NFKD").replace(/[\u0300-\u036f]/g, "");
+    if (ascii !== t.name) add(names, ascii, cand);
+  }
   const g = { ...base, names, codes, starts: startsOf(names) };
-  withAirports.set(airports, g);
+  byTowns.set(tkey, g);
   return g;
 }
 

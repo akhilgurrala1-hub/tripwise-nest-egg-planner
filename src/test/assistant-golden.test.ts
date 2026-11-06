@@ -6,16 +6,24 @@
 import { describe, expect, it } from "vitest";
 
 import rows from "@/data/airports.json";
+import townRows from "@/data/towns.json";
 import { toAirport, type AirportRow } from "@/lib/airports";
+import { townsFrom } from "@/lib/towns";
 import { missingRequired, understand } from "@/lib/understand/conversation";
 import { gazetteer } from "@/lib/understand/gazetteer";
+import { matchDestination } from "@/lib/assistant";
 
-const g = gazetteer((rows as unknown as AirportRow[]).map(toAirport));
+const g = gazetteer(
+  (rows as unknown as AirportRow[]).map(toAirport),
+  townsFrom(townRows as unknown[]),
+);
 const ctx = { today: "2026-11-05", gazetteer: g, homeCity: "Charlotte, NC", homeCountry: "US" };
 const town = (s: string | null) => (s ?? "").split(",")[0];
 
 type Want = {
   dest?: string | null;
+  /** The whole place, state or country included ("Athens, GA") */
+  place?: string;
   cities?: string[];
   origin?: string;
   start?: string;
@@ -311,6 +319,31 @@ const GOLDEN: [string, Want][] = [
     { dest: "Miami", nights: 4, covered: ["lodging"] },
   ],
   ["Boston next weekend, dont need accommodation", { dest: "Boston", covered: ["lodging"] }],
+  // Places that share a name: the state or country they typed decides.
+  ["athens georgia for a football weekend, 2 of us", { place: "Athens, GA", travelers: 2 }],
+  ["athens for a week in may, 2 of us", { place: "Athens, Greece", nights: 7 }],
+  ["paris texas road trip next month, 2 people", { place: "Paris, TX" }],
+  ["portland maine for a long weekend", { place: "Portland, ME" }],
+  ["london ontario for a weekend, 2 people", { place: "London, Canada" }],
+  ["birmingham uk for 2 nights", { place: "Birmingham, United Kingdom", cities: [] }],
+  ["manchester uk 3 nights in march", { place: "Manchester, United Kingdom", nights: 3 }],
+  ["tbilisi georgia for a week in may", { place: "Tbilisi, Georgia", nights: 7 }],
+  ["savannah georgia for a weekend", { place: "Savannah, GA" }],
+  ["georgia for a week in may, 2 of us", { place: "Georgia", asks: "narrow" }],
+  // Towns without an airport (from the towns table), and words that only look like towns.
+  ["victoria bc in july for 4 nights", { place: "Victoria, Canada", nights: 4 }],
+  ["sedona for a long weekend, 2 of us", { place: "Sedona, AZ", travelers: 2 }],
+  ["siena 3 nights in october", { place: "Siena, Italy", nights: 3 }],
+  ["hallstatt in december, 2 of us", { place: "Hallstatt, Austria", travelers: 2 }],
+  ["cambridge uk in june, 3 nights", { place: "Cambridge, United Kingdom", nights: 3 }],
+  ["killarney 4 nights in may", { place: "Killarney, Ireland", nights: 4 }],
+  ["seattle wa 3 nights", { place: "Seattle, WA", nights: 3 }],
+  ["frankfurt for 2 nights on business", { dest: "Frankfurt", nights: 2 }],
+  ["bruges and ghent for 4 nights", { cities: ["Bruges", "Ghent"] }],
+  ["a week in march, 2 of us, somewhere warm", { dest: null, nights: 7, travelers: 2 }],
+  ["Can you plan 5 nights in Rome for us?", { dest: "Rome", nights: 5 }],
+  ["somewhere with beaches for spring break, me and my gf", { dest: null, travelers: 2 }],
+  ["Iceland in March, 2 people, 6 nights", { nights: 6, travelers: 2, start: "2027-03-05" }],
 ];
 
 describe("the trip assistant understands hand-written messages", () => {
@@ -319,6 +352,7 @@ describe("the trip assistant understands hand-written messages", () => {
     const d = u.draft;
     if (want.dest === null) expect(d.destination).toBeNull();
     else if (want.dest) expect(town(d.destination)).toBe(want.dest);
+    if (want.place) expect(d.destination).toBe(want.place);
     if (want.cities) expect(d.cities.map((c) => town(c.name))).toEqual(want.cities);
     if (want.origin) expect(town(d.origin)).toBe(want.origin);
     if (want.start) expect(d.startDate).toBe(want.start);
@@ -331,5 +365,24 @@ describe("the trip assistant understands hand-written messages", () => {
     for (const i of want.interests ?? []) expect(d.interests).toContain(i);
     for (const c of want.covered ?? []) expect(d.covered[c as "lodging"]).toBe(true);
     if (want.asks) expect(missingRequired(u)).toContain(want.asks);
+  });
+});
+
+describe("a named place becomes the right destination", () => {
+  it.each([
+    ["Athens, GA", null],
+    ["Athens, Greece", "place:athens"],
+    ["Athens", "place:athens"],
+    ["Paris, TX", null],
+    ["Paris, France", "place:paris"],
+    ["Portland, ME", null],
+    ["Portland, OR", "place:portland"],
+    ["Portland, Oregon", "place:portland"],
+    ["London, Canada", null],
+    ["London, United Kingdom", "place:london"],
+    ["London, UK", "place:london"],
+    ["New York, NY", "place:new-york"],
+  ])("%s", (name, id) => {
+    expect(matchDestination(name, "flight")).toBe(id);
   });
 });

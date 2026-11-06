@@ -19,6 +19,10 @@ const inputSchema = z.object({
   destination: z.string().trim().min(2).max(160),
   interests: z.array(z.enum(INTEREST_IDS)).max(9),
   style: z.enum(["budget", "comfort", "luxury"]),
+  /** Where the destination is, to keep results in that town */
+  near: z
+    .object({ lat: z.number().min(-90).max(90), lon: z.number().min(-180).max(180) })
+    .optional(),
 });
 
 /** Signed-in only: real sights and restaurants in the destination (billable map-service calls). */

@@ -192,16 +192,77 @@ def check_aliases(aliases: Sequence[Sequence[str]]) -> list[str]:
     return out
 
 
+#: Places the app counts as the US that GeoNames and OurAirports list as their own country.
+US_TERRITORIES = {"PR", "VI", "GU"}
+
+#: A catalog place's coordinates farther than this from the real town it names are wrong.
+MAX_TOWN_KM = 60
+
+
+def check_locations(
+    places: list[Record], cruises: list[Record], towns: list[list], airports: list[list]
+) -> list[str]:
+    """Each place's coordinates against where its town really is (GeoNames, then airports).
+
+    A place whose town isn't in either table is skipped; one whose town is, but far
+    from the place's coordinates, is reported with the distance.
+    """
+    from .towns import fold, km
+
+    # Keyed by name and country, and by name, country and state where there is one.
+    where: dict[tuple[str, ...], list[tuple[float, float]]] = {}
+    for t in towns[1:]:
+        where.setdefault((fold(t[0]), t[1]), []).append((t[3], t[4]))
+        if t[2]:
+            where.setdefault((fold(t[0]), t[1], t[2]), []).append((t[3], t[4]))
+    for a in airports:
+        region = a[7] if len(a) > 7 else ""
+        for n in [a[4], *(a[8] if len(a) > 8 else [])]:
+            where.setdefault((fold(n), a[5]), []).append((a[1], a[2]))
+            if region:
+                where.setdefault((fold(n), a[5], region), []).append((a[1], a[2]))
+    out: list[str] = []
+
+    def near(label: str, town: str, country: str, at: tuple[float, float]) -> None:
+        name, _, qualifier = (x.strip() for x in town.partition(","))
+        key: tuple[str, ...] = (fold(name), country)
+        if country == "US" and qualifier in US_TERRITORIES:
+            key = (fold(name), qualifier)
+        elif country in ("US", "CA", "AU") and qualifier.isupper() and 2 <= len(qualifier) <= 3:
+            key = (fold(name), country, qualifier)
+        spots = where.get(key)
+        if not spots:
+            return
+        d = min(km(at, s) for s in spots)
+        if d > MAX_TOWN_KM:
+            out.append(f"{label}: {d:.0f} km from {town} (check its coordinates)")
+
+    for p in places:
+        near(f"places/{p['id']}", p["town"], p["country"], (p["lat"], p["lon"]))
+    for c in cruises:
+        country = c.get("country", "US")
+        near(
+            f"cruises/{c['id']} port",
+            c["port"],
+            country,
+            (c["portPoint"]["lat"], c["portPoint"]["lon"]),
+        )
+    return out
+
+
 def check_all(data: Record) -> list[str]:
+    """Every check over the loaded files: airports, places, cruises (keys as in paths)."""
+    from .towns import check_towns
     from .visas import check_visas
 
-    """Every check over the loaded files: airports, places, cruises (keys as in paths)."""
     rules = data["rules"]
     return (
         check_airports(data["airports"])
         + check_countries(data["countries"], data["states"])
         + check_aliases(data["aliases"])
         + check_visas(data["visas"])
+        + check_towns(data["towns"])
         + check_places(data["places"], rules, data["airports"])
         + check_cruises(data["cruises"], rules)
+        + check_locations(data["places"], data["cruises"], data["towns"], data["airports"])
     )

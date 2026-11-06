@@ -67,9 +67,28 @@ export function mergePlaces(primary: RealPlace[], secondary: RealPlace[]): RealP
     }
     if (!same.hours && s.hours) same.hours = s.hours;
     if (!same.address && s.address) same.address = s.address;
+    if (s.fame !== undefined && (same.fame ?? -1) < s.fame) same.fame = s.fame;
   }
   return out;
 }
+
+/**
+ * Sights in the order worth seeing them: how well known each is (Wikipedia page
+ * views) with a travel-guide pick counting as well known on its own, so the
+ * Colosseum and the guide's favorites lead and an obscure plaque comes last.
+ * Places Waypoint knows nothing about keep their order. Pure, so it's testable.
+ */
+export function rankSights(list: RealPlace[]): RealPlace[] {
+  const score = (p: RealPlace) =>
+    (p.fame !== undefined ? Math.log10(p.fame + 1) : 0) + (p.source === "wikivoyage" ? 3.5 : 0);
+  return list
+    .map((p, i) => ({ p, i, s: score(p) }))
+    .sort((a, b) => b.s - a.s || a.i - b.i)
+    .map(({ p }) => p);
+}
+
+/** Monthly Wikipedia views from which a sight counts as one of a place's best known. */
+const FAMOUS_VIEWS = 30_000;
 
 /** Real nearby places as short lines for the prompt ("British Museum — Museum in London"). */
 export function placeLines(sights: RealPlace[], restaurants: RealPlace[]): string[] {
@@ -83,6 +102,7 @@ export function placeLines(sights: RealPlace[], restaurants: RealPlace[]): strin
           : "",
       p.hours ? `hours: ${p.hours}` : "",
       p.source === "wikivoyage" ? "recommended by travelers" : "",
+      (p.fame ?? 0) >= FAMOUS_VIEWS ? "one of the best-known sights here" : "",
     ].filter(Boolean);
     return clip(`${p.name} (${p.typeLabel})${facts.length ? `: ${facts.join("; ")}` : ""}`, 260);
   };

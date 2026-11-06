@@ -1,4 +1,5 @@
 // Server-only: real sights and restaurants in a destination via the Google Maps connector.
+import { milesBetween, type GeoPoint } from "../catalog";
 import type { Interest, TravelStyle } from "../demo-data";
 import {
   FOOD_TYPES,
@@ -45,9 +46,25 @@ const FIELD_MASK = [
   "places.editorialSummary",
   "places.googleMapsUri",
   "places.businessStatus",
+  "places.location",
 ].join(",");
 
-type Place = GPlace & { businessStatus?: string };
+/** Results are searched around the destination and anything farther than this is another town. */
+const BIAS_METERS = 20_000;
+const MAX_KM = 80;
+
+type Place = GPlace & {
+  businessStatus?: string;
+  location?: { latitude?: number; longitude?: number };
+};
+
+/** A result really in the destination: near it when its location is known. */
+export function nearEnough(p: Place, near?: GeoPoint | undefined): boolean {
+  const lat = p.location?.latitude;
+  const lon = p.location?.longitude;
+  if (!near || typeof lat !== "number" || typeof lon !== "number") return true;
+  return milesBetween(near, { lat, lon }) * 1.609 <= MAX_KM;
+}
 
 function toRealPlace(p: Place, kind: RealPlace["kind"]): RealPlace | null {
   const name = p.displayName?.text;
@@ -76,6 +93,7 @@ export async function findDestinationPlaces(input: {
   destination: string;
   interests: Interest[];
   style: TravelStyle;
+  near?: GeoPoint | undefined;
 }): Promise<DestinationPlacesResult> {
   const lovable = process.env["LOVABLE_API_KEY"];
   const maps = process.env["GOOGLE_MAPS_API_KEY"];
@@ -89,10 +107,20 @@ export async function findDestinationPlaces(input: {
       .filter((q): q is string => !!q)
       .slice(0, MAX_INTEREST_QUERIES),
   ];
+  const bias = input.near
+    ? {
+        locationBias: {
+          circle: {
+            center: { latitude: input.near.lat, longitude: input.near.lon },
+            radius: BIAS_METERS,
+          },
+        },
+      }
+    : {};
   const requests = [
     ...sightQueries.map((q) => ({
       kind: "sight" as const,
-      body: { textQuery: `${q} in ${input.destination}`, pageSize: PAGE_SIZE },
+      body: { textQuery: `${q} in ${input.destination}`, pageSize: PAGE_SIZE, ...bias },
     })),
     {
       kind: "restaurant" as const,
@@ -101,6 +129,7 @@ export async function findDestinationPlaces(input: {
         pageSize: PAGE_SIZE,
         priceLevels: RESTAURANT_PRICE_LEVELS[input.style],
         minRating: 4,
+        ...bias,
       },
     },
   ];
@@ -122,7 +151,7 @@ export async function findDestinationPlaces(input: {
         const isFood = FOOD_TYPES.some((t) => (p.types ?? []).includes(t));
         const kind = res.value.r.kind === "restaurant" || isFood ? "restaurant" : "sight";
         const target = kind === "restaurant" ? restaurants : sights;
-        if (sights.has(p.id) || restaurants.has(p.id)) continue;
+        if (sights.has(p.id) || restaurants.has(p.id) || !nearEnough(p, input.near)) continue;
         const place = toRealPlace(p, kind);
         if (place) target.set(p.id, place);
       }
