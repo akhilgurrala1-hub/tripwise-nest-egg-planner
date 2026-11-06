@@ -5,31 +5,32 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg text-sm font-medium cursor-pointer select-none transition-[transform,background-color,color,border-color,box-shadow,opacity] duration-150 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:pointer-events-none disabled:opacity-45 disabled:cursor-not-allowed active:scale-[0.97] [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
+  // `pressable`: shrinks the instant the pointer goes down, springs back on release.
+  "pressable inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-xl text-sm font-medium cursor-pointer select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:pointer-events-none disabled:opacity-40 disabled:cursor-not-allowed [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
   {
     variants: {
       variant: {
-        default: "bg-primary text-primary-foreground hover:bg-primary-deep",
+        default: "bg-primary font-semibold text-primary-foreground hover:bg-primary-deep",
         destructive: "bg-destructive text-destructive-foreground hover:bg-destructive/90",
-        outline:
-          "border border-border bg-card text-foreground hover:bg-secondary hover:border-input",
-        secondary: "bg-secondary text-secondary-foreground hover:bg-accent",
-        ghost: "text-foreground hover:bg-secondary",
+        // Bordered: a tinted fill, no outline stroke (HIG "gray" button).
+        outline: "bg-fill text-foreground hover:bg-secondary",
+        secondary: "bg-fill text-secondary-foreground hover:bg-secondary",
+        ghost: "text-foreground hover:bg-fill",
         link: "text-primary underline-offset-4 hover:underline",
         // Primary call to action: solid ink, inverts in dark mode.
-        hero: "bg-ink text-ink-foreground hover:opacity-90",
+        hero: "bg-ink font-semibold text-ink-foreground hover:opacity-90",
         // "Go" actions that move the trip forward (Plan trip, Start planning).
-        go: "bg-go text-go-foreground shadow-[0_1px_2px_oklch(0.3_0.1_152/0.25)] hover:bg-go-deep",
-        ink: "bg-ink text-ink-foreground hover:opacity-90",
+        go: "bg-go font-semibold text-go-foreground hover:bg-go-deep",
+        ink: "bg-ink font-semibold text-ink-foreground hover:opacity-90",
         shield: "bg-shield text-shield-foreground hover:opacity-90",
-        success:
-          "border border-border bg-card text-foreground hover:border-success/40 hover:text-success",
+        success: "bg-fill text-foreground hover:text-success",
       },
       size: {
-        default: "h-10 px-4",
-        sm: "h-8 rounded-md px-3 text-[13px]",
-        lg: "h-12 px-6 text-[15px]",
-        icon: "h-10 w-10",
+        // 44px: the smallest comfortable touch target.
+        default: "h-11 px-4",
+        sm: "h-8 rounded-lg px-4 text-footnote",
+        lg: "h-12 px-6 text-headline",
+        icon: "h-11 w-11",
       },
     },
     defaultVariants: {

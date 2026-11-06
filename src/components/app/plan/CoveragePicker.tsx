@@ -55,7 +55,7 @@ export function CoveragePicker({
     mode === "flight" ? "airport" : mode === "train" || mode === "bus" ? "station" : null;
   return (
     <div>
-      <p className="mb-2.5 text-sm text-muted-foreground">Already taken care of</p>
+      <p className="mb-2 text-sm text-muted-foreground">Already taken care of</p>
       <div className="grid gap-2 sm:grid-cols-2" role="group" aria-label="Already taken care of">
         {FLAGS.map((f) => {
           const on = !!c[f.id];
@@ -67,7 +67,7 @@ export function CoveragePicker({
               aria-pressed={on}
               onClick={() => set({ [f.id]: !on })}
               className={cn(
-                "flex items-center gap-3 rounded-lg border px-3 py-2.5 text-left transition-[background-color,border-color,transform] duration-150 active:scale-[0.98]",
+                "flex items-center gap-4 rounded-lg border px-4 py-2 text-left transition-[background-color,border-color,transform] duration-150 active:scale-[0.98]",
                 on
                   ? "border-primary bg-[color-mix(in_oklab,var(--primary)_6%,var(--card))]"
                   : "border-border bg-card hover:border-muted-foreground/40",
@@ -78,8 +78,8 @@ export function CoveragePicker({
                 strokeWidth={1.8}
               />
               <span className="min-w-0 flex-1">
-                <span className="block text-[13px] leading-tight font-medium">{f.label}</span>
-                <span className="mt-0.5 block text-[11px] leading-tight text-muted-foreground">
+                <span className="block text-footnote leading-tight font-medium">{f.label}</span>
+                <span className="mt-1 block text-micro leading-tight text-muted-foreground">
                   {f.hint}
                 </span>
               </span>
@@ -94,7 +94,7 @@ export function CoveragePicker({
       </div>
       {station && (
         <div className="mt-4 max-w-xs">
-          <label htmlFor="transfer" className="text-[13px] text-muted-foreground">
+          <label htmlFor="transfer" className="text-footnote text-muted-foreground">
             Getting to the {station} and back
           </label>
           <NumberField
@@ -104,9 +104,9 @@ export function CoveragePicker({
             step={5}
             value={c.transfer ?? 0}
             onChange={(n) => set({ transfer: n > 0 ? n : undefined })}
-            className="mt-1.5 h-11"
+            className="mt-2 h-11"
           />
-          <p className="mt-1.5 text-xs text-muted-foreground">
+          <p className="mt-2 text-xs text-muted-foreground">
             From your dorm or home, e.g. a rideshare each way. Leave at $0 if you have a ride.
           </p>
         </div>

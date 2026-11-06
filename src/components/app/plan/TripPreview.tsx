@@ -109,27 +109,27 @@ export function TripPreview({
       className={cn("surface-card overflow-hidden", className)}
       style={{ "--trip": color } as CSSProperties}
     >
-      <div className="flex items-center gap-2 px-5 pt-5 text-[13px] font-medium">
+      <div className="flex items-center gap-2 px-6 pt-6 text-footnote font-medium">
         <span className="grid size-7 place-items-center rounded-lg bg-[color-mix(in_oklab,var(--trip)_12%,transparent)] transition-colors duration-500">
           <Icon className="size-4" style={{ color }} strokeWidth={2} />
         </span>
         {tripTypeInfo(form.tripType).label}
         <span className="eyebrow ml-auto">Preview</span>
       </div>
-      <div className="p-5 pt-4">
+      <div className="p-6 pt-4">
         <DestinationPhoto
           dest={dest}
           origin={form.origin}
           showText={false}
           className="-mx-1 mb-4"
         />
-        <p key={destLabel} className="title-display animate-pop text-[32px]">
+        <p key={destLabel} className="title-display animate-pop text-large-title">
           {destLabel}
         </p>
         {dest.region && !form.cities?.some((x) => x.name.trim()) && (
-          <p className="mt-0.5 text-xs text-muted-foreground">{dest.region}</p>
+          <p className="mt-1 text-xs text-muted-foreground">{dest.region}</p>
         )}
-        <ul className="mt-4 space-y-1.5 text-[13px] [&_svg]:size-3.5 [&_svg]:shrink-0 [&_svg]:text-muted-foreground">
+        <ul className="mt-4 space-y-2 text-footnote [&_svg]:size-3.5 [&_svg]:shrink-0 [&_svg]:text-muted-foreground">
           {form.origin && form.tripType !== "staycation" && (
             <li className="flex items-center gap-2">
               <MapPin />
@@ -171,7 +171,7 @@ export function TripPreview({
           {flying &&
             noAirport.map((p) => (
               <li key={p.name} className="animate-pop flex items-start gap-2 text-destructive">
-                <CircleAlert className="mt-0.5 text-destructive!" />
+                <CircleAlert className="mt-1 text-destructive!" />
                 <span>
                   No airport with flights near {p.name}
                   {p.closest ? `. Closest: ${p.closest.code}, ${p.closest.miles} mi away.` : "."}
@@ -180,7 +180,7 @@ export function TripPreview({
             ))}
           {coveredLabels(form.coverage).length > 0 && (
             <li className="animate-pop flex items-start gap-2">
-              <CircleCheck className="mt-0.5" />
+              <CircleCheck className="mt-1" />
               <span>Not counted: {coveredLabels(form.coverage).join(", ")}</span>
             </li>
           )}
@@ -192,17 +192,17 @@ export function TripPreview({
           )}
         </ul>
 
-        <div className="mt-5 border-t border-border pt-4">
+        <div className="mt-6 border-t border-border pt-4">
           <div className="flex items-baseline justify-between gap-2">
-            <p className="text-[13px] text-muted-foreground">Estimated cost</p>
-            <AnimatedMoney value={totals.planned} className="money-display text-[36px]" />
+            <p className="text-footnote text-muted-foreground">Estimated cost</p>
+            <AnimatedMoney value={totals.planned} className="money-display text-large-title" />
           </div>
           <ApproxMoney usd={totals.planned} className="block text-right text-xs" />
           <div className="mt-2 flex h-1.5 overflow-hidden rounded-full bg-muted">
             {cats.map(({ c, v }) => (
               <span
                 key={c}
-                className="h-full transition-[width] duration-500 ease-[var(--ease-out-quint)]"
+                className="h-full transition-[width] spring-smooth"
                 style={{
                   width: `${spendable > 0 ? (v / Math.max(spendable, totals.planned)) * 100 : 0}%`,
                   background: CATEGORY_COLOR_VAR[c],
@@ -212,7 +212,7 @@ export function TripPreview({
           </div>
           <p
             className={cn(
-              "tabular mt-1.5 text-xs",
+              "tabular mt-2 text-xs",
               left < 0 ? "text-destructive" : "text-muted-foreground",
             )}
           >
@@ -222,7 +222,7 @@ export function TripPreview({
                 ? `${formatMoney(left)} to spare of ${formatMoney(spendable)} · ${Math.round(pct)}% planned`
                 : `${formatMoney(-left)} over your ${formatMoney(spendable)}. Try Savvy or fewer nights`}
           </p>
-          <ul className="mt-3 space-y-1.5 text-xs">
+          <ul className="mt-4 space-y-2 text-xs">
             {top.map(({ c, v }) => {
               const parts =
                 c === "transportation" && inputs
@@ -244,7 +244,7 @@ export function TripPreview({
                   </span>
                   {parts.length > 1 ||
                   (parts.length === 1 && parts[0]!.label !== CATEGORY_LABELS[c]) ? (
-                    <ul className="mt-1 space-y-0.5 pl-4 text-muted-foreground">
+                    <ul className="mt-1 space-y-1 pl-4 text-muted-foreground">
                       {parts.map((p) => (
                         <li key={p.key} className="flex gap-2">
                           <span className="min-w-0 flex-1 truncate">
@@ -260,7 +260,7 @@ export function TripPreview({
             })}
           </ul>
         </div>
-        <Button type="submit" form={formId} variant="go" size="lg" className="mt-5 w-full">
+        <Button type="submit" form={formId} variant="go" size="lg" className="mt-6 w-full">
           Plan trip <ArrowRight />
         </Button>
       </div>

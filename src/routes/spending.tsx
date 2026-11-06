@@ -104,7 +104,7 @@ function SpendingPage() {
       <PageHeader eyebrow="Spending" title="What you've spent" />
       <BudgetTabs current="spent" />
 
-      <div className="mx-auto mt-6 grid max-w-6xl grid-cols-1 gap-4 px-4 lg:grid-cols-[minmax(0,1fr)_340px]">
+      <div className="page-container mt-6 layout-main-aside">
         <div className="min-w-0 space-y-4">
           <SummaryCard />
           <ExpenseForm
@@ -115,9 +115,9 @@ function SpendingPage() {
           {hasAny && <CategoryCard />}
 
           {days.length > 0 && (
-            <section aria-labelledby="spend-log" className="space-y-3">
+            <section aria-labelledby="spend-log" className="space-y-4">
               <div className="flex flex-wrap items-center justify-between gap-2">
-                <h2 id="spend-log" className="title-display text-[26px]">
+                <h2 id="spend-log" className="title-display text-title-1">
                   Day by day
                 </h2>
                 <Button variant="outline" size="sm" onClick={download}>
@@ -132,11 +132,11 @@ function SpendingPage() {
                     month: "long",
                     day: "numeric",
                   })}
-                  className="surface-card render-lazy animate-rise p-4 sm:p-5"
+                  className="surface-card render-lazy animate-rise p-4 sm:p-6"
                   style={stagger(i)}
                 >
-                  <div className="flex items-baseline justify-between gap-3">
-                    <h3 className="text-[15px] font-semibold">
+                  <div className="flex items-baseline justify-between gap-4">
+                    <h3 className="text-headline font-semibold">
                       {formatCalendarDate(d.date, {
                         weekday: "short",
                         month: "short",
@@ -185,7 +185,7 @@ function SummaryCard() {
   const { summary, trip } = useSpending();
   const s = summary;
   return (
-    <section className="surface-card animate-rise p-5 sm:p-7" aria-labelledby="spend-summary">
+    <section className="surface-card animate-rise p-6 sm:p-8" aria-labelledby="spend-summary">
       <h2 id="spend-summary" className="sr-only">
         Summary
       </h2>
@@ -194,12 +194,7 @@ function SummaryCard() {
           <p className="text-sm text-muted-foreground">
             {s.over ? "Over your spending money" : "Left to spend"}
           </p>
-          <p
-            className={cn(
-              "money-display mt-2 text-[56px] sm:text-[76px]",
-              s.over && "text-destructive",
-            )}
-          >
+          <p className={cn("money-display mt-2 text-display", s.over && "text-destructive")}>
             {s.over ? "−" : ""}
             <AnimatedMoney value={Math.abs(s.left)} />
           </p>
@@ -208,19 +203,19 @@ function SummaryCard() {
             suffix={s.over ? "over" : "left"}
             className="mt-1 block text-sm"
           />
-          <p className="tabular mt-3 text-sm text-muted-foreground">
+          <p className="tabular mt-4 text-sm text-muted-foreground">
             {formatMoney(s.spent)} spent of {formatMoney(s.spendable)}
-            <span className="px-1.5 text-border">/</span>
+            <span className="px-2 text-border">/</span>
             <Lock className="mr-1 inline size-3 -translate-y-px" />
             {formatMoney(s.emergencyFund)} emergency fund kept separate
           </p>
         </div>
-        <dl className="grid grid-cols-2 gap-x-8 gap-y-3 text-sm sm:text-right">
+        <dl className="grid grid-cols-2 gap-x-8 gap-y-4 text-sm sm:text-right">
           {s.phase === "during" ? (
             <>
               <div>
                 <dt className="text-muted-foreground">Spent today</dt>
-                <dd className="tabular mt-0.5 text-base font-medium">
+                <dd className="tabular mt-1 text-base font-medium">
                   <AnimatedMoney value={s.today} />
                 </dd>
               </div>
@@ -228,7 +223,7 @@ function SummaryCard() {
                 <dt className="text-muted-foreground">
                   A day, for {s.daysLeft} day{s.daysLeft === 1 ? "" : "s"}
                 </dt>
-                <dd className="tabular mt-0.5 text-base font-medium">
+                <dd className="tabular mt-1 text-base font-medium">
                   <AnimatedMoney value={s.perDayLeft ?? 0} />
                 </dd>
               </div>
@@ -237,11 +232,11 @@ function SummaryCard() {
             <>
               <div>
                 <dt className="text-muted-foreground">Planned</dt>
-                <dd className="tabular mt-0.5 text-base font-medium">{formatMoney(s.planned)}</dd>
+                <dd className="tabular mt-1 text-base font-medium">{formatMoney(s.planned)}</dd>
               </div>
               <div>
                 <dt className="text-muted-foreground">{s.phase === "after" ? "Trip" : "Starts"}</dt>
-                <dd className="mt-0.5 text-base font-medium">
+                <dd className="mt-1 text-base font-medium">
                   {s.phase === "after"
                     ? "Over"
                     : formatCalendarDate(trip.setup.startDate, { month: "short", day: "numeric" })}
@@ -251,7 +246,7 @@ function SummaryCard() {
           )}
         </dl>
       </div>
-      <p className="mt-5 text-xs text-muted-foreground">
+      <p className="mt-6 text-xs text-muted-foreground">
         {s.phase === "during"
           ? "The daily figure is what's left shared over the days still to come, today included."
           : s.phase === "before"
@@ -268,21 +263,21 @@ function CategoryCard() {
   const { summary } = useSpending();
   return (
     <section
-      className="surface-card animate-rise p-5"
+      className="surface-card animate-rise p-6"
       aria-labelledby="spend-cats"
       style={stagger(1)}
     >
-      <h2 id="spend-cats" className="title-display text-[26px]">
+      <h2 id="spend-cats" className="title-display text-title-1">
         By category
       </h2>
-      <ul className="mt-3 space-y-3.5">
+      <ul className="mt-4 space-y-4">
         {summary.categories.map((c) => {
           const pct =
             c.planned > 0 ? Math.min(100, (c.spent / c.planned) * 100) : c.spent > 0 ? 100 : 0;
           const Icon = CATEGORY_ICONS[c.category];
           return (
             <li key={c.category}>
-              <div className="flex flex-wrap items-baseline justify-between gap-x-3 text-sm">
+              <div className="flex flex-wrap items-baseline justify-between gap-x-4 text-sm">
                 <span className="flex items-center gap-2 font-medium">
                   <Icon
                     className="size-4"
@@ -297,12 +292,12 @@ function CategoryCard() {
                 </span>
               </div>
               <div
-                className="mt-1.5 h-2 overflow-hidden rounded-full bg-muted"
+                className="mt-2 h-2 overflow-hidden rounded-full bg-muted"
                 role="img"
                 aria-label={`${c.label}: ${formatMoney(c.spent)} of ${formatMoney(c.planned)} spent`}
               >
                 <span
-                  className="block h-full rounded-full transition-[width] duration-500 ease-[var(--ease-out-quint)]"
+                  className="block h-full rounded-full transition-[width] spring-smooth"
                   style={{
                     width: `${pct}%`,
                     backgroundColor: c.over ? "var(--destructive)" : CATEGORY_COLOR_VAR[c.category],
@@ -402,12 +397,12 @@ function ExpenseForm({ editing, onDone }: { editing: Expense | null; onDone: () 
 
   return (
     <section
-      className="surface-card animate-rise p-5"
+      className="surface-card animate-rise p-6"
       aria-labelledby="spend-add"
       style={stagger(1)}
     >
-      <div className="flex items-center justify-between gap-3">
-        <h2 id="spend-add" className="text-[15px] font-semibold">
+      <div className="flex items-center justify-between gap-4">
+        <h2 id="spend-add" className="text-headline font-semibold">
           {editing ? "Change this cost" : "Log a cost"}
         </h2>
         {editing && (
@@ -416,8 +411,8 @@ function ExpenseForm({ editing, onDone }: { editing: Expense | null; onDone: () 
           </Button>
         )}
       </div>
-      <form onSubmit={submit} className="mt-3 space-y-4">
-        <div className="flex flex-wrap items-end gap-3">
+      <form onSubmit={submit} className="mt-4 space-y-4">
+        <div className="flex flex-wrap items-end gap-4">
           <label className="text-xs text-muted-foreground">
             Amount
             <NumberField
@@ -436,7 +431,7 @@ function ExpenseForm({ editing, onDone }: { editing: Expense | null; onDone: () 
               <select
                 value={currency}
                 onChange={(e) => setCurrency(e.target.value)}
-                className="mt-1 block h-11 rounded-lg border border-input bg-card px-3 text-sm text-foreground"
+                className="mt-1 block h-11 rounded-lg border border-input bg-fill px-4 text-sm text-foreground"
               >
                 {currencies.map((c) => (
                   <option key={c} value={c}>
@@ -467,7 +462,7 @@ function ExpenseForm({ editing, onDone }: { editing: Expense | null; onDone: () 
 
         <fieldset>
           <legend className="text-xs text-muted-foreground">Category</legend>
-          <div className="mt-1.5 grid grid-cols-2 gap-1.5 sm:grid-cols-4">
+          <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-4">
             {shownCats.map((c) => {
               const Icon = CATEGORY_ICONS[c];
               const on = c === category;
@@ -478,7 +473,7 @@ function ExpenseForm({ editing, onDone }: { editing: Expense | null; onDone: () 
                   aria-pressed={on}
                   onClick={() => setCategory(c)}
                   className={cn(
-                    "flex min-h-11 items-center gap-2 rounded-lg border px-3 text-left text-[13px] font-medium transition-colors",
+                    "flex min-h-11 items-center gap-2 rounded-lg border px-4 text-left text-footnote font-medium transition-colors",
                     on
                       ? "border-primary bg-[color-mix(in_oklch,var(--primary)_8%,transparent)] text-foreground"
                       : "border-border text-muted-foreground hover:text-foreground",
@@ -508,13 +503,13 @@ function ExpenseForm({ editing, onDone }: { editing: Expense | null; onDone: () 
         </label>
 
         {people.length > 1 && (
-          <div className="grid gap-3 sm:grid-cols-[auto_1fr]">
+          <div className="grid gap-4 sm:grid-cols-[auto_1fr]">
             <label className="text-xs text-muted-foreground">
               Paid by
               <select
                 value={paidBy}
                 onChange={(e) => setPaidBy(e.target.value)}
-                className="mt-1 block h-11 rounded-lg border border-input bg-card px-3 text-sm text-foreground"
+                className="mt-1 block h-11 rounded-lg border border-input bg-fill px-4 text-sm text-foreground"
               >
                 <option value="">Not splitting this</option>
                 {people.map((p) => (
@@ -579,7 +574,7 @@ function ExpenseRow({
     });
   };
   return (
-    <li className={cn("flex items-center gap-3 py-2.5", editing && "opacity-60")}>
+    <li className={cn("flex items-center gap-4 py-2", editing && "opacity-60")}>
       <Icon
         className="size-4 shrink-0"
         style={{ color: CATEGORY_COLOR_VAR[e.category] }}
@@ -601,7 +596,7 @@ function ExpenseRow({
           </p>
         )}
       </div>
-      <div className="flex shrink-0 gap-0.5">
+      <div className="flex shrink-0 gap-1">
         <Button
           type="button"
           variant="ghost"
@@ -642,8 +637,8 @@ function SplitCard() {
   };
 
   return (
-    <section className="surface-card animate-rise p-5" aria-labelledby="spend-split">
-      <h2 id="spend-split" className="title-display text-[26px] leading-tight">
+    <section className="surface-card animate-rise p-6" aria-labelledby="spend-split">
+      <h2 id="spend-split" className="title-display text-title-1 leading-tight">
         Split costs
       </h2>
       <p className="mt-1 text-xs text-muted-foreground">
@@ -654,7 +649,7 @@ function SplitCard() {
           : "Pick who paid when you log a cost. Names stay on this trip."}
       </p>
       {people.length > 0 && (
-        <ul className="mt-3 divide-y divide-border">
+        <ul className="mt-4 divide-y divide-border">
           {people.map((p) => {
             const b = owed.find((x) => x.person.id === p.id);
             return (
@@ -680,7 +675,7 @@ function SplitCard() {
         </ul>
       )}
       {people.length < 20 && (
-        <form onSubmit={add} className="mt-3 flex gap-2">
+        <form onSubmit={add} className="mt-4 flex gap-2">
           <Input
             value={name}
             onChange={(e) => setName(e.target.value)}
@@ -696,7 +691,7 @@ function SplitCard() {
       )}
 
       {people.length > 1 && paidCosts && (
-        <div className="mt-5 border-t border-border pt-4">
+        <div className="mt-6 border-t border-border pt-4">
           <h3 className="eyebrow">To settle up</h3>
           {payments.length === 0 ? (
             <p className="mt-2 text-sm text-muted-foreground">Everyone's even.</p>
@@ -705,7 +700,7 @@ function SplitCard() {
               {payments.map((t) => (
                 <li
                   key={`${t.from.id}-${t.to.id}`}
-                  className="flex items-baseline justify-between gap-3 text-sm"
+                  className="flex items-baseline justify-between gap-4 text-sm"
                 >
                   <span>
                     <span className="font-medium">{t.from.name}</span> pays{" "}
@@ -718,7 +713,7 @@ function SplitCard() {
               ))}
             </ul>
           )}
-          <p className="mt-3 text-xs text-muted-foreground">
+          <p className="mt-4 text-xs text-muted-foreground">
             The fewest payments that even everyone out. Costs nobody paid for in the group (and
             booked prices) aren't split.
           </p>

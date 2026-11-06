@@ -28,8 +28,8 @@ export function CitiesEditor({
 
   return (
     <div className="mt-6">
-      <div className="flex flex-col gap-0.5 sm:flex-row sm:items-baseline sm:justify-between sm:gap-3">
-        <p className="text-[13px] text-muted-foreground">More cities on this trip</p>
+      <div className="flex flex-col gap-1 sm:flex-row sm:items-baseline sm:justify-between sm:gap-4">
+        <p className="text-footnote text-muted-foreground">More cities on this trip</p>
         {cities.length > 0 && (
           <p className="tabular text-xs text-muted-foreground">
             {legs
@@ -44,7 +44,7 @@ export function CitiesEditor({
             <li key={i} className="flex flex-wrap items-center gap-2 sm:flex-nowrap">
               <span
                 aria-hidden
-                className="font-mono w-6 shrink-0 text-center text-[12px] text-coral-text"
+                className="tabular w-6 shrink-0 text-center text-caption font-semibold text-coral-text"
               >
                 {String(i + 2).padStart(2, "0")}
               </span>
@@ -58,7 +58,7 @@ export function CitiesEditor({
                   className="h-11 w-full"
                 />
               </div>
-              <div className="ml-8 flex h-11 items-center rounded-lg border border-input bg-card sm:ml-0">
+              <div className="ml-8 flex h-11 items-center rounded-lg border border-input bg-fill sm:ml-0">
                 <Button
                   type="button"
                   variant="ghost"
@@ -70,7 +70,7 @@ export function CitiesEditor({
                 >
                   <Minus />
                 </Button>
-                <span className="tabular w-16 text-center text-[13px]">
+                <span className="tabular w-16 text-center text-footnote">
                   {c.nights} night{c.nights === 1 ? "" : "s"}
                 </span>
                 <Button

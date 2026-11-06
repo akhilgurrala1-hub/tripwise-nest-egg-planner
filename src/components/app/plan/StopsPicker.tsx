@@ -12,7 +12,7 @@ export function StopsPicker({
   className?: string;
 }) {
   return (
-    <div className={className ?? "mt-3 flex flex-wrap items-center gap-x-4 gap-y-2"}>
+    <div className={className ?? "mt-4 flex flex-wrap items-center gap-x-4 gap-y-2"}>
       <p className="text-sm text-muted-foreground">Stops</p>
       <Segmented
         ariaLabel="Flight stops"

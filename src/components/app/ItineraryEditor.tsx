@@ -104,7 +104,7 @@ export function ItemDialog({
           </DialogHeader>
 
           <div>
-            <Label htmlFor="item-name" className="text-[13px] font-normal text-muted-foreground">
+            <Label htmlFor="item-name" className="text-footnote font-normal text-muted-foreground">
               Name
             </Label>
             <Input
@@ -114,12 +114,12 @@ export function ItemDialog({
               placeholder="e.g. Tennessee Aquarium"
               value={draft.name}
               onChange={(e) => set({ name: e.target.value })}
-              className="mt-1.5"
+              className="mt-2"
             />
           </div>
 
           <div>
-            <p className="mb-1.5 text-[13px] text-muted-foreground">When</p>
+            <p className="mb-2 text-footnote text-muted-foreground">When</p>
             <Segmented
               ariaLabel="Time of day"
               size="sm"
@@ -129,9 +129,9 @@ export function ItemDialog({
             />
           </div>
 
-          <div className="grid grid-cols-[auto_1fr] items-end gap-3">
+          <div className="grid grid-cols-[auto_1fr] items-end gap-4">
             <div>
-              <p className="mb-1.5 text-[13px] text-muted-foreground">Type</p>
+              <p className="mb-2 text-footnote text-muted-foreground">Type</p>
               <Segmented
                 ariaLabel="Type"
                 size="sm"
@@ -141,7 +141,7 @@ export function ItemDialog({
               />
             </div>
             <div>
-              <Label className="text-[13px] font-normal text-muted-foreground">
+              <Label className="text-footnote font-normal text-muted-foreground">
                 Cost per person
               </Label>
               <NumberField
@@ -150,14 +150,17 @@ export function ItemDialog({
                 step={5}
                 value={draft.costPerPerson}
                 onChange={(costPerPerson) => set({ costPerPerson })}
-                className="mt-1.5 h-10"
+                className="mt-2 h-10"
               />
             </div>
           </div>
 
-          <div className="grid gap-3 sm:grid-cols-2">
+          <div className="grid gap-4 sm:grid-cols-2">
             <div>
-              <Label htmlFor="item-area" className="text-[13px] font-normal text-muted-foreground">
+              <Label
+                htmlFor="item-area"
+                className="text-footnote font-normal text-muted-foreground"
+              >
                 Where (optional)
               </Label>
               <Input
@@ -166,11 +169,14 @@ export function ItemDialog({
                 placeholder="Neighborhood or address"
                 value={draft.area}
                 onChange={(e) => set({ area: e.target.value })}
-                className="mt-1.5"
+                className="mt-2"
               />
             </div>
             <div>
-              <Label htmlFor="item-note" className="text-[13px] font-normal text-muted-foreground">
+              <Label
+                htmlFor="item-note"
+                className="text-footnote font-normal text-muted-foreground"
+              >
                 Note (optional)
               </Label>
               <Input
@@ -179,7 +185,7 @@ export function ItemDialog({
                 placeholder="Book ahead, bring cash…"
                 value={draft.note}
                 onChange={(e) => set({ note: e.target.value })}
-                className="mt-1.5"
+                className="mt-2"
               />
             </div>
           </div>
@@ -222,8 +228,8 @@ export function ItemActions({
   };
 
   return (
-    <div className="flex shrink-0 items-center gap-0.5">
-      <div className="hidden items-center gap-0.5 opacity-0 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100 sm:flex">
+    <div className="flex shrink-0 items-center gap-1">
+      <div className="hidden items-center gap-1 opacity-0 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100 sm:flex">
         <IconButton
           label={`Move ${item.name} earlier`}
           disabled={!up}
@@ -329,7 +335,7 @@ export function AddItemButton({ dayIndex, itinerary }: { dayIndex: number; itine
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="flex min-h-11 w-full items-center gap-2 rounded-lg border border-dashed border-border px-3 text-[13px] text-muted-foreground transition-colors hover:border-muted-foreground/40 hover:text-foreground active:scale-[0.99]"
+        className="flex min-h-11 w-full items-center gap-2 rounded-lg border border-dashed border-border px-4 text-footnote text-muted-foreground transition-colors hover:border-muted-foreground/40 hover:text-foreground active:scale-[0.99]"
       >
         <Plus className="size-4" /> Add to day {day.day}
       </button>

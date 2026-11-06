@@ -81,7 +81,7 @@ export function PriceSourceBadge({ className }: { className?: string }) {
 
 /** A quiet line saying where numbers or places come from (examples, estimates, live). */
 export function SourceNote({ label, className }: { label: string; className?: string }) {
-  return <p className={cn("text-[11px] text-muted-foreground", className)}>{label}</p>;
+  return <p className={cn("text-micro text-muted-foreground", className)}>{label}</p>;
 }
 
 /** Numeric input that lets people clear and retype freely, committing on change. */
@@ -117,7 +117,7 @@ export function NumberField({
   return (
     <div
       className={cn(
-        "flex h-11 items-center gap-1.5 rounded-lg border border-input bg-card px-3 transition-[border-color,box-shadow] duration-150 hover:border-muted-foreground/40 focus-within:border-primary focus-within:ring-3 focus-within:ring-primary/15",
+        "flex h-11 items-center gap-2 rounded-lg border border-input bg-fill px-4 transition-[border-color,box-shadow] duration-150 hover:border-muted-foreground/40 focus-within:border-primary focus-within:ring-3 focus-within:ring-primary/15",
         className,
       )}
     >
@@ -151,7 +151,7 @@ export function NumberField({
           if (e.target.value === "") onChange(0);
         }}
         className={cn(
-          "tabular w-full min-w-0 bg-transparent text-[15px] font-medium outline-none",
+          "tabular w-full min-w-0 bg-transparent text-headline font-medium outline-none",
           inputClassName,
         )}
       />
@@ -170,7 +170,7 @@ export function SectionTitle({
   action?: ReactNode;
 }) {
   return (
-    <div className="mb-4 flex items-end justify-between gap-3">
+    <div className="mb-4 flex items-end justify-between gap-4">
       <div>
         {eyebrow && <p className="eyebrow">{eyebrow}</p>}
         <h2 className="text-lg font-semibold text-foreground">{title}</h2>
@@ -216,7 +216,7 @@ export function InterestChips({
             aria-pressed={active}
             onClick={() => onToggle(i.id)}
             className={cn(
-              "flex h-11 items-center gap-2.5 rounded-lg border px-3 text-left text-[13px] font-medium transition-[background-color,border-color,color,transform] duration-150 active:scale-[0.98]",
+              "flex h-11 items-center gap-2 rounded-lg border px-4 text-left text-footnote font-medium transition-[background-color,border-color,color,transform] duration-150 active:scale-[0.98]",
               active
                 ? "border-primary bg-[color-mix(in_oklab,var(--primary)_6%,var(--card))] text-foreground"
                 : "border-border bg-card text-foreground/85 hover:border-muted-foreground/40",

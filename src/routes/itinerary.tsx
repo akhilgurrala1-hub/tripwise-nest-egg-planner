@@ -189,7 +189,7 @@ function ItineraryPage() {
         </div>
       </PageHeader>
 
-      <div className="mx-auto mt-8 grid max-w-6xl grid-cols-1 gap-4 px-4 lg:grid-cols-[minmax(0,1fr)_320px]">
+      <div className="page-container mt-8 layout-main-aside">
         <div className="min-w-0 space-y-4">
           <PlanSourceBadge source={itin?.source ?? "demo"} />
           {user && itin && itin.days.length > 0 && (
@@ -199,7 +199,7 @@ function ItineraryPage() {
           {planner.busy && (
             <div
               role="status"
-              className="surface-card animate-pop flex items-center gap-3 p-4 text-sm text-muted-foreground"
+              className="surface-card animate-pop flex items-center gap-4 p-4 text-sm text-muted-foreground"
             >
               <LogoMark loading className="size-7 shrink-0" />
               <p className="min-w-0 flex-1">
@@ -220,7 +220,7 @@ function ItineraryPage() {
 
           {!itin || itin.days.length === 0 ? (
             <div className="surface-card p-8 text-center">
-              <p className="text-[15px] font-semibold">No itinerary yet</p>
+              <p className="text-headline font-semibold">No itinerary yet</p>
               <Button className="mt-4" onClick={tripActions.regenerateDemoItinerary}>
                 Create example plan
               </Button>
@@ -250,8 +250,8 @@ function ItineraryPage() {
         <aside className="space-y-4 lg:sticky lg:top-20 lg:self-start">
           <PlanCosts />
           {itin && itin.tips.length > 0 && (
-            <section className="surface-card p-5">
-              <h2 className="title-display text-[26px]">Tips</h2>
+            <section className="surface-card p-6">
+              <h2 className="title-display text-title-1">Tips</h2>
               <ul className="mt-2 space-y-2 text-sm">
                 {itin.tips.map((t, i) => (
                   <li key={i} className="leading-snug">
@@ -284,10 +284,10 @@ function DriveStops() {
   const { trip, shape } = useTrip();
   return (
     <section className="surface-card overflow-hidden">
-      <header className="flex items-center justify-between gap-3 border-b border-border px-5 py-3.5">
+      <header className="flex items-center justify-between gap-4 border-b border-border px-6 py-4">
         <div>
           <p className="eyebrow">On the drive</p>
-          <h2 className="title-display text-[26px]">Road-trip stops</h2>
+          <h2 className="title-display text-title-1">Road-trip stops</h2>
         </div>
         <Link
           to="/road-trip"
@@ -296,9 +296,9 @@ function DriveStops() {
           Find more
         </Link>
       </header>
-      <ol className="px-5 py-2">
+      <ol className="px-6 py-2">
         {trip.roadTrip.includedStops.map((s) => (
-          <li key={s.id} className="flex items-center gap-3 py-2.5">
+          <li key={s.id} className="flex items-center gap-4 py-2">
             <span className="grid size-8 shrink-0 place-items-center rounded-lg border border-border text-foreground/80">
               <Car className="size-4" />
             </span>
@@ -343,8 +343,8 @@ function RefinePlan({ busy, onRefine }: { busy: boolean; onRefine: (text: string
     setText("");
   };
   return (
-    <section className="surface-card p-3 print:hidden">
-      <div className="flex items-center gap-2 rounded-lg border border-input bg-card p-1 pl-3 focus-within:border-primary focus-within:ring-3 focus-within:ring-primary/15">
+    <section className="surface-card p-4 print:hidden">
+      <div className="flex items-center gap-2 rounded-lg border border-input bg-fill p-1 pl-4 focus-within:border-primary focus-within:ring-3 focus-within:ring-primary/15">
         <Wand2 className="size-4 shrink-0 text-brand-coral" aria-hidden />
         <input
           value={text}
@@ -366,14 +366,14 @@ function RefinePlan({ busy, onRefine }: { busy: boolean; onRefine: (text: string
           Update
         </Button>
       </div>
-      <div className="mt-2 flex flex-wrap gap-1.5">
+      <div className="mt-2 flex flex-wrap gap-2">
         {REFINE_IDEAS.map((idea) => (
           <button
             key={idea}
             type="button"
             disabled={busy}
             onClick={() => submit(idea)}
-            className="h-8 rounded-lg bg-muted px-2.5 text-xs text-muted-foreground transition-colors hover:bg-accent hover:text-foreground disabled:opacity-50"
+            className="h-8 rounded-lg bg-muted px-2 text-xs text-muted-foreground transition-colors hover:bg-accent hover:text-foreground disabled:opacity-50"
           >
             {idea}
           </button>

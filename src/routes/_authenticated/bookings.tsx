@@ -77,7 +77,7 @@ function BookingsPage() {
     <div>
       <PageHeader eyebrow="Bookings" title="Reserve your trip" />
       <div className="mx-auto mt-6 max-w-5xl space-y-6 px-4">
-        <p className="rounded-2xl bg-muted px-4 py-3 text-sm leading-snug">
+        <p className="rounded-2xl bg-muted px-4 py-4 text-sm leading-snug">
           You reserve and pay on the hotel's, airline's or rental company's own site. Waypoint never
           takes payment. Add each reservation here and save its confirmation number so everything
           stays in one place.
@@ -85,19 +85,19 @@ function BookingsPage() {
 
         <LivePricesPanel />
 
-        <section className="surface-card p-5">
-          <h2 className="title-display text-[26px]">Hotels</h2>
+        <section className="surface-card p-6">
+          <h2 className="title-display text-title-1">Hotels</h2>
           {live?.hotels ? (
             <>
               <p className="text-sm text-muted-foreground">
                 {live.hotels.checkIn} → {live.hotels.checkOut} · prices per room per night before
                 taxes, from Google Hotels
               </p>
-              <ul className="mt-4 grid gap-3 sm:grid-cols-2">
+              <ul className="mt-4 grid gap-4 sm:grid-cols-2">
                 {live.hotels.options.map((h) => (
                   <li
                     key={h.name}
-                    className="flex gap-3 rounded-2xl border border-border bg-background/60 p-3"
+                    className="flex gap-4 rounded-2xl border border-border bg-background/60 p-4"
                   >
                     {h.image && (
                       <img
@@ -112,7 +112,7 @@ function BookingsPage() {
                       <p className="flex flex-wrap items-center gap-x-2 text-xs text-muted-foreground">
                         {h.hotelClass ? <span>{h.hotelClass}-star</span> : null}
                         {h.rating ? (
-                          <span className="inline-flex items-center gap-0.5">
+                          <span className="inline-flex items-center gap-1">
                             <Star className="size-3 fill-current text-gold" aria-hidden />{" "}
                             {h.rating.toFixed(1)}
                             {h.reviews ? ` (${h.reviews.toLocaleString()})` : ""}
@@ -128,7 +128,7 @@ function BookingsPage() {
                           </span>
                         ) : null}
                       </p>
-                      <div className="mt-2 flex flex-wrap gap-1.5">
+                      <div className="mt-2 flex flex-wrap gap-2">
                         {h.link && (
                           <Button asChild size="sm" variant="ink">
                             <a
@@ -176,8 +176,8 @@ function BookingsPage() {
           )}
         </section>
 
-        <section className="surface-card p-5">
-          <h2 className="title-display text-[26px]">Flights</h2>
+        <section className="surface-card p-6">
+          <h2 className="title-display text-title-1">Flights</h2>
           {live?.flights ? (
             <>
               <p className="text-sm text-muted-foreground">
@@ -192,7 +192,7 @@ function BookingsPage() {
                 {live.flights.options.map((f, i) => (
                   <li
                     key={i}
-                    className="flex flex-wrap items-center gap-3 rounded-2xl border border-border bg-background/60 p-3"
+                    className="flex flex-wrap items-center gap-4 rounded-2xl border border-border bg-background/60 p-4"
                   >
                     <div className="min-w-0 flex-1">
                       <p className="font-semibold">{f.airlines.join(" + ")}</p>
@@ -224,7 +224,7 @@ function BookingsPage() {
                 ))}
               </ul>
               {live.flights.bookingUrl && (
-                <Button asChild variant="ink" className="mt-3">
+                <Button asChild variant="ink" className="mt-4">
                   <a
                     href={safeExternalUrl(live.flights.bookingUrl ?? "")}
                     target="_blank"
@@ -244,14 +244,14 @@ function BookingsPage() {
           )}
         </section>
 
-        <section className="surface-card p-5">
-          <h2 className="title-display text-[26px]">Rental cars</h2>
+        <section className="surface-card p-6">
+          <h2 className="title-display text-title-1">Rental cars</h2>
           <p className="text-sm text-muted-foreground">
             Live rental prices aren't connected yet. Your budget's estimate is{" "}
             <strong className="tabular text-foreground">{formatMoney(carEstimate)}</strong> (
             {formatMoney(trip.inputs.rentalPerDay)}/day × {carDays} days). Compare real prices here:
           </p>
-          <div className="mt-3 flex flex-wrap gap-2">
+          <div className="mt-4 flex flex-wrap gap-2">
             <Button asChild size="sm" variant="ink">
               <a href={kayakCars} target="_blank" rel="noopener noreferrer">
                 Search on KAYAK <ExternalLink />
@@ -282,10 +282,10 @@ function BookingsPage() {
           </div>
         </section>
 
-        <section className="space-y-3">
-          <h2 className="title-display text-[26px]">My bookings ({bookings.length})</h2>
+        <section className="space-y-4">
+          <h2 className="title-display text-title-1">My bookings ({bookings.length})</h2>
           {bookings.length === 0 && (
-            <p className="surface-card p-5 text-sm text-muted-foreground">
+            <p className="surface-card p-6 text-sm text-muted-foreground">
               Nothing tracked yet. Tap Track on a hotel, flight or rental above.
             </p>
           )}
@@ -313,7 +313,7 @@ function BookingCard({ b, onChange }: { b: BookingRow; onChange: () => void }) {
   return (
     <div
       className={cn(
-        "surface-card flex flex-col gap-3 p-4 sm:flex-row sm:items-center",
+        "surface-card flex flex-col gap-4 p-4 sm:flex-row sm:items-center",
         b.status === "cancelled" && "opacity-60",
       )}
     >
@@ -370,7 +370,7 @@ function BookingCard({ b, onChange }: { b: BookingRow; onChange: () => void }) {
           </Button>
         </form>
       </div>
-      <div className="flex flex-wrap gap-1.5">
+      <div className="flex flex-wrap gap-2">
         {safeExternalUrl(b.url) && (
           <Button asChild size="sm" variant="ink">
             <a href={safeExternalUrl(b.url)} target="_blank" rel="noopener noreferrer">

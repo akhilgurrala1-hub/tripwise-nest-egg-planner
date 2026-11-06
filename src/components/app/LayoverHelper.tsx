@@ -40,8 +40,8 @@ export function LayoverHelper({ homeCountry }: { homeCountry: string }) {
       : null;
 
   return (
-    <section aria-labelledby="layovers-title" className="surface-card animate-rise p-5 sm:p-6">
-      <h2 id="layovers-title" className="title-display text-[26px] leading-tight">
+    <section aria-labelledby="layovers-title" className="surface-card animate-rise p-6 sm:p-6">
+      <h2 id="layovers-title" className="title-display text-title-1 leading-tight">
         Layovers
       </h2>
       <p className="mt-1 text-sm text-muted-foreground">
@@ -53,7 +53,7 @@ export function LayoverHelper({ homeCountry }: { homeCountry: string }) {
         <select
           value={passport}
           onChange={(e) => tripActions.setPassport(e.target.value)}
-          className="h-10 rounded-lg border border-input bg-card px-3 text-sm"
+          className="h-10 rounded-lg border border-input bg-fill px-4 text-sm"
         >
           {COUNTRIES.map((c) => (
             <option key={c.code} value={c.code}>
@@ -64,7 +64,7 @@ export function LayoverHelper({ homeCountry }: { homeCountry: string }) {
       </label>
 
       {live.length > 0 && airports && visas && (
-        <div className="mt-5 space-y-3">
+        <div className="mt-6 space-y-4">
           <p className="eyebrow">In your cheapest flight</p>
           {live.map((l) => (
             <AdviceFor
@@ -80,7 +80,7 @@ export function LayoverHelper({ homeCountry }: { homeCountry: string }) {
 
       <form
         onSubmit={(e) => e.preventDefault()}
-        className="mt-5 grid gap-2 sm:grid-cols-[minmax(0,1fr)_auto_auto] sm:items-end"
+        className="mt-6 grid gap-2 sm:grid-cols-[minmax(0,1fr)_auto_auto] sm:items-end"
       >
         <label className="text-xs text-muted-foreground">
           Check a layover: airport or city
@@ -96,7 +96,7 @@ export function LayoverHelper({ homeCountry }: { homeCountry: string }) {
           <select
             value={hours}
             onChange={(e) => setHours(Number(e.target.value))}
-            className="mt-1 block h-10 rounded-lg border border-input bg-card px-3 text-sm text-foreground"
+            className="mt-1 block h-10 rounded-lg border border-input bg-fill px-4 text-sm text-foreground"
           >
             {Array.from({ length: 24 }, (_, i) => i + 1).map((h) => (
               <option key={h} value={h}>
@@ -121,7 +121,7 @@ export function LayoverHelper({ homeCountry }: { homeCountry: string }) {
         </p>
       )}
       {typed && visas && (
-        <div className="mt-3">
+        <div className="mt-4">
           <AdviceFor
             layover={{ code: typed.code, name: typed.name, minutes: hours * 60, overnight }}
             airport={typed}
@@ -195,7 +195,7 @@ function AdviceCard({
     <article className="rounded-xl border border-border p-4">
       <header className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
         <Plane className="size-4 translate-y-0.5 text-muted-foreground" aria-hidden />
-        <h3 className="text-[15px] font-semibold">
+        <h3 className="text-headline font-semibold">
           {code} · {name}
         </h3>
         <span className="tabular flex items-center gap-1 text-sm text-muted-foreground">
@@ -204,9 +204,9 @@ function AdviceCard({
       </header>
       <p className={cn("mt-2 flex gap-2 text-sm", leaves ? "text-success" : "text-foreground")}>
         {leaves ? (
-          <Check className="mt-0.5 size-4 shrink-0" aria-hidden />
+          <Check className="mt-1 size-4 shrink-0" aria-hidden />
         ) : (
-          <X className="mt-0.5 size-4 shrink-0 text-muted-foreground" aria-hidden />
+          <X className="mt-1 size-4 shrink-0 text-muted-foreground" aria-hidden />
         )}
         <span>
           <span className="sr-only">{passportName} passport: </span>
@@ -214,7 +214,7 @@ function AdviceCard({
         </span>
       </p>
       <p className="mt-1 text-sm text-muted-foreground">{advice.verdictText}</p>
-      <ul className="mt-3 space-y-1 text-sm">
+      <ul className="mt-4 space-y-1 text-sm">
         {advice.inside.map((i) => (
           <li key={i} className="flex gap-2">
             <span aria-hidden className="mt-2 size-1 shrink-0 rounded-full bg-muted-foreground" />
@@ -223,13 +223,13 @@ function AdviceCard({
         ))}
       </ul>
       {advice.notes.length > 0 && (
-        <ul className="mt-3 space-y-1 text-xs text-muted-foreground">
+        <ul className="mt-4 space-y-1 text-xs text-muted-foreground">
           {advice.notes.map((n) => (
             <li key={n}>{n}</li>
           ))}
         </ul>
       )}
-      <div className="mt-3 flex flex-wrap gap-3">
+      <div className="mt-4 flex flex-wrap gap-4">
         {advice.links.map((l) => (
           <a
             key={l.label}

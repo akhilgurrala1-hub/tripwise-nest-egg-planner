@@ -76,7 +76,7 @@ export function TripTypePicker({
         })}
       />
       <TravelScene
-        className="mt-3"
+        className="mt-4"
         tripType={tripType}
         mode={mode}
         caption={`${info.blurb}.`}
@@ -84,7 +84,7 @@ export function TripTypePicker({
         to={to ?? ""}
       />
       {modes.length > 1 && (
-        <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+        <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2">
           <p className="text-sm text-muted-foreground">{info.modeQuestion}</p>
           <Segmented
             ariaLabel={info.modeQuestion}

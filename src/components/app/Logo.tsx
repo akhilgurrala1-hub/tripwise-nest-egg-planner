@@ -69,7 +69,7 @@ export function LogoMark({
   );
 }
 
-/** Mark + wordmark lockup. The wordmark is set in Geist, tightly tracked. */
+/** Mark + wordmark lockup. The wordmark is set in the system face (SF, or Inter), tightly tracked. */
 export function Logo({
   className,
   markClassName,
@@ -82,12 +82,7 @@ export function Logo({
   return (
     <span className={cn("logo inline-flex items-center gap-2", className)}>
       <LogoMark className={cn("size-7", markClassName)} />
-      <span
-        className={cn(
-          "logo-word text-[16px] font-semibold tracking-[-0.03em] text-foreground",
-          wordClassName,
-        )}
-      >
+      <span className={cn("logo-word text-headline font-semibold text-foreground", wordClassName)}>
         Waypoint
       </span>
     </span>

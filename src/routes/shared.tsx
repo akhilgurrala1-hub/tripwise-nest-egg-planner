@@ -117,13 +117,13 @@ function Preview({ shared }: { shared: SharedTrip }) {
 
   return (
     <div className="space-y-4">
-      <section className="surface-card animate-rise p-5 sm:p-7">
+      <section className="surface-card animate-rise p-6 sm:p-8">
         <div className="flex items-start gap-4">
           <RouteMark className="hidden w-16 shrink-0 sm:block" />
           <div className="min-w-0">
             <p className="eyebrow">A trip shared with you</p>
-            <h1 className="title-display mt-2 text-[38px] sm:text-[48px]">{dest.name}</h1>
-            <div className="mt-3 flex flex-wrap gap-x-4 gap-y-2 text-[13px]">
+            <h1 className="title-display mt-2 text-large-title sm:text-display">{dest.name}</h1>
+            <div className="mt-4 flex flex-wrap gap-x-4 gap-y-2 text-footnote">
               <Fact icon={<TypeIcon />}>{type.label}</Fact>
               <Fact icon={<CalendarDays />}>
                 {formatDateRange(trip.setup.startDate, trip.setup.endDate)}
@@ -140,7 +140,7 @@ function Preview({ shared }: { shared: SharedTrip }) {
           </div>
         </div>
 
-        <div className="mt-6 grid grid-cols-3 gap-3 border-t border-border pt-5">
+        <div className="mt-6 grid grid-cols-3 gap-4 border-t border-border pt-6">
           <Stat label="Total budget" value={formatMoney(totals.totalBudget)} />
           <Stat label="Planned spending" value={formatMoney(totals.planned)} />
           <Stat
@@ -149,7 +149,7 @@ function Preview({ shared }: { shared: SharedTrip }) {
           />
         </div>
 
-        <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center">
+        <div className="mt-6 flex flex-col gap-4 sm:flex-row sm:items-center">
           <Button variant="go" size="lg" onClick={open}>
             Open this trip <ArrowRight />
           </Button>
@@ -160,18 +160,18 @@ function Preview({ shared }: { shared: SharedTrip }) {
           </p>
         </div>
         {failed && (
-          <p role="alert" className="mt-3 text-sm text-destructive">
+          <p role="alert" className="mt-4 text-sm text-destructive">
             This trip couldn't be opened. Ask for the link again.
           </p>
         )}
       </section>
 
       {lines.length > 0 && (
-        <section className="surface-card p-5 sm:p-6">
-          <h2 className="title-display text-[26px]">Where the money goes</h2>
-          <ul className="mt-3 divide-y divide-border text-sm">
+        <section className="surface-card p-6 sm:p-6">
+          <h2 className="title-display text-title-1">Where the money goes</h2>
+          <ul className="mt-4 divide-y divide-border text-sm">
             {lines.map(({ c, amount }) => (
-              <li key={c} className="flex items-center justify-between gap-3 py-2">
+              <li key={c} className="flex items-center justify-between gap-4 py-2">
                 <span className="flex items-center gap-2">
                   <span
                     aria-hidden
@@ -188,15 +188,16 @@ function Preview({ shared }: { shared: SharedTrip }) {
       )}
 
       {days.length > 0 && (
-        <section className="surface-card p-5 sm:p-6">
-          <h2 className="title-display text-[26px]">Day by day</h2>
-          <ol className="mt-3 space-y-4">
+        <section className="surface-card p-6 sm:p-6">
+          <h2 className="title-display text-title-1">Day by day</h2>
+          <ol className="mt-4 space-y-4">
             {days.map((d) => (
               <li key={d.day}>
                 <p className="text-sm font-semibold">
-                  <span className="font-mono text-muted-foreground">Day {d.day}</span> · {d.title}
+                  <span className="tabular font-semibold text-muted-foreground">Day {d.day}</span> ·{" "}
+                  {d.title}
                 </p>
-                <ul className="mt-1.5 space-y-1 text-sm">
+                <ul className="mt-2 space-y-1 text-sm">
                   {d.items.map((i) => (
                     <li key={i.id} className="grid grid-cols-[76px_1fr] gap-2">
                       <span className="text-muted-foreground">{i.time}</span>
@@ -227,7 +228,7 @@ function Preview({ shared }: { shared: SharedTrip }) {
 
 function Fact({ icon, children }: { icon: ReactNode; children: ReactNode }) {
   return (
-    <span className="tabular inline-flex max-w-full items-center gap-1.5 [&>svg]:size-4 [&>svg]:shrink-0 [&>svg]:text-muted-foreground">
+    <span className="tabular inline-flex max-w-full items-center gap-2 [&>svg]:size-4 [&>svg]:shrink-0 [&>svg]:text-muted-foreground">
       {icon}
       <span className="truncate">{children}</span>
     </span>
@@ -238,7 +239,7 @@ function Stat({ label, value }: { label: string; value: string }) {
   return (
     <div>
       <p className="text-xs text-muted-foreground">{label}</p>
-      <p className="tabular mt-0.5 text-lg font-semibold sm:text-xl">{value}</p>
+      <p className="tabular mt-1 text-lg font-semibold sm:text-xl">{value}</p>
     </div>
   );
 }

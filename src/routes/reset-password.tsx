@@ -53,7 +53,7 @@ function ResetPassword() {
     <div className="mx-auto max-w-md px-4 pt-10">
       <div className="surface-card p-6">
         <KeyRound className="size-8 text-primary" />
-        <h1 className="title-display mt-3 text-4xl">Choose a new password</h1>
+        <h1 className="title-display mt-4 text-4xl">Choose a new password</h1>
         {ready ? (
           <form onSubmit={submit} className="mt-6 space-y-4">
             <div>
@@ -66,7 +66,7 @@ function ResetPassword() {
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="mt-1.5 h-11 rounded-xl bg-card"
+                className="mt-2 h-11 rounded-xl bg-card"
               />
             </div>
             <Button type="submit" variant="hero" className="w-full" disabled={busy}>

@@ -312,31 +312,31 @@ function Welcome() {
     !touched.current && home.place?.source === "approximate" && form.origin === home.place.label;
 
   return (
-    <div className="mx-auto max-w-6xl px-4 pt-6 pb-10 sm:pt-10">
-      <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_340px] lg:gap-10">
+    <div className="page-container pt-6 pb-10 sm:pt-10">
+      <div className="layout-main-aside lg:gap-y-8">
         <div className="min-w-0">
           {/* A trip in progress: one tap back to it (unfinished things pull people back). */}
           {!trip.isSample && (
             <Link
               to="/dashboard"
-              className="group animate-rise mb-6 flex items-center justify-between gap-3 rounded-xl border border-border bg-card px-4 py-3 text-sm transition-colors hover:border-primary"
+              className="group animate-rise mb-6 flex items-center justify-between gap-4 rounded-xl border border-border bg-card px-4 py-4 text-sm transition-colors hover:border-primary"
             >
               <span className="min-w-0">
                 <span className="eyebrow block">Pick up where you left off</span>
-                <span className="mt-0.5 block truncate font-medium">
+                <span className="mt-1 block truncate font-medium">
                   {tripPlace} · {formatDateRange(trip.setup.startDate, trip.setup.endDate)}
                 </span>
               </span>
-              <ArrowRight className="size-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5" />
+              <ArrowRight className="size-4 shrink-0 text-muted-foreground" />
             </Link>
           )}
           {/* One question first: everything else on the page is optional detail. */}
           <header className="animate-rise">
             <p className="eyebrow">New trip</p>
-            <h1 className="title-display mt-3 text-[44px] sm:text-[64px] lg:text-[76px]">
+            <h1 className="title-display mt-4 text-large-title sm:text-display lg:text-display">
               Where to <em className="text-primary">next?</em>
             </h1>
-            <p className="mt-3 max-w-lg text-[16px] leading-relaxed text-muted-foreground sm:text-[17px]">
+            <p className="mt-4 max-w-lg text-headline leading-relaxed text-muted-foreground">
               Say it however you like. Waypoint works out the budget to the dollar, plans the days
               and lists what to book.
             </p>
@@ -389,10 +389,7 @@ function Welcome() {
             }}
           />
 
-          <h2
-            id="plan-steps"
-            className="title-display mt-14 scroll-mt-24 text-[32px] sm:text-[36px]"
-          >
+          <h2 id="plan-steps" className="title-display mt-14 scroll-mt-24 text-large-title">
             Or plan it yourself
           </h2>
 
@@ -469,9 +466,9 @@ function Welcome() {
             </Section>
 
             <Section step="03" title="When & who" style={stagger(3)}>
-              <div className="flex flex-wrap items-start gap-x-3 gap-y-4">
+              <div className="flex flex-wrap items-start gap-x-4 gap-y-4">
                 <div className="min-w-0 flex-1 basis-64">
-                  <p className="mb-1.5 text-[13px] text-muted-foreground">Dates</p>
+                  <p className="mb-2 text-footnote text-muted-foreground">Dates</p>
                   <div className="grid grid-cols-2 gap-2">
                     <Input
                       type="date"
@@ -492,7 +489,7 @@ function Welcome() {
                   </div>
                   <p
                     className={cn(
-                      "mt-1.5 text-xs",
+                      "mt-2 text-xs",
                       dateError ? "text-destructive" : "text-muted-foreground",
                     )}
                   >
@@ -502,9 +499,9 @@ function Welcome() {
                         : `${shape.days} days, ${shape.nights} night${shape.nights === 1 ? "" : "s"}`)}
                   </p>
                 </div>
-                <div className="flex w-full items-center justify-between gap-3 sm:block sm:w-auto">
-                  <p className="text-[13px] text-muted-foreground sm:mb-1.5">Travelers</p>
-                  <div className="flex h-11 items-center rounded-lg border border-input bg-card">
+                <div className="flex w-full items-center justify-between gap-4 sm:block sm:w-auto">
+                  <p className="text-footnote text-muted-foreground sm:mb-2">Travelers</p>
+                  <div className="flex h-11 items-center rounded-lg border border-input bg-fill">
                     <Button
                       type="button"
                       variant="ghost"
@@ -520,7 +517,7 @@ function Welcome() {
                       key={form.travelers}
                       aria-live="polite"
                       aria-label={`${form.travelers} ${form.travelers === 1 ? "traveler" : "travelers"}`}
-                      className="animate-pop tabular w-7 text-center text-[15px] font-semibold"
+                      className="animate-pop tabular w-7 text-center text-headline font-semibold"
                     >
                       {form.travelers}
                     </span>
@@ -544,7 +541,7 @@ function Welcome() {
 
             <Section step="04" title="Style" style={stagger(4)}>
               <StylePicker value={form.style} onChange={(style) => update({ style })} />
-              <p className="mt-5 mb-2.5 text-sm text-muted-foreground">Interests</p>
+              <p className="mt-6 mb-2 text-sm text-muted-foreground">Interests</p>
               <InterestChips value={form.interests} onToggle={toggleInterest} />
             </Section>
 
@@ -559,7 +556,7 @@ function Welcome() {
             <Section step="06" title="Budget" style={stagger(5)}>
               <div className="grid gap-4 sm:grid-cols-2">
                 <div>
-                  <Label className="text-[13px] font-normal text-muted-foreground">
+                  <Label className="text-footnote font-normal text-muted-foreground">
                     Total budget
                   </Label>
                   <NumberField
@@ -568,7 +565,7 @@ function Welcome() {
                     value={totalBudget}
                     onChange={setBudget}
                     step={50}
-                    className="mt-1.5 h-12"
+                    className="mt-2 h-12"
                     inputClassName="text-xl"
                   />
                   {!budgetOwn ? (
@@ -603,7 +600,7 @@ function Welcome() {
                   )}
                 </div>
                 <div>
-                  <Label className="text-[13px] font-normal text-muted-foreground">
+                  <Label className="text-footnote font-normal text-muted-foreground">
                     Emergency fund
                   </Label>
                   <NumberField
@@ -611,7 +608,7 @@ function Welcome() {
                     prefix="$"
                     step={25}
                     value={emergencyFund}
-                    className="mt-1.5 h-12"
+                    className="mt-2 h-12"
                     inputClassName="text-xl"
                     onChange={(n) => {
                       reserveTouched.current = true;
@@ -645,11 +642,11 @@ function Welcome() {
       <div
         inert={!showBar}
         className={cn(
-          "sticky bottom-[calc(4.5rem+env(safe-area-inset-bottom))] z-20 mt-6 transition-[opacity,translate] duration-300 ease-[var(--ease-out-quint)] md:bottom-4 lg:hidden",
+          "sticky bottom-[calc(4.5rem+env(safe-area-inset-bottom))] z-20 mt-6 transition-[opacity,translate] spring-smooth md:bottom-4 lg:hidden",
           showBar ? "opacity-100" : "pointer-events-none translate-y-3 opacity-0",
         )}
       >
-        <div className="flex items-center justify-between gap-3 rounded-xl border border-border bg-card p-2 pl-4 shadow-lift">
+        <div className="flex items-center justify-between gap-4 rounded-xl border border-border bg-card p-2 pl-4 shadow-lift">
           <div className="min-w-0 text-sm">
             <p className="truncate font-medium">{routeText}</p>
             <p className="tabular truncate text-xs text-muted-foreground">
@@ -658,7 +655,7 @@ function Welcome() {
               {distance ? ` · ${distance}` : ""} · about {formatMoney(estimate.planned)}
             </p>
           </div>
-          <Button type="submit" form="plan-form" variant="go" size="lg" className="shrink-0 px-5">
+          <Button type="submit" form="plan-form" variant="go" size="lg" className="shrink-0 px-6">
             Plan trip <ArrowRight />
           </Button>
         </div>
@@ -682,15 +679,12 @@ function Section({
   style?: React.CSSProperties;
 }) {
   return (
-    <section
-      className="animate-rise grid gap-4 py-9 sm:grid-cols-[140px_1fr] sm:gap-8"
-      style={style}
-    >
-      <div className="flex items-baseline gap-2.5 sm:block">
-        <span aria-hidden className="font-mono text-[12px] text-coral-text">
+    <section className="reveal grid gap-4 py-10 sm:grid-cols-[140px_1fr] sm:gap-8" style={style}>
+      <div className="flex items-baseline gap-2 sm:block">
+        <span aria-hidden className="tabular text-caption font-semibold text-coral-text">
           {step}
         </span>
-        <h2 className="text-[17px] font-semibold sm:mt-1.5">{title}</h2>
+        <h2 className="text-headline font-semibold sm:mt-2">{title}</h2>
         {aside && <p className="ml-auto text-xs text-muted-foreground sm:mt-1 sm:ml-0">{aside}</p>}
       </div>
       <div className="min-w-0">{children}</div>

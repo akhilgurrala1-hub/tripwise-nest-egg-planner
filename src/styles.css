@@ -5,20 +5,79 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 /*
- * Waypoint design system: "field notes".
- * Editorial travel: a serif voice for titles and big numbers (Instrument Serif),
- * a precise sans for everything you read and tap (Geist), mono for labels and
- * step numbers (Geist Mono). Warm paper surfaces, near-black ink, one blue
- * accent, and the brand's coral dot as the "you are here" mark.
+ * Waypoint design system, after Apple's Human Interface Guidelines.
+ * - Type: the system's San Francisco where it exists (Apple devices), Inter
+ *   everywhere else; one family, a 9-level scale (text-display … text-micro), each
+ *   level with its own size, line height, tracking and weight.
+ * - Surfaces: neutral grays (no tint), white cards on light gray, black and
+ *   elevated grays in dark mode; one blue accent.
+ * - Materials: bars and menus are frosted glass (backdrop blur + saturation) with
+ *   a specular top edge and a hairline separator; content cards are opaque.
+ * - Motion: springs (src/lib/spring.ts) for anything that moves; CSS uses the
+ *   same springs as linear() easings. Reduced motion keeps crossfades only.
+ * - Space: an 8px grid (4px only inside controls), a 12-column layout grid.
  * All colors are oklch tokens; components use semantic classes only.
  */
 
 @theme inline {
-  --font-display: "Instrument Serif", ui-serif, Georgia, serif;
-  --font-sans: "Geist", ui-sans-serif, system-ui, sans-serif;
-  --font-mono: "Geist Mono", ui-monospace, SFMono-Regular, monospace;
+  --font-sans:
+    -apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter", "Segoe UI", Roboto, "Helvetica Neue",
+    Arial, sans-serif;
+  --font-display:
+    -apple-system, BlinkMacSystemFont, "SF Pro Display", "Inter", "Segoe UI", Roboto,
+    "Helvetica Neue", Arial, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace;
 
-  /* Controls stay crisp; large surfaces are generously rounded. */
+  /* The 9-level type scale. Large sizes track tighter and weigh more; small ones open up. */
+  --text-display: clamp(3rem, 2.2rem + 3.4vw, 5rem);
+  --text-display--line-height: 1.04;
+  --text-display--letter-spacing: -0.035em;
+  --text-display--font-weight: 700;
+  --text-large-title: clamp(2rem, 1.7rem + 1.2vw, 2.5rem);
+  --text-large-title--line-height: 1.1;
+  --text-large-title--letter-spacing: -0.028em;
+  --text-large-title--font-weight: 700;
+  --text-title-1: 1.75rem;
+  --text-title-1--line-height: 1.18;
+  --text-title-1--letter-spacing: -0.022em;
+  --text-title-1--font-weight: 700;
+  --text-title-2: 1.375rem;
+  --text-title-2--line-height: 1.27;
+  --text-title-2--letter-spacing: -0.016em;
+  --text-title-2--font-weight: 600;
+  --text-headline: 1.0625rem;
+  --text-headline--line-height: 1.41;
+  --text-headline--letter-spacing: -0.012em;
+  --text-headline--font-weight: 600;
+  --text-body: 0.9375rem;
+  --text-body--line-height: 1.47;
+  --text-body--letter-spacing: -0.006em;
+  --text-footnote: 0.8125rem;
+  --text-footnote--line-height: 1.38;
+  --text-footnote--letter-spacing: -0.002em;
+  --text-caption: 0.75rem;
+  --text-caption--line-height: 1.33;
+  --text-caption--letter-spacing: 0em;
+  --text-micro: 0.6875rem;
+  --text-micro--line-height: 1.27;
+  --text-micro--letter-spacing: 0.012em;
+  /* Tailwind's own names resolve onto the scale, so older markup stays on it. */
+  --text-xs: 0.75rem;
+  --text-xs--line-height: 1.33;
+  --text-sm: 0.9375rem;
+  --text-sm--line-height: 1.47;
+  --text-base: 1.0625rem;
+  --text-base--line-height: 1.47;
+  --text-lg: 1.25rem;
+  --text-lg--line-height: 1.35;
+  --text-xl: 1.375rem;
+  --text-xl--line-height: 1.27;
+  --text-2xl: 1.75rem;
+  --text-2xl--line-height: 1.18;
+  --text-3xl: 2.125rem;
+  --text-3xl--line-height: 1.15;
+
+  /* Controls are rounded rectangles (never capsules); surfaces round more. */
   --radius-sm: 6px;
   --radius-md: 8px;
   --radius-lg: 10px;
@@ -27,7 +86,130 @@
   --radius-3xl: 20px;
   --radius-4xl: 28px;
 
-  --ease-out-quint: cubic-bezier(0.22, 1, 0.36, 1);
+  /* Springs as CSS easings (generated from src/lib/spring.ts SPRINGS). */
+  --ease-spring-snappy: linear(
+    0,
+    0.065,
+    0.2,
+    0.351,
+    0.491,
+    0.611,
+    0.707,
+    0.783,
+    0.841,
+    0.885,
+    0.917,
+    0.941,
+    0.958,
+    0.97,
+    0.979,
+    0.985,
+    0.99,
+    0.993,
+    0.995,
+    0.997,
+    0.998,
+    0.998,
+    0.999,
+    0.999,
+    1
+  );
+  --ease-spring-smooth: linear(
+    0,
+    0.061,
+    0.189,
+    0.335,
+    0.472,
+    0.591,
+    0.688,
+    0.766,
+    0.826,
+    0.872,
+    0.907,
+    0.932,
+    0.951,
+    0.965,
+    0.975,
+    0.982,
+    0.987,
+    0.991,
+    0.994,
+    0.996,
+    0.997,
+    0.998,
+    0.998,
+    0.999,
+    1
+  );
+  --ease-spring-bouncy: linear(
+    0,
+    0.028,
+    0.099,
+    0.195,
+    0.302,
+    0.411,
+    0.515,
+    0.611,
+    0.697,
+    0.77,
+    0.832,
+    0.882,
+    0.922,
+    0.953,
+    0.977,
+    0.994,
+    1.006,
+    1.013,
+    1.018,
+    1.02,
+    1.02,
+    1.019,
+    1.017,
+    1.015,
+    1.013,
+    1.011,
+    1.009,
+    1.007,
+    1.006,
+    1.004,
+    1.003,
+    1.002,
+    1.001,
+    1.001,
+    1,
+    1,
+    1
+  );
+  --ease-spring-press: linear(
+    0,
+    0.07,
+    0.214,
+    0.371,
+    0.515,
+    0.635,
+    0.73,
+    0.804,
+    0.859,
+    0.899,
+    0.929,
+    0.95,
+    0.965,
+    0.976,
+    0.983,
+    0.988,
+    0.992,
+    0.995,
+    0.996,
+    0.997,
+    0.998,
+    0.999,
+    0.999,
+    0.999,
+    1
+  );
+
+  /* Kept for older markup: it now resolves to the smooth spring. */
+  --ease-out-quint: var(--ease-spring-smooth);
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -96,61 +278,67 @@
   --shadow-soft: var(--shadow-soft-value);
   --shadow-lift: var(--shadow-lift-value);
   --shadow-glow: var(--shadow-glow-value);
+  --color-separator: var(--separator);
+  --color-fill: var(--fill);
 }
 
 :root {
   --radius: 10px;
   color-scheme: light;
-  /* Warm paper, not gray: the page reads like a well-made travel guide. */
-  --background: oklch(0.975 0.006 85);
-  --foreground: oklch(0.2 0.012 60);
-  --card: oklch(0.997 0.002 85);
-  --card-foreground: oklch(0.2 0.012 60);
-  --popover: oklch(0.997 0.002 85);
-  --popover-foreground: oklch(0.2 0.012 60);
+  /* Neutral system grays: the page is #f5f5f7, cards are white, text is #1d1d1f. */
+  --background: oklch(0.973 0.002 286);
+  --foreground: oklch(0.218 0.004 286);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.218 0.004 286);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.218 0.004 286);
   /* The one accent: interactive, selected, focused. */
   /* Brand blue (#2457E6), the logo's tile color, doubles as the interactive accent. */
   --primary: oklch(0.519 0.223 264.5);
   --primary-deep: oklch(0.455 0.197 264.8);
   --primary-foreground: oklch(0.99 0 0);
-  --secondary: oklch(0.945 0.008 80);
-  --secondary-foreground: oklch(0.25 0.012 60);
-  --muted: oklch(0.95 0.007 80);
-  --muted-foreground: oklch(0.49 0.014 60);
-  --accent: oklch(0.945 0.016 256);
-  --accent-foreground: oklch(0.25 0.012 60);
+  /* Fills (#e8e8ed) for secondary controls and tracks. */
+  --secondary: oklch(0.935 0.003 286);
+  --secondary-foreground: oklch(0.218 0.004 286);
+  --muted: oklch(0.945 0.003 286);
+  --muted-foreground: oklch(0.5 0.008 286);
+  --accent: oklch(0.945 0.018 264);
+  --accent-foreground: oklch(0.218 0.004 286);
+  --fill: oklch(0.218 0.004 286 / 0.06);
   /* Legacy warm tokens now resolve to the accent / neutrals. */
   --sunset: var(--primary);
   --sunset-foreground: var(--primary-foreground);
-  --sunset-soft: oklch(0.955 0.016 256);
+  --sunset-soft: oklch(0.955 0.016 264);
   --gold: oklch(0.7 0.12 80);
-  --gold-soft: oklch(0.95 0.007 80);
-  --success: oklch(0.49 0.11 158);
-  --success-soft: oklch(0.955 0.025 158);
-  --shield: oklch(0.38 0.012 60);
-  --shield-soft: oklch(0.95 0.007 80);
+  --gold-soft: oklch(0.945 0.003 286);
+  --success: oklch(0.49 0.12 152);
+  --success-soft: oklch(0.955 0.025 152);
+  --shield: oklch(0.38 0.006 286);
+  --shield-soft: oklch(0.945 0.003 286);
   --shield-foreground: oklch(0.99 0 0);
-  --demo: oklch(0.49 0.014 60);
-  --demo-soft: oklch(0.95 0.007 80);
-  --destructive: oklch(0.55 0.19 27);
+  --demo: oklch(0.5 0.008 286);
+  --demo-soft: oklch(0.945 0.003 286);
+  --destructive: oklch(0.55 0.2 27);
   --destructive-foreground: oklch(0.99 0 0);
   --destructive-soft: oklch(0.96 0.02 27);
-  --border: oklch(0.905 0.009 80);
-  --input: oklch(0.86 0.01 80);
+  /* Separators are hairlines: black at low alpha, so they sit right on any surface. */
+  --border: oklch(0.218 0.004 286 / 0.12);
+  --separator: oklch(0.218 0.004 286 / 0.1);
+  --input: oklch(0.218 0.004 286 / 0.18);
   --ring: oklch(0.519 0.223 264.5);
   /* Brand coral (#FF6B4A): the logo's destination dot. Used sparingly for "you are here / next" cues. */
   --brand-coral: oklch(0.707 0.187 34.1);
   /* Coral as small text (step numbers): darker so it reads at AA contrast on paper. */
   --coral-text: oklch(0.55 0.17 34);
   /* Solid emphasis surface (primary call to action, the balance card). */
-  --ink: oklch(0.21 0.012 60);
-  --ink-foreground: oklch(0.985 0.004 85);
+  --ink: oklch(0.218 0.004 286);
+  --ink-foreground: oklch(0.985 0 0);
   --on-image: oklch(0.99 0 0);
 
   /* "Go" actions (Plan trip, Start planning): a deep pine green, white text at AA contrast. */
   --go: oklch(0.49 0.12 160);
   --go-deep: oklch(0.43 0.11 160);
-  --go-foreground: oklch(0.99 0.004 85);
+  --go-foreground: oklch(0.99 0 0);
   --go-soft: oklch(0.955 0.03 160);
 
   /* Travel styles: Savvy green, Comfort blue, Luxe violet. */
@@ -192,13 +380,19 @@
   --gradient-sand: linear-gradient(var(--card), var(--card));
   --gradient-hero-fade: linear-gradient(180deg, oklch(0 0 0 / 0) 35%, oklch(0 0 0 / 0.65) 100%);
 
-  /* Layered and warm: a card sits on the page like paper, it doesn't float. */
-  --shadow-soft-value:
-    0 1px 1px oklch(0.3 0.02 60 / 0.03), 0 2px 6px -2px oklch(0.3 0.02 60 / 0.05),
-    0 12px 28px -18px oklch(0.3 0.02 60 / 0.12);
-  --shadow-lift-value:
-    0 1px 2px oklch(0.3 0.02 60 / 0.05), 0 18px 40px -18px oklch(0.3 0.02 60 / 0.25);
-  --shadow-glow-value: 0 1px 2px oklch(0.3 0.02 60 / 0.06);
+  /* Depth is quiet: cards barely lift off the page; menus and sheets lift more. */
+  --shadow-soft-value: 0 1px 2px oklch(0 0 0 / 0.04), 0 4px 16px -4px oklch(0 0 0 / 0.06);
+  --shadow-lift-value: 0 2px 6px oklch(0 0 0 / 0.06), 0 16px 40px -12px oklch(0 0 0 / 0.18);
+  --shadow-glow-value: 0 1px 2px oklch(0 0 0 / 0.05);
+
+  /* Materials: frosted glass for bars and menus (alpha of the base + blur). */
+  --material-base: oklch(0.985 0.002 286);
+  --material-thick: 0.88;
+  --material-regular: 0.74;
+  --material-thin: 0.6;
+  /* The lit top edge of glass, and the hairline under it. */
+  --specular: oklch(1 0 0 / 0.7);
+  --material-edge: oklch(0.218 0.004 286 / 0.1);
 
   --sidebar: var(--background);
   --sidebar-foreground: var(--foreground);
@@ -212,44 +406,46 @@
 
 .dark {
   color-scheme: dark;
-  /* Warm charcoal, like a night flight cabin, not blue-gray. */
-  --background: oklch(0.165 0.006 60);
-  --foreground: oklch(0.955 0.006 85);
-  --card: oklch(0.205 0.007 60);
-  --card-foreground: oklch(0.955 0.006 85);
-  --popover: oklch(0.225 0.008 60);
-  --popover-foreground: oklch(0.955 0.006 85);
+  /* True black page, elevated grays for cards (#1c1c1e) and menus (#2c2c2e). */
+  --background: oklch(0 0 0);
+  --foreground: oklch(0.97 0.002 286);
+  --card: oklch(0.218 0.004 286);
+  --card-foreground: oklch(0.97 0.002 286);
+  --popover: oklch(0.27 0.005 286);
+  --popover-foreground: oklch(0.97 0.002 286);
   --primary: oklch(0.7 0.16 264);
   --primary-deep: oklch(0.76 0.13 264);
   --primary-foreground: oklch(0.16 0.01 260);
-  --secondary: oklch(0.255 0.008 60);
-  --secondary-foreground: oklch(0.94 0.006 85);
-  --muted: oklch(0.245 0.008 60);
-  --muted-foreground: oklch(0.71 0.012 70);
-  --accent: oklch(0.27 0.025 256);
-  --accent-foreground: oklch(0.94 0.006 85);
+  --secondary: oklch(0.27 0.005 286);
+  --secondary-foreground: oklch(0.97 0.002 286);
+  --muted: oklch(0.25 0.004 286);
+  --muted-foreground: oklch(0.7 0.008 286);
+  --accent: oklch(0.28 0.03 264);
+  --accent-foreground: oklch(0.97 0.002 286);
+  --fill: oklch(1 0 0 / 0.08);
   --sunset: var(--primary);
   --sunset-foreground: var(--primary-foreground);
-  --sunset-soft: oklch(0.26 0.03 256);
+  --sunset-soft: oklch(0.27 0.03 264);
   --gold: oklch(0.78 0.11 80);
-  --gold-soft: oklch(0.245 0.008 60);
-  --success: oklch(0.74 0.12 158);
-  --success-soft: oklch(0.25 0.03 158);
-  --shield: oklch(0.86 0.008 70);
-  --shield-soft: oklch(0.255 0.008 60);
-  --shield-foreground: oklch(0.16 0.006 60);
-  --demo: oklch(0.71 0.012 70);
-  --demo-soft: oklch(0.245 0.008 60);
+  --gold-soft: oklch(0.25 0.004 286);
+  --success: oklch(0.74 0.14 152);
+  --success-soft: oklch(0.26 0.035 152);
+  --shield: oklch(0.86 0.004 286);
+  --shield-soft: oklch(0.27 0.005 286);
+  --shield-foreground: oklch(0.16 0.004 286);
+  --demo: oklch(0.7 0.008 286);
+  --demo-soft: oklch(0.25 0.004 286);
   --destructive: oklch(0.7 0.17 25);
   --destructive-foreground: oklch(0.16 0.01 260);
-  --destructive-soft: oklch(0.27 0.04 25);
-  --border: oklch(0.29 0.008 60);
-  --input: oklch(0.34 0.01 60);
+  --destructive-soft: oklch(0.28 0.045 25);
+  --border: oklch(1 0 0 / 0.14);
+  --separator: oklch(1 0 0 / 0.12);
+  --input: oklch(1 0 0 / 0.2);
   --ring: oklch(0.7 0.16 264);
   --brand-coral: oklch(0.74 0.17 36);
   --coral-text: oklch(0.76 0.15 38);
-  --ink: oklch(0.955 0.006 85);
-  --ink-foreground: oklch(0.17 0.006 60);
+  --ink: oklch(0.97 0.002 286);
+  --ink-foreground: oklch(0.16 0.004 286);
   --on-image: oklch(0.99 0 0);
 
   --go: oklch(0.66 0.13 160);
@@ -285,9 +481,16 @@
   --gradient-ink: linear-gradient(var(--ink), var(--ink));
   --gradient-sand: linear-gradient(var(--card), var(--card));
 
-  --shadow-soft-value: 0 1px 0 oklch(1 0 0 / 0.03) inset, 0 12px 28px -18px oklch(0 0 0 / 0.5);
-  --shadow-lift-value: 0 18px 40px -18px oklch(0 0 0 / 0.7);
+  --shadow-soft-value: none;
+  --shadow-lift-value: 0 16px 48px -12px oklch(0 0 0 / 0.8);
   --shadow-glow-value: none;
+
+  --material-base: oklch(0.2 0.004 286);
+  --material-thick: 0.86;
+  --material-regular: 0.72;
+  --material-thin: 0.58;
+  --specular: oklch(1 0 0 / 0.1);
+  --material-edge: oklch(1 0 0 / 0.1);
 }
 
 @layer base {
@@ -303,19 +506,20 @@
     background-color: var(--color-background);
     color: var(--color-foreground);
     font-family: var(--font-sans);
+    font-size: var(--text-body);
+    line-height: var(--text-body--line-height);
+    letter-spacing: var(--text-body--letter-spacing);
+    font-optical-sizing: auto;
+    font-synthesis-weight: none;
     -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
   }
 
   h1,
   h2,
   h3 {
-    letter-spacing: -0.02em;
-    font-weight: 600;
-  }
-
-  body {
-    font-feature-settings: "ss01", "cv11";
-    text-rendering: optimizeLegibility;
+    text-wrap: balance;
   }
 
   input[type="number"]::-webkit-inner-spin-button,
@@ -336,13 +540,18 @@
     background: color-mix(in oklab, var(--primary) 25%, transparent);
   }
 
+  /*
+   * Reduced motion: nothing moves, but changes still crossfade (opacity and color
+   * only, quickly), so the page never jumps abruptly between states.
+   */
   @media (prefers-reduced-motion: reduce) {
     *,
     *::before,
     *::after {
-      animation-duration: 0.01ms !important;
       animation-iteration-count: 1 !important;
-      transition-duration: 0.01ms !important;
+      transition-property: opacity, color, background-color, border-color, fill, stroke !important;
+      transition-duration: 160ms !important;
+      transition-timing-function: ease-out !important;
       scroll-behavior: auto !important;
     }
   }
@@ -368,43 +577,236 @@
   background-image: var(--gradient-hero-fade);
 }
 
+/* Content surface: opaque, white on the gray page (elevated gray in dark mode). */
 @utility surface-card {
   background-color: var(--color-card);
-  border: 1px solid color-mix(in oklab, var(--color-border) 70%, transparent);
+  border: 1px solid transparent;
   border-radius: var(--radius-3xl);
   box-shadow: var(--shadow-soft-value);
+  .dark & {
+    border-color: var(--separator);
+  }
 }
 
-/* Small mono label above titles and values, like the codes on a boarding pass. */
+/* Small label above a title or value: caption size, semibold, quietly spaced capitals. */
 @utility eyebrow {
-  font-family: var(--font-mono);
-  font-size: 11px;
-  font-weight: 500;
-  letter-spacing: 0.06em;
+  font-family: var(--font-sans);
+  font-size: var(--text-caption);
+  line-height: var(--text-caption--line-height);
+  font-weight: 600;
+  letter-spacing: 0.04em;
   text-transform: uppercase;
   color: var(--color-muted-foreground);
 }
 
-/* The serif voice: page titles, section titles and the numbers that matter. */
+/* Titles: the display cut of the system face. Size, weight and tracking come from the text-* level. */
 @utility title-display {
   font-family: var(--font-display);
-  font-weight: 400;
-  letter-spacing: -0.015em;
-  line-height: 1.02;
+  text-wrap: balance;
+  & em {
+    font-style: normal;
+  }
 }
 
-/* Big money in the serif voice, with even digits. */
+/* Amounts that matter: display face, even digits, tight. */
 @utility money-display {
   font-family: var(--font-display);
-  font-weight: 400;
-  letter-spacing: -0.02em;
+  font-weight: 700;
+  letter-spacing: -0.035em;
   line-height: 1;
-  font-variant-numeric: lining-nums tabular-nums;
+  font-variant-numeric: tabular-nums;
 }
 
-/* Bars that sit over content (header, phone tab bar): solid, so nothing shows through. */
+/*
+ * Materials: frosted glass over content (bars, menus, popovers, sheets). The base
+ * color at partial alpha, blurred and saturated, a lit top edge and a hairline.
+ * Browsers without backdrop-filter get the base color opaque, so text stays legible.
+ */
+@utility material-thick {
+  background-color: color-mix(
+    in oklab,
+    var(--material-base) calc(var(--material-thick) * 100%),
+    transparent
+  );
+  @apply backdrop-blur-[30px] backdrop-saturate-[180%];
+  @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+    background-color: var(--material-base);
+  }
+}
+@utility material-regular {
+  background-color: color-mix(
+    in oklab,
+    var(--material-base) calc(var(--material-regular) * 100%),
+    transparent
+  );
+  @apply backdrop-blur-[20px] backdrop-saturate-[180%];
+  @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+    background-color: var(--material-base);
+  }
+}
+@utility material-thin {
+  background-color: color-mix(
+    in oklab,
+    var(--material-base) calc(var(--material-thin) * 100%),
+    transparent
+  );
+  @apply backdrop-blur-[14px] backdrop-saturate-[160%];
+  @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+    background-color: var(--material-base);
+  }
+}
+/* The lit edge of glass: a 1px highlight inside the top edge plus a hairline outline. */
+@utility specular {
+  box-shadow:
+    inset 0 1px 0 0 var(--specular),
+    0 0 0 0.5px var(--material-edge);
+}
+
+/* Menus, popovers, dropdowns: thick glass that floats (lit edge, hairline, lifted shadow). */
+@utility floating {
+  background-color: color-mix(
+    in oklab,
+    var(--material-base) calc(var(--material-thick) * 100%),
+    transparent
+  );
+  @apply backdrop-blur-[30px] backdrop-saturate-[180%];
+  box-shadow:
+    inset 0 1px 0 0 var(--specular),
+    0 0 0 0.5px var(--material-edge),
+    var(--shadow-lift-value);
+  @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+    background-color: var(--material-base);
+  }
+}
+
+/* Bars over content (header, phone tab bar): the regular material. */
 @utility glass {
-  background-color: var(--background);
+  background-color: color-mix(
+    in oklab,
+    var(--material-base) calc(var(--material-regular) * 100%),
+    transparent
+  );
+  @apply backdrop-blur-[20px] backdrop-saturate-[180%];
+  @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+    background-color: var(--material-base);
+  }
+}
+
+/* ---------- Layout: 8px spacing, 12-column grid ---------- */
+
+/* The page's column: 16px margins on phones, 24 on tablets, 32 on desktops. */
+@utility page-container {
+  margin-inline: auto;
+  width: 100%;
+  max-width: 72rem;
+  padding-inline: 16px;
+  @media (width >= 40rem) {
+    padding-inline: 24px;
+  }
+  @media (width >= 64rem) {
+    padding-inline: 32px;
+  }
+}
+
+/* Twelve columns with 16px gutters (24 on desktop); children span with col-span-*. */
+@utility grid-12 {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  column-gap: 16px;
+  row-gap: 16px;
+  @media (width >= 64rem) {
+    column-gap: 24px;
+  }
+}
+
+/* The working layout: a main column (8 of 12) and a sidebar (4 of 12), stacked on phones. */
+@utility layout-main-aside {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  column-gap: 16px;
+  row-gap: 16px;
+  & > * {
+    grid-column: span 12 / span 12;
+    min-width: 0;
+  }
+  @media (width >= 64rem) {
+    column-gap: 24px;
+    & > :first-child {
+      grid-column: span 8 / span 8;
+    }
+    & > :last-child {
+      grid-column: span 4 / span 4;
+    }
+  }
+}
+
+/* Two panels, the second the larger (5 and 7 of 12). */
+@utility layout-5-7 {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  column-gap: 16px;
+  row-gap: 16px;
+  & > * {
+    grid-column: span 12 / span 12;
+    min-width: 0;
+  }
+  @media (width >= 64rem) {
+    column-gap: 24px;
+    & > :first-child {
+      grid-column: span 5 / span 5;
+    }
+    & > :last-child {
+      grid-column: span 7 / span 7;
+    }
+  }
+}
+
+/* ---------- Springs ---------- */
+/* Transitions that move use a spring: snappy for controls, smooth for surfaces. */
+@utility spring-snappy {
+  transition-timing-function: var(--ease-spring-snappy);
+  transition-duration: 500ms;
+}
+@utility spring-smooth {
+  transition-timing-function: var(--ease-spring-smooth);
+  transition-duration: 680ms;
+}
+@utility spring-bouncy {
+  transition-timing-function: var(--ease-spring-bouncy);
+  transition-duration: 610ms;
+}
+
+/*
+ * Press: responds the instant the pointer goes down (no delay, no easing in),
+ * then springs back when released, from wherever it was.
+ */
+@utility pressable {
+  transition-property: transform, background-color, color, border-color, box-shadow, opacity;
+  transition-timing-function:
+    var(--ease-spring-press), ease-out, ease-out, ease-out, ease-out, ease-out;
+  transition-duration: 360ms, 150ms, 150ms, 150ms, 150ms, 150ms;
+  &:active:not(:disabled) {
+    transform: scale(0.97);
+    transition-duration: 0ms, 150ms, 150ms, 150ms, 150ms, 150ms;
+  }
+}
+
+/* ---------- Scroll staging (scroll-driven, so it can't stutter or be outrun) ---------- */
+/* A section settles into place as it enters the viewport. */
+@utility reveal {
+  @supports (animation-timeline: view()) {
+    animation: reveal linear both;
+    animation-timeline: view();
+    animation-range: entry 0% entry 60%;
+  }
+}
+/* A hero image that drifts slower than the page and eases out of scale. */
+@utility parallax {
+  @supports (animation-timeline: view()) {
+    animation: parallax linear both;
+    animation-timeline: view();
+    animation-range: cover 0% cover 100%;
+  }
 }
 
 @utility pb-safe {
@@ -430,36 +832,38 @@
 /* Entrances are short (≤ 400ms) and small (≤ 8px): they show where content came from, then get out of the way. */
 
 @utility animate-rise {
-  animation: rise 0.3s var(--ease-out-quint) both;
-  animation-delay: calc(min(var(--i, 0), 4) * 25ms);
+  animation: rise 0.5s var(--ease-spring-smooth) both;
+  animation-delay: calc(min(var(--i, 0), 3) * 30ms);
 }
 
-/* Switching tabs: a quick cross-fade only, so the new page is there at once. */
+/* Switching tabs: the new page crossfades in while settling from 99% scale. */
 @utility animate-page {
-  animation: page-in 0.16s ease-out both;
+  animation: page-in 0.36s var(--ease-spring-smooth) both;
 }
 
 @utility animate-pop {
-  animation: pop 0.22s var(--ease-out-quint) both;
+  animation: pop 0.4s var(--ease-spring-snappy) both;
 }
 
 @keyframes rise {
   from {
     opacity: 0;
-    transform: translateY(6px);
+    transform: translateY(8px) scale(0.985);
   }
   to {
     opacity: 1;
-    transform: translateY(0);
+    transform: none;
   }
 }
 
 @keyframes page-in {
   from {
-    opacity: 0.4;
+    opacity: 0;
+    transform: scale(0.992);
   }
   to {
     opacity: 1;
+    transform: none;
   }
 }
 
@@ -471,6 +875,49 @@
   to {
     opacity: 1;
     transform: scale(1);
+  }
+}
+
+@keyframes reveal {
+  from {
+    opacity: 0.35;
+    transform: translateY(24px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes parallax {
+  from {
+    transform: translateY(-6%) scale(1.08);
+  }
+  to {
+    transform: translateY(6%) scale(1);
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Reduced motion: entrances become plain crossfades; scroll staging and parallax stop. */
+@media (prefers-reduced-motion: reduce) {
+  .animate-rise,
+  .animate-page,
+  .animate-pop {
+    animation-name: fade-in !important;
+    animation-duration: 160ms !important;
+  }
+  .reveal,
+  .parallax {
+    animation: none !important;
   }
 }
 

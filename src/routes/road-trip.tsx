@@ -180,13 +180,13 @@ function RoadTripPage() {
     <div>
       <PageHeader eyebrow="Road trip" title="Find the stops worth the detour" />
 
-      <div className="mx-auto mt-6 grid max-w-6xl grid-cols-1 gap-6 px-4 lg:grid-cols-[minmax(0,1fr)_340px]">
+      <div className="page-container mt-6 layout-main-aside">
         <div className="min-w-0 space-y-6">
           {/* Route setup */}
-          <section className="surface-card space-y-5 p-5">
-            <div className="grid gap-3 sm:grid-cols-2">
+          <section className="surface-card space-y-6 p-6">
+            <div className="grid gap-4 sm:grid-cols-2">
               <div>
-                <label htmlFor="rt-origin" className="text-[13px] text-muted-foreground">
+                <label htmlFor="rt-origin" className="text-footnote text-muted-foreground">
                   Starting location
                 </label>
                 <Input
@@ -195,11 +195,11 @@ function RoadTripPage() {
                   placeholder="e.g. your city"
                   maxLength={80}
                   onChange={(e) => tripActions.updateRoadTrip({ origin: e.target.value })}
-                  className="mt-1.5 h-11"
+                  className="mt-2 h-11"
                 />
               </div>
               <div>
-                <label htmlFor="rt-dest" className="text-[13px] text-muted-foreground">
+                <label htmlFor="rt-dest" className="text-footnote text-muted-foreground">
                   Destination
                 </label>
                 <Input
@@ -208,14 +208,14 @@ function RoadTripPage() {
                   placeholder="Where you're headed"
                   maxLength={80}
                   onChange={(e) => tripActions.updateRoadTrip({ destination: e.target.value })}
-                  className="mt-1.5 h-11"
+                  className="mt-2 h-11"
                 />
               </div>
             </div>
 
-            <div className="grid gap-5 sm:grid-cols-2">
+            <div className="grid gap-6 sm:grid-cols-2">
               <div>
-                <label htmlFor="rt-budget" className="text-[13px] text-muted-foreground">
+                <label htmlFor="rt-budget" className="text-footnote text-muted-foreground">
                   Budget for stops & detours
                 </label>
                 <NumberField
@@ -224,12 +224,12 @@ function RoadTripPage() {
                   step={25}
                   value={rt.stopBudget}
                   onChange={(v) => tripActions.updateRoadTrip({ stopBudget: v })}
-                  className="mt-1.5"
+                  className="mt-2"
                 />
               </div>
               <div>
                 <div className="flex items-baseline justify-between">
-                  <span className="text-[13px] text-muted-foreground">Max detour per stop</span>
+                  <span className="text-footnote text-muted-foreground">Max detour per stop</span>
                   <span className="tabular text-sm font-medium">{rt.maxDetourMinutes} min</span>
                 </div>
                 <Slider
@@ -245,7 +245,7 @@ function RoadTripPage() {
             </div>
 
             <div>
-              <p className="mb-2 text-[13px] text-muted-foreground">Interests</p>
+              <p className="mb-2 text-footnote text-muted-foreground">Interests</p>
               <InterestChips value={rt.interests} onToggle={toggleInterest} />
             </div>
             {authLoading ? null : realMode ? (
@@ -259,7 +259,7 @@ function RoadTripPage() {
                 {real.isFetching ? "Looking along your route…" : "Find real stops"}
               </Button>
             ) : (
-              <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg bg-muted px-4 py-3 text-sm">
+              <div className="flex flex-wrap items-center justify-between gap-4 rounded-lg bg-muted px-4 py-4 text-sm">
                 <p>
                   <span className="font-medium">You're seeing sample stops.</span> Sign in to
                   explore real places, routes and drive times.
@@ -285,7 +285,7 @@ function RoadTripPage() {
             </p>
           )}
 
-          <section className="space-y-3" aria-live="polite">
+          <section className="space-y-4" aria-live="polite">
             {view === "auth-loading" || view === "loading" ? (
               <StateCard
                 icon={<Loader2 className="size-5 animate-spin text-primary" />}
@@ -367,24 +367,24 @@ function RoadTripPage() {
 
         {/* Route plan */}
         <aside className="space-y-4 lg:sticky lg:top-20 lg:self-start">
-          <section className="surface-card p-5">
-            <h2 className="title-display text-[26px]">Your route plan</h2>
-            <dl className="mt-3 grid grid-cols-2 gap-3 text-sm">
-              <div className="rounded-lg border border-border p-3">
+          <section className="surface-card p-6">
+            <h2 className="title-display text-title-1">Your route plan</h2>
+            <dl className="mt-4 grid grid-cols-2 gap-4 text-sm">
+              <div className="rounded-lg border border-border p-4">
                 <dt className="text-xs text-muted-foreground">Stops added</dt>
                 <dd className="tabular text-lg font-semibold">{rt.includedStops.length}</dd>
               </div>
-              <div className="rounded-lg border border-border p-3">
+              <div className="rounded-lg border border-border p-4">
                 <dt className="text-xs text-muted-foreground">Extra drive (sample)</dt>
                 <dd className="tabular text-lg font-semibold">+{extraMinutes} min</dd>
               </div>
-              <div className="rounded-lg border border-border p-3">
+              <div className="rounded-lg border border-border p-4">
                 <dt className="text-xs text-muted-foreground">Stop spend</dt>
                 <dd className="tabular text-lg font-semibold">
                   {formatMoney(stopsTotal, { cents: true })}
                 </dd>
               </div>
-              <div className="rounded-lg border border-border p-3">
+              <div className="rounded-lg border border-border p-4">
                 <dt className="text-xs text-muted-foreground">Stop budget left</dt>
                 <dd
                   className={cn(
@@ -396,11 +396,11 @@ function RoadTripPage() {
                 </dd>
               </div>
             </dl>
-            <div className="mt-3 rounded-lg border border-border p-3 text-sm">
+            <div className="mt-4 rounded-lg border border-border p-4 text-sm">
               <p className="text-xs text-muted-foreground">Whole-trip money remaining</p>
               <p
                 className={cn(
-                  "tabular text-[15px] font-semibold",
+                  "tabular text-headline font-semibold",
                   totals.overBudget && "text-primary",
                 )}
               >
@@ -414,7 +414,7 @@ function RoadTripPage() {
 
           {realOk ? (
             <section className="surface-card p-4">
-              <h2 className="title-display mb-3 text-[26px]">Route map</h2>
+              <h2 className="title-display mb-4 text-title-1">Route map</h2>
               <RealRouteMap
                 route={realOk.route}
                 stops={withinDetour}
@@ -488,7 +488,7 @@ function StopCard({
     <article
       id={`stop-${stop.id}`}
       className={cn(
-        "surface-card animate-rise render-lazy flex gap-3 p-4 transition-[border-color,box-shadow] duration-200 [contain-intrinsic-size:auto_160px]",
+        "surface-card animate-rise render-lazy flex gap-4 p-4 transition-[border-color,box-shadow] duration-200 [contain-intrinsic-size:auto_160px]",
         included && "border-primary ring-3 ring-primary/12",
       )}
     >
@@ -499,10 +499,10 @@ function StopCard({
         <p className="eyebrow truncate">
           {label} · {segment}
         </p>
-        <h2 className="mt-0.5 text-sm leading-snug font-medium">{stop.name}</h2>
-        <p className="mt-0.5 text-xs text-muted-foreground">
+        <h2 className="mt-1 text-sm leading-snug font-medium">{stop.name}</h2>
+        <p className="mt-1 text-xs text-muted-foreground">
           {stop.rating !== null && (
-            <span className="tabular mr-2 inline-flex items-center gap-0.5 font-medium text-foreground">
+            <span className="tabular mr-2 inline-flex items-center gap-1 font-medium text-foreground">
               <Star className="size-3 fill-gold text-gold" /> {stop.rating.toFixed(1)}
               {stop.ratingCount !== null && (
                 <span className="font-normal text-muted-foreground">
@@ -515,13 +515,13 @@ function StopCard({
         </p>
         {reasons.length > 0 && (
           <ul
-            className="mt-2 flex flex-wrap gap-x-3 gap-y-1"
+            className="mt-2 flex flex-wrap gap-x-4 gap-y-1"
             aria-label="Why it's worth the detour"
           >
             {reasons.map((r) => (
               <li
                 key={r}
-                className="inline-flex items-center gap-1 text-[11px] text-muted-foreground"
+                className="inline-flex items-center gap-1 text-micro text-muted-foreground"
               >
                 <Check className="size-3 text-success" /> {r}
               </li>
@@ -544,12 +544,12 @@ function StopCard({
           <p className="tabular text-sm font-semibold" title={costDetail}>
             {costText}
           </p>
-          <p className="tabular inline-flex items-center gap-1 text-[11px] text-muted-foreground">
+          <p className="tabular inline-flex items-center gap-1 text-micro text-muted-foreground">
             <Clock className="size-3" /> +{stop.extraMinutes} min
           </p>
           {/* Only worth a line when it would push the trip or the stop budget over. */}
           {(remainingAfter < 0 || stopLeftAfter < 0) && (
-            <p className="tabular text-[11px] text-destructive">
+            <p className="tabular text-micro text-destructive">
               {remainingAfter < 0
                 ? `${formatMoney(-remainingAfter)} over budget`
                 : `${formatMoney(-stopLeftAfter)} over stop budget`}
@@ -592,12 +592,12 @@ function RouteMap({
   includedIds: Set<string>;
 }) {
   return (
-    <section className="surface-card p-5">
+    <section className="surface-card p-6">
       <div className="flex items-center justify-between">
-        <h2 className="title-display text-[26px]">Route sketch</h2>
+        <h2 className="title-display text-title-1">Route sketch</h2>
         <SourceNote label="Not to scale" />
       </div>
-      <div className="relative mt-4 ml-3 h-80">
+      <div className="relative mt-4 ml-4 h-80">
         <span
           className="absolute top-2 bottom-2 left-[7px] w-0.5 rounded-full bg-primary"
           aria-hidden
@@ -625,14 +625,14 @@ function RouteMap({
             >
               <span
                 className={cn(
-                  "ml-[2px] size-3 rounded-full border-2 transition-all",
+                  "ml-1 size-3 rounded-full border-2 transition-all",
                   on
                     ? "border-success bg-success"
                     : "border-border bg-card group-hover:border-primary",
                 )}
               />
               {on && (
-                <span className="max-w-48 truncate text-[11px] font-semibold text-success">
+                <span className="max-w-48 truncate text-micro font-semibold text-success">
                   {s.name}
                 </span>
               )}
@@ -646,7 +646,7 @@ function RouteMap({
           <span className="text-xs font-semibold">{destination || "Destination"}</span>
         </div>
       </div>
-      <p className="mt-3 text-[11px] text-muted-foreground">
+      <p className="mt-4 text-micro text-muted-foreground">
         Not a map, just a sketch of where sample stops fall along the drive. Sign in for a live map.
       </p>
     </section>
@@ -665,7 +665,7 @@ function StateCard({
   return (
     <div className="surface-card flex flex-col items-center gap-2 px-6 py-10 text-center">
       <span className="grid size-11 place-items-center rounded-full bg-muted">{icon}</span>
-      <p className="text-[15px] font-semibold">{title}</p>
+      <p className="text-headline font-semibold">{title}</p>
       <p className="max-w-sm text-sm text-muted-foreground">{children}</p>
     </div>
   );
@@ -680,14 +680,14 @@ function NotARoadTrip() {
       <PageHeader eyebrow="Road trip" title="Stops along the drive" />
       <div className="mx-auto mt-6 max-w-2xl px-4">
         <section className="surface-card p-6 text-center">
-          <p className="text-[15px] font-semibold">
+          <p className="text-headline font-semibold">
             Your trip is a {label.toLowerCase()}, not a road trip
           </p>
           <p className="mt-2 text-sm text-muted-foreground">
             Route stops and detours are for road trips. Switch the trip type to plan stops, or head
             to your itinerary.
           </p>
-          <div className="mt-5 flex flex-wrap justify-center gap-2">
+          <div className="mt-6 flex flex-wrap justify-center gap-2">
             <Button
               variant="hero"
               onClick={() => {

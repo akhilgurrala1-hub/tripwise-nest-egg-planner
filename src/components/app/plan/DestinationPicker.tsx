@@ -68,7 +68,7 @@ export function DestinationPicker({
 
   return (
     <div>
-      <p className="mb-2.5 flex items-center gap-1.5 text-[13px] text-muted-foreground">
+      <p className="mb-2 flex items-center gap-2 text-footnote text-muted-foreground">
         <Sparkles className="size-3.5 text-brand-coral" />
         {tripType === "staycation"
           ? "Planned around your home city"
@@ -128,7 +128,7 @@ export function DestinationPicker({
         />
       </div>
       {destinationId === CUSTOM_DESTINATION_ID && (
-        <div className="animate-pop mt-3">
+        <div className="animate-pop mt-4">
           <PlaceInput
             autoFocus
             aria-label="Destination"
@@ -140,7 +140,7 @@ export function DestinationPicker({
             onPickPlace={(p) => onCustom(p.label, p)}
             className="h-11"
           />
-          {error && <p className="mt-1.5 text-xs text-destructive">{error}</p>}
+          {error && <p className="mt-2 text-xs text-destructive">{error}</p>}
         </div>
       )}
     </div>
@@ -187,7 +187,7 @@ function OptionRow({
       onClick={onClick}
       style={stagger(index)}
       className={cn(
-        "group animate-rise relative flex items-start gap-3 rounded-xl border p-3.5 text-left transition-[border-color,background-color,box-shadow,transform] duration-200 hover:-translate-y-px active:scale-[0.99]",
+        "group animate-rise relative flex items-start gap-4 rounded-xl border p-4 text-left transition-[border-color,background-color,box-shadow,transform] duration-200 pressable active:scale-[0.99]",
         active
           ? "border-primary bg-card ring-3 ring-primary/12"
           : "border-border bg-card hover:border-muted-foreground/40 hover:shadow-[0_2px_8px_oklch(0.2_0.01_260/0.06)]",
@@ -195,7 +195,7 @@ function OptionRow({
     >
       <span
         className={cn(
-          "mt-0.5 grid size-4 shrink-0 place-items-center rounded-full border transition-colors duration-200",
+          "mt-1 grid size-4 shrink-0 place-items-center rounded-full border transition-colors duration-200",
           active ? "border-primary bg-primary" : "border-input",
         )}
         aria-hidden
@@ -208,15 +208,15 @@ function OptionRow({
         />
       </span>
       <span className="min-w-0 flex-1">
-        <span className="flex items-center gap-1.5 text-sm font-medium">
+        <span className="flex items-center gap-2 text-sm font-medium">
           {icon}
           {title}
         </span>
-        <span className="mt-0.5 block truncate text-xs text-muted-foreground">{meta}</span>
-        <span className="tabular mt-2 flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-muted-foreground">
+        <span className="mt-1 block truncate text-xs text-muted-foreground">{meta}</span>
+        <span className="tabular mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
           {detail}
         </span>
-        <span className="mt-1 block truncate text-[11px] text-muted-foreground">{note}</span>
+        <span className="mt-1 block truncate text-micro text-muted-foreground">{note}</span>
       </span>
     </button>
   );

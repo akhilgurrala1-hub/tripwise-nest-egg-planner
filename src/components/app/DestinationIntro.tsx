@@ -49,7 +49,7 @@ export function DestinationPhoto({
         </a>
       )}
       {showText && (
-        <figcaption className="mt-3 text-[13px] leading-relaxed text-muted-foreground">
+        <figcaption className="mt-4 text-footnote leading-relaxed text-muted-foreground">
           {s.extract}{" "}
           <a
             href={s.url}
@@ -96,7 +96,7 @@ export function DestinationHero({
         src={s.image}
         alt={s.title}
         decoding="async"
-        className="absolute inset-0 size-full object-cover transition-transform duration-700 ease-[var(--ease-out-quint)] group-hover:scale-[1.02]"
+        className="parallax absolute inset-0 size-full object-cover"
       />
     </a>
   );
@@ -120,13 +120,13 @@ export function DestinationCard({
   const guide = useTravelGuide();
   const reviews = destinationReviewLinks(destinationQuery(dest, origin));
   return (
-    <section className={cn("surface-card p-5", className)}>
-      <h2 className="title-display text-[28px]">About {dest.name}</h2>
+    <section className={cn("surface-card p-6", className)}>
+      <h2 className="title-display text-title-1">About {dest.name}</h2>
       {summary.data ? (
-        <DestinationPhoto dest={dest} origin={origin} showImage={photo} className="mt-3" />
+        <DestinationPhoto dest={dest} origin={origin} showImage={photo} className="mt-4" />
       ) : (
         // Until (or unless) the introduction loads, the place's own short description.
-        <p className="mt-2 text-[13px] leading-relaxed text-muted-foreground">
+        <p className="mt-2 text-footnote leading-relaxed text-muted-foreground">
           {dest.region ? `${dest.region}. ` : ""}
           {dest.tagline}
         </p>
@@ -136,7 +136,7 @@ export function DestinationCard({
         <TravelerTips tips={guide.data.tips} url={guide.data.url} className="mt-4" />
       )}
       {reviews.length > 0 && (
-        <p className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-1 border-t border-border pt-3 text-xs">
+        <p className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-1 border-t border-border pt-4 text-xs">
           <span className="text-muted-foreground">What travelers say:</span>
           {reviews.map((l) => (
             <a
@@ -168,13 +168,13 @@ function TravelerTips({
   className?: string;
 }) {
   return (
-    <div className={cn("animate-pop space-y-2.5", className)}>
+    <div className={cn("animate-pop space-y-2", className)}>
       {tips.map((t) => {
         const Icon = TIP_ICON[t.topic];
         return (
-          <div key={t.topic} className="flex gap-2.5">
-            <Icon className="mt-0.5 size-4 shrink-0 text-primary" aria-hidden />
-            <p className="text-[13px] leading-relaxed text-muted-foreground">
+          <div key={t.topic} className="flex gap-2">
+            <Icon className="mt-1 size-4 shrink-0 text-primary" aria-hidden />
+            <p className="text-footnote leading-relaxed text-muted-foreground">
               <span className="font-semibold text-foreground">{t.topic}.</span> {t.text}
             </p>
           </div>
@@ -202,12 +202,12 @@ export function HolidayList({
 }) {
   if (holidays.length === 0) return null;
   return (
-    <div className={cn("animate-pop rounded-lg border border-border p-3", className)}>
-      <p className="flex items-center gap-1.5 text-[13px] font-medium">
+    <div className={cn("animate-pop rounded-lg border border-border p-4", className)}>
+      <p className="flex items-center gap-2 text-footnote font-medium">
         <CalendarHeart className="size-4 text-brand-coral" /> Public holiday
         {holidays.length > 1 ? "s" : ""} during your trip
       </p>
-      <ul className="mt-1.5 space-y-1 text-xs text-muted-foreground">
+      <ul className="mt-2 space-y-1 text-xs text-muted-foreground">
         {holidays.map((h) => (
           <li key={h.date + h.name}>
             <span className="font-medium text-foreground">
@@ -218,7 +218,7 @@ export function HolidayList({
           </li>
         ))}
       </ul>
-      <p className="mt-1.5 text-[11px] text-muted-foreground">
+      <p className="mt-2 text-micro text-muted-foreground">
         Expect closures and bigger crowds, so book popular spots ahead.
       </p>
     </div>

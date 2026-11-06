@@ -30,10 +30,10 @@ export function OriginField({
   const [note, setNote] = useState("");
   return (
     <div>
-      <label htmlFor={id} className="text-[13px] text-muted-foreground">
+      <label htmlFor={id} className="text-footnote text-muted-foreground">
         {label}
       </label>
-      <div className="mt-1.5 flex gap-2">
+      <div className="mt-2 flex gap-2">
         <div className="min-w-0 flex-1">
           <PlaceInput
             id={id}
@@ -82,11 +82,7 @@ export function OriginField({
           <span className="sr-only sm:hidden">Use my location</span>
         </Button>
       </div>
-      <p
-        className={
-          error ? "mt-1.5 text-xs text-destructive" : "mt-1.5 text-xs text-muted-foreground"
-        }
-      >
+      <p className={error ? "mt-2 text-xs text-destructive" : "mt-2 text-xs text-muted-foreground"}>
         {error ||
           note ||
           (found === "none"

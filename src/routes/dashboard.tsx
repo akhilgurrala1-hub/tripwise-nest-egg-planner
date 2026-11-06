@@ -90,7 +90,7 @@ function Dashboard() {
         {!trip.isSample && <ShareTripButton />}
       </PageHeader>
 
-      <div className="mx-auto mt-8 max-w-6xl space-y-4 px-4">
+      <div className="page-container mt-8 space-y-4">
         <TripReady />
         {/* The place first, large, like a travel magazine: then the money. */}
         <DestinationHero
@@ -100,7 +100,7 @@ function Dashboard() {
         />
         <div className="flex flex-col gap-4 lg:flex-row">
           {/* Balance */}
-          <section className="surface-card animate-rise min-w-0 flex-1 p-5 sm:p-7">
+          <section className="surface-card animate-rise min-w-0 flex-1 p-6 sm:p-8">
             <div className="grid gap-6 sm:grid-cols-[1fr_auto] sm:items-end">
               <div>
                 <p className="text-sm text-muted-foreground">
@@ -108,7 +108,7 @@ function Dashboard() {
                 </p>
                 <p
                   className={cn(
-                    "money-display mt-2 text-[64px] sm:text-[88px]",
+                    "money-display mt-2 text-display",
                     totals.overBudget && "text-destructive",
                   )}
                 >
@@ -120,23 +120,23 @@ function Dashboard() {
                   suffix={totals.overBudget ? "over" : "left"}
                   className="mt-1 block text-sm"
                 />
-                <p className="tabular mt-3 text-sm text-muted-foreground">
+                <p className="tabular mt-4 text-sm text-muted-foreground">
                   {formatMoney(totals.planned)} planned of {formatMoney(totals.spendable)}
-                  <span className="px-1.5 text-border">/</span>
+                  <span className="px-2 text-border">/</span>
                   <Lock className="mr-1 inline size-3 -translate-y-px" />
                   {formatMoney(totals.emergencyFund)} emergency fund
                 </p>
               </div>
-              <dl className="grid grid-cols-2 gap-x-8 gap-y-3 text-sm sm:text-right">
+              <dl className="grid grid-cols-2 gap-x-8 gap-y-4 text-sm sm:text-right">
                 <div>
                   <dt className="text-muted-foreground">Per person, per day</dt>
-                  <dd className="tabular mt-0.5 text-base font-medium">
+                  <dd className="tabular mt-1 text-base font-medium">
                     <AnimatedMoney value={totals.perPersonPerDay} />
                   </dd>
                 </div>
                 <div>
                   <dt className="text-muted-foreground">Could save</dt>
-                  <dd className="tabular mt-0.5 text-base font-medium text-success">
+                  <dd className="tabular mt-1 text-base font-medium text-success">
                     <AnimatedMoney value={potentialSavings} />
                   </dd>
                 </div>
@@ -144,13 +144,13 @@ function Dashboard() {
             </div>
 
             {/* One stacked bar: every category in proportion, with the spending limit marked. */}
-            <div className="relative mt-7">
+            <div className="relative mt-8">
               <div className="flex h-2.5 gap-px overflow-hidden rounded-full bg-muted">
                 {breakdown.map((d) => (
                   <span
                     key={d.cat}
                     title={`${CATEGORY_LABELS[d.cat]} ${formatMoney(d.value)}`}
-                    className="h-full transition-[width] duration-500 ease-[var(--ease-out-quint)] first:rounded-l-full last:rounded-r-full"
+                    className="h-full transition-[width] spring-smooth first:rounded-l-full last:rounded-r-full"
                     style={{
                       width: `${(d.value / scale) * 100}%`,
                       backgroundColor: CATEGORY_COLOR_VAR[d.cat],
@@ -165,7 +165,7 @@ function Dashboard() {
                   aria-hidden
                 />
               )}
-              <div className="mt-2.5 flex flex-wrap justify-between gap-2 text-xs text-muted-foreground">
+              <div className="mt-2 flex flex-wrap justify-between gap-2 text-xs text-muted-foreground">
                 <span className="tabular">
                   {totals.percentUsed === null
                     ? "No spendable budget"
@@ -193,14 +193,14 @@ function Dashboard() {
 
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
           {/* Breakdown */}
-          <section className="surface-card animate-rise p-5" style={stagger(2)}>
-            <div className="flex items-center justify-between gap-3">
-              <h2 className="title-display text-[28px]">Where it goes</h2>
+          <section className="surface-card reveal p-6">
+            <div className="flex items-center justify-between gap-4">
+              <h2 className="title-display text-title-1">Where it goes</h2>
               <PriceSourceBadge />
             </div>
             <ul className="mt-4 divide-y divide-border">
               {breakdown.map(({ cat, value }) => (
-                <li key={cat} className="flex flex-wrap items-center gap-x-3 py-2.5 text-sm">
+                <li key={cat} className="flex flex-wrap items-center gap-x-4 py-2 text-sm">
                   <span
                     className="size-2 shrink-0 rounded-[3px]"
                     style={{ backgroundColor: CATEGORY_COLOR_VAR[cat] }}
@@ -213,7 +213,7 @@ function Dashboard() {
                     <AnimatedMoney value={value} />
                   </span>
                   {cat === "transportation" && parts.length > 0 && (
-                    <ul className="basis-full space-y-1 pt-1.5 pl-5">
+                    <ul className="basis-full space-y-1 pt-2 pl-6">
                       {parts.map((p) => (
                         <li key={p.key} className="flex items-baseline gap-2 text-xs">
                           <span className="min-w-0 flex-1 truncate text-foreground/85">
@@ -221,12 +221,12 @@ function Dashboard() {
                             <span className="text-muted-foreground"> · {p.detail}</span>
                           </span>
                           {p.key === "fares" && fareLive ? (
-                            <span className="text-[11px] font-medium text-success">Live</span>
+                            <span className="text-micro font-medium text-success">Live</span>
                           ) : p.key === "fares" && flightsConnected ? (
                             <Link
                               to="/budget"
                               hash="live-prices"
-                              className="text-[11px] font-medium text-primary hover:underline"
+                              className="text-micro font-medium text-primary hover:underline"
                             >
                               Check the real fare
                             </Link>
@@ -239,7 +239,7 @@ function Dashboard() {
                     </ul>
                   )}
                   {cat === "misc" && (
-                    <span className="basis-full pl-5 text-xs text-muted-foreground">
+                    <span className="basis-full pl-6 text-xs text-muted-foreground">
                       {trip.inputs.miscPct}% set aside for prices that change before you book
                     </span>
                   )}
@@ -254,17 +254,17 @@ function Dashboard() {
           </section>
 
           {/* Savings */}
-          <section className="surface-card animate-rise p-5" style={stagger(3)}>
-            <h2 className="title-display text-[28px]">Ways to spend less</h2>
-            <p className="mt-0.5 text-[13px] text-muted-foreground">
+          <section className="surface-card reveal p-6">
+            <h2 className="title-display text-title-1">Ways to spend less</h2>
+            <p className="mt-1 text-footnote text-muted-foreground">
               Applies to your budget instantly. Undo anytime.
             </p>
-            <ul className="mt-3 divide-y divide-border">
+            <ul className="mt-4 divide-y divide-border">
               {(showAllSavings ? savings : savings.slice(0, SAVINGS_SHOWN)).map((s) => (
-                <li key={s.id} className="flex items-center gap-3 py-3">
+                <li key={s.id} className="flex items-center gap-4 py-4">
                   <div className="min-w-0 flex-1">
                     <p className="text-sm font-medium">{s.title}</p>
-                    <p className="mt-0.5 text-xs leading-snug text-muted-foreground">{s.detail}</p>
+                    <p className="mt-1 text-xs leading-snug text-muted-foreground">{s.detail}</p>
                   </div>
                   <span className="tabular shrink-0 text-sm font-medium text-success">
                     −{formatMoney(s.totalSavings)}
@@ -301,13 +301,13 @@ function Dashboard() {
               </Button>
             )}
             {applied.length > 0 && (
-              <div className="mt-3 flex flex-wrap items-center gap-1.5 border-t border-border pt-3">
+              <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-border pt-4">
                 <span className="mr-1 text-xs text-muted-foreground">Applied</span>
                 {applied.map((id) => (
                   <button
                     key={id}
                     onClick={() => tripActions.undoSaving(id)}
-                    className="animate-pop inline-flex h-7 items-center gap-1.5 rounded-md border border-border px-2 text-xs font-medium transition-colors hover:border-muted-foreground/40 active:scale-[0.97]"
+                    className="animate-pop inline-flex h-7 items-center gap-2 rounded-md border border-border px-2 text-xs font-medium transition-colors hover:border-muted-foreground/40 active:scale-[0.97]"
                     aria-label={`Undo ${SAVING_TITLES[id]}`}
                   >
                     <Check className="size-3 text-success" /> {SAVING_TITLES[id]}
@@ -319,14 +319,14 @@ function Dashboard() {
           </section>
         </div>
 
-        <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)]">
+        <div className="layout-5-7">
           <DestinationCard
             dest={dest}
             origin={trip.setup.origin}
             photo={false}
-            className="animate-rise"
+            className="reveal"
           />
-          <WeatherCard className="animate-rise" />
+          <WeatherCard className="reveal" />
         </div>
       </div>
     </div>
@@ -350,7 +350,7 @@ function SpendingGlance() {
   return (
     <section
       aria-labelledby="glance-spent"
-      className="surface-card animate-rise flex flex-col p-5 lg:w-[300px]"
+      className="surface-card animate-rise flex flex-col p-6 lg:w-[300px]"
       style={stagger(1)}
     >
       <h2 id="glance-spent" className="eyebrow">
@@ -358,7 +358,7 @@ function SpendingGlance() {
           ? `Today, ${formatCalendarDate(today, { month: "short", day: "numeric" })}`
           : "Spent so far"}
       </h2>
-      <p className="money-display mt-2 text-[44px]">
+      <p className="money-display mt-2 text-large-title">
         <AnimatedMoney value={s.phase === "during" ? s.today : s.spent} />
       </p>
       <p className="tabular mt-1 text-sm text-muted-foreground">
@@ -435,11 +435,11 @@ function NextSteps() {
     );
 
   return (
-    <section className="surface-card animate-rise p-5" style={stagger(1)}>
-      <div className="flex flex-wrap items-center justify-between gap-3">
+    <section className="surface-card animate-rise p-6" style={stagger(1)}>
+      <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h2 className="title-display text-[28px]">Checklist</h2>
-          <p className="tabular mt-0.5 text-[13px] text-muted-foreground">
+          <h2 className="title-display text-title-1">Checklist</h2>
+          <p className="tabular mt-1 text-footnote text-muted-foreground">
             {next
               ? `${doneCount} of ${steps.length} done${next ? `. Next: ${next.title.toLowerCase()}` : ""}`
               : "All set. Have a great trip."}
@@ -467,7 +467,7 @@ function NextSteps() {
         className="mt-4 h-1.5 overflow-hidden rounded-[3px] bg-muted"
       >
         <div
-          className="h-full rounded-[3px] bg-success transition-[width] duration-700 ease-[var(--ease-out-quint)]"
+          className="h-full rounded-[3px] bg-success transition-[width] spring-smooth"
           style={{ width: `${(100 * doneCount) / steps.length}%` }}
         />
       </div>
@@ -479,7 +479,7 @@ function NextSteps() {
               <>
                 <span
                   className={cn(
-                    "tabular grid size-6 shrink-0 place-items-center rounded-full border text-[11px] font-medium transition-colors duration-300",
+                    "tabular grid size-6 shrink-0 place-items-center rounded-full border text-micro font-medium transition-colors duration-300",
                     s.done
                       ? "border-foreground bg-foreground text-background"
                       : s === next
@@ -491,7 +491,7 @@ function NextSteps() {
                 </span>
                 <span
                   className={cn(
-                    "hidden truncate text-[13px] lg:inline",
+                    "hidden truncate text-footnote lg:inline",
                     s.done || s === next ? "text-foreground" : "text-muted-foreground",
                   )}
                 >
