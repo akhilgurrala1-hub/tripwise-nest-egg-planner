@@ -1,4 +1,4 @@
-# Tripwise Nest Egg Planner
+ARG TRAVEL
 
 Create a modern AI-powered travel planning web app. The app should eventually support every type of traveler, but the first version will focus on budget-friendly vacations, road trips, and staycations. Build a beautiful, mobile-friendly interface with:
 
@@ -13,14 +13,6 @@ A personalized travel itinerary with suggested destinations, restaurants, and si
 A dashboard showing total planned expenses, remaining money, and potential savings.
 
 Use example prices and locations clearly labeled as demonstrations until real travel-data integrations are available. Make the app functional with editable budgets and working calculations. Use a premium, modern design that feels friendly to both budget and luxury travelers. Do not implement real bookings or payments yet.
-
-This project was built with [Lovable](https://lovable.dev).
-
-**Live app**: https://tripwise-nest-egg-planner.lovable.app
-
-## Build with Lovable
-
-Continue developing this project in the [Lovable editor](https://lovable.dev/projects/dec388c7-309c-5d2f-a96c-0642c498b996).
 
 - **Ship faster**: describe what you want to build and Lovable handles the code.
 - **Stay in sync**: every change made in Lovable is committed straight to this repository.
