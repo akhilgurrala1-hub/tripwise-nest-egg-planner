@@ -36,7 +36,7 @@ export function TripReady() {
   return (
     <section
       aria-labelledby="trip-ready-title"
-      className="surface-card animate-rise relative overflow-hidden p-5 sm:p-7"
+      className="surface-card animate-rise relative overflow-hidden p-6 sm:p-8"
     >
       <button
         type="button"
@@ -46,40 +46,37 @@ export function TripReady() {
       >
         <X className="size-4" />
       </button>
-      <div className="grid items-center gap-5 sm:grid-cols-[minmax(0,1fr)_200px]">
+      <div className="grid items-center gap-6 sm:grid-cols-[minmax(0,1fr)_200px]">
         <div className="min-w-0">
-          <p className="eyebrow flex items-center gap-1.5">
+          <p className="eyebrow flex items-center gap-2">
             <span aria-hidden className="size-[5px] rounded-full bg-brand-coral" /> Ready
           </p>
-          <h2
-            id="trip-ready-title"
-            className="title-display mt-2 text-[34px] leading-tight sm:text-[40px]"
-          >
+          <h2 id="trip-ready-title" className="title-display mt-2 text-large-title leading-tight">
             Your trip is <em className="text-primary">planned.</em>
           </h2>
-          <p className="tabular mt-2 text-[15px] text-muted-foreground">
+          <p className="tabular mt-2 text-headline text-muted-foreground">
             {place} · {formatDateRange(s.startDate, s.endDate)} · {s.travelers}{" "}
             {s.travelers === 1 ? "traveler" : "travelers"}
           </p>
-          <ul className="mt-4 grid grid-cols-3 gap-3 text-xs sm:gap-4 sm:text-sm">
+          <ul className="mt-4 grid grid-cols-3 gap-4 text-xs sm:gap-4 sm:text-sm">
             <li>
-              <span className="money-display block text-[22px] sm:text-[26px]">
+              <span className="money-display block text-title-2 sm:text-title-1">
                 {formatMoney(totals.spendable)}
               </span>
               <span className="text-muted-foreground">to spend</span>
             </li>
             <li>
-              <span className="money-display block text-[22px] sm:text-[26px]">
+              <span className="money-display block text-title-2 sm:text-title-1">
                 {formatMoney(totals.emergencyFund)}
               </span>
               <span className="text-muted-foreground">emergency fund</span>
             </li>
             <li>
-              <span className="money-display block text-[22px] sm:text-[26px]">{days}</span>
+              <span className="money-display block text-title-2 sm:text-title-1">{days}</span>
               <span className="text-muted-foreground">{days === 1 ? "day" : "days"} planned</span>
             </li>
           </ul>
-          <div className="mt-5 flex flex-wrap gap-2">
+          <div className="mt-6 flex flex-wrap gap-2">
             <Button asChild variant="go">
               <Link to="/itinerary">
                 See the days <ArrowRight />

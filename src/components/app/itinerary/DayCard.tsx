@@ -62,17 +62,17 @@ export function DayCard({
       className="surface-card animate-rise render-lazy overflow-hidden print:break-inside-avoid print:shadow-none"
       style={style}
     >
-      <header className="flex items-center gap-3 border-b border-border px-5 py-3.5">
-        <span className="tabular grid size-9 shrink-0 place-items-center rounded-lg border border-border font-mono text-[13px] text-muted-foreground">
+      <header className="flex items-center gap-4 border-b border-border px-6 py-4">
+        <span className="tabular grid size-9 shrink-0 place-items-center rounded-lg bg-fill text-footnote font-semibold text-muted-foreground">
           {day.day}
         </span>
         <div className="min-w-0 flex-1">
           <p className="eyebrow">
             {formatCalendarDate(day.date, { weekday: "long", month: "short", day: "numeric" })}
           </p>
-          <h2 className="title-display line-clamp-2 text-[24px]">{day.title}</h2>
+          <h2 className="title-display line-clamp-2 text-title-2">{day.title}</h2>
           {holiday && (
-            <p className="mt-1 inline-flex items-center gap-1 text-[11px] font-medium text-[color-mix(in_oklab,var(--brand-coral)_55%,var(--foreground))]">
+            <p className="mt-1 inline-flex items-center gap-1 text-micro font-medium text-[color-mix(in_oklab,var(--brand-coral)_55%,var(--foreground))]">
               <CalendarHeart className="size-3" /> {holiday}: expect closures and crowds
             </p>
           )}
@@ -80,18 +80,18 @@ export function DayCard({
         {weather && <WeatherChip day={weather} className="hidden shrink-0 sm:inline-flex" />}
       </header>
       {weather && (
-        <div className="flex flex-wrap items-center gap-2 border-b border-border px-5 py-2 sm:hidden">
+        <div className="flex flex-wrap items-center gap-2 border-b border-border px-6 py-2 sm:hidden">
           <WeatherChip day={weather} />
         </div>
       )}
       {weather && isWetDay(weather) && (
-        <p className="border-b border-border bg-shield-soft px-5 py-2 text-xs">
+        <p className="border-b border-border bg-shield-soft px-6 py-2 text-xs">
           {weather.label}{" "}
           {weather.source === "forecast" ? "in the forecast" : "is common on this date"}. Have an
           indoor backup (a museum, market or long lunch) ready for outdoor stops.
         </p>
       )}
-      <ol className="relative px-5 py-3">
+      <ol className="relative px-6 py-4">
         {day.items.map((item, idx) => (
           <ItemRow
             key={item.id}
@@ -102,10 +102,10 @@ export function DayCard({
           />
         ))}
         {day.items.length === 0 && (
-          <li className="py-3 text-sm text-muted-foreground">Free day. Wander as you like.</li>
+          <li className="py-4 text-sm text-muted-foreground">Free day. Wander as you like.</li>
         )}
       </ol>
-      <div className="px-5 pb-4 print:hidden">
+      <div className="px-6 pb-4 print:hidden">
         <AddItemButton dayIndex={dayIndex} itinerary={itinerary} />
       </div>
     </section>
@@ -126,7 +126,7 @@ function ItemRow({
   const Icon = KIND_ICON[item.kind] ?? Landmark;
   const TimeIcon = TIME_ICONS[item.time] ?? Sun;
   return (
-    <li className="group relative flex gap-3 py-3">
+    <li className="group relative flex gap-4 py-4">
       {!last && (
         <span className="absolute top-11 bottom-0 left-[15px] w-px bg-border" aria-hidden />
       )}
@@ -137,7 +137,7 @@ function ItemRow({
         <p className="eyebrow inline-flex items-center gap-1">
           <TimeIcon className="size-3" aria-hidden /> {item.time}
         </p>
-        <p className="mt-0.5 text-sm leading-snug font-medium">
+        <p className="mt-1 text-sm leading-snug font-medium">
           {item.name}
           <SourceTag item={item} />
         </p>
@@ -146,7 +146,7 @@ function ItemRow({
           {item.note ? ` · ${item.note}` : ""}
         </p>
         {(item.hours || item.source === "wikivoyage") && (
-          <p className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
+          <p className="mt-1 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
             {item.source === "wikivoyage" && (
               <span className="inline-flex items-center gap-1 font-medium text-foreground/80">
                 <BookOpen className="size-3" aria-hidden /> Travel guide pick
@@ -163,7 +163,7 @@ function ItemRow({
           <PlaceLinks item={item} />
         ) : (
           (item.rating || item.mapsUrl) && (
-            <p className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
+            <p className="mt-1 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs">
               {item.rating ? (
                 <span className="tabular inline-flex items-center gap-1 font-semibold">
                   <Star className="size-3 fill-current text-gold" aria-hidden />{" "}
@@ -190,7 +190,7 @@ function ItemRow({
         )}
       </div>
       <div className="flex shrink-0 items-start gap-1">
-        <span className="pt-1.5">
+        <span className="pt-2">
           <CostChip item={item} />
         </span>
         <span className="print:hidden">
@@ -207,7 +207,7 @@ function PlaceLinks({ item }: { item: ItineraryItem }) {
   const near = destinationQuery(dest, trip.setup.origin);
   const links = placeReviewLinks(item.name, near, item.mapsUrl);
   return (
-    <p className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs print:hidden">
+    <p className="mt-1 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs print:hidden">
       {item.rating ? (
         <span className="tabular inline-flex items-center gap-1 font-semibold">
           <Star className="size-3 fill-current text-gold" aria-hidden /> {item.rating.toFixed(1)}
@@ -239,7 +239,7 @@ function PlaceLinks({ item }: { item: ItineraryItem }) {
 function SourceTag({ item }: { item: ItineraryItem }) {
   if (!item.custom) return null;
   return (
-    <span className="ml-2 inline-flex -translate-y-px items-center rounded-[5px] border border-border px-1.5 text-[10px] font-medium text-muted-foreground">
+    <span className="ml-2 inline-flex -translate-y-px items-center rounded-[5px] border border-border px-2 text-micro font-medium text-muted-foreground">
       Yours
     </span>
   );

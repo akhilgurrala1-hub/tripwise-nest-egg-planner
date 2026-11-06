@@ -3,7 +3,16 @@ import { useEffect, useId, useLayoutEffect, useRef, type CSSProperties } from "r
 import { TRIP_COLOR } from "./trip-colors";
 
 import type { TransportMode, TripType } from "@/lib/demo-data";
+import { springEasing, SPRINGS } from "@/lib/spring";
 import { cn } from "@/lib/utils";
+
+/** The smooth spring as a Web Animations easing, or ease-out where linear() isn't supported. */
+let settleEasing: string | null = null;
+const SETTLE_EASING = () =>
+  (settleEasing ??=
+    typeof CSS !== "undefined" && CSS.supports?.("transition-timing-function", "linear(0, 1)")
+      ? springEasing(SPRINGS.smooth).easing
+      : "ease-out");
 import {
   DEST_X,
   FLIGHT_PATH,
@@ -75,7 +84,7 @@ export function TravelScene({
       style={{ "--trip": TRIP_COLOR[tripType] } as CSSProperties}
     >
       {caption && (
-        <p key={playKey} className="animate-pop px-3.5 pt-2.5 text-[13px] text-muted-foreground">
+        <p key={playKey} className="animate-pop px-4 pt-2 text-footnote text-muted-foreground">
           {caption}
         </p>
       )}
@@ -89,7 +98,7 @@ export function TravelScene({
         <Scene kind={kind} />
       </svg>
       {kind !== "home" && (from || to) && (
-        <div className="pointer-events-none absolute inset-x-3.5 bottom-1.5 flex justify-between gap-4 text-[11px] text-muted-foreground">
+        <div className="pointer-events-none absolute inset-x-3.5 bottom-1.5 flex justify-between gap-4 text-micro text-muted-foreground">
           <span className="truncate">{from}</span>
           <span className="truncate text-right font-medium text-foreground">{to}</span>
         </div>
@@ -458,7 +467,8 @@ function play(kind: SceneKind, svg: SVGSVGElement): Animation[] {
   const run = (el: Element | null, keyframes: Keyframe[], options: KeyframeAnimationOptions) => {
     if (el) out.push(el.animate(keyframes, options));
   };
-  const settle = "cubic-bezier(0.22, 1, 0.36, 1)";
+  // Parts settle into place on the same smooth spring as the rest of the app.
+  const settle = SETTLE_EASING();
 
   if (kind === "home") {
     run(

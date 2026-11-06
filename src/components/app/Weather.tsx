@@ -47,7 +47,7 @@ export function WeatherChip({ day, className }: { day: DayWeather; className?: s
   return (
     <span
       className={cn(
-        "inline-flex h-7 items-center gap-1.5 rounded-md border border-border bg-card px-2 text-xs font-medium",
+        "inline-flex h-7 items-center gap-2 rounded-md border border-border bg-card px-2 text-xs font-medium",
         className,
       )}
       title={
@@ -59,7 +59,7 @@ export function WeatherChip({ day, className }: { day: DayWeather; className?: s
         {tempValue(day.highF, units)}° / {tempValue(day.lowF, units)}°
       </span>
       {day.precipChance !== null && day.precipChance >= 20 && (
-        <span className="tabular inline-flex items-center gap-0.5 text-primary">
+        <span className="tabular inline-flex items-center gap-1 text-primary">
           <Umbrella className="size-3" />
           {day.precipChance}%
         </span>
@@ -80,10 +80,10 @@ export function WeatherCard({ className }: { className?: string }) {
   const anyForecast = days.some((d) => d.source === "forecast");
 
   return (
-    <section className={cn("surface-card p-5", className)}>
+    <section className={cn("surface-card p-6", className)}>
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div className="min-w-0">
-          <h2 className="title-display text-[26px]">Weather</h2>
+          <h2 className="title-display text-title-1">Weather</h2>
           <p className="text-sm text-muted-foreground">
             {w.status === "ready" && days.length > 0
               ? `${w.placeLabel} · ${summarize(days, units)}`
@@ -108,7 +108,7 @@ export function WeatherCard({ className }: { className?: string }) {
         </p>
       )}
       {w.status === "error" && (
-        <div className="mt-4 flex items-center justify-between gap-3 text-sm text-muted-foreground">
+        <div className="mt-4 flex items-center justify-between gap-4 text-sm text-muted-foreground">
           <p>The weather service didn't respond.</p>
           <Button size="sm" variant="outline" onClick={() => void w.refetch()}>
             <RefreshCw /> Try again
@@ -132,13 +132,13 @@ export function WeatherCard({ className }: { className?: string }) {
                 <li
                   key={d.date}
                   className={cn(
-                    "w-24 shrink-0 snap-start rounded-2xl border p-3 text-center",
+                    "w-24 shrink-0 snap-start rounded-2xl border p-4 text-center",
                     isWetDay(d)
                       ? "border-shield/30 bg-shield-soft"
                       : "border-border bg-background/60",
                   )}
                 >
-                  <p className="text-[11px] font-semibold text-muted-foreground">
+                  <p className="text-micro font-semibold text-muted-foreground">
                     {formatCalendarDate(d.date, {
                       weekday: "short",
                       month: "short",
@@ -150,7 +150,7 @@ export function WeatherCard({ className }: { className?: string }) {
                     strokeWidth={1.6}
                     aria-hidden
                   />
-                  <p className="text-[11px] leading-tight">{d.label}</p>
+                  <p className="text-micro leading-tight">{d.label}</p>
                   <p className="tabular mt-1 text-sm font-medium">
                     {tempValue(d.highF, units)}°{" "}
                     <span className="font-normal text-muted-foreground">
@@ -158,26 +158,26 @@ export function WeatherCard({ className }: { className?: string }) {
                     </span>
                   </p>
                   {d.precipChance !== null && (
-                    <p className="tabular text-[11px] text-primary">
+                    <p className="tabular text-micro text-primary">
                       <Umbrella className="inline size-3" /> {d.precipChance}%
                     </p>
                   )}
                   {d.sunset && (
-                    <p className="text-[10px] text-muted-foreground">Sunset {clock(d.sunset)}</p>
+                    <p className="text-micro text-muted-foreground">Sunset {clock(d.sunset)}</p>
                   )}
                 </li>
               );
             })}
           </ol>
           {wet.length > 0 && (
-            <p className="mt-3 text-xs text-foreground">
+            <p className="mt-4 text-xs text-foreground">
               <Umbrella className="mr-1 inline size-3.5 -translate-y-px text-primary" />
               Wet weather is likely on{" "}
               {wet.map((d) => formatCalendarDate(d.date, { weekday: "long" })).join(", ")}. Keep an
               indoor plan for those days.
             </p>
           )}
-          <p className="mt-2 text-[11px] text-muted-foreground">
+          <p className="mt-2 text-micro text-muted-foreground">
             {anyForecast ? "Live forecast from Open-Meteo, updated hourly." : ""}
             {days.some((d) => d.source === "typical")
               ? `${anyForecast ? " " : ""}Days beyond the 16-day forecast show what those dates were like last year.`

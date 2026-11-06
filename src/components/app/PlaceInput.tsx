@@ -95,7 +95,7 @@ export function PlaceInput({
               role="option"
               aria-selected={false}
               aria-disabled
-              className="flex items-center gap-2 px-3 py-2 text-sm text-muted-foreground"
+              className="flex items-center gap-2 px-4 py-2 text-sm text-muted-foreground"
             >
               <Loader2 className="size-3.5 animate-spin" /> Finding places…
             </li>
@@ -110,7 +110,7 @@ export function PlaceInput({
                 pick(p);
               }}
               className={cn(
-                "flex min-h-11 cursor-pointer items-center gap-2 px-3 py-2 text-sm",
+                "flex min-h-11 cursor-pointer items-center gap-2 px-4 py-2 text-sm",
                 i === active ? "bg-secondary" : "hover:bg-secondary/70",
               )}
             >

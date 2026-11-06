@@ -46,7 +46,7 @@ export function PriceKeyCheck({
   };
 
   return (
-    <div className={cn("rounded-lg border border-border p-3 text-xs", className)}>
+    <div className={cn("rounded-lg border border-border p-4 text-xs", className)}>
       {!connected && !import.meta.env.DEV && (
         <p className="text-muted-foreground">
           Live prices aren't available right now, so these amounts are estimates.
@@ -54,7 +54,7 @@ export function PriceKeyCheck({
       )}
       {/* Setup help is for whoever runs the app: shown in the editor preview, not to visitors. */}
       {!connected && import.meta.env.DEV && (
-        <div className="space-y-1.5 text-muted-foreground">
+        <div className="space-y-2 text-muted-foreground">
           <p className="font-medium text-foreground">Live prices aren't connected yet</p>
           <p>
             In Lovable, open <strong className="text-foreground">Cloud → Secrets</strong> and add
@@ -63,7 +63,7 @@ export function PriceKeyCheck({
           <ul className="space-y-1 pl-1">
             {Object.values(SERVICE).map((s) => (
               <li key={s.secret}>
-                <code className="rounded bg-muted px-1 py-0.5 font-mono text-[11px] text-foreground">
+                <code className="rounded bg-muted px-1 py-1 font-mono text-micro text-foreground">
                   {s.secret}
                 </code>{" "}
                 for {s.label}. Free key from {s.site}.
@@ -73,7 +73,7 @@ export function PriceKeyCheck({
         </div>
       )}
       {signedIn && (
-        <div className={cn(!connected && "mt-3")}>
+        <div className={cn(!connected && "mt-4")}>
           <Button variant="outline" size="sm" onClick={run} disabled={busy}>
             {busy ? <Loader2 className="animate-spin" /> : <PlugZap />}
             {busy ? "Testing…" : "Test connection"}
@@ -82,7 +82,7 @@ export function PriceKeyCheck({
             <p className="mt-2 text-destructive">Couldn't run the test. Try again in a moment.</p>
           )}
           {checks && (
-            <ul className="mt-2 space-y-1.5" aria-live="polite">
+            <ul className="mt-2 space-y-2" aria-live="polite">
               {checks.map((c) => {
                 const s = SERVICE[c.service];
                 const ok = c.status === "ok";

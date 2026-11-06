@@ -123,11 +123,11 @@ export function LivePricesPanel({ className }: { className?: string }) {
   };
 
   return (
-    <section id="live-prices" className={cn("surface-card scroll-mt-24 p-5", className)}>
-      <div className="flex flex-wrap items-start justify-between gap-3">
+    <section id="live-prices" className={cn("surface-card scroll-mt-24 p-6", className)}>
+      <div className="flex flex-wrap items-start justify-between gap-4">
         <div className="min-w-0">
-          <h2 className="title-display text-[26px]">Live prices</h2>
-          <p className="mt-0.5 text-[13px] text-muted-foreground">
+          <h2 className="title-display text-title-1">Live prices</h2>
+          <p className="mt-1 text-footnote text-muted-foreground">
             Hotel and flight prices from Google, gas from the U.S. Energy Information
             Administration's weekly survey.
           </p>
@@ -150,16 +150,16 @@ export function LivePricesPanel({ className }: { className?: string }) {
         <PriceKeyCheck
           connected={connected.gas || connected.flights || connected.hotels}
           signedIn={!!user}
-          className="mt-3"
+          className="mt-4"
         />
       )}
       {user && anyConnected && notConnected.length > 0 && (
-        <p className="mt-3 text-xs text-muted-foreground">
+        <p className="mt-4 text-xs text-muted-foreground">
           Not connected yet: {notConnected.join(", ")}. Those amounts stay estimates.
         </p>
       )}
       {live && (stale || tripChanged) && (
-        <p className="mt-3 rounded-lg border border-border px-3 py-2 text-xs">
+        <p className="mt-4 rounded-lg border border-border px-4 py-2 text-xs">
           {tripChanged
             ? "Your dates changed since these prices were checked. Refresh to price the new dates."
             : `These prices were checked ${Math.round(ageHours / 24)} day${Math.round(ageHours / 24) === 1 ? "" : "s"} ago. Refresh for today's rates.`}
@@ -167,7 +167,7 @@ export function LivePricesPanel({ className }: { className?: string }) {
       )}
 
       {user && flying && anyConnected && (
-        <div className="mt-3 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+        <div className="mt-4 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
           <span>
             Flying from{" "}
             <strong className="text-foreground" title={air.airports[0]?.name}>
@@ -184,7 +184,7 @@ export function LivePricesPanel({ className }: { className?: string }) {
             )}
             .
           </span>
-          <label className="inline-flex items-center gap-1.5">
+          <label className="inline-flex items-center gap-2">
             {air.codes[1] ? "Use another airport" : "Destination airport (optional)"}
             <Input
               value={destAirport}
@@ -213,7 +213,7 @@ export function LivePricesPanel({ className }: { className?: string }) {
       )}
 
       {live ? (
-        <div className="mt-4 grid gap-3 sm:grid-cols-3">
+        <div className="mt-4 grid gap-4 sm:grid-cols-3">
           <Quote
             icon={Fuel}
             label="Gas"
@@ -260,7 +260,7 @@ export function LivePricesPanel({ className }: { className?: string }) {
           </p>
         </div>
       ) : connected && !anyConnected ? null : (
-        <p className="mt-3 text-xs text-muted-foreground">
+        <p className="mt-4 text-xs text-muted-foreground">
           Until you check, gas, hotel and fare amounts are estimates.
         </p>
       )}
@@ -280,8 +280,8 @@ function Quote({
   sub?: string | undefined;
 }) {
   return (
-    <div className="rounded-lg border border-border p-3">
-      <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
+    <div className="rounded-lg border border-border p-4">
+      <p className="flex items-center gap-2 text-xs text-muted-foreground">
         <Icon className="size-3.5" /> {label}
       </p>
       <p className="tabular mt-1 text-base font-medium">{value}</p>

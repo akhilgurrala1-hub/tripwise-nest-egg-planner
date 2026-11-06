@@ -9,7 +9,7 @@ export function BudgetTabs({ current }: { current: "plan" | "spent" }) {
       to={to}
       aria-current={current === id ? "page" : undefined}
       className={cn(
-        "flex min-h-9 items-center rounded-lg px-3.5 text-[13px] font-medium transition-colors",
+        "flex min-h-9 items-center rounded-lg px-4 text-footnote font-medium transition-colors",
         current === id
           ? "border border-border bg-card text-foreground shadow-[0_1px_2px_oklch(0.2_0.01_260/0.08)]"
           : "text-muted-foreground hover:text-foreground",
@@ -19,7 +19,7 @@ export function BudgetTabs({ current }: { current: "plan" | "spent" }) {
     </Link>
   );
   return (
-    <nav aria-label="Budget" className="mx-auto mt-5 max-w-6xl px-4 print:hidden">
+    <nav aria-label="Budget" className="page-container mt-6 print:hidden">
       <div className="inline-flex gap-1 rounded-xl border border-border bg-muted/60 p-1">
         {tab("/budget", "plan", "Plan")}
         {tab("/spending", "spent", "Spent")}

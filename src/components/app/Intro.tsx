@@ -10,7 +10,7 @@ export const INTRO_BOOT_SCRIPT = `(function(){try{if(sessionStorage.getItem("way
 export function IntroOverlay() {
   return (
     <div className="intro" aria-hidden suppressHydrationWarning>
-      <Logo className="gap-3.5" markClassName="size-14" wordClassName="text-[34px]" />
+      <Logo className="gap-4" markClassName="size-14" wordClassName="text-large-title" />
     </div>
   );
 }

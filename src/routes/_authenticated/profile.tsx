@@ -88,12 +88,12 @@ function ProfilePage() {
     <div>
       <PageHeader eyebrow="Your account" title="Profile & preferences" showTrip={false} />
       <div className="mx-auto mt-6 max-w-3xl space-y-6 px-4">
-        <section className="surface-card p-5">
+        <section className="surface-card p-6">
           <p className="text-xs font-semibold tracking-wider text-muted-foreground uppercase">
             Signed in as
           </p>
           <p className="font-semibold">{email}</p>
-          <div className="mt-3 flex flex-wrap gap-3 text-sm">
+          <div className="mt-4 flex flex-wrap gap-4 text-sm">
             <Link
               to="/trips"
               className="font-semibold text-primary underline-offset-2 hover:underline"
@@ -115,16 +115,16 @@ function ProfilePage() {
           </div>
         </section>
 
-        <section className="surface-card space-y-5 p-5">
+        <section className="surface-card space-y-6 p-6">
           <div>
-            <h2 className="title-display text-[26px]">How you like to travel</h2>
+            <h2 className="title-display text-title-1">How you like to travel</h2>
             <p className="text-sm text-muted-foreground">
               New trips start with these choices, and flight prices search from your home airport.
             </p>
           </div>
 
           <div className="grid gap-4 sm:grid-cols-2">
-            <div className="space-y-1.5">
+            <div className="space-y-2">
               <Label htmlFor="home-city">Home city</Label>
               <Input
                 id="home-city"
@@ -134,7 +134,7 @@ function ProfilePage() {
                 onChange={(e) => set("home_city", e.target.value)}
               />
             </div>
-            <div className="space-y-1.5">
+            <div className="space-y-2">
               <Label htmlFor="home-airport">Home airport code</Label>
               <Input
                 id="home-airport"
@@ -157,7 +157,7 @@ function ProfilePage() {
                 onPick={(code) => set("home_airport", code)}
               />
             </div>
-            <div className="space-y-1.5">
+            <div className="space-y-2">
               <Label htmlFor="travelers">Usual number of travelers</Label>
               <Input
                 id="travelers"
@@ -173,7 +173,7 @@ function ProfilePage() {
                 }
               />
             </div>
-            <div className="space-y-1.5">
+            <div className="space-y-2">
               <Label htmlFor="transport">Usual way to get there</Label>
               <select
                 id="transport"
@@ -181,7 +181,7 @@ function ProfilePage() {
                 onChange={(e) =>
                   set("transport_mode", e.target.value as Preferences["transport_mode"])
                 }
-                className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
+                className="h-10 w-full rounded-md border border-input bg-background px-4 text-sm"
               >
                 {TRANSPORT_MODES.map((m) => (
                   <option key={m.id} value={m.id}>

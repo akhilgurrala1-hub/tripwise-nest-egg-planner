@@ -124,8 +124,8 @@ function TripsPage() {
     <div>
       <PageHeader eyebrow="Your account" title="Saved trips" showTrip={false} />
       <div className="mx-auto mt-6 max-w-4xl space-y-6 px-4">
-        <section className="surface-card p-5">
-          <h2 className="title-display text-[26px]">Trip you're planning now</h2>
+        <section className="surface-card p-6">
+          <h2 className="title-display text-title-1">Trip you're planning now</h2>
           {trip.cloud ? (
             <p className="mt-1 text-sm text-muted-foreground">
               Saved as <strong className="text-foreground">{trip.cloud.name}</strong> · last saved{" "}
@@ -168,8 +168,8 @@ function TripsPage() {
           </div>
         </section>
 
-        <section className="space-y-3">
-          <h2 className="title-display text-[26px]">All trips ({active.length})</h2>
+        <section className="space-y-4">
+          <h2 className="title-display text-title-1">All trips ({active.length})</h2>
           {active.length === 0 && (
             <div className="surface-card p-6 text-center text-sm text-muted-foreground">
               No saved trips yet.{" "}
@@ -202,12 +202,12 @@ function TripsPage() {
         </section>
 
         {deleted.length > 0 && (
-          <section className="space-y-3">
-            <h2 className="text-[15px] font-semibold text-muted-foreground">Recently deleted</h2>
+          <section className="space-y-4">
+            <h2 className="text-headline font-semibold text-muted-foreground">Recently deleted</h2>
             {deleted.map((row) => (
               <div
                 key={row.id}
-                className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-dashed border-border p-4"
+                className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-dashed border-border p-4"
               >
                 <div className="min-w-0">
                   <p className="truncate font-semibold">{row.name}</p>
@@ -269,7 +269,7 @@ function TripRow({
     else setName(row.name);
   };
   return (
-    <div className="surface-card flex flex-col gap-3 p-4 sm:flex-row sm:items-center">
+    <div className="surface-card flex flex-col gap-4 p-4 sm:flex-row sm:items-center">
       <div className="min-w-0 flex-1">
         {editing ? (
           <form
@@ -308,12 +308,12 @@ function TripRow({
             {isOpen && <Badge variant="success">Open now</Badge>}
           </p>
         )}
-        <p className="mt-0.5 text-xs text-muted-foreground">{summary(row)}</p>
+        <p className="mt-1 text-xs text-muted-foreground">{summary(row)}</p>
         <p className="text-xs text-muted-foreground">
           Updated {new Date(row.updated_at).toLocaleString()}
         </p>
       </div>
-      <div className="flex flex-wrap gap-1.5">
+      <div className="flex flex-wrap gap-2">
         <Button size="sm" variant="ink" onClick={onOpen}>
           <FolderOpen /> Open
         </Button>

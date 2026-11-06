@@ -68,13 +68,13 @@ export function AppShell({ children }: { children: ReactNode }) {
   const tabPath = pathname === "/spending" ? "/budget" : pathname;
   const active = nav.find((n) => n.to === tabPath)?.to;
   const desk = useActiveIndicator<HTMLDivElement>([active, nav.length]);
-  const mobile = useActiveIndicator<HTMLDivElement>([active, nav.length]);
+  const mobile = useActiveIndicator<HTMLDivElement>([active, nav.length], { onlyX: true });
   usePreloadTabs();
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="glass sticky top-0 z-40 border-b border-border print:hidden">
-        <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-4">
+      <header className="material-regular sticky top-0 z-40 border-b border-separator print:hidden">
+        <div className="page-container flex h-16 items-center justify-between gap-4">
           <Link to="/" className="flex items-center rounded-md" aria-label="Waypoint home">
             <Logo />
           </Link>
@@ -82,14 +82,14 @@ export function AppShell({ children }: { children: ReactNode }) {
             <div ref={desk.ref} className="relative flex items-center gap-1">
               {/* "You are here": the brand's coral destination dot travels to the current tab. */}
               <span
+                ref={desk.thumbRef}
                 aria-hidden
                 className={cn(
-                  "pointer-events-none absolute top-0 left-0 flex items-end justify-center transition-[transform,width,opacity] duration-300 ease-[var(--ease-out-quint)]",
+                  "pointer-events-none absolute top-0 left-0 flex items-end justify-center transition-opacity duration-150",
                   desk.ready && active ? "opacity-100" : "opacity-0",
                 )}
-                style={desk.style}
               >
-                <span className="mb-[-3px] block size-[5px] rounded-full bg-brand-coral" />
+                <span className="-mb-1 block size-[5px] rounded-full bg-brand-coral" />
               </span>
               {nav.map((item) => (
                 <Link
@@ -97,7 +97,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                   to={item.to}
                   data-active={item.to === active}
                   className={cn(
-                    "relative rounded-md px-3 py-2 text-[14px] font-medium tracking-[-0.005em] transition-colors",
+                    "pressable relative rounded-md px-4 py-2 text-sm font-medium",
                     item.to === active
                       ? "text-foreground"
                       : "text-muted-foreground hover:text-foreground",
@@ -108,7 +108,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               ))}
             </div>
           </nav>
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-2">
             <ThemeToggle />
             <AccountButton />
           </div>
@@ -120,7 +120,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       </main>
 
       <nav
-        className="glass pb-safe fixed inset-x-0 bottom-0 z-40 border-t border-border md:hidden print:hidden"
+        className="material-regular pb-safe fixed inset-x-0 bottom-0 z-40 border-t border-separator md:hidden print:hidden"
         aria-label="Main"
       >
         <div
@@ -131,14 +131,14 @@ export function AppShell({ children }: { children: ReactNode }) {
           )}
         >
           <span
+            ref={mobile.thumbRef}
             aria-hidden
             className={cn(
-              "pointer-events-none absolute top-0 left-0 transition-[transform,width,opacity] duration-300 ease-[var(--ease-out-quint)]",
+              "pointer-events-none absolute top-0 left-0 h-[5px] transition-opacity duration-150",
               mobile.ready && active ? "opacity-100" : "opacity-0",
             )}
-            style={mobile.style ? { ...mobile.style, height: 5 } : undefined}
           >
-            <span className="mx-auto mt-0.5 block size-[5px] rounded-full bg-brand-coral" />
+            <span className="mx-auto mt-1 block size-[5px] rounded-full bg-brand-coral" />
           </span>
           {nav.map(({ to, label, icon: Icon }) => {
             const isActive = to === active;
@@ -148,7 +148,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                 to={to}
                 data-active={isActive}
                 className={cn(
-                  "flex flex-col items-center gap-1 pt-2.5 pb-1.5 text-[10.5px] font-medium tracking-[0.01em] transition-colors active:scale-95",
+                  "pressable flex flex-col items-center gap-1 pt-2 pb-2 text-micro font-medium",
                   isActive ? "text-foreground" : "text-muted-foreground",
                 )}
               >
@@ -319,7 +319,7 @@ function ThemeToggle() {
             ))}
           </DropdownMenuSubContent>
         </DropdownMenuSub>
-        <p className="px-2 pt-1 pb-1.5 text-[11px] leading-snug text-muted-foreground">
+        <p className="px-2 pt-1 pb-2 text-micro leading-snug text-muted-foreground">
           Budgets are worked out in US dollars; other currencies show an approximate conversion at
           today&apos;s rate.
         </p>

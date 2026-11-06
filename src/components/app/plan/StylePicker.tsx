@@ -40,7 +40,7 @@ export function StylePicker({
             onClick={() => onChange(t.id)}
             style={{ "--tile": look.color } as CSSProperties}
             className={cn(
-              "flex flex-col items-start gap-2 rounded-xl border p-3 text-left transition-[background-color,border-color,box-shadow,transform] duration-200 active:scale-[0.98]",
+              "flex flex-col items-start gap-2 rounded-xl border p-4 text-left transition-[background-color,border-color,box-shadow,transform] duration-200 active:scale-[0.98]",
               active
                 ? "border-[var(--tile)] bg-[color-mix(in_oklab,var(--tile)_5%,var(--card))] shadow-[0_0_0_1px_var(--tile)]"
                 : "border-border bg-card hover:border-muted-foreground/40",
@@ -66,7 +66,7 @@ export function StylePicker({
             </span>
             <span>
               <span className="block text-sm leading-tight font-semibold">{t.label}</span>
-              <span className="mt-0.5 block text-[11px] leading-tight text-muted-foreground">
+              <span className="mt-1 block text-micro leading-tight text-muted-foreground">
                 {t.blurb}
               </span>
             </span>

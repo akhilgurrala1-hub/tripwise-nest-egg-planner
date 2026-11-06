@@ -28,9 +28,9 @@ export function PlanCosts() {
   const unpriced = unpricedItems(itin);
 
   return (
-    <section className="surface-card p-5">
-      <h2 className="title-display text-[26px]">Plan vs. budget</h2>
-      <p className="mt-0.5 text-xs text-muted-foreground">
+    <section className="surface-card p-6">
+      <h2 className="title-display text-title-1">Plan vs. budget</h2>
+      <p className="mt-1 text-xs text-muted-foreground">
         For {shape.travelers} traveler{shape.travelers > 1 ? "s" : ""}
       </p>
 
@@ -51,14 +51,14 @@ export function PlanCosts() {
       />
 
       {unpriced > 0 && (
-        <p className="mt-4 rounded-lg bg-muted px-3 py-2 text-xs leading-snug text-muted-foreground">
+        <p className="mt-4 rounded-lg bg-muted px-4 py-2 text-xs leading-snug text-muted-foreground">
           {unpriced} {unpriced === 1 ? "place doesn't" : "places don't"} publish prices, so{" "}
           {unpriced === 1 ? "it isn't" : "they aren't"} counted. Check before you go.
         </p>
       )}
 
       {unpriced > 0 && sightseeing === 0 ? null : activities.fit === "matches" ? (
-        <p className="mt-4 flex items-center gap-1.5 text-xs text-muted-foreground">
+        <p className="mt-4 flex items-center gap-2 text-xs text-muted-foreground">
           <Check className="size-3.5 text-success" /> Activities budget matches your plan
         </p>
       ) : (
@@ -80,7 +80,7 @@ export function PlanCosts() {
       )}
       <Link
         to="/budget"
-        className="mt-3 block text-center text-xs font-medium text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
+        className="mt-4 block text-center text-xs font-medium text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
       >
         Open the full budget
       </Link>
@@ -111,16 +111,16 @@ function CostLine({
         <span>{label}</span>
         <AnimatedMoney value={planned} className="font-medium" />
       </div>
-      <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-muted">
+      <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-muted">
         <div
           className={cn(
-            "h-full rounded-full transition-[width] duration-500 ease-[var(--ease-out-quint)]",
+            "h-full rounded-full transition-[width] spring-smooth",
             fit === "over" ? "bg-destructive" : "bg-foreground",
           )}
           style={{ width: `${pct}%` }}
         />
       </div>
-      <p className="tabular mt-1.5 flex justify-between gap-2 text-xs text-muted-foreground">
+      <p className="tabular mt-2 flex justify-between gap-2 text-xs text-muted-foreground">
         <span>
           {budgetLabel} {formatMoney(budget)}
         </span>
@@ -130,7 +130,7 @@ function CostLine({
           <span>{formatMoney(diff)} unplanned</span>
         ) : null}
       </p>
-      {note && <p className="mt-0.5 text-[11px] text-muted-foreground">{note}</p>}
+      {note && <p className="mt-1 text-micro text-muted-foreground">{note}</p>}
     </div>
   );
 }

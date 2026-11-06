@@ -48,12 +48,12 @@ export function PageHeader({
   const { trip } = useTrip();
   const sample = showTrip && trip.isSample;
   return (
-    <div className="mx-auto max-w-6xl px-4 pt-6 sm:pt-10">
+    <div className="page-container pt-6 sm:pt-10">
       {sample && sampleBanner === "card" && (
-        <section className="surface-card animate-rise mb-7 grid grid-cols-[56px_1fr] items-center gap-4 p-5 sm:grid-cols-[72px_1fr_auto] sm:gap-6 sm:p-6 print:hidden">
+        <section className="surface-card animate-rise mb-8 grid grid-cols-[56px_1fr] items-center gap-4 p-6 sm:grid-cols-[72px_1fr_auto] sm:gap-6 sm:p-6 print:hidden">
           <RouteMark className="w-14 sm:w-[72px]" />
           <div className="min-w-0">
-            <h2 className="title-display text-[26px] sm:text-[30px]">
+            <h2 className="title-display text-title-1">
               This is a sample trip. <em className="text-primary">Make it yours.</em>
             </h2>
             <p className="mt-1 max-w-lg text-sm text-muted-foreground">
@@ -74,7 +74,7 @@ export function PageHeader({
         </section>
       )}
       {sample && sampleBanner === "line" && (
-        <p className="mb-5 flex flex-wrap items-center gap-x-2 gap-y-1 text-[13px] text-muted-foreground print:hidden">
+        <p className="mb-6 flex flex-wrap items-center gap-x-2 gap-y-1 text-footnote text-muted-foreground print:hidden">
           <Info className="size-3.5 shrink-0" />
           You're looking at a sample trip.
           <Link
@@ -88,7 +88,7 @@ export function PageHeader({
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div className="min-w-0">
           <p className="eyebrow">{eyebrow}</p>
-          <h1 className="title-display mt-2 text-[40px] sm:text-[52px]">{title}</h1>
+          <h1 className="title-display mt-2 text-large-title sm:text-display">{title}</h1>
           {showTrip && <TripBar title={title} />}
         </div>
         <div className="contents print:hidden">{children}</div>
@@ -100,7 +100,7 @@ export function PageHeader({
 function TripBar({ title }: { title: string }) {
   const { trip, place, shape } = useTrip();
   return (
-    <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-[13px]">
+    <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-footnote">
       <TripTypeChip />
       {/* Not twice: the Overview's title already is the destination. */}
       {title !== place && <Chip icon={<MapPin />}>{place}</Chip>}
@@ -116,7 +116,7 @@ function TripBar({ title }: { title: string }) {
       </Chip>
       <Link
         to="/"
-        className="inline-flex h-8 items-center gap-1.5 rounded-md px-1 font-medium text-primary transition-colors hover:underline hover:underline-offset-4 print:hidden"
+        className="inline-flex h-8 items-center gap-2 rounded-md px-1 font-medium text-primary transition-colors hover:underline hover:underline-offset-4 print:hidden"
       >
         <Pencil className="size-3.5" /> Edit trip
       </Link>
@@ -126,7 +126,7 @@ function TripBar({ title }: { title: string }) {
 
 function Chip({ icon, children }: { icon: ReactNode; children: ReactNode }) {
   return (
-    <span className="tabular inline-flex max-w-full items-center gap-1.5 [&>svg]:size-4 [&>svg]:shrink-0 [&>svg]:text-muted-foreground">
+    <span className="tabular inline-flex max-w-full items-center gap-2 [&>svg]:size-4 [&>svg]:shrink-0 [&>svg]:text-muted-foreground">
       {icon}
       <span className="truncate">{children}</span>
     </span>
@@ -142,7 +142,7 @@ function TripTypeChip() {
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger
         style={{ "--tile": TRIP_COLOR[trip.setup.tripType] } as CSSProperties}
-        className="inline-flex h-8 items-center gap-1.5 rounded-md bg-[color-mix(in_oklab,var(--tile)_12%,transparent)] px-2.5 font-semibold transition-colors hover:bg-[color-mix(in_oklab,var(--tile)_20%,transparent)] data-[state=open]:ring-2 data-[state=open]:ring-[var(--tile)]"
+        className="inline-flex h-8 items-center gap-2 rounded-md bg-[color-mix(in_oklab,var(--tile)_12%,transparent)] px-2 font-semibold transition-colors hover:bg-[color-mix(in_oklab,var(--tile)_20%,transparent)] data-[state=open]:ring-2 data-[state=open]:ring-[var(--tile)]"
       >
         <Icon
           className="size-3.5"
@@ -155,9 +155,9 @@ function TripTypeChip() {
       <PopoverContent
         align="start"
         aria-label="Switch trip type"
-        className="w-[min(420px,calc(100vw-2rem))] rounded-xl p-3"
+        className="w-[min(420px,calc(100vw-2rem))] rounded-xl p-4"
       >
-        <p className="px-1 pb-2.5 text-[13px] text-muted-foreground">
+        <p className="px-1 pb-2 text-footnote text-muted-foreground">
           Switch trip type. The budget updates to match.
         </p>
         <TripTypePicker

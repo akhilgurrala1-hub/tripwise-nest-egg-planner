@@ -290,22 +290,22 @@ export function TripAssistant({
     >
       {variant === "hero" ? (
         state.turns.length > 0 && (
-          <div className="flex justify-end px-3 pt-3">
+          <div className="flex justify-end px-4 pt-4">
             <Button variant="ghost" size="sm" onClick={reset} aria-label="Start over">
               <RotateCcw /> <span className="hidden sm:inline">Start over</span>
             </Button>
           </div>
         )
       ) : (
-        <header className="flex items-start gap-3 px-5 pt-5 sm:px-6 sm:pt-6">
+        <header className="flex items-start gap-4 px-6 pt-6 sm:px-6 sm:pt-6">
           <div className="min-w-0 flex-1">
-            <p className="eyebrow flex items-center gap-1.5">
+            <p className="eyebrow flex items-center gap-2">
               <span aria-hidden className="size-[5px] rounded-full bg-brand-coral" /> Describe it
             </p>
-            <h2 className="mt-2 text-[19px] leading-snug font-semibold">
+            <h2 className="mt-2 text-headline leading-snug font-semibold">
               Tell us the trip in your own words
             </h2>
-            <p className="mt-1 text-[13.5px] text-muted-foreground">
+            <p className="mt-1 text-footnote text-muted-foreground">
               Waypoint asks what it needs, then builds the plan.
             </p>
           </div>
@@ -318,36 +318,36 @@ export function TripAssistant({
       )}
 
       {state.turns.length > 0 && (
-        <div className="max-h-[420px] space-y-3 overflow-y-auto px-4 py-4" aria-live="polite">
+        <div className="max-h-[420px] space-y-4 overflow-y-auto px-4 py-4" aria-live="polite">
           {state.turns.map((t, i) =>
             t.role === "user" ? (
               <p
                 key={i}
-                className="animate-rise ml-auto w-fit max-w-[85%] rounded-2xl rounded-br-md bg-ink px-3.5 py-2 text-sm text-ink-foreground"
+                className="animate-rise ml-auto w-fit max-w-[85%] rounded-2xl rounded-br-md bg-ink px-4 py-2 text-sm text-ink-foreground"
               >
                 {t.content}
               </p>
             ) : (
-              <div key={i} className="animate-rise max-w-[92%] space-y-2.5">
-                <p className="w-fit rounded-2xl rounded-bl-md bg-muted px-3.5 py-2 text-sm">
+              <div key={i} className="animate-rise max-w-[92%] space-y-2">
+                <p className="w-fit rounded-2xl rounded-bl-md bg-muted px-4 py-2 text-sm">
                   {t.content}
                 </p>
                 {t.note && <p className="px-1 text-xs text-muted-foreground">{t.note}</p>}
                 {t === lastAssistant && !busy && (
                   <>
                     {ready && t.questions.length > 0 && (
-                      <p className="eyebrow px-0.5 pt-1">Optional, for a better plan</p>
+                      <p className="eyebrow px-1 pt-1">Optional, for a better plan</p>
                     )}
                     {t.questions.map((q, qi) => (
                       <div key={qi} style={stagger(qi + 1)} className="animate-rise">
-                        <p className="text-[13px] font-medium">{q.question}</p>
-                        <div className="mt-1.5 flex flex-wrap gap-1.5">
+                        <p className="text-footnote font-medium">{q.question}</p>
+                        <div className="mt-2 flex flex-wrap gap-2">
                           {q.options.slice(0, 4).map((o) => (
                             <button
                               key={o}
                               type="button"
                               onClick={() => send(o)}
-                              className="h-8 rounded-lg border border-border bg-card px-2.5 text-[13px] transition-[border-color,transform] duration-150 hover:border-primary active:scale-[0.97]"
+                              className="h-8 rounded-lg border border-border bg-card px-2 text-footnote transition-[border-color,transform] duration-150 hover:border-primary active:scale-[0.97]"
                             >
                               {o}
                             </button>
@@ -363,10 +363,10 @@ export function TripAssistant({
                             type="button"
                             style={stagger(ii + 1)}
                             onClick={() => send(`Let's do ${idea.name}.`)}
-                            className="animate-rise rounded-xl border border-border bg-card p-3 text-left transition-[border-color,transform] duration-150 hover:-translate-y-px hover:border-primary"
+                            className="animate-rise rounded-xl border border-border bg-card p-4 text-left transition-[border-color,transform] duration-150 pressable hover:border-primary"
                           >
                             <span className="block text-sm font-medium">{idea.name}</span>
-                            <span className="mt-0.5 block text-xs text-muted-foreground">
+                            <span className="mt-1 block text-xs text-muted-foreground">
                               {idea.why}
                             </span>
                           </button>
@@ -379,7 +379,7 @@ export function TripAssistant({
             ),
           )}
           {busy && (
-            <div className="animate-pop flex w-fit items-center gap-2 rounded-2xl rounded-bl-md bg-muted px-3 py-2 text-sm text-muted-foreground">
+            <div className="animate-pop flex w-fit items-center gap-2 rounded-2xl rounded-bl-md bg-muted px-4 py-2 text-sm text-muted-foreground">
               <LogoMark loading className="size-5" /> Thinking…
               <button
                 type="button"
@@ -400,7 +400,7 @@ export function TripAssistant({
       {state.draft && <DraftSummary draft={state.draft} today={today} />}
 
       {ready && state.draft && (
-        <div className="animate-rise flex flex-wrap gap-2 border-t border-border px-4 py-3">
+        <div className="animate-rise flex flex-wrap gap-2 border-t border-border px-4 py-4">
           <Button variant="hero" onClick={() => onBuild(state.draft!)}>
             Build this trip <ArrowRight />
           </Button>
@@ -413,12 +413,12 @@ export function TripAssistant({
       {error && (
         <div
           role="alert"
-          className="flex items-center justify-between gap-3 border-t border-border px-4 py-2.5 text-sm text-destructive"
+          className="flex items-center justify-between gap-4 border-t border-border px-4 py-2 text-sm text-destructive"
         >
           <span className="min-w-0">
             {error.message}
             {error.detail && (
-              <span className="mt-0.5 block text-xs break-words text-muted-foreground">
+              <span className="mt-1 block text-xs break-words text-muted-foreground">
                 Details: {error.detail}
               </span>
             )}
@@ -431,7 +431,7 @@ export function TripAssistant({
 
       <form
         className={cn(
-          variant === "hero" && state.turns.length === 0 ? "" : "p-4 sm:p-5",
+          variant === "hero" && state.turns.length === 0 ? "" : "p-4 sm:p-6",
           state.turns.length > 0 && "border-t border-border",
         )}
         onSubmit={(e) => {
@@ -443,7 +443,7 @@ export function TripAssistant({
           className={cn(
             "flex flex-col gap-2 rounded-2xl border p-2 pl-4 transition-[border-color,box-shadow,background-color] focus-within:border-primary focus-within:bg-card focus-within:ring-4 focus-within:ring-primary/10 sm:flex-row sm:items-end",
             variant === "hero" && state.turns.length === 0
-              ? "border-border bg-card shadow-[var(--shadow-soft-value)] sm:p-3 sm:pl-5"
+              ? "border-border bg-card shadow-[var(--shadow-soft-value)] sm:p-4 sm:pl-6"
               : "border-input bg-background/70",
           )}
         >
@@ -468,7 +468,7 @@ export function TripAssistant({
             aria-label="Describe your trip"
             className={cn(
               "min-h-9 w-full flex-1 resize-none bg-transparent py-2 leading-relaxed outline-none placeholder:text-muted-foreground",
-              variant === "hero" && !state.turns.length ? "text-[17px]" : "text-[15px]",
+              variant === "hero" && !state.turns.length ? "text-headline" : "text-headline",
             )}
           />
           <Button
@@ -501,9 +501,9 @@ export function TripAssistant({
                     type="button"
                     onClick={() => void send(ex.message)}
                     title={ex.message}
-                    className="group flex h-10 items-center gap-2 rounded-lg border border-border bg-card px-3 text-[14px] transition-[border-color,transform] duration-150 hover:border-primary active:scale-[0.97]"
+                    className="group flex h-10 items-center gap-2 rounded-lg border border-border bg-card px-4 text-body transition-[border-color,transform] duration-150 hover:border-primary active:scale-[0.97]"
                   >
-                    <CornerDownRight className="size-3.5 shrink-0 text-brand-coral transition-transform group-hover:translate-x-0.5" />
+                    <CornerDownRight className="size-3.5 shrink-0 text-brand-coral" />
                     {ex.label}
                   </button>
                 </li>
@@ -577,12 +577,12 @@ function DraftSummary({ draft, today }: { draft: TripDraft; today: string }) {
     })(),
   ];
   return (
-    <div className="flex flex-wrap gap-1.5 border-t border-border bg-muted/40 px-4 py-2.5">
+    <div className="flex flex-wrap gap-2 border-t border-border bg-muted/40 px-4 py-2">
       {items.map((it) => (
         <span
           key={`${it.key}:${it.value ?? ""}`}
           className={cn(
-            "inline-flex h-7 items-center gap-1.5 rounded-lg border px-2 text-xs",
+            "inline-flex h-7 items-center gap-2 rounded-lg border px-2 text-xs",
             it.value
               ? "animate-pop border-border bg-card"
               : "border-dashed border-border text-muted-foreground",

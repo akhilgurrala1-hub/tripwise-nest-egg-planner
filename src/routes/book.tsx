@@ -151,12 +151,12 @@ function BookPage() {
   return (
     <div>
       <PageHeader eyebrow="Book" title="Book your trip" />
-      <p className="mx-auto mt-4 max-w-6xl px-4 text-[13px] text-muted-foreground">
+      <p className="page-container mt-4 text-footnote text-muted-foreground">
         Each search opens on the provider's own site with your dates and group filled in. You book
         and pay there; Waypoint never takes payment.
       </p>
 
-      <div className="mx-auto mt-6 grid max-w-6xl grid-cols-1 gap-4 px-4 lg:grid-cols-[minmax(0,1fr)_320px]">
+      <div className="page-container mt-6 layout-main-aside">
         <div className="min-w-0 space-y-6">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <p className="text-sm text-muted-foreground">
@@ -171,7 +171,7 @@ function BookPage() {
             </Button>
           </div>
           {groups.map((g) => (
-            <section key={g.key} aria-labelledby={`book-${g.key}`} className="space-y-3">
+            <section key={g.key} aria-labelledby={`book-${g.key}`} className="space-y-4">
               <h2 id={`book-${g.key}`} className="eyebrow">
                 {g.label}
               </h2>
@@ -197,11 +197,11 @@ function BookPage() {
         </div>
 
         <aside className="lg:sticky lg:top-20 lg:self-start">
-          <section className="surface-card animate-rise p-5">
+          <section className="surface-card animate-rise p-6">
             <div className="flex items-center gap-4">
               <ProgressRing value={pct} />
               <div>
-                <p className="text-[15px] font-semibold">
+                <p className="text-headline font-semibold">
                   {progress.booked} of {progress.total} booked
                 </p>
                 <p className="text-xs text-muted-foreground">
@@ -213,7 +213,7 @@ function BookPage() {
                 </p>
               </div>
             </div>
-            <dl className="mt-5 space-y-2 border-t border-border pt-4 text-sm">
+            <dl className="mt-6 space-y-2 border-t border-border pt-4 text-sm">
               <div className="flex justify-between">
                 <dt className="text-muted-foreground">Booked so far</dt>
                 <dd>
@@ -255,22 +255,22 @@ function BookPage() {
 function PrepList({ items }: { items: PrepItem[] }) {
   const { trip } = useTrip();
   return (
-    <section aria-labelledby="book-prep" className="surface-card animate-rise p-5">
-      <h2 id="book-prep" className="title-display text-[26px] leading-tight">
+    <section aria-labelledby="book-prep" className="surface-card animate-rise p-6">
+      <h2 id="book-prep" className="title-display text-title-1 leading-tight">
         Before you go
       </h2>
-      <ul className="mt-3 divide-y divide-border">
+      <ul className="mt-4 divide-y divide-border">
         {items.map((p) => {
           const done = trip.bookings[p.key]?.status === "booked";
           return (
-            <li key={p.key} className="flex gap-3 py-3">
+            <li key={p.key} className="flex gap-4 py-4">
               <button
                 type="button"
                 aria-pressed={done}
                 aria-label={`${p.title}: ${done ? "done" : "not done yet"}`}
                 onClick={() => tripActions.setBooking(p.key, { status: done ? "todo" : "booked" })}
                 className={cn(
-                  "mt-0.5 shrink-0 transition-colors",
+                  "mt-1 shrink-0 transition-colors",
                   done ? "text-success" : "text-muted-foreground hover:text-foreground",
                 )}
               >
@@ -285,14 +285,14 @@ function PrepList({ items }: { items: PrepItem[] }) {
                 >
                   {p.title}
                   {p.optional && (
-                    <span className="ml-2 text-[11px] font-normal text-muted-foreground">
+                    <span className="ml-2 text-micro font-normal text-muted-foreground">
                       Optional
                     </span>
                   )}
                 </p>
-                <p className="mt-0.5 text-xs text-muted-foreground">{p.detail}</p>
+                <p className="mt-1 text-xs text-muted-foreground">{p.detail}</p>
                 {p.links.length > 0 && (
-                  <div className="mt-1.5 flex flex-wrap gap-3">
+                  <div className="mt-2 flex flex-wrap gap-4">
                     {p.links.map((l) => (
                       <a
                         key={l.label}
@@ -326,7 +326,7 @@ function ProgressRing({ value }: { value: number }) {
         cy={28}
         r={r}
         fill="none"
-        className="stroke-success transition-[stroke-dashoffset] duration-700 ease-[var(--ease-out-quint)]"
+        className="stroke-success transition-[stroke-dashoffset] spring-smooth"
         strokeWidth={6}
         strokeLinecap="round"
         strokeDasharray={c}
@@ -394,13 +394,13 @@ function BookingCard({
     <article
       style={{ ...style, "--kind": color } as CSSProperties}
       className={cn(
-        "surface-card animate-rise render-lazy relative overflow-hidden p-4 transition-[opacity,border-color] duration-300 [contain-intrinsic-size:auto_200px] sm:p-5",
+        "surface-card animate-rise render-lazy relative overflow-hidden p-4 transition-[opacity,border-color] duration-300 [contain-intrinsic-size:auto_200px] sm:p-6",
         isNext && "border-[color-mix(in_oklab,var(--brand-coral)_45%,var(--border))]",
         skipped && "opacity-60",
       )}
     >
       {isNext && <span className="absolute inset-y-0 left-0 w-0.5 bg-brand-coral" aria-hidden />}
-      <div className="flex gap-3.5">
+      <div className="flex gap-4">
         <span
           className={cn(
             "grid size-10 shrink-0 place-items-center rounded-xl transition-colors duration-300",
@@ -417,19 +417,19 @@ function BookingCard({
         </span>
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
-            <h2 className="text-[15px] leading-snug font-semibold">{item.title}</h2>
+            <h2 className="text-headline leading-snug font-semibold">{item.title}</h2>
             {isNext && (
-              <span className="rounded-md bg-[color-mix(in_oklab,var(--brand-coral)_14%,var(--card))] px-1.5 py-0.5 text-[10px] font-semibold tracking-wide text-[color-mix(in_oklab,var(--brand-coral)_55%,var(--foreground))] uppercase">
+              <span className="rounded-md bg-[color-mix(in_oklab,var(--brand-coral)_14%,var(--card))] px-2 py-1 text-micro font-semibold tracking-wide text-[color-mix(in_oklab,var(--brand-coral)_55%,var(--foreground))] uppercase">
                 Next
               </span>
             )}
             {item.optional && !booked && (
-              <span className="rounded-md border border-border px-1.5 py-0.5 text-[10px] text-muted-foreground">
+              <span className="rounded-md border border-border px-2 py-1 text-micro text-muted-foreground">
                 Optional
               </span>
             )}
           </div>
-          <p className="mt-0.5 text-xs text-muted-foreground">{item.detail}</p>
+          <p className="mt-1 text-xs text-muted-foreground">{item.detail}</p>
           {when && (
             <p
               className={cn(
@@ -446,9 +446,9 @@ function BookingCard({
             </p>
           )}
           {item.stops && item.stops.length > 0 && (
-            <ul className="mt-2 flex flex-wrap gap-1.5">
+            <ul className="mt-2 flex flex-wrap gap-2">
               {item.stops.map((s) => (
-                <li key={s} className="rounded-md bg-muted px-2 py-0.5 text-[11px]">
+                <li key={s} className="rounded-md bg-muted px-2 py-1 text-micro">
                   {s}
                 </li>
               ))}
@@ -478,7 +478,7 @@ function BookingCard({
             !skipped && (
               <>
                 {live.length > 0 && (
-                  <ul className="mt-3 space-y-1.5">
+                  <ul className="mt-4 space-y-2">
                     {live.map((o) => (
                       <li key={o.name} className="flex items-center gap-2 text-xs">
                         <span className="size-1.5 rounded-full bg-success" />
@@ -498,7 +498,7 @@ function BookingCard({
                     ))}
                   </ul>
                 )}
-                <div className="mt-3 flex flex-wrap gap-1.5">
+                <div className="mt-4 flex flex-wrap gap-2">
                   {item.links.map((l, li) => (
                     <Button key={l.label} asChild size="sm" variant={li === 0 ? "ink" : "outline"}>
                       <a href={l.url} target="_blank" rel="noopener noreferrer">
@@ -512,7 +512,7 @@ function BookingCard({
           )}
 
           {editing && (
-            <div className="animate-pop mt-3 grid gap-2 rounded-xl border border-border bg-muted/40 p-3 sm:grid-cols-[1fr_150px_auto] sm:items-end">
+            <div className="animate-pop mt-4 grid gap-2 rounded-xl border border-border bg-muted/40 p-4 sm:grid-cols-[1fr_150px_auto] sm:items-end">
               <label className="text-xs text-muted-foreground">
                 Confirmation number
                 <Input
@@ -534,7 +534,7 @@ function BookingCard({
                   className="mt-1 h-9"
                 />
               </label>
-              <div className="flex gap-1.5">
+              <div className="flex gap-2">
                 <Button size="sm" variant="ink" onClick={save}>
                   Save
                 </Button>
@@ -550,14 +550,14 @@ function BookingCard({
           <p className="tabular text-sm font-semibold">
             {item.budget > 0 ? formatMoney(item.budget) : "Not set"}
           </p>
-          <p className="text-[11px] text-muted-foreground">
+          <p className="text-micro text-muted-foreground">
             {item.budget > 0 ? "budgeted" : "not in budget"}
           </p>
         </div>
       </div>
 
       {!editing && (
-        <div className="mt-3 flex flex-wrap items-center gap-1.5 border-t border-border pt-3 sm:pl-[54px]">
+        <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-border pt-4 sm:pl-14">
           {booked ? (
             <>
               <Button size="sm" variant="ghost" onClick={() => setEditing(true)}>

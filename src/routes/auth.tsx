@@ -141,7 +141,7 @@ function AuthPage() {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="mt-1.5 h-11 rounded-xl bg-card"
+                  className="mt-2 h-11 rounded-xl bg-card"
                 />
               </div>
               {mode !== "forgot" && (
@@ -166,7 +166,7 @@ function AuthPage() {
                     minLength={6}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="mt-1.5 h-11 rounded-xl bg-card"
+                    className="mt-2 h-11 rounded-xl bg-card"
                   />
                 </div>
               )}
@@ -179,7 +179,7 @@ function AuthPage() {
                     : "Send reset link"}
               </Button>
             </form>
-            <p className="mt-5 text-center text-sm text-muted-foreground">
+            <p className="mt-6 text-center text-sm text-muted-foreground">
               {mode === "signup" ? (
                 <>
                   Already have an account?{" "}

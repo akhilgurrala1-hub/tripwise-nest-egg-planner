@@ -78,13 +78,13 @@ function BudgetPage() {
       <PageHeader eyebrow="Spending plan" title="Budget" />
       <BudgetTabs current="plan" />
 
-      <div className="mx-auto mt-6 grid max-w-6xl grid-cols-1 gap-4 px-4 lg:grid-cols-[minmax(0,1fr)_340px]">
+      <div className="page-container mt-6 layout-main-aside">
         <div className="min-w-0 space-y-4 lg:order-1">
           {/* Summary */}
-          <section className="surface-card animate-rise p-5">
-            <div className="grid gap-5 sm:grid-cols-[1fr_1.3fr] sm:items-end">
+          <section className="surface-card animate-rise p-6">
+            <div className="grid gap-6 sm:grid-cols-[1fr_1.3fr] sm:items-end">
               <div>
-                <label htmlFor="total-budget" className="text-[13px] text-muted-foreground">
+                <label htmlFor="total-budget" className="text-footnote text-muted-foreground">
                   Total trip budget
                 </label>
                 <NumberField
@@ -114,11 +114,11 @@ function BudgetPage() {
                 />
               </dl>
             </div>
-            <div className="mt-5">
+            <div className="mt-6">
               <div className="h-1.5 overflow-hidden rounded-full bg-muted">
                 <div
                   className={cn(
-                    "h-full rounded-full transition-[width] duration-500 ease-[var(--ease-out-quint)]",
+                    "h-full rounded-full transition-[width] spring-smooth",
                     totals.overBudget ? "bg-destructive" : "bg-foreground",
                   )}
                   style={{
@@ -126,7 +126,7 @@ function BudgetPage() {
                   }}
                 />
               </div>
-              <p className="tabular mt-1.5 text-xs text-muted-foreground">
+              <p className="tabular mt-2 text-xs text-muted-foreground">
                 {percentLabel(totals)} · {formatMoney(totals.perPersonPerDay)} per person per day
                 <ApproxMoney usd={totals.spendable} suffix="to spend" className="ml-2" />
               </p>
@@ -136,8 +136,8 @@ function BudgetPage() {
 
           {/* Categories */}
           <section className="animate-rise" style={stagger(2)}>
-            <div className="mb-2.5 flex min-h-8 items-center justify-between">
-              <h2 className="title-display text-[26px]">Where your money goes</h2>
+            <div className="mb-2 flex min-h-8 items-center justify-between">
+              <h2 className="title-display text-title-1">Where your money goes</h2>
               {hasOverrides && (
                 <Button variant="ghost" size="sm" onClick={tripActions.resetToEstimates}>
                   <RotateCcw /> Reset custom amounts
@@ -153,7 +153,7 @@ function BudgetPage() {
               <Button
                 variant="ghost"
                 size="sm"
-                className="mt-1.5 h-auto max-w-full py-1.5 text-left whitespace-normal text-muted-foreground"
+                className="mt-2 h-auto max-w-full py-2 text-left whitespace-normal text-muted-foreground"
                 onClick={() => setShowZero((v) => !v)}
                 aria-expanded={showZero}
               >
@@ -163,7 +163,7 @@ function BudgetPage() {
                   : `Show ${zeroCats.length} more at $0: ${zeroCats.map((c) => CATEGORY_LABELS[c]).join(", ")}`}
               </Button>
             )}
-            <p className="mt-2.5 text-xs text-muted-foreground">
+            <p className="mt-2 text-xs text-muted-foreground">
               Unmarked amounts are estimates for {shape.days} day
               {shape.days > 1 ? "s" : ""}, {shape.nights} night
               {shape.nights === 1 ? "" : "s"} and {shape.travelers} traveler
@@ -175,27 +175,27 @@ function BudgetPage() {
 
         {/* Emergency fund */}
         <aside className="space-y-4 lg:order-2">
-          <section className="surface-card animate-rise p-5" style={stagger(1)}>
+          <section className="surface-card animate-rise p-6" style={stagger(1)}>
             <div className="flex items-center justify-between">
-              <h2 className="title-display text-[26px]">Emergency fund</h2>
+              <h2 className="title-display text-title-1">Emergency fund</h2>
               <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
                 <Lock className="size-3" /> Protected
               </span>
             </div>
-            <p className="mt-2 text-[13px] leading-relaxed text-muted-foreground">
+            <p className="mt-2 text-footnote leading-relaxed text-muted-foreground">
               For flat tires, urgent care or a surprise night's stay.
             </p>
-            <p className="money-display mt-5 text-[52px]">
+            <p className="money-display mt-6 text-display">
               <AnimatedMoney value={totals.emergencyFund} />
             </p>
-            <p className="mt-1.5 text-xs text-muted-foreground">
+            <p className="mt-2 text-xs text-muted-foreground">
               {trip.setup.totalBudget > 0
                 ? Math.round((totals.emergencyFund / trip.setup.totalBudget) * 100)
                 : 0}
               % of your total budget
             </p>
             <Slider
-              className="mt-5"
+              className="mt-6"
               value={[Math.min(trip.emergencyFund, maxFund)]}
               max={maxFund || 1}
               step={25}
@@ -228,11 +228,11 @@ function Stat({
   tone?: "success" | "danger";
 }) {
   return (
-    <div className="bg-card px-3 py-2.5">
+    <div className="bg-card px-4 py-2">
       <dt className="text-xs text-muted-foreground">{label}</dt>
       <dd
         className={cn(
-          "mt-0.5 text-[15px] font-medium",
+          "mt-1 text-headline font-medium",
           tone === "success" && "text-success",
           tone === "danger" && "text-destructive",
         )}
@@ -521,7 +521,7 @@ function CategoryRow({ cat }: { cat: Category }) {
             step={5}
           />
           {trip.itinerary && (
-            <div className="col-span-full flex items-center justify-between gap-2 rounded-xl bg-secondary px-3 py-2 text-xs">
+            <div className="col-span-full flex items-center justify-between gap-2 rounded-xl bg-secondary px-4 py-2 text-xs">
               <span>
                 Your itinerary's sightseeing:{" "}
                 <strong className="tabular">{formatMoney(fromItinerary)}</strong>
@@ -549,8 +549,8 @@ function CategoryRow({ cat }: { cat: Category }) {
 
   return (
     <AccordionItem value={cat} className="border-b border-border px-0 last:border-b-0">
-      <AccordionTrigger className="px-4 py-3.5 transition-colors hover:bg-muted/50 hover:no-underline data-[state=open]:bg-muted/40">
-        <div className="flex min-w-0 flex-1 items-center gap-3 text-left font-sans">
+      <AccordionTrigger className="px-4 py-4 transition-colors hover:bg-muted/50 hover:no-underline data-[state=open]:bg-muted/40">
+        <div className="flex min-w-0 flex-1 items-center gap-4 text-left font-sans">
           <span className="relative grid size-8 shrink-0 place-items-center rounded-lg border border-border">
             <Icon className="size-4 text-foreground/80" strokeWidth={1.8} />
             <span
@@ -575,16 +575,16 @@ function CategoryRow({ cat }: { cat: Category }) {
             <p className="text-sm font-medium">
               <AnimatedMoney value={amount} cents={amount % 1 !== 0 && amount < 100} />
             </p>
-            <p className="tabular text-[11px] font-normal text-muted-foreground">
+            <p className="tabular text-micro font-normal text-muted-foreground">
               {Math.round(share)}%
             </p>
           </div>
         </div>
       </AccordionTrigger>
       <AccordionContent className="bg-muted/40 px-4 pt-1 pb-4">
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">{fields}</div>
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">{fields}</div>
         {canOverride && (
-          <div className="mt-4 flex flex-wrap items-end gap-3 border-t border-dashed border-border pt-4">
+          <div className="mt-4 flex flex-wrap items-end gap-4 border-t border-dashed border-border pt-4">
             <div className="min-w-40 flex-1">
               <p className="mb-1 text-xs font-semibold text-muted-foreground">
                 Or set your own total
@@ -643,9 +643,9 @@ function NotDriving() {
 function CutPlan() {
   const { cuts } = useTrip();
   return (
-    <div className="animate-pop mt-5 rounded-xl border border-destructive/25 p-4">
-      <div className="flex gap-2.5 text-sm text-destructive">
-        <AlertTriangle className="mt-0.5 size-4 shrink-0" />
+    <div className="animate-pop mt-6 rounded-xl border border-destructive/25 p-4">
+      <div className="flex gap-2 text-sm text-destructive">
+        <AlertTriangle className="mt-1 size-4 shrink-0" />
         <p>
           <strong>Your plan is {formatMoney(cuts.gap, { cents: true })} over budget.</strong> Here
           are ways to close the gap:
@@ -657,7 +657,7 @@ function CutPlan() {
           return (
             <li
               key={s.category}
-              className="flex items-center gap-3 border-t border-border py-3 first:border-t-0"
+              className="flex items-center gap-4 border-t border-border py-4 first:border-t-0"
             >
               <span className="grid size-8 shrink-0 place-items-center rounded-lg border border-border">
                 <Icon className="size-4 text-foreground/80" strokeWidth={1.8} />
@@ -672,7 +672,7 @@ function CutPlan() {
                 <p className="tabular text-xs text-muted-foreground">
                   Saves {formatMoney(s.saves, { cents: true })} incl. taxes & cushion
                   {s.closesGap && (
-                    <span className="ml-1 inline-flex items-center gap-0.5 font-semibold text-success">
+                    <span className="ml-1 inline-flex items-center gap-1 font-semibold text-success">
                       <Check className="size-3" /> back on budget
                     </span>
                   )}
