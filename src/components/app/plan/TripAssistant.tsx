@@ -16,6 +16,7 @@ import { Button } from "@/components/ui/button";
 import { tripChat } from "@/lib/ai-trip-chat.functions";
 import { airportFor } from "@/lib/airports";
 import { useAirports } from "@/lib/live/use-airports";
+import { useTowns } from "@/lib/live/use-towns";
 import { cleanChatAnswer } from "@/lib/ai-quality";
 import { coverageFromDraft, draftDates, missingFields, type TripDraft } from "@/lib/assistant";
 import { understand, type AskField, type UnderstandContext } from "@/lib/understand/conversation";
@@ -130,6 +131,7 @@ export function TripAssistant({
   const { user, loading: authLoading } = useAuth();
   const { currency } = useLocale();
   const airports = useAirports();
+  const towns = useTowns();
   const homeAirport = airports && from ? airportFor(airports, from) : null;
   const { place } = useHomePlace();
   const [state, setState] = useState<Saved>({ turns: [], draft: null, pending: "" });
@@ -165,7 +167,7 @@ export function TripAssistant({
 
   const today = todayIso();
   const usdRate = useUsdRate(currency);
-  const places = useMemo(() => gazetteer(airports), [airports]);
+  const places = useMemo(() => gazetteer(airports, towns), [airports, towns]);
   const ctx: UnderstandContext = {
     today,
     gazetteer: places,

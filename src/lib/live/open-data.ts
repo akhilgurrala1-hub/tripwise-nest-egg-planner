@@ -128,40 +128,49 @@ export async function fetchPlaceSummary(
   return parseSummary(await res.json(), near);
 }
 
-// ---------- Landmarks (Wikipedia geosearch) ----------
+// ---------- Landmarks (Wikipedia) ----------
 
-/** What a landmark's short description says it is, mapped to interests; null = not a sight. */
+/**
+ * What a landmark's short description says it is, mapped to interests; null = not a sight.
+ * Wikipedia's short descriptions name the thing plainly ("Ancient amphitheatre in Rome",
+ * "Fountain in Rome", "Colossal sculpture on Liberty Island"), so these cover what
+ * travelers go to see.
+ */
 const SIGHT_RULES: [RegExp, Interest[]][] = [
   [/\b(art )?museum|gallery\b/i, ["arts", "history"]],
   [/\b(national|state|provincial) park\b|\bnature reserve|wildlife\b/i, ["nature", "adventure"]],
   [/\bpark\b|\bgarden|botanic/i, ["nature", "family"]],
   [/\bbeach|bay\b|\bcoast/i, ["beaches", "nature"]],
   [
-    /\bwaterfall|\blake\b|\bmountain|\bpeak\b|\bcanyon|\bcave|\bglacier|\bvolcano|\btrail\b/i,
+    /\bwaterfall|\blake\b|\bmountain|\bpeak\b|\bcanyon|\bcave|\bglacier|\bvolcano|\btrail\b|\bgorge\b|\bcliffs?\b/i,
     ["nature", "adventure"],
   ],
   [
-    /\bcathedral|\bbasilica|\bchurch|\bmosque|\btemple|\bshrine|\bsynagogue|\bmonastery|\babbey/i,
+    /\bcathedral|\bbasilica|\bchurch|\bmosque|\btemple|\bshrine|\bsynagogue|\bmonastery|\babbey|\bpagoda|\bchapel\b/i,
     ["history", "arts"],
   ],
   [
-    /\bcastle|\bpalace|\bfort(ress)?\b|\bruins?\b|\barchaeological|\bmonument|\bmemorial|\bhistoric|\bmansion|\bmission\b/i,
+    /\bcastle|\bpalace|\bfort(ress)?\b|\bruin(s|ed)?\b|\barchaeological|\bmonument|\bmemorial|\bhistoric|\bmansion|\bmission\b|\bamphithea(tre|ter)|\bcolosseum|\bforum\b|\baqueduct|\bbaths\b|\btomb\b|\bmausoleum|\bpyramid|\bnecropolis|\bcatacombs?|\bcitadel|\bwalls\b|\bold town|\bmedina\b|\bwonder\b/i,
     ["history"],
   ],
   [/\bzoo\b|\baquarium|\bamusement|\btheme park|\bscience (centre|center)/i, ["family"]],
   [/\bmarket\b|\bbazaar|\bshopping/i, ["shopping", "food"]],
   [/\btheat(re|er)|\bopera|\bconcert hall|\bmusic venue/i, ["arts", "nightlife"]],
   [
-    /\bsquare\b|\bplaza\b|\bbridge\b|\btower\b|\blighthouse|\bobservatory|\bpier\b|\bpromenade|\bboardwalk|\blandmark/i,
+    /\bfountain|\bstatue|\bsculpture|\bsteps\b|\bstairs?\b|\b(triumphal )?arch\b|\bgate\b|\bsquare\b|\bplaza\b|\bpiazza|\bbridge\b|\btower\b|\blighthouse|\bobservatory|\bobservation deck|\bviewpoint|\blookout|\bpier\b|\bpromenade|\bboardwalk|\blandmark|\bskyscraper/i,
     ["history", "arts"],
   ],
 ];
 
 const NOT_SIGHTS =
-  /\b(school|university|college|station|airport|hospital|company|corporation|neighbou?rhood|district|suburb|census|county|municipality|village|town|city in|road|street|highway|railway|stadium|hotel|office|building in|apartment|bank|cemetery)\b/i;
+  /\b(school|university|college|station|airport|hospital|company|corporation|neighbou?rhood|district|suburb|census|county|municipality|village|town|city in|road|street|highway|railway|stadium|hotel|office|building in|apartment|bank|cemetery|embassy|consulate|ministry|headquarters|government agency)\b/i;
+/** Words that make it a sight even when the description also says "building" or "district". */
+const ALWAYS_SIGHTS =
+  /\b(museum|cathedral|basilica|castle|palace|amphithea(tre|ter)|ruins|monument|historic (building|house|district|centre|center|quarter|site)|old town|world heritage)\b/i;
 
 export function classifySight(description: string): Interest[] | null {
-  if (!description || NOT_SIGHTS.test(description)) return null;
+  if (!description) return null;
+  if (NOT_SIGHTS.test(description) && !ALWAYS_SIGHTS.test(description)) return null;
   for (const [re, interests] of SIGHT_RULES) if (re.test(description)) return interests;
   return null;
 }
@@ -170,25 +179,63 @@ function mapsSearch(name: string, near: string): string {
   return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${name}, ${near}`)}`;
 }
 
-export function parseLandmarks(body: unknown, near: string): RealPlace[] {
+/** Views over the last month, from Wikipedia's page-view counts (null when not reported). */
+function monthViews(p: Record<string, unknown>): number | null {
+  const v = p["pageviews"];
+  if (!v || typeof v !== "object") return null;
+  let sum = 0;
+  let any = false;
+  for (const n of Object.values(v as Record<string, unknown>)) {
+    if (typeof n === "number" && Number.isFinite(n) && n >= 0) {
+      sum += n;
+      any = true;
+    }
+  }
+  return any ? sum : null;
+}
+
+/**
+ * How well known a place is, for ranking: page views when Wikipedia reports
+ * them (the Colosseum gets hundreds of thousands a month, a side chapel a few
+ * hundred), else the article's length, minus a little for distance from the
+ * center. Pure, so the order is testable.
+ */
+export function fameScore(views: number | null, length: number | null, km: number): number {
+  const base =
+    views !== null ? Math.log10(views + 1) : length ? Math.max(0, Math.log10(length) - 1.2) : 0;
+  return base - 0.08 * km;
+}
+
+export function parseLandmarks(body: unknown, near: string, at?: GeoPoint | null): RealPlace[] {
   const pages = (body as { query?: { pages?: Record<string, Record<string, unknown>> } })?.query
     ?.pages;
   if (!pages) return [];
-  const out: (RealPlace & { _dist: number })[] = [];
+  const out: (RealPlace & { _score: number })[] = [];
+  const seen = new Set<string>();
   for (const p of Object.values(pages)) {
     const title = String(p["title"] ?? "");
     const description = String(p["description"] ?? "");
     const interests = classifySight(description);
-    if (!title || !interests) continue;
+    if (!title || !interests || seen.has(title)) continue;
+    seen.add(title);
     const coords = (
       p["coordinates"] as { lat: number; lon: number; dist?: number }[] | undefined
     )?.[0];
+    const km =
+      typeof coords?.dist === "number"
+        ? coords.dist / 1000
+        : coords && at
+          ? milesBetween(at, { lat: coords.lat, lon: coords.lon }) * 1.609
+          : Number(p["index"] ?? 0) / 10;
+    const views = monthViews(p);
+    const length = typeof p["length"] === "number" ? (p["length"] as number) : null;
+    const label = description.charAt(0).toUpperCase() + description.slice(1);
     out.push({
       placeId: `wiki:${String(p["pageid"] ?? title)}`,
       name: title,
       kind: "sight",
-      typeLabel: description.charAt(0).toUpperCase() + description.slice(1),
-      description: description.charAt(0).toUpperCase() + description.slice(1),
+      typeLabel: label,
+      description: label,
       address: null,
       rating: null,
       ratingCount: null,
@@ -197,34 +244,90 @@ export function parseLandmarks(body: unknown, near: string): RealPlace[] {
       costSource: "unknown",
       interests,
       source: "wikipedia",
-      _dist: coords?.dist ?? Number(p["index"] ?? 0) * 100,
+      ...(views !== null ? { fame: views } : {}),
+      _score: fameScore(views, length, km),
     });
   }
-  return out.sort((a, b) => a._dist - b._dist).map(({ _dist, ...p }) => p);
+  return out.sort((a, b) => b._score - a._score).map(({ _score, ...p }) => p);
 }
 
-/** Notable landmarks within ~10 km, from Wikipedia articles with coordinates. */
+/** Both searches' pages in one body (the same article from both counts once). */
+export function mergeWikiBodies(...bodies: unknown[]): {
+  query: { pages: Record<string, unknown> };
+} {
+  const pages: Record<string, unknown> = {};
+  for (const b of bodies) {
+    const ps = (b as { query?: { pages?: Record<string, Record<string, unknown>> } })?.query?.pages;
+    if (!ps) continue;
+    for (const [id, p] of Object.entries(ps)) {
+      const prev = pages[id] as Record<string, unknown> | undefined;
+      // Keep whichever copy reported page views.
+      if (!prev || (prev["pageviews"] === undefined && p["pageviews"] !== undefined)) pages[id] = p;
+    }
+  }
+  return { query: { pages } };
+}
+
+async function wikiQuery(params: Record<string, string>, signal?: AbortSignal): Promise<unknown> {
+  const u = new URL(WIKI);
+  for (const [k, v] of Object.entries(params)) u.searchParams.set(k, v);
+  const res = await fetch(u.toString(), signal ? { signal } : {});
+  if (!res.ok) throw new Error(`Wikipedia error (${res.status})`);
+  return res.json();
+}
+
+/**
+ * Notable landmarks within ~10 km, best known first. Two searches run together:
+ * the articles most linked to from the rest of Wikipedia near the place (where
+ * the Colosseum and Trevi Fountain are), and the nearest articles (small gems
+ * in the center); both report page views, which decide the order.
+ */
 export async function fetchLandmarks(
   at: GeoPoint,
   near: string,
   signal?: AbortSignal,
 ): Promise<RealPlace[]> {
-  const u = new URL(WIKI);
-  const params: Record<string, string> = {
+  const props = {
     action: "query",
     format: "json",
     origin: "*",
-    generator: "geosearch",
-    ggscoord: `${at.lat}|${at.lon}`,
-    ggsradius: "10000",
-    ggslimit: "80",
-    prop: "description|coordinates",
-    colimit: "80",
+    prop: "description|coordinates|pageviews|info",
+    colimit: "max",
+    codistancefrompoint: `${at.lat}|${at.lon}`,
+    pvipdays: "30",
   };
-  for (const [k, v] of Object.entries(params)) u.searchParams.set(k, v);
-  const res = await fetch(u.toString(), signal ? { signal } : {});
-  if (!res.ok) throw new Error(`Wikipedia error (${res.status})`);
-  return parseLandmarks(await res.json(), near);
+  const [linked, nearest] = await Promise.allSettled([
+    wikiQuery(
+      {
+        ...props,
+        generator: "search",
+        gsrsearch: `nearcoord:10km,${at.lat},${at.lon}`,
+        gsrsort: "incoming_links_desc",
+        gsrlimit: "50",
+        gsrnamespace: "0",
+      },
+      signal,
+    ),
+    wikiQuery(
+      {
+        ...props,
+        generator: "geosearch",
+        ggscoord: `${at.lat}|${at.lon}`,
+        ggsradius: "10000",
+        ggslimit: "50",
+      },
+      signal,
+    ),
+  ]);
+  if (linked.status === "rejected" && nearest.status === "rejected") throw nearest.reason;
+  return parseLandmarks(
+    mergeWikiBodies(
+      linked.status === "fulfilled" ? linked.value : null,
+      nearest.status === "fulfilled" ? nearest.value : null,
+    ),
+    near,
+    at,
+  );
 }
 
 // ---------- Restaurants (OpenStreetMap) ----------
@@ -240,10 +343,34 @@ const CUISINE_INTERESTS: [RegExp, Interest[]][] = [
   [/coffee|cafe|bakery|ice_cream/i, ["food", "arts"]],
 ];
 
-export function parseRestaurants(body: unknown, near: string): RealPlace[] {
+/** Chains and fast food: real, but not what anyone travels for. */
+const CHAIN_NAMES =
+  /^(mcdonald'?s|burger king|kfc|subway|domino'?s|pizza hut|starbucks|wendy'?s|taco bell|five guys|nando'?s|telepizza|vapiano|hard rock cafe|tgi friday'?s|applebee'?s|chili'?s|olive garden|denny'?s|ihop|panda express|chipotle|popeyes|dunkin'?)\b/i;
+
+/**
+ * How promising a restaurant looks from what OpenStreetMap knows about it: a
+ * Wikipedia or Wikidata entry (notable), a website, published hours, a cuisine
+ * and a phone number, a little less the farther it is from the center. Chains
+ * sink to the bottom. Pure, so the order is testable.
+ */
+export function restaurantScore(tags: Record<string, string>, km: number | null): number {
+  let s = 0;
+  if (tags["wikidata"] || tags["wikipedia"]) s += 3;
+  if (tags["website"] || tags["contact:website"]) s += 1;
+  if (tags["opening_hours"]) s += 0.6;
+  if (tags["cuisine"]) s += 0.5;
+  if (tags["phone"] || tags["contact:phone"]) s += 0.3;
+  if (tags["addr:street"]) s += 0.2;
+  if (tags["brand"] || tags["brand:wikidata"] || CHAIN_NAMES.test(tags["name"] ?? "")) s -= 6;
+  if (/fast_food|burger/i.test(tags["cuisine"] ?? "")) s -= 1;
+  if (km !== null) s -= 0.4 * km;
+  return s;
+}
+
+export function parseRestaurants(body: unknown, near: string, at?: GeoPoint | null): RealPlace[] {
   const elements = (body as { elements?: Record<string, unknown>[] })?.elements ?? [];
   const seen = new Set<string>();
-  const out: RealPlace[] = [];
+  const out: (RealPlace & { _score: number })[] = [];
   for (const e of elements) {
     const tags = (e["tags"] ?? {}) as Record<string, string>;
     const name = tags["name"]?.trim();
@@ -254,6 +381,13 @@ export function parseRestaurants(body: unknown, near: string): RealPlace[] {
       ? `${cuisine.charAt(0).toUpperCase()}${cuisine.slice(1)} restaurant`
       : "Restaurant";
     const street = [tags["addr:housenumber"], tags["addr:street"]].filter(Boolean).join(" ");
+    const center = (e["center"] as { lat?: number; lon?: number } | undefined) ?? e;
+    const lat = Number((center as { lat?: unknown }).lat);
+    const lon = Number((center as { lon?: unknown }).lon);
+    const km =
+      at && Number.isFinite(lat) && Number.isFinite(lon)
+        ? milesBetween(at, { lat, lon }) * 1.609
+        : null;
     out.push({
       placeId: `osm:${String(e["type"] ?? "node")}/${String(e["id"] ?? name)}`,
       name,
@@ -269,18 +403,28 @@ export function parseRestaurants(body: unknown, near: string): RealPlace[] {
       interests: CUISINE_INTERESTS.find(([re]) => re.test(cuisine))?.[1] ?? ["food"],
       ...(tags["opening_hours"] ? { hours: tags["opening_hours"].slice(0, 80) } : {}),
       source: "osm",
+      _score: restaurantScore(tags, km),
     });
   }
-  return out;
+  // Stable: equally promising places keep OpenStreetMap's order.
+  return out
+    .map((p, i) => ({ p, i }))
+    .sort((a, b) => b.p._score - a.p._score || a.i - b.i)
+    .map(({ p: { _score, ...p } }) => p);
 }
 
-/** Named restaurants within ~3 km, from OpenStreetMap (two public Overpass servers). */
+/**
+ * Restaurants worth a meal near the center, from OpenStreetMap: notable ones
+ * (with a Wikipedia entry) within 3 km, well-documented independents within 2 km
+ * and anything named close by; chains are left out where the data says so.
+ */
 export async function fetchRestaurants(
   at: GeoPoint,
   near: string,
   signal?: AbortSignal,
 ): Promise<RealPlace[]> {
-  const query = `[out:json][timeout:15];nwr(around:3000,${at.lat},${at.lon})["amenity"="restaurant"]["name"];out tags 80;`;
+  const a = `${at.lat},${at.lon}`;
+  const query = `[out:json][timeout:20];(nwr(around:3000,${a})["amenity"="restaurant"]["name"]["wikidata"];nwr(around:2000,${a})["amenity"="restaurant"]["name"]["website"][!"brand"];nwr(around:800,${a})["amenity"="restaurant"]["name"][!"brand"];);out center 200;`;
   for (const url of OVERPASS) {
     try {
       const res = await fetch(url, {
@@ -288,7 +432,7 @@ export async function fetchRestaurants(
         body: new URLSearchParams({ data: query }),
         ...(signal ? { signal } : {}),
       });
-      if (res.ok) return parseRestaurants(await res.json(), near);
+      if (res.ok) return parseRestaurants(await res.json(), near, at);
     } catch (e) {
       if (signal?.aborted) throw e;
     }

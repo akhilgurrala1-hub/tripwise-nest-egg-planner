@@ -287,6 +287,27 @@ const WORDY_CODES = new Set(
   ),
 );
 
+/** Two-letter country names people type after a city without a comma. */
+const SHORT_COUNTRIES = new Set(["uk"]);
+
+/**
+ * Codes that are never words, typed after a town without a comma ("victoria bc",
+ * "pittsburgh pa"): only trusted when they narrow a real town, like other short codes.
+ */
+const NO_COMMA_CODES = new Set([
+  "bc",
+  "qc",
+  "ns",
+  "nb",
+  "ab",
+  "sk",
+  "mb",
+  "nsw",
+  "qld",
+  "wa",
+  "pa",
+]);
+
 interface Qualifier {
   end: number;
   country?: string;
@@ -309,14 +330,19 @@ function qualifierAt(
     if (words.length < n || words.some(isSep)) continue;
     const phrase = plainName(words.join(" ")).replace(/^the /, "");
     const state = g.states.get(phrase);
+    const country = g.countries.get(phrase);
     if (state) {
       const code = phrase.length <= 3 && state[1].toLowerCase() === phrase;
       const typedUpper = !!ctx.upperCodes?.has(phrase.toUpperCase());
-      if (!code || typedUpper || SAFE_CODES.has(phrase)) return { end: k + n, state, wordy: false };
-      if (comma) return { end: k + n, state, wordy: WORDY_CODES.has(phrase) };
+      // "georgia" is a state and a country: the city decides which ("tbilisi georgia").
+      const also = !code && country ? { country } : {};
+      if (!code || typedUpper || SAFE_CODES.has(phrase))
+        return { end: k + n, state, ...also, wordy: false };
+      if (comma || NO_COMMA_CODES.has(phrase))
+        return { end: k + n, state, wordy: WORDY_CODES.has(phrase) };
     }
-    const country = g.countries.get(phrase);
-    if (country && (phrase.length > 2 || comma))
+    // "uk" needs no comma ("birmingham uk"); other two-letter codes do, since most are words.
+    if (country && (phrase.length > 2 || comma || SHORT_COUNTRIES.has(phrase)))
       return { end: k + n, country, wordy: phrase.length <= 2 };
   }
   return null;
@@ -332,6 +358,8 @@ function best(
     return (
       c.weight +
       (c.country && c.country === ctx.homeCountry && c.kind === "city" ? 1 : 0) +
+      // A traveler from the US saying "Georgia" means the state, not the country.
+      (c.country && c.country === ctx.homeCountry && c.kind === "state" ? 1.5 : 0) +
       (c.country && contextCountries.has(c.country) ? 2 : 0)
     );
   }
@@ -378,19 +406,50 @@ function findMentions(tokens: string[], ctx: WhereContext): Mention[] {
         between.every((t) =>
           /^(,|and|then|or|&|\d+|nights?|nites|n|days?|in|to|\(|\)|plus|:)$/.test(t),
         );
-      if (n === 1 && cands && !everydayWordAllowed(key, !!ctx.capitalized?.has(key) || listed, !!q))
+      // A short code only vouches for an everyday word when it narrows it ("victoria bc").
+      const vouches =
+        !!q &&
+        (!q.wordy ||
+          !!cands?.some((c) =>
+            q.state ? c.region === q.state[1] && c.country === q.state[0] : c.country === q.country,
+          ));
+      if (
+        n === 1 &&
+        cands &&
+        !everydayWordAllowed(key, !!ctx.capitalized?.has(key) || listed, vouches)
+      )
         cands = undefined;
+      // A town whose name is an everyday word ("March", "Can", "Normal") needs its state or
+      // country, or other places around it: a capital letter alone could start a sentence.
+      const joined =
+        !!prev && between.length > 0 && between.every((t) => /^(and|then|&|plus)$/.test(t));
+      const inQualifier =
+        !!q &&
+        !!cands?.some((c) =>
+          q.state ? c.region === q.state[1] && c.country === q.state[0] : c.country === q.country,
+        );
+      if (cands?.every((c) => c.word) && !(joined || inQualifier)) cands = undefined;
       if (!cands && n === 1 && ctx.upperCodes?.has(key.toUpperCase())) {
         const code = g.codes.get(key.toUpperCase());
         if (code) cands = [code];
+      }
+      // "the country of georgia": the country, whatever else shares the name.
+      if (cands && /\bcountry of$/.test(tokens.slice(Math.max(0, i - 2), i).join(" "))) {
+        const countries = cands.filter((c) => c.kind === "country");
+        if (countries.length) cands = countries;
       }
       if (cands) {
         let list = cands;
         let end = i + n;
         if (q) {
-          const narrowed = cands.filter((c) =>
-            q.state ? c.region === q.state[1] && c.country === q.state[0] : c.country === q.country,
-          );
+          const inState = q.state
+            ? cands.filter((c) => c.region === q.state![1] && c.country === q.state![0])
+            : [];
+          const narrowed = inState.length
+            ? inState
+            : q.country
+              ? cands.filter((c) => c.country === q.country)
+              : [];
           if (q.wordy && !narrowed.length) {
             // "savannah, me and 3 friends": "me" isn't Maine here.
             hit = { start: i, end: i + n, cands, qualified: false };

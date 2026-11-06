@@ -16,6 +16,7 @@ def repo_data():
         "states": jsonfile.load(paths.STATES),
         "aliases": jsonfile.load(paths.ALIASES),
         "visas": jsonfile.load(paths.VISAS),
+        "towns": jsonfile.load(paths.TOWNS),
     }
 
 

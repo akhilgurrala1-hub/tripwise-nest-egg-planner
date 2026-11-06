@@ -23,6 +23,8 @@ export interface RealPlace {
   priceText?: string | null;
   /** A bar, café or music venue: better for an evening than a meal */
   evening?: boolean;
+  /** Wikipedia page views over the last month: how well known it is, for ranking */
+  fame?: number;
   /** Where it came from: travel guide, Wikipedia, OpenStreetMap or Google Maps */
   source?: PlaceSource;
 }

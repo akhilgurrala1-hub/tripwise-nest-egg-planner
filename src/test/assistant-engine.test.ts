@@ -1,13 +1,18 @@
 import { describe, expect, it } from "vitest";
 
 import rows from "@/data/airports.json";
+import townRows from "@/data/towns.json";
 import type { ChatAnswer } from "@/lib/ai-quality";
 import { toAirport, type AirportRow } from "@/lib/airports";
+import { townsFrom } from "@/lib/towns";
 import { emptyDraft, understand, type ConversationTurn } from "@/lib/understand/conversation";
 import { gazetteer } from "@/lib/understand/gazetteer";
 import { factLines, localAnswer, questionField, reconcile } from "@/lib/understand/reply";
 
-const g = gazetteer((rows as unknown as AirportRow[]).map(toAirport));
+const g = gazetteer(
+  (rows as unknown as AirportRow[]).map(toAirport),
+  townsFrom(townRows as unknown[]),
+);
 const ctx = {
   today: "2026-11-05",
   gazetteer: g,

@@ -388,7 +388,9 @@ function placeScore(p: RealPlace, interests: Interest[]): number {
   const reviews = p.rating !== null && p.ratingCount ? p.rating * Math.log10(p.ratingCount + 1) : 0;
   // Travel-guide picks were chosen and described by travelers, so they rank ahead of bare map pins.
   const recommended = p.source === "wikivoyage" ? 4 + (p.description ? 1 : 0) : 0;
-  return match * 5 + reviews + recommended;
+  // How well known it is (Wikipedia page views a month): the Colosseum before a side chapel.
+  const fame = p.fame !== undefined ? 1.6 * Math.log10(p.fame + 1) : 0;
+  return match * 5 + reviews + recommended + fame;
 }
 
 function placeItem(p: RealPlace, id: string, time: SlotTime): ItineraryItem {

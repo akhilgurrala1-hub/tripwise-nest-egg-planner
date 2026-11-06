@@ -20,7 +20,14 @@ import {
   shareOf,
   type PlanChunk,
 } from "@/lib/ai-chunks";
-import { cleanAiPlan, groundedCount, mergePlaces, placeLines, planLines } from "@/lib/ai-quality";
+import {
+  cleanAiPlan,
+  groundedCount,
+  mergePlaces,
+  placeLines,
+  planLines,
+  rankSights,
+} from "@/lib/ai-quality";
 import { coveredLabels } from "@/lib/budget";
 import { inclusiveDays } from "@/lib/dates";
 import { addDays, buildRealItinerary, stitchCityPlans, type Itinerary } from "@/lib/itinerary";
@@ -29,7 +36,7 @@ import { useTripWeather } from "@/lib/live/use-live";
 import { useTripAirports } from "@/lib/live/use-airports";
 import { useUsdRate } from "@/lib/live/use-locale";
 import { currencyForCountry } from "@/lib/locale";
-import { cabinInfo } from "@/lib/demo-data";
+import { cabinInfo, travelPoint } from "@/lib/demo-data";
 import { getDestinationPlaces } from "@/lib/places/destination-places.functions";
 import { fetchLandmarks, fetchRestaurants } from "@/lib/live/open-data";
 import type { GuideTip } from "@/lib/live/travel-guide";
@@ -203,7 +210,9 @@ export function usePlanner() {
         ])
       : [];
     const found: NearbyPlaces = {
-      sights: mergePlaces(guide?.sights ?? [], sights?.status === "fulfilled" ? sights.value : []),
+      sights: rankSights(
+        mergePlaces(guide?.sights ?? [], sights?.status === "fulfilled" ? sights.value : []),
+      ),
       restaurants: mergePlaces(
         guide?.restaurants ?? [],
         restaurants?.status === "fulfilled" ? restaurants.value : [],
@@ -451,10 +460,16 @@ export function usePlanner() {
 
   const planWithRealPlaces = async () => {
     const key = planKey(currentTrip());
+    // Where the place is, so the map search stays in the right town ("Athens, GA", not Greece).
+    const nearOf = (p: GeoPoint | null | undefined) =>
+      p
+        ? { near: { lat: Math.round(p.lat * 1000) / 1000, lon: Math.round(p.lon * 1000) / 1000 } }
+        : {};
     const request = {
       destination: destinationQuery(dest, trip.setup.origin, prefs?.home_city),
       interests: trip.setup.interests,
       style: trip.setup.style,
+      ...nearOf(travelPoint(dest, trip.setup.destinationPoint)),
     };
     const cacheKey = JSON.stringify(request);
     const { ctrl, done } = start("places", PLACES_TIMEOUT_MS);
@@ -462,10 +477,10 @@ export function usePlanner() {
       if (multi) {
         const perCity = await Promise.all(
           legs.map(async (leg) => {
-            const req = {
-              ...request,
-              destination: leg.main ? request.destination : leg.name,
-            };
+            const { near: _near, ...rest } = request;
+            const req = leg.main
+              ? request
+              : { ...rest, destination: leg.name, ...nearOf(leg.point) };
             const k = JSON.stringify(req);
             let r = placesCache.get(k);
             if (!r) {
