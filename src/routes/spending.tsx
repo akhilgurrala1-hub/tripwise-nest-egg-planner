@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Download, Lock, Pencil, Trash2, UserPlus, X } from "lucide-react";
+import { Download, Lock, Pencil, Trash2, UserPlus, X, Receipt } from "lucide-react";
 import { useState, type FormEvent } from "react";
 import { toast } from "sonner";
 
@@ -10,6 +10,7 @@ import {
   NumberField,
 } from "@/components/app/bits";
 import { BudgetTabs } from "@/components/app/BudgetTabs";
+import { EmptyState } from "@/components/app/Photo";
 import { AnimatedMoney, stagger } from "@/components/app/motion";
 import { PageHeader } from "@/components/app/TripHeader";
 import { Button } from "@/components/ui/button";
@@ -114,6 +115,11 @@ function SpendingPage() {
           />
           {hasAny && <CategoryCard />}
 
+          {days.length === 0 && summary.booked === 0 && (
+            <EmptyState icon={<Receipt />} title="No costs logged yet">
+              Log what you spend as you go and it appears here day by day, against your plan.
+            </EmptyState>
+          )}
           {days.length > 0 && (
             <section aria-labelledby="spend-log" className="space-y-4">
               <div className="flex flex-wrap items-center justify-between gap-2">

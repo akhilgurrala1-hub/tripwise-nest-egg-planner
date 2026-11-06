@@ -22,6 +22,7 @@ import {
   UtensilsCrossed,
   Ship,
   type LucideIcon,
+  CircleAlert,
 } from "lucide-react";
 import { useEffect, useState, type CSSProperties, type ReactNode } from "react";
 
@@ -95,6 +96,8 @@ export function NumberField({
   id,
   className,
   inputClassName,
+  invalid,
+  describedBy,
   "aria-label": ariaLabel,
 }: {
   value: number;
@@ -106,6 +109,10 @@ export function NumberField({
   id?: string;
   className?: string;
   inputClassName?: string;
+  /** The value is wrong: red border and fill, announced as invalid */
+  invalid?: boolean;
+  /** The id of the message that explains the error */
+  describedBy?: string | undefined;
   "aria-label"?: string;
 }) {
   const [text, setText] = useState(String(value));
@@ -118,6 +125,8 @@ export function NumberField({
     <div
       className={cn(
         "flex h-11 items-center gap-2 rounded-lg border border-input bg-fill px-4 transition-[border-color,box-shadow] duration-150 hover:border-muted-foreground/40 focus-within:border-primary focus-within:ring-3 focus-within:ring-primary/15",
+        invalid &&
+          "border-destructive bg-destructive-soft focus-within:border-destructive focus-within:ring-destructive/20",
         className,
       )}
     >
@@ -125,6 +134,8 @@ export function NumberField({
       <input
         id={id}
         aria-label={ariaLabel}
+        aria-invalid={invalid || undefined}
+        aria-describedby={describedBy}
         type="number"
         inputMode="decimal"
         // Any amount is valid (a step here would make the browser reject e.g. $4,321 and block
@@ -194,7 +205,7 @@ export const INTEREST_ICON: Record<Interest, LucideIcon> = {
   shopping: ShoppingBag,
 };
 
-/** What the traveler enjoys: a grid of quiet tiles; chosen ones take the accent color. */
+/** What the traveler enjoys: tokens sized to their words, wrapping like text; chosen ones fill with the brand color. */
 export function InterestChips({
   value,
   onToggle,
@@ -205,7 +216,7 @@ export function InterestChips({
   className?: string;
 }) {
   return (
-    <div className={cn("grid grid-cols-2 gap-2 sm:grid-cols-3", className)}>
+    <div className={cn("flex flex-wrap gap-2", className)}>
       {INTERESTS.map((i) => {
         const active = value.includes(i.id);
         const Icon = INTEREST_ICON[i.id];
@@ -216,28 +227,19 @@ export function InterestChips({
             aria-pressed={active}
             onClick={() => onToggle(i.id)}
             className={cn(
-              "flex h-11 items-center gap-2 rounded-lg border px-4 text-left text-footnote font-medium transition-[background-color,border-color,color,transform] duration-150 active:scale-[0.98]",
+              "pressable flex h-10 items-center gap-2 rounded-lg px-4 text-left text-footnote font-medium",
               active
-                ? "border-primary bg-[color-mix(in_oklab,var(--primary)_6%,var(--card))] text-foreground"
-                : "border-border bg-card text-foreground/85 hover:border-muted-foreground/40",
+                ? "bg-primary text-primary-foreground"
+                : "bg-fill text-foreground hover:bg-secondary",
             )}
           >
             <Icon
               className={cn(
                 "size-4 shrink-0 transition-colors duration-150",
-                active ? "text-primary" : "text-muted-foreground",
+                active ? "text-primary-foreground" : "text-muted-foreground",
               )}
-              strokeWidth={1.8}
             />
-            <span className="min-w-0 flex-1 truncate">{i.label}</span>
-            <Check
-              className={cn(
-                "size-3.5 shrink-0 text-primary transition-opacity duration-150",
-                active ? "opacity-100" : "opacity-0",
-              )}
-              strokeWidth={2.5}
-              aria-hidden
-            />
+            <span className="whitespace-nowrap">{i.label}</span>
           </button>
         );
       })}
@@ -266,5 +268,15 @@ export function ApproxMoney({
       {formatApprox(usd, currency, rate)}
       {suffix ? ` ${suffix}` : ""}
     </span>
+  );
+}
+
+/** The message under a field that's wrong: what to fix, with an icon so it doesn't rely on color. */
+export function FieldError({ id, children }: { id: string; children: ReactNode }) {
+  return (
+    <p id={id} role="alert" className="mt-2 flex items-start gap-1 text-footnote text-destructive">
+      <CircleAlert className="mt-px size-4 shrink-0" aria-hidden />
+      <span>{children}</span>
+    </p>
   );
 }

@@ -2,6 +2,7 @@ import { ArrowUpRight } from "lucide-react";
 import type { CSSProperties } from "react";
 
 import { RouteMark } from "@/components/app/Illustrations";
+import { Photo } from "@/components/app/Photo";
 import { stagger, useDragScroll } from "@/components/app/motion";
 import { formatMoney } from "@/lib/budget";
 import type { GeoPoint } from "@/lib/catalog";
@@ -122,12 +123,13 @@ function IdeaCard({
     >
       <span className="relative block aspect-[4/3] overflow-hidden bg-[color-mix(in_oklab,var(--kind)_10%,var(--card))]">
         {photo?.image ? (
-          <img
+          <Photo
             src={photo.image}
             alt=""
-            loading="lazy"
-            decoding="async"
-            className="absolute inset-0 size-full object-cover transition-transform spring-smooth group-hover:scale-[1.04]"
+            className="absolute inset-0"
+            fallback={
+              <RouteMark className="absolute inset-0 m-auto h-16 w-24 text-(--kind) opacity-60" />
+            }
           />
         ) : (
           <RouteMark className="absolute inset-0 m-auto h-16 w-24 text-(--kind) opacity-60" />

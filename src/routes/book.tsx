@@ -395,11 +395,11 @@ function BookingCard({
       style={{ ...style, "--kind": color } as CSSProperties}
       className={cn(
         "surface-card animate-rise render-lazy relative overflow-hidden p-4 transition-[opacity,border-color] duration-300 [contain-intrinsic-size:auto_200px] sm:p-6",
-        isNext && "border-[color-mix(in_oklab,var(--brand-coral)_45%,var(--border))]",
+        isNext && "border-[color-mix(in_oklab,var(--primary)_45%,var(--border))]",
         skipped && "opacity-60",
       )}
     >
-      {isNext && <span className="absolute inset-y-0 left-0 w-0.5 bg-brand-coral" aria-hidden />}
+      {isNext && <span className="absolute inset-y-0 left-0 w-0.5 bg-primary" aria-hidden />}
       <div className="flex gap-4">
         <span
           className={cn(
@@ -419,7 +419,7 @@ function BookingCard({
           <div className="flex flex-wrap items-center gap-2">
             <h2 className="text-headline leading-snug font-semibold">{item.title}</h2>
             {isNext && (
-              <span className="rounded-md bg-[color-mix(in_oklab,var(--brand-coral)_14%,var(--card))] px-2 py-1 text-micro font-semibold tracking-wide text-[color-mix(in_oklab,var(--brand-coral)_55%,var(--foreground))] uppercase">
+              <span className="rounded-md bg-[color-mix(in_oklab,var(--primary)_14%,var(--card))] px-2 py-1 text-micro font-semibold tracking-wide text-[color-mix(in_oklab,var(--primary)_55%,var(--foreground))] uppercase">
                 Next
               </span>
             )}
@@ -435,7 +435,7 @@ function BookingCard({
               className={cn(
                 "mt-1 text-xs",
                 when.urgency === "overdue" || when.urgency === "now"
-                  ? "font-medium text-coral-text"
+                  ? "font-medium text-primary"
                   : "text-muted-foreground",
               )}
             >

@@ -118,3 +118,28 @@ describe("class merging", () => {
     expect(cn("text-sm", "text-caption")).toBe("text-caption");
   });
 });
+
+describe("no template tells", () => {
+  it("headlines are one color: no accent word in the brand color", () => {
+    expect(find(/<em className="text-primary">/g)).toEqual([]);
+  });
+
+  it("coral stays in the logo and the route art; the UI has one brand color", () => {
+    const art = (p: string) =>
+      /Logo\.tsx$|Illustrations\.tsx$|TravelScene\.tsx$|Intro\.tsx$/.test(p);
+    expect(
+      find(/\b(?:text|bg|border|ring|fill|stroke)-(?:brand-coral|coral-text)\b/g, art),
+    ).toEqual([]);
+  });
+
+  it("photos go through Photo (loading placeholder, fade-in, fallback), never a bare img", () => {
+    expect(find(/<img\b/g, (p) => p.endsWith("Photo.tsx"))).toEqual([]);
+  });
+
+  it("uses its own type pairing, self-hosted: no Inter, no Google Fonts", () => {
+    const css = readFileSync(join(SRC, "styles.css"), "utf8");
+    expect(css).not.toMatch(/"Inter"/);
+    const root = readFileSync(join(SRC, "routes", "__root.tsx"), "utf8");
+    expect(root).not.toMatch(/fonts\.googleapis\.com/);
+  });
+});

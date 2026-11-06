@@ -1,6 +1,18 @@
+import { EmptyState } from "@/components/app/Photo";
 import { useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { Check, Copy, FolderOpen, Loader2, Pencil, RotateCcw, Save, Trash2, X } from "lucide-react";
+import {
+  Check,
+  Copy,
+  FolderOpen,
+  Loader2,
+  Pencil,
+  RotateCcw,
+  Save,
+  Trash2,
+  X,
+  Luggage,
+} from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -171,13 +183,17 @@ function TripsPage() {
         <section className="space-y-4">
           <h2 className="title-display text-title-1">All trips ({active.length})</h2>
           {active.length === 0 && (
-            <div className="surface-card p-6 text-center text-sm text-muted-foreground">
-              No saved trips yet.{" "}
-              <Link to="/" className="font-semibold text-primary">
-                Plan a trip
-              </Link>{" "}
-              and save it here.
-            </div>
+            <EmptyState
+              icon={<Luggage />}
+              title="No saved trips yet"
+              action={
+                <Button asChild variant="go" size="sm">
+                  <Link to="/">Plan a trip</Link>
+                </Button>
+              }
+            >
+              Trips you save appear here, ready to open on any device.
+            </EmptyState>
           )}
           {active.map((row) => (
             <TripRow

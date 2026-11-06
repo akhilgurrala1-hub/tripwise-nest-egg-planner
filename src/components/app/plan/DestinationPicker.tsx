@@ -1,4 +1,4 @@
-import { Car, Home, MapPin, Plane, Ship, Sparkles, TrainFront } from "lucide-react";
+import { Car, Home, MapPin, Plane, Ship, Sparkles, TrainFront, Check } from "lucide-react";
 import type { ReactNode } from "react";
 
 import { stagger } from "@/components/app/motion";
@@ -15,6 +15,7 @@ import {
 import type { GeoPlace } from "@/lib/live/geocode";
 import { useLocale } from "@/lib/live/use-locale";
 import { interestLabel, recommendDestinations, type Suggestion } from "@/lib/recommend";
+import { FieldError } from "@/components/app/bits";
 import { cn } from "@/lib/utils";
 
 const DISTANCE_ICON: Record<TripType, typeof Car> = {
@@ -69,7 +70,7 @@ export function DestinationPicker({
   return (
     <div>
       <p className="mb-2 flex items-center gap-2 text-footnote text-muted-foreground">
-        <Sparkles className="size-3.5 text-brand-coral" />
+        <Sparkles className="size-3.5 text-primary" />
         {tripType === "staycation"
           ? "Planned around your home city"
           : from
@@ -78,7 +79,8 @@ export function DestinationPicker({
       </p>
       <div
         key={`${tripType}:${fromLabel}`}
-        className="grid gap-2 sm:grid-cols-2"
+        // A grouped list: one row per place, a checkmark on the chosen one.
+        className="overflow-hidden rounded-2xl bg-card shadow-[var(--shadow-soft-value)] dark:border dark:border-separator"
         role="radiogroup"
         aria-label="Destination"
       >
@@ -95,8 +97,8 @@ export function DestinationPicker({
               detail={
                 <>
                   {d.distanceLabel && (
-                    <span className="inline-flex items-center gap-1 text-foreground/80">
-                      <DistanceIcon className="size-3" /> {d.distanceLabel}
+                    <span className="inline-flex items-center gap-1 text-foreground">
+                      <DistanceIcon className="size-3.5" /> {d.distanceLabel}
                     </span>
                   )}
                   <span>
@@ -140,7 +142,7 @@ export function DestinationPicker({
             onPickPlace={(p) => onCustom(p.label, p)}
             className="h-11"
           />
-          {error && <p className="mt-2 text-xs text-destructive">{error}</p>}
+          {error && <FieldError id="destination-error">{error}</FieldError>}
         </div>
       )}
     </div>
@@ -186,38 +188,38 @@ function OptionRow({
       aria-checked={active}
       onClick={onClick}
       style={stagger(index)}
-      className={cn(
-        "group animate-rise relative flex items-start gap-4 rounded-xl border p-4 text-left transition-[border-color,background-color,box-shadow,transform] duration-200 pressable active:scale-[0.99]",
-        active
-          ? "border-primary bg-card ring-3 ring-primary/12"
-          : "border-border bg-card hover:border-muted-foreground/40 hover:shadow-[0_2px_8px_oklch(0.2_0.01_260/0.06)]",
-      )}
+      className="group animate-rise relative flex min-h-16 w-full items-center gap-4 px-4 py-2 text-left transition-colors duration-150 hover:bg-fill active:bg-fill"
     >
-      <span
-        className={cn(
-          "mt-1 grid size-4 shrink-0 place-items-center rounded-full border transition-colors duration-200",
-          active ? "border-primary bg-primary" : "border-input",
-        )}
-        aria-hidden
-      >
+      <span className="min-w-0 flex-1">
         <span
           className={cn(
-            "size-1.5 rounded-full bg-primary-foreground transition-transform duration-200",
-            active ? "scale-100" : "scale-0",
+            "flex items-center gap-2 text-body",
+            active ? "font-semibold" : "font-medium",
           )}
-        />
-      </span>
-      <span className="min-w-0 flex-1">
-        <span className="flex items-center gap-2 text-sm font-medium">
+        >
           {icon}
-          {title}
+          <span className="truncate">{title}</span>
         </span>
-        <span className="mt-1 block truncate text-xs text-muted-foreground">{meta}</span>
-        <span className="tabular mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
-          {detail}
+        <span className="mt-1 block truncate text-footnote text-muted-foreground">
+          {meta}
+          {note ? ` · ${note}` : ""}
         </span>
-        <span className="mt-1 block truncate text-micro text-muted-foreground">{note}</span>
       </span>
+      <span className="tabular hidden shrink-0 flex-col items-end gap-1 text-right text-footnote text-muted-foreground sm:flex">
+        {detail}
+      </span>
+      <Check
+        aria-hidden
+        className={cn(
+          "size-5 shrink-0 text-primary transition-[opacity,scale] duration-150",
+          active ? "scale-100 opacity-100" : "scale-75 opacity-0",
+        )}
+      />
+      {/* Separator, inset to where the text starts. */}
+      <span
+        aria-hidden
+        className="absolute right-0 bottom-0 left-4 h-px bg-separator group-last:hidden"
+      />
     </button>
   );
 }

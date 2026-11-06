@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { CalendarHeart, ExternalLink, Footprints, ShieldCheck } from "lucide-react";
 
 import { safeExternalUrl } from "@/lib/booking";
@@ -7,6 +8,7 @@ import { destinationQuery } from "@/lib/live/place";
 import type { GuideTip } from "@/lib/live/travel-guide";
 import { useDestinationSummary, useTravelGuide, useTripHolidays } from "@/lib/live/use-open-data";
 import { destinationReviewLinks } from "@/lib/reviews";
+import { Photo, Skeleton } from "@/components/app/Photo";
 import { cn } from "@/lib/utils";
 
 /**
@@ -28,7 +30,20 @@ export function DestinationPhoto({
 }) {
   const q = useDestinationSummary(dest, origin);
   const s = q.data;
-  if (!s) return null;
+  if (!s)
+    return q.isLoading ? (
+      // Lines in the shape of the introduction while it loads.
+      <div className={cn("space-y-2", className)} role="status" aria-label="Loading">
+        {showImage && <Skeleton className="aspect-[16/9] w-full rounded-lg" />}
+        {showText && (
+          <>
+            <Skeleton className="mt-4 h-3 w-full" />
+            <Skeleton className="h-3 w-11/12" />
+            <Skeleton className="h-3 w-2/3" />
+          </>
+        )}
+      </div>
+    ) : null;
   return (
     <figure className={cn("animate-pop", className)}>
       {showImage && s.image && (
@@ -37,15 +52,9 @@ export function DestinationPhoto({
           target="_blank"
           rel="noopener noreferrer"
           title="Photo from Wikipedia"
-          className="relative block overflow-hidden rounded-lg bg-muted"
+          className="relative block overflow-hidden rounded-lg"
         >
-          <img
-            src={s.image}
-            alt={s.title}
-            loading="lazy"
-            decoding="async"
-            className="aspect-[16/9] w-full object-cover"
-          />
+          <Photo src={s.image} alt={s.title} className="aspect-[16/9] w-full" />
         </a>
       )}
       {showText && (
@@ -80,7 +89,9 @@ export function DestinationHero({
   className?: string;
 }) {
   const s = useDestinationSummary(dest, origin).data;
-  if (!s?.image) return null;
+  const [failed, setFailed] = useState(false);
+  // Better no hero than a broken one: a photo that can't load takes the hero with it.
+  if (!s?.image || failed) return null;
   return (
     <a
       href={s.url}
@@ -88,15 +99,17 @@ export function DestinationHero({
       rel="noopener noreferrer"
       title="Photo from Wikipedia"
       className={cn(
-        "animate-pop group relative block overflow-hidden rounded-[20px] bg-muted shadow-[var(--shadow-soft-value)]",
+        "animate-pop group relative block overflow-hidden rounded-[20px] shadow-[var(--shadow-soft-value)]",
         className,
       )}
     >
-      <img
+      <Photo
         src={s.image}
         alt={s.title}
-        decoding="async"
-        className="parallax absolute inset-0 size-full object-cover"
+        lazy={false}
+        className="absolute inset-0"
+        imgClassName="parallax"
+        onFail={() => setFailed(true)}
       />
     </a>
   );
@@ -204,7 +217,7 @@ export function HolidayList({
   return (
     <div className={cn("animate-pop rounded-lg border border-border p-4", className)}>
       <p className="flex items-center gap-2 text-footnote font-medium">
-        <CalendarHeart className="size-4 text-brand-coral" /> Public holiday
+        <CalendarHeart className="size-4 text-primary" /> Public holiday
         {holidays.length > 1 ? "s" : ""} during your trip
       </p>
       <ul className="mt-2 space-y-1 text-xs text-muted-foreground">

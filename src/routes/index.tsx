@@ -4,7 +4,7 @@ import { ArrowRight, Minus, Plus } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 
-import { InterestChips, NumberField } from "@/components/app/bits";
+import { InterestChips, NumberField, FieldError } from "@/components/app/bits";
 import { stagger } from "@/components/app/motion";
 import { DestinationPicker } from "@/components/app/plan/DestinationPicker";
 import { CoveragePicker } from "@/components/app/plan/CoveragePicker";
@@ -334,7 +334,7 @@ function Welcome() {
           <header className="animate-rise">
             <p className="eyebrow">New trip</p>
             <h1 className="title-display mt-4 text-large-title sm:text-display lg:text-display">
-              Where to <em className="text-primary">next?</em>
+              Where to next?
             </h1>
             <p className="mt-4 max-w-lg text-headline leading-relaxed text-muted-foreground">
               Say it however you like. Waypoint works out the budget to the dollar, plans the days
@@ -394,7 +394,7 @@ function Welcome() {
           </h2>
 
           <form id="plan-form" onSubmit={submit} noValidate className="mt-2 divide-y divide-border">
-            <Section step="01" title="Trip" style={stagger(2)}>
+            <Section title="Trip" style={stagger(2)}>
               <TripTypePicker
                 tripType={form.tripType}
                 mode={form.transportMode}
@@ -415,7 +415,6 @@ function Welcome() {
             </Section>
 
             <Section
-              step="02"
               title={
                 form.tripType === "cruise"
                   ? "Cruise"
@@ -465,7 +464,7 @@ function Welcome() {
               )}
             </Section>
 
-            <Section step="03" title="When & who" style={stagger(3)}>
+            <Section title="When & who" style={stagger(3)}>
               <div className="flex flex-wrap items-start gap-x-4 gap-y-4">
                 <div className="min-w-0 flex-1 basis-64">
                   <p className="mb-2 text-footnote text-muted-foreground">Dates</p>
@@ -473,6 +472,8 @@ function Welcome() {
                     <Input
                       type="date"
                       aria-label="Start date"
+                      aria-invalid={!!dateError || undefined}
+                      aria-describedby={dateError ? "date-error" : undefined}
                       value={form.startDate}
                       min={todayIso()}
                       onChange={(e) => setStartDate(e.target.value)}
@@ -481,23 +482,23 @@ function Welcome() {
                     <Input
                       type="date"
                       aria-label="End date"
+                      aria-invalid={!!dateError || undefined}
+                      aria-describedby={dateError ? "date-error" : undefined}
                       value={form.endDate}
                       min={form.startDate}
                       onChange={(e) => update({ endDate: e.target.value })}
                       className="h-11"
                     />
                   </div>
-                  <p
-                    className={cn(
-                      "mt-2 text-xs",
-                      dateError ? "text-destructive" : "text-muted-foreground",
-                    )}
-                  >
-                    {dateError ||
-                      (shape.days === 1
+                  {dateError ? (
+                    <FieldError id="date-error">{dateError}</FieldError>
+                  ) : (
+                    <p className="mt-2 text-xs text-muted-foreground">
+                      {shape.days === 1
                         ? "Day trip, no overnight stay"
-                        : `${shape.days} days, ${shape.nights} night${shape.nights === 1 ? "" : "s"}`)}
-                  </p>
+                        : `${shape.days} days, ${shape.nights} night${shape.nights === 1 ? "" : "s"}`}
+                    </p>
+                  )}
                 </div>
                 <div className="flex w-full items-center justify-between gap-4 sm:block sm:w-auto">
                   <p className="text-footnote text-muted-foreground sm:mb-2">Travelers</p>
@@ -539,13 +540,13 @@ function Welcome() {
               </div>
             </Section>
 
-            <Section step="04" title="Style" style={stagger(4)}>
+            <Section title="Style" style={stagger(4)}>
               <StylePicker value={form.style} onChange={(style) => update({ style })} />
               <p className="mt-6 mb-2 text-sm text-muted-foreground">Interests</p>
               <InterestChips value={form.interests} onToggle={toggleInterest} />
             </Section>
 
-            <Section step="05" title="What you pay for" style={stagger(5)}>
+            <Section title="What you pay for" style={stagger(5)}>
               <CoveragePicker
                 value={form.coverage}
                 mode={form.transportMode}
@@ -553,7 +554,7 @@ function Welcome() {
               />
             </Section>
 
-            <Section step="06" title="Budget" style={stagger(5)}>
+            <Section title="Budget" style={stagger(5)}>
               <div className="grid gap-4 sm:grid-cols-2">
                 <div>
                   <Label className="text-footnote font-normal text-muted-foreground">
@@ -605,6 +606,8 @@ function Welcome() {
                   </Label>
                   <NumberField
                     aria-label="Emergency fund"
+                    invalid={!!reserveError}
+                    describedBy={reserveError ? "reserve-error" : undefined}
                     prefix="$"
                     step={25}
                     value={emergencyFund}
@@ -615,7 +618,7 @@ function Welcome() {
                       update({ emergencyFund: n });
                     }}
                   />
-                  {reserveError && <p className="mt-2 text-xs text-destructive">{reserveError}</p>}
+                  {reserveError && <FieldError id="reserve-error">{reserveError}</FieldError>}
                 </div>
               </div>
             </Section>
@@ -665,25 +668,19 @@ function Welcome() {
 }
 
 function Section({
-  step,
   title,
   aside,
   children,
   style,
 }: {
-  /** "01", "02"...: the order the trip comes together in */
-  step: string;
   title: string;
   aside?: string;
   children: React.ReactNode;
   style?: React.CSSProperties;
 }) {
   return (
-    <section className="reveal grid gap-4 py-10 sm:grid-cols-[140px_1fr] sm:gap-8" style={style}>
+    <section className="grid gap-4 py-10 sm:grid-cols-[160px_1fr] sm:gap-8" style={style}>
       <div className="flex items-baseline gap-2 sm:block">
-        <span aria-hidden className="tabular text-caption font-semibold text-coral-text">
-          {step}
-        </span>
         <h2 className="text-headline font-semibold sm:mt-2">{title}</h2>
         {aside && <p className="ml-auto text-xs text-muted-foreground sm:mt-1 sm:ml-0">{aside}</p>}
       </div>

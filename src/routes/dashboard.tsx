@@ -193,7 +193,7 @@ function Dashboard() {
 
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
           {/* Breakdown */}
-          <section className="surface-card reveal p-6">
+          <section className="surface-card p-6">
             <div className="flex items-center justify-between gap-4">
               <h2 className="title-display text-title-1">Where it goes</h2>
               <PriceSourceBadge />
@@ -254,7 +254,7 @@ function Dashboard() {
           </section>
 
           {/* Savings */}
-          <section className="surface-card reveal p-6">
+          <section className="surface-card p-6">
             <h2 className="title-display text-title-1">Ways to spend less</h2>
             <p className="mt-1 text-footnote text-muted-foreground">
               Applies to your budget instantly. Undo anytime.
@@ -320,13 +320,8 @@ function Dashboard() {
         </div>
 
         <div className="layout-5-7">
-          <DestinationCard
-            dest={dest}
-            origin={trip.setup.origin}
-            photo={false}
-            className="reveal"
-          />
-          <WeatherCard className="reveal" />
+          <DestinationCard dest={dest} origin={trip.setup.origin} photo={false} />
+          <WeatherCard />
         </div>
       </div>
     </div>
@@ -483,7 +478,7 @@ function NextSteps() {
                     s.done
                       ? "border-foreground bg-foreground text-background"
                       : s === next
-                        ? "border-brand-coral text-foreground ring-3 ring-brand-coral/20"
+                        ? "border-primary text-foreground ring-3 ring-primary/20"
                         : "border-input text-muted-foreground",
                   )}
                 >
