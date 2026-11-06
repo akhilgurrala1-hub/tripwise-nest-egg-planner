@@ -1,8 +1,9 @@
 import { Link } from "@tanstack/react-router";
 import { ArrowRight, CalendarDays, ChevronDown, Info, MapPin, Pencil, Users } from "lucide-react";
-import { useState, type CSSProperties, type ReactNode } from "react";
+import { useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { toast } from "sonner";
 
+import { useLargeTitle } from "./large-title";
 import { RouteMark } from "./Illustrations";
 import { TRIP_COLOR } from "./trip-colors";
 import { TRIP_ICONS, TripTypePicker } from "./TripTypePicker";
@@ -45,6 +46,8 @@ export function PageHeader({
   /** How loudly to say this is the sample trip: a full card (Overview) or one line */
   sampleBanner?: "card" | "line";
 }) {
+  const titleRef = useRef<HTMLHeadingElement>(null);
+  useLargeTitle(titleRef, title);
   const { trip } = useTrip();
   const sample = showTrip && trip.isSample;
   return (
@@ -53,9 +56,7 @@ export function PageHeader({
         <section className="surface-card animate-rise mb-8 grid grid-cols-[56px_1fr] items-center gap-4 p-6 sm:grid-cols-[72px_1fr_auto] sm:gap-6 sm:p-6 print:hidden">
           <RouteMark className="w-14 sm:w-[72px]" />
           <div className="min-w-0">
-            <h2 className="title-display text-title-1">
-              This is a sample trip. <em className="text-primary">Make it yours.</em>
-            </h2>
+            <h2 className="title-display text-title-1">This is a sample trip. Make it yours.</h2>
             <p className="mt-1 max-w-lg text-sm text-muted-foreground">
               Pick where you're going, your dates and your budget. Everything on these pages updates
               to match.
@@ -88,7 +89,9 @@ export function PageHeader({
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div className="min-w-0">
           <p className="eyebrow">{eyebrow}</p>
-          <h1 className="title-display mt-2 text-large-title sm:text-display">{title}</h1>
+          <h1 ref={titleRef} className="title-display mt-2 text-large-title sm:text-display">
+            {title}
+          </h1>
           {showTrip && <TripBar title={title} />}
         </div>
         <div className="contents print:hidden">{children}</div>

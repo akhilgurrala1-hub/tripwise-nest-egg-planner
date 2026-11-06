@@ -44,7 +44,7 @@ export function CitiesEditor({
             <li key={i} className="flex flex-wrap items-center gap-2 sm:flex-nowrap">
               <span
                 aria-hidden
-                className="tabular w-6 shrink-0 text-center text-caption font-semibold text-coral-text"
+                className="tabular w-6 shrink-0 text-center text-caption font-semibold text-muted-foreground"
               >
                 {String(i + 2).padStart(2, "0")}
               </span>

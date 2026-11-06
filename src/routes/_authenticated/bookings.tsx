@@ -1,6 +1,6 @@
 import { useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
-import { Car, ExternalLink, Hotel, Plane, Plus, Star, Trash2 } from "lucide-react";
+import { Car, ExternalLink, Hotel, Plane, Plus, Star, Trash2, Bookmark } from "lucide-react";
 import { toast } from "sonner";
 
 import { LivePricesPanel, destinationQuery } from "@/components/app/LivePricesPanel";
@@ -18,6 +18,7 @@ import {
 } from "@/lib/account";
 import { formatMoney } from "@/lib/budget";
 import { useTrip } from "@/lib/trip-store";
+import { EmptyState, Photo } from "@/components/app/Photo";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/_authenticated/bookings")({
@@ -100,12 +101,7 @@ function BookingsPage() {
                     className="flex gap-4 rounded-2xl border border-border bg-background/60 p-4"
                   >
                     {h.image && (
-                      <img
-                        src={h.image}
-                        alt=""
-                        loading="lazy"
-                        className="size-16 shrink-0 rounded-xl object-cover"
-                      />
+                      <Photo src={h.image} alt="" className="size-16 shrink-0 rounded-xl" />
                     )}
                     <div className="min-w-0 flex-1">
                       <p className="font-semibold leading-snug">{h.name}</p>
@@ -285,9 +281,10 @@ function BookingsPage() {
         <section className="space-y-4">
           <h2 className="title-display text-title-1">My bookings ({bookings.length})</h2>
           {bookings.length === 0 && (
-            <p className="surface-card p-6 text-sm text-muted-foreground">
-              Nothing tracked yet. Tap Track on a hotel, flight or rental above.
-            </p>
+            <EmptyState icon={<Bookmark />} title="Nothing tracked yet">
+              Tap Track on a hotel, flight or rental above and it shows up here with its price and
+              status.
+            </EmptyState>
           )}
           {bookings.map((b) => (
             <BookingCard key={b.id} b={b} onChange={refresh} />

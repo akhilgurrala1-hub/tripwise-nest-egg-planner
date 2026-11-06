@@ -49,3 +49,38 @@ enforces the rules below, so a violation fails CI.
 - **No serif, script or mono display type.** Mono only for codes people copy.
 - **No staggered cascades on every navigation**, and no more than one moving thing competing for attention.
 - **No borders on cards**, and no heavy dimming behind dialogs.
+
+## Second pass: removing what still read as a template
+
+| Tell                         | What it looked like                                                                                         | Now                                                                                                                   |
+| ---------------------------- | ----------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| Two action colors            | Green "go" buttons next to the blue accent, coral dots and arrows                                           | One brand blue for every action and highlight; coral only inside the logo and the route art                           |
+| Pure black / plain gray      | True black dark mode, flat #f5f5f7 page                                                                     | A cool off-white with a whisper of the brand, white cards; deep blue-gray dark mode                                   |
+| Accent word in headlines     | "Where to **next?**", "Your trip is **planned.**" in blue                                                   | One-color headlines; weight carries the emphasis                                                                      |
+| Default type                 | System font on Macs, Inter elsewhere (what every Tailwind template ships)                                   | A pairing, self-hosted: Schibsted Grotesk for headlines and big numbers, Instrument Sans for text                     |
+| Icons at nine stroke weights | 1, 1.5, 1.6, 1.7, 1.8, 2, 2.5                                                                               | Every Lucide icon at 1.75                                                                                             |
+| Decorative dots              | Floating coral dot and ring in the trip-ready card, a dot under the active tab, dots before labels          | The card shows the real route (home, each city with its nights, home); tabs use a highlight (desktop) or tint (phone) |
+| Numbered steps               | Coral "01–06" beside each Plan section                                                                      | Plain section titles                                                                                                  |
+| Equal boxes                  | Three style cards, a 2-column grid of destination cards, four "what you pay for" tiles, nine interest tiles | A segmented control; a grouped list with checkmarks; a grouped list with switches; tokens sized to their words        |
+| Fading content               | Sections at 35% opacity until scrolled to                                                                   | Content is always fully visible; only the hero photo moves (parallax)                                                 |
+| Broken photos                | Browser broken-image icon and alt text in a gray box                                                        | `Photo`: placeholder while loading, fade-in, then a designed fallback or no photo at all                              |
+| Spinners and blank space     | "Checking the forecast…" spinner, nothing while the introduction loads                                      | Skeletons in the content's shape; designed error panel                                                                |
+| Dead empty lists             | One centered line of text                                                                                   | `EmptyState`: icon, what will appear, the action that fills it                                                        |
+| Errors only in text          | A red sentence under a normal-looking field                                                                 | The field itself turns red (border, fill, focus ring), with an icon message linked to it                              |
+
+Apple patterns added:
+
+- Grouped lists with inset separators.
+- iOS switches whose knob stretches while held.
+- iOS large titles that collapse into the bar.
+- A tinted tab bar.
+- A sliding toolbar highlight.
+- Notification-style toasts on glass.
+- Thicker glass for the bars.
+
+`src/test/design-system.test.ts` now also fails on:
+
+- an accent word in a headline
+- coral in the UI
+- a bare `<img>`
+- Inter or Google Fonts

@@ -1,6 +1,7 @@
-import { BedDouble, Car, Check, Ticket, UtensilsCrossed, type LucideIcon } from "lucide-react";
+import { BedDouble, Car, Ticket, UtensilsCrossed, type LucideIcon } from "lucide-react";
 
 import { NumberField } from "@/components/app/bits";
+import { Switch } from "@/components/ui/switch";
 import type { TripCoverage } from "@/lib/budget";
 import type { TransportMode } from "@/lib/demo-data";
 import { cn } from "@/lib/utils";
@@ -55,43 +56,47 @@ export function CoveragePicker({
     mode === "flight" ? "airport" : mode === "train" || mode === "bus" ? "station" : null;
   return (
     <div>
-      <p className="mb-2 text-sm text-muted-foreground">Already taken care of</p>
-      <div className="grid gap-2 sm:grid-cols-2" role="group" aria-label="Already taken care of">
-        {FLAGS.map((f) => {
+      <p className="mb-2 text-footnote text-muted-foreground">Already taken care of</p>
+      {/* A grouped list, like Settings: one row per cost, a switch on the right. */}
+      <ul
+        aria-label="Already taken care of"
+        className="overflow-hidden rounded-2xl bg-card shadow-[var(--shadow-soft-value)] dark:border dark:border-separator"
+      >
+        {FLAGS.map((f, i) => {
           const on = !!c[f.id];
           const Icon = f.icon;
+          const id = `cover-${f.id}`;
           return (
-            <button
-              key={f.id}
-              type="button"
-              aria-pressed={on}
-              onClick={() => set({ [f.id]: !on })}
-              className={cn(
-                "flex items-center gap-4 rounded-lg border px-4 py-2 text-left transition-[background-color,border-color,transform] duration-150 active:scale-[0.98]",
-                on
-                  ? "border-primary bg-[color-mix(in_oklab,var(--primary)_6%,var(--card))]"
-                  : "border-border bg-card hover:border-muted-foreground/40",
-              )}
-            >
-              <Icon
-                className={cn("size-4 shrink-0", on ? "text-primary" : "text-muted-foreground")}
-                strokeWidth={1.8}
-              />
-              <span className="min-w-0 flex-1">
-                <span className="block text-footnote leading-tight font-medium">{f.label}</span>
-                <span className="mt-1 block text-micro leading-tight text-muted-foreground">
-                  {f.hint}
+            <li key={f.id} className="relative">
+              <label
+                htmlFor={id}
+                className="flex min-h-14 cursor-pointer items-center gap-4 px-4 py-2"
+              >
+                <span
+                  aria-hidden
+                  className={cn(
+                    "grid size-8 shrink-0 place-items-center rounded-lg transition-colors duration-150",
+                    on ? "bg-primary text-primary-foreground" : "bg-fill text-muted-foreground",
+                  )}
+                >
+                  <Icon className="size-4" />
                 </span>
-              </span>
-              <Check
-                className={cn("size-3.5 shrink-0 text-primary", on ? "opacity-100" : "opacity-0")}
-                strokeWidth={2.5}
-                aria-hidden
-              />
-            </button>
+                <span className="min-w-0 flex-1">
+                  <span className="block text-body leading-tight">{f.label}</span>
+                  <span className="mt-1 block text-caption leading-tight text-muted-foreground">
+                    {f.hint}
+                  </span>
+                </span>
+                <Switch id={id} checked={on} onCheckedChange={(v) => set({ [f.id]: v })} />
+              </label>
+              {/* Separators start where the text does, as in an iOS list. */}
+              {i < FLAGS.length - 1 && (
+                <span aria-hidden className="absolute right-0 bottom-0 left-16 h-px bg-separator" />
+              )}
+            </li>
           );
         })}
-      </div>
+      </ul>
       {station && (
         <div className="mt-4 max-w-xs">
           <label htmlFor="transfer" className="text-footnote text-muted-foreground">

@@ -22,6 +22,7 @@ import {
 import { useEffect, type ReactNode } from "react";
 
 import { Logo } from "./Logo";
+import { useCompactTitle } from "./large-title";
 import { useActiveIndicator } from "./motion";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -68,38 +69,49 @@ export function AppShell({ children }: { children: ReactNode }) {
   const tabPath = pathname === "/spending" ? "/budget" : pathname;
   const active = nav.find((n) => n.to === tabPath)?.to;
   const desk = useActiveIndicator<HTMLDivElement>([active, nav.length]);
-  const mobile = useActiveIndicator<HTMLDivElement>([active, nav.length], { onlyX: true });
+  const compact = useCompactTitle();
   usePreloadTabs();
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="material-regular sticky top-0 z-40 border-b border-separator print:hidden">
-        <div className="page-container flex h-16 items-center justify-between gap-4">
+      <header className="material-thick sticky top-0 z-40 border-b border-separator print:hidden">
+        <div className="page-container relative flex h-16 items-center justify-between gap-4">
           <Link to="/" className="flex items-center rounded-md" aria-label="Waypoint home">
             <Logo />
           </Link>
+          {/* iOS large title: once the page's big title scrolls under the bar, a compact copy
+              appears here (phones; the desktop bar keeps its tabs). */}
+          <p
+            aria-hidden
+            className={cn(
+              "pointer-events-none absolute left-1/2 -translate-x-1/2 truncate text-headline transition-[opacity,translate] duration-200 md:hidden",
+              compact.hidden && compact.title
+                ? "translate-y-0 opacity-100"
+                : "translate-y-1 opacity-0",
+            )}
+          >
+            {compact.title}
+          </p>
           <nav className="hidden md:block" aria-label="Main">
             <div ref={desk.ref} className="relative flex items-center gap-1">
-              {/* "You are here": the brand's coral destination dot travels to the current tab. */}
+              {/* The current tab sits on a soft highlight that springs to the next one. */}
               <span
                 ref={desk.thumbRef}
                 aria-hidden
                 className={cn(
-                  "pointer-events-none absolute top-0 left-0 flex items-end justify-center transition-opacity duration-150",
+                  "pointer-events-none absolute top-0 left-0 rounded-lg bg-fill transition-opacity duration-150",
                   desk.ready && active ? "opacity-100" : "opacity-0",
                 )}
-              >
-                <span className="-mb-1 block size-[5px] rounded-full bg-brand-coral" />
-              </span>
+              />
               {nav.map((item) => (
                 <Link
                   key={item.to}
                   to={item.to}
                   data-active={item.to === active}
                   className={cn(
-                    "pressable relative rounded-md px-4 py-2 text-sm font-medium",
+                    "pressable relative rounded-lg px-4 py-2 text-sm font-medium",
                     item.to === active
-                      ? "text-foreground"
+                      ? "font-semibold text-foreground"
                       : "text-muted-foreground hover:text-foreground",
                   )}
                 >
@@ -120,26 +132,15 @@ export function AppShell({ children }: { children: ReactNode }) {
       </main>
 
       <nav
-        className="material-regular pb-safe fixed inset-x-0 bottom-0 z-40 border-t border-separator md:hidden print:hidden"
+        className="material-thick pb-safe fixed inset-x-0 bottom-0 z-40 border-t border-separator md:hidden print:hidden"
         aria-label="Main"
       >
         <div
-          ref={mobile.ref}
           className={cn(
             "relative mx-auto grid max-w-lg px-2 pt-1",
             nav.length === 6 ? "grid-cols-6" : "grid-cols-5",
           )}
         >
-          <span
-            ref={mobile.thumbRef}
-            aria-hidden
-            className={cn(
-              "pointer-events-none absolute top-0 left-0 h-[5px] transition-opacity duration-150",
-              mobile.ready && active ? "opacity-100" : "opacity-0",
-            )}
-          >
-            <span className="mx-auto mt-1 block size-[5px] rounded-full bg-brand-coral" />
-          </span>
           {nav.map(({ to, label, icon: Icon }) => {
             const isActive = to === active;
             return (
@@ -148,11 +149,12 @@ export function AppShell({ children }: { children: ReactNode }) {
                 to={to}
                 data-active={isActive}
                 className={cn(
-                  "pressable flex flex-col items-center gap-1 pt-2 pb-2 text-micro font-medium",
-                  isActive ? "text-foreground" : "text-muted-foreground",
+                  "pressable flex flex-col items-center gap-1 pt-2 pb-2 text-micro font-medium transition-colors duration-150",
+                  // iOS tab bars mark the current tab by tinting it, nothing else.
+                  isActive ? "text-primary" : "text-muted-foreground",
                 )}
               >
-                <Icon className="size-[22px]" strokeWidth={isActive ? 2 : 1.6} />
+                <Icon className="size-6" />
                 {label}
               </Link>
             );

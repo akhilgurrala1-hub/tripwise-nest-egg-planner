@@ -1,16 +1,20 @@
 @import "tailwindcss" source(none);
 @source "../src";
 @import "tw-animate-css";
+/* The type pairing, self-hosted (OFL): Schibsted Grotesk for headlines and big
+   numbers, Instrument Sans for everything you read and tap. */
+@import "@fontsource-variable/schibsted-grotesk";
+@import "@fontsource-variable/instrument-sans";
 
 @custom-variant dark (&:where(.dark, .dark *));
 
 /*
  * Waypoint design system, after Apple's Human Interface Guidelines.
- * - Type: the system's San Francisco where it exists (Apple devices), Inter
- *   everywhere else; one family, a 9-level scale (text-display … text-micro), each
- *   level with its own size, line height, tracking and weight.
- * - Surfaces: neutral grays (no tint), white cards on light gray, black and
- *   elevated grays in dark mode; one blue accent.
+ * - Type: a pairing, self-hosted: Schibsted Grotesk (headlines, big numbers) and
+ *   Instrument Sans (text, controls), on a 9-level scale (text-display … text-micro),
+ *   each level with its own size, line height, tracking and weight.
+ * - Color: one brand blue. Pages are a cool off-white (not gray, not white), cards
+ *   white; dark mode is deep blue-gray, never pure black. Coral lives only in the logo.
  * - Materials: bars and menus are frosted glass (backdrop blur + saturation) with
  *   a specular top edge and a hairline separator; content cards are opaque.
  * - Motion: springs (src/lib/spring.ts) for anything that moves; CSS uses the
@@ -21,11 +25,11 @@
 
 @theme inline {
   --font-sans:
-    -apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter", "Segoe UI", Roboto, "Helvetica Neue",
-    Arial, sans-serif;
+    "Instrument Sans Variable", "Instrument Sans", ui-sans-serif, -apple-system, BlinkMacSystemFont,
+    "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   --font-display:
-    -apple-system, BlinkMacSystemFont, "SF Pro Display", "Inter", "Segoe UI", Roboto,
-    "Helvetica Neue", Arial, sans-serif;
+    "Schibsted Grotesk Variable", "Schibsted Grotesk", ui-sans-serif, -apple-system,
+    BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   --font-mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace;
 
   /* The 9-level type scale. Large sizes track tighter and weigh more; small ones open up. */
@@ -285,9 +289,9 @@
 :root {
   --radius: 10px;
   color-scheme: light;
-  /* Neutral system grays: the page is #f5f5f7, cards are white, text is #1d1d1f. */
-  --background: oklch(0.973 0.002 286);
-  --foreground: oklch(0.218 0.004 286);
+  /* A cool off-white page (a whisper of the brand blue), white cards, ink text. */
+  --background: oklch(0.972 0.005 265);
+  --foreground: oklch(0.215 0.012 265);
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.218 0.004 286);
   --popover: oklch(1 0 0);
@@ -335,11 +339,11 @@
   --ink-foreground: oklch(0.985 0 0);
   --on-image: oklch(0.99 0 0);
 
-  /* "Go" actions (Plan trip, Start planning): a deep pine green, white text at AA contrast. */
-  --go: oklch(0.49 0.12 160);
-  --go-deep: oklch(0.43 0.11 160);
-  --go-foreground: oklch(0.99 0 0);
-  --go-soft: oklch(0.955 0.03 160);
+  /* "Go" actions (Plan trip, See the days) use the brand blue: one action color. */
+  --go: var(--primary);
+  --go-deep: var(--primary-deep);
+  --go-foreground: var(--primary-foreground);
+  --go-soft: var(--accent);
 
   /* Travel styles: Savvy green, Comfort blue, Luxe violet. */
   --style-budget: oklch(0.52 0.13 160);
@@ -406,12 +410,12 @@
 
 .dark {
   color-scheme: dark;
-  /* True black page, elevated grays for cards (#1c1c1e) and menus (#2c2c2e). */
-  --background: oklch(0 0 0);
+  /* Deep blue-gray, not pure black; cards and menus step up from it. */
+  --background: oklch(0.165 0.01 265);
   --foreground: oklch(0.97 0.002 286);
-  --card: oklch(0.218 0.004 286);
-  --card-foreground: oklch(0.97 0.002 286);
-  --popover: oklch(0.27 0.005 286);
+  --card: oklch(0.21 0.012 265);
+  --card-foreground: oklch(0.97 0.004 265);
+  --popover: oklch(0.255 0.013 265);
   --popover-foreground: oklch(0.97 0.002 286);
   --primary: oklch(0.7 0.16 264);
   --primary-deep: oklch(0.76 0.13 264);
@@ -448,10 +452,10 @@
   --ink-foreground: oklch(0.16 0.004 286);
   --on-image: oklch(0.99 0 0);
 
-  --go: oklch(0.66 0.13 160);
-  --go-deep: oklch(0.6 0.12 160);
-  --go-foreground: oklch(0.16 0.02 160);
-  --go-soft: oklch(0.27 0.045 160);
+  --go: var(--primary);
+  --go-deep: var(--primary-deep);
+  --go-foreground: var(--primary-foreground);
+  --go-soft: var(--accent);
 
   --style-budget: oklch(0.74 0.13 160);
   --style-comfort: oklch(0.72 0.14 258);
@@ -485,7 +489,7 @@
   --shadow-lift-value: 0 16px 48px -12px oklch(0 0 0 / 0.8);
   --shadow-glow-value: none;
 
-  --material-base: oklch(0.2 0.004 286);
+  --material-base: oklch(0.19 0.011 265);
   --material-thick: 0.86;
   --material-regular: 0.72;
   --material-thin: 0.58;
@@ -520,6 +524,11 @@
   h2,
   h3 {
     text-wrap: balance;
+  }
+
+  /* One icon set, one weight: every Lucide icon draws at 1.75 whatever its size. */
+  svg.lucide {
+    stroke-width: 1.75;
   }
 
   input[type="number"]::-webkit-inner-spin-button,
@@ -608,13 +617,14 @@
   }
 }
 
-/* Amounts that matter: display face, even digits, tight. */
+/* Amounts that matter: display face, its natural figures (even-width digits leave
+   gaps around commas at this size), tight. Columns of numbers use `tabular`. */
 @utility money-display {
   font-family: var(--font-display);
   font-weight: 700;
-  letter-spacing: -0.035em;
+  letter-spacing: -0.03em;
   line-height: 1;
-  font-variant-numeric: tabular-nums;
+  font-variant-numeric: lining-nums proportional-nums;
 }
 
 /*
@@ -761,6 +771,15 @@
   }
 }
 
+/* Content on its way: a soft fill that breathes (static with reduced motion). */
+@utility skeleton {
+  background-color: var(--fill);
+  animation: skeleton-breathe 1.6s ease-in-out infinite;
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
+}
+
 /* ---------- Springs ---------- */
 /* Transitions that move use a spring: snappy for controls, smooth for surfaces. */
 @utility spring-snappy {
@@ -895,6 +914,16 @@
   }
   to {
     transform: translateY(6%) scale(1);
+  }
+}
+
+@keyframes skeleton-breathe {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
   }
 }
 

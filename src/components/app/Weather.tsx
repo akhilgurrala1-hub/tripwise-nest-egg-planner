@@ -6,7 +6,7 @@ import {
   CloudRain,
   CloudSnow,
   CloudSun,
-  Loader2,
+  CloudOff,
   RefreshCw,
   Sun,
   Umbrella,
@@ -19,6 +19,7 @@ import { useTripWeather } from "@/lib/live/use-live";
 import { isWetDay, summarize, type DayWeather, type WeatherKind } from "@/lib/live/weather";
 import { tempValue } from "@/lib/locale";
 import { useLocale } from "@/lib/live/use-locale";
+import { Skeleton } from "@/components/app/Photo";
 import { cn } from "@/lib/utils";
 
 export const WEATHER_ICON: Record<WeatherKind, LucideIcon> = {
@@ -93,9 +94,12 @@ export function WeatherCard({ className }: { className?: string }) {
       </div>
 
       {w.status === "loading" && (
-        <p className="mt-4 flex items-center gap-2 text-sm text-muted-foreground">
-          <Loader2 className="size-4 animate-spin" /> Checking the forecast…
-        </p>
+        // The forecast's own shape while it loads, so nothing jumps when it arrives.
+        <div className="mt-4 flex gap-2" role="status" aria-label="Checking the forecast">
+          {Array.from({ length: 5 }, (_, i) => (
+            <Skeleton key={i} className="h-32 w-24 shrink-0 rounded-2xl" />
+          ))}
+        </div>
       )}
       {w.status === "no-place" && (
         <p className="mt-4 text-sm text-muted-foreground">
@@ -108,8 +112,10 @@ export function WeatherCard({ className }: { className?: string }) {
         </p>
       )}
       {w.status === "error" && (
-        <div className="mt-4 flex items-center justify-between gap-4 text-sm text-muted-foreground">
-          <p>The weather service didn't respond.</p>
+        <div className="mt-4 flex items-center justify-between gap-4 rounded-2xl bg-fill p-4 text-sm text-muted-foreground">
+          <p className="flex items-center gap-2">
+            <CloudOff className="size-4 shrink-0" aria-hidden /> The weather service didn't respond.
+          </p>
           <Button size="sm" variant="outline" onClick={() => void w.refetch()}>
             <RefreshCw /> Try again
           </Button>

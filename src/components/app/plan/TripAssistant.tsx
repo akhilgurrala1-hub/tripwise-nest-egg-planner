@@ -299,9 +299,7 @@ export function TripAssistant({
       ) : (
         <header className="flex items-start gap-4 px-6 pt-6 sm:px-6 sm:pt-6">
           <div className="min-w-0 flex-1">
-            <p className="eyebrow flex items-center gap-2">
-              <span aria-hidden className="size-[5px] rounded-full bg-brand-coral" /> Describe it
-            </p>
+            <p className="eyebrow flex items-center gap-2">Describe it</p>
             <h2 className="mt-2 text-headline leading-snug font-semibold">
               Tell us the trip in your own words
             </h2>
@@ -503,7 +501,7 @@ export function TripAssistant({
                     title={ex.message}
                     className="group flex h-10 items-center gap-2 rounded-lg border border-border bg-card px-4 text-body transition-[border-color,transform] duration-150 hover:border-primary active:scale-[0.97]"
                   >
-                    <CornerDownRight className="size-3.5 shrink-0 text-brand-coral" />
+                    <CornerDownRight className="size-3.5 shrink-0 text-primary" />
                     {ex.label}
                   </button>
                 </li>
