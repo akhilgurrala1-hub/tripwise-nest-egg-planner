@@ -194,3 +194,26 @@ An audit against a "shipped by a mature product team" checklist:
   | Keyboard and forms          | The sign-up password field states its rule (6 characters), linked with `aria-describedby`     |
 
 - **Verified:** Impeccable's detector reports 0 anti-patterns on every page of the running app.
+
+## Ninth pass: the three installed skills
+
+**Impeccable** (critique run in one context: its two reviewer subagents hit the usage limit; detector on source and every page: 0 findings)
+
+- No label above a heading anywhere: the itinerary day's date moved under its title, the shared trip's "A trip shared with you" under the place.
+- Section headings on a fixed 32px (app surfaces don't use fluid headings); the form's step titles are `h3` under "Or plan it yourself".
+- The sample-trip banner is a notice (sans, 21px), not a second display headline under the page title.
+- Browser surfaces wear the palette: caret, native controls (`accent-color`) and scrollbars.
+
+**Emil Kowalski** (review table in the PR)
+
+- No `transition-all`; nothing grows from `scale(0)` (logo intro and travel-scene arrival start at 0.6).
+- UI transitions at 300ms or less: springs 250 to 300ms, press release 200ms, progress bars and color changes 200ms.
+- The switch slides without bouncing; the travel scenes no longer loop while idle; the logo has no hover ripple.
+
+**Taste skill** (its checker on the Plan page: credit-wall and copy-headline now pass)
+
+- The h1 says what Waypoint does: "Plan your trip, priced to the dollar."
+- No caption on the hero photo; the footer carries one credit line linking to the full list in the Terms (Open-Meteo added there).
+- No fade-in or parallax on the hero.
+- Quick starts are actions ("Plan a mountain weekend for 2"); idea-card photos zoom 1.03 inside their frame on hover.
+- Not applied, on purpose: its landing-page rules (one section per screen, at most two actions in the hero, a 2px card lift on hover) don't fit an app's working screens, and the lift conflicts with Emil's rules and our hover test.

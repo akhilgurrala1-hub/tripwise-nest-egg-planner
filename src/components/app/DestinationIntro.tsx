@@ -113,7 +113,6 @@ export function DestinationHero({
         alt={s.title}
         lazy={false}
         className="absolute inset-0"
-        imgClassName="parallax"
         onFail={() => setTries({ src: s.image!, step: step + 1 })}
       />
     </a>
@@ -274,26 +273,9 @@ export function HeroBackdrop({ dest, origin }: { dest: DemoDestination; origin: 
         alt=""
         lazy={false}
         className="absolute inset-0 -z-10"
-        imgClassName="parallax"
         onFail={() => setTries({ src: s.image!, step: step + 1 })}
       />
       <div aria-hidden className="photo-scrim absolute inset-0 -z-10" />
     </>
-  );
-}
-
-/** The backdrop's credit: the place's name and a link to the photo's source. */
-export function HeroCredit({ dest, origin }: { dest: DemoDestination; origin: string }) {
-  const s = useDestinationSummary(dest, origin).data;
-  if (!s?.image) return null;
-  return (
-    <a
-      href={s.url}
-      target="_blank"
-      rel="noopener noreferrer"
-      className="on-photo text-caption hover:underline"
-    >
-      {dest.name} · Photo from Wikipedia
-    </a>
   );
 }

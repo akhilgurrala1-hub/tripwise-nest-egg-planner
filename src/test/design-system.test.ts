@@ -245,8 +245,11 @@ describe("product-team basics", () => {
 
   it("content is simply there: no fade-in on every card, section or page", () => {
     const css = read("styles.css");
-    expect(css).not.toMatch(/@utility (animate-rise|animate-pop|animate-page|reveal) /);
-    expect(find(/\banimate-(?:rise|pop|page)\b|useScrollReveal|countUp/g)).toEqual([]);
+    expect(css).not.toMatch(/@utility (animate-rise|animate-pop|animate-page|reveal|parallax) /);
+    expect(css).not.toMatch(/\.hero-in \{/);
+    expect(
+      find(/\banimate-(?:rise|pop|page)\b|useScrollReveal|countUp|\bhero-in\b|\bparallax\b/g),
+    ).toEqual([]);
   });
 
   it("copy says what the product does, not buzzwords", () => {

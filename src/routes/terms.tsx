@@ -124,14 +124,14 @@ function TermsPage() {
         </p>
       </Section>
 
-      <Section title="6. Our content and other people's">
+      <Section id="credits" title="6. Our content and other people's">
         <p>
           Waypoint&rsquo;s design, code and name belong to us. Some content belongs to others and is
           used under its license: text and photos from Wikipedia, Wikivoyage and Wikimedia Commons
           (CC BY-SA and the photographers&rsquo; licenses), map data from OpenStreetMap contributors
-          (ODbL), towns from GeoNames (CC BY), airports from OurAirports (public domain) and
-          passport data from the Passport Index dataset (MIT). Credits appear where the content is
-          shown.
+          (ODbL), towns from GeoNames (CC BY), weather from Open-Meteo (CC BY 4.0), airports from
+          OurAirports (public domain) and passport data from the Passport Index dataset (MIT).
+          Credits appear where the content is shown.
         </p>
       </Section>
 

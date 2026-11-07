@@ -622,7 +622,7 @@ function RouteMap({
             >
               <span
                 className={cn(
-                  "ml-1 size-3 rounded-full border-2 transition-all",
+                  "ml-1 size-3 rounded-full border-2 transition-colors",
                   on
                     ? "border-success bg-success"
                     : "border-border bg-card group-hover:border-primary",

@@ -1,7 +1,6 @@
 import { ArrowUpRight, ChevronLeft, ChevronRight } from "lucide-react";
 import { useState, type CSSProperties } from "react";
 
-import { RouteMark } from "@/components/app/Illustrations";
 import { Photo } from "@/components/app/Photo";
 import { stagger, useDragScroll } from "@/components/app/motion";
 import { formatMoney } from "@/lib/budget";
@@ -89,8 +88,8 @@ export function Inspiration({
   return (
     <section aria-labelledby="ideas-title">
       <div className="flex items-baseline justify-between gap-4">
-        <h2 id="ideas-title" className="title-display text-large-title">
-          Ideas from {fromLabel}.
+        <h2 id="ideas-title" className="title-display text-title-1">
+          Trip ideas from {fromLabel}
         </h2>
       </div>
       <p className="mt-2 text-body text-muted-foreground">
@@ -160,13 +159,9 @@ function IdeaCard({
           src={photo.image}
           alt=""
           className="absolute inset-0 -z-10"
-          fallback={
-            <RouteMark className="absolute inset-x-0 top-16 -z-10 mx-auto h-16 w-24 text-on-image/40" />
-          }
+          imgClassName="transition-[opacity,scale] duration-300 ease-out group-hover:scale-[1.03]"
         />
-      ) : (
-        <RouteMark className="absolute inset-x-0 top-16 -z-10 mx-auto h-16 w-24 text-on-image/40" />
-      )}
+      ) : null}
       <span aria-hidden className="card-scrim absolute inset-0 -z-10" />
       <span className="absolute top-4 left-4 rounded-sm bg-card px-2 py-1 text-micro font-semibold text-foreground">
         {tripTypeInfo(idea.tripType).label}

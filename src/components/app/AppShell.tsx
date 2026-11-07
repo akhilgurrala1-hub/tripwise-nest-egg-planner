@@ -325,9 +325,11 @@ function Footer({ items, active }: { items: typeof NAV; active: string | undefin
             site.
           </p>
           <p>
-            Weather from Open-Meteo. Photos and introductions from Wikipedia, travel tips from
-            Wikivoyage (CC BY-SA). Restaurants from OpenStreetMap contributors. Towns from GeoNames
-            (CC BY). Airports from OurAirports.
+            Photos and place information from Wikipedia, Wikivoyage, OpenStreetMap and other open
+            sources.{" "}
+            <Link to="/terms" hash="credits" className="hover:text-foreground hover:underline">
+              Credits and licenses
+            </Link>
           </p>
         </div>
         <nav aria-label="Breadcrumb" className="flex items-center gap-2 py-4">

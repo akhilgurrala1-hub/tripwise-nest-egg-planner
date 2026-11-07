@@ -123,7 +123,7 @@ export function DestinationPicker({
           onClick={() => onPick(CUSTOM_DESTINATION_ID)}
           title="Somewhere else"
           meta="Anywhere in the world"
-          detail={<span>Distance and costs worked out for you</span>}
+          detail={<span>Costs worked out</span>}
           note="Type a city, park or port"
           icon={<MapPin className="size-4" />}
         />

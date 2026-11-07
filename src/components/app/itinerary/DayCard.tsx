@@ -67,10 +67,10 @@ export function DayCard({
           {day.day}
         </span>
         <div className="min-w-0 flex-1">
-          <p className="eyebrow">
+          <h2 className="title-display line-clamp-2 text-title-2">{day.title}</h2>
+          <p className="mt-1 text-footnote text-muted-foreground">
             {formatCalendarDate(day.date, { weekday: "long", month: "short", day: "numeric" })}
           </p>
-          <h2 className="title-display line-clamp-2 text-title-2">{day.title}</h2>
           {holiday && (
             <p className="mt-1 inline-flex items-center gap-1 text-micro font-medium text-[color-mix(in_oklab,var(--primary)_55%,var(--foreground))]">
               <CalendarHeart className="size-3" /> {holiday}: expect closures and crowds
@@ -134,7 +134,7 @@ function ItemRow({
         <Icon className="size-3.5" strokeWidth={1.8} />
       </span>
       <div className="min-w-0 flex-1">
-        <p className="eyebrow inline-flex items-center gap-1">
+        <p className="tabular inline-flex items-center gap-1 text-caption font-medium text-muted-foreground">
           <TimeIcon className="size-3" aria-hidden /> {item.time}
         </p>
         <p className="mt-1 text-sm leading-snug font-medium">
