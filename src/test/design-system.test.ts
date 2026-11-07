@@ -108,6 +108,18 @@ describe("surfaces", () => {
   it("floating menus use the floating material", () => {
     expect(find(/rounded-md border bg-popover/g)).toEqual([]);
   });
+
+  it("glass turns solid for Reduce Transparency and Increase Contrast", () => {
+    const css = readFileSync(join(SRC, "styles.css"), "utf8");
+    for (const query of ["prefers-reduced-transparency: reduce", "prefers-contrast: more"]) {
+      const at = css.indexOf(`@media (${query})`);
+      expect(at, `no @media (${query}) block`).toBeGreaterThan(-1);
+      const block = css.slice(at, css.indexOf("\n}\n", at));
+      for (const material of [".material-thick", ".material-regular", ".floating"])
+        expect(block, `${material} under ${query}`).toContain(material);
+      expect(block).toContain("backdrop-filter: none");
+    }
+  });
 });
 
 describe("class merging", () => {

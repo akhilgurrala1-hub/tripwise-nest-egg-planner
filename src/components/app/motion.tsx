@@ -11,6 +11,7 @@ import {
 } from "react";
 
 import { formatMoney } from "@/lib/budget";
+import { haptic } from "@/lib/haptics";
 import {
   isSettled,
   rubberBand,
@@ -266,7 +267,10 @@ export function Segmented<V extends string>({
       Math.abs(velocity) > 400 ? SPRINGS.bouncy : SPRINGS.snappy,
       velocity,
     );
-    if (option.value !== value) onChange(option.value);
+    if (option.value !== value) {
+      haptic();
+      onChange(option.value);
+    }
   };
 
   const onKeyDown = (e: ReactKeyboardEvent<HTMLDivElement>) => {
