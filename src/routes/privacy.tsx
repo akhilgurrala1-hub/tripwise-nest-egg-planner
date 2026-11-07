@@ -37,8 +37,9 @@ function PrivacyPage() {
       <Section title="1. Who we are">
         <p>
           This policy covers the Waypoint website and app (&ldquo;Waypoint&rdquo;, &ldquo;we&rdquo;,
-          &ldquo;us&rdquo;). Waypoint is {LEGAL.operator}. Questions about this policy or your data
-          go to <ContactEmail />.
+          &ldquo;us&rdquo;). Waypoint is owned and run solely by {LEGAL.owner}, an individual based
+          in {LEGAL.location}, who is responsible for your data. Questions about this policy or your
+          data go to <ContactEmail />.
         </p>
       </Section>
 

@@ -34,9 +34,9 @@ function TermsPage() {
     >
       <Section title="1. Agreement">
         <p>
-          These terms are an agreement between you and Waypoint, {LEGAL.operator}{" "}
-          (&ldquo;Waypoint&rdquo;, &ldquo;we&rdquo;, &ldquo;us&rdquo;). By using Waypoint you agree
-          to them and to our{" "}
+          These terms are an agreement between you and {LEGAL.owner}, an individual based in{" "}
+          {LEGAL.location} who owns and solely runs Waypoint (&ldquo;Waypoint&rdquo;,
+          &ldquo;we&rdquo;, &ldquo;us&rdquo;). By using Waypoint you agree to them and to our{" "}
           <Link to="/privacy" className="text-primary underline-offset-2 hover:underline">
             Privacy Policy
           </Link>

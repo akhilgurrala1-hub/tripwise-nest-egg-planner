@@ -428,7 +428,9 @@ function Footer({ items, active }: { items: typeof NAV; active: string | undefin
           </div>
         </div>
         <div className="flex flex-wrap items-center gap-x-4 gap-y-2 pt-4">
-          <p>Copyright © {year} Waypoint. All rights reserved.</p>
+          <p>
+            Copyright © {year} {LEGAL.owner}. All rights reserved.
+          </p>
           <Link to="/privacy" className="hover:text-foreground hover:underline">
             Privacy Policy
           </Link>
