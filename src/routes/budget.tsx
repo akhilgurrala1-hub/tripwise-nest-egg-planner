@@ -75,15 +75,15 @@ function BudgetPage() {
 
   return (
     <div>
-      <PageHeader eyebrow="Spending plan" title="Budget" />
+      <PageHeader title="Budget" />
       <BudgetTabs current="plan" />
 
       <div className="page-container mt-6 layout-main-aside">
         <div className="min-w-0 space-y-4 lg:order-1">
           {/* Summary */}
-          <section className="surface-card animate-rise p-6">
-            <div className="grid gap-6 sm:grid-cols-[1fr_1.3fr] sm:items-end">
-              <div>
+          <section className="surface-card p-6">
+            <div className="space-y-6">
+              <div className="max-w-sm">
                 <label htmlFor="total-budget" className="text-footnote text-muted-foreground">
                   Total trip budget
                 </label>
@@ -103,7 +103,7 @@ function BudgetPage() {
                   </p>
                 )}
               </div>
-              <dl className="grid grid-cols-2 gap-px overflow-hidden rounded-lg border border-border bg-border text-sm sm:grid-cols-4">
+              <dl className="grid grid-cols-2 gap-x-6 gap-y-4 border-t border-separator pt-6 text-sm sm:grid-cols-4">
                 <Stat label="Emergency fund" value={totals.emergencyFund} />
                 <Stat label="To spend" value={totals.spendable} />
                 <Stat label="Planned" value={totals.planned} />
@@ -135,7 +135,7 @@ function BudgetPage() {
           </section>
 
           {/* Categories */}
-          <section className="animate-rise" style={stagger(2)}>
+          <section className="" style={stagger(2)}>
             <div className="mb-2 flex min-h-8 items-center justify-between">
               <h2 className="title-display text-title-1">Where your money goes</h2>
               {hasOverrides && (
@@ -175,7 +175,7 @@ function BudgetPage() {
 
         {/* Emergency fund */}
         <aside className="space-y-4 lg:order-2">
-          <section className="surface-card animate-rise p-6" style={stagger(1)}>
+          <section className="surface-card p-6" style={stagger(1)}>
             <div className="flex items-center justify-between">
               <h2 className="title-display text-title-1">Emergency fund</h2>
               <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
@@ -186,7 +186,7 @@ function BudgetPage() {
               For flat tires, urgent care or a surprise night's stay.
             </p>
             <p className="money-display mt-6 text-display">
-              <AnimatedMoney value={totals.emergencyFund} countUp />
+              <AnimatedMoney value={totals.emergencyFund} />
             </p>
             <p className="mt-2 text-xs text-muted-foreground">
               {trip.setup.totalBudget > 0
@@ -211,7 +211,7 @@ function BudgetPage() {
               className="mt-4"
             />
           </section>
-          <LivePricesPanel className="animate-rise" />
+          <LivePricesPanel className="" />
         </aside>
       </div>
     </div>
@@ -228,7 +228,7 @@ function Stat({
   tone?: "success" | "danger";
 }) {
   return (
-    <div className="bg-card px-4 py-2">
+    <div className="min-w-0">
       <dt className="text-xs text-muted-foreground">{label}</dt>
       <dd
         className={cn(
@@ -643,7 +643,7 @@ function NotDriving() {
 function CutPlan() {
   const { cuts } = useTrip();
   return (
-    <div className="animate-pop mt-6 rounded-xl border border-destructive/25 p-4">
+    <div className="mt-6 rounded-xl border border-destructive/25 p-4">
       <div className="flex gap-2 text-sm text-destructive">
         <AlertTriangle className="mt-1 size-4 shrink-0" />
         <p>

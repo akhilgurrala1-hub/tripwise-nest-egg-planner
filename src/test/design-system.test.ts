@@ -110,8 +110,13 @@ describe("surfaces", () => {
   });
 
   it("fields share one shape: text inputs, text areas and selects", () => {
-    for (const f of ["input", "textarea", "select"]) {
-      const src = readFileSync(join(SRC, "components", "ui", `${f}.tsx`), "utf8");
+    const ui = join(SRC, "components", "ui");
+    const fields = ["input", "textarea", "select"].filter((f) =>
+      readdirSync(ui).includes(`${f}.tsx`),
+    );
+    expect(fields).toContain("input");
+    for (const f of fields) {
+      const src = readFileSync(join(ui, `${f}.tsx`), "utf8");
       expect(src, `${f}.tsx`).toMatch(/rounded-xl border border-input bg-fill/);
       expect(src, `${f}.tsx`).not.toMatch(/\bshadow-sm\b/);
     }
@@ -203,5 +208,50 @@ describe("no template tells", () => {
     expect(css).not.toMatch(/"Inter"/);
     const root = readFileSync(join(SRC, "routes", "__root.tsx"), "utf8");
     expect(root).not.toMatch(/fonts\.googleapis\.com/);
+  });
+});
+
+describe("product-team basics", () => {
+  const ROUTES = join(SRC, "routes");
+  const read = (...p: string[]) => readFileSync(join(SRC, ...p), "utf8");
+
+  it("every page has its own title and description", () => {
+    const pages = [
+      ...readdirSync(ROUTES).map((f) => join(ROUTES, f)),
+      ...readdirSync(join(ROUTES, "_authenticated")).map((f) => join(ROUTES, "_authenticated", f)),
+    ].filter((f) => f.endsWith(".tsx") && !/__root|route\.tsx$/.test(f));
+    const missing = pages.filter((f) => {
+      const src = readFileSync(f, "utf8");
+      return !/title: "/.test(src) || !/name: "description"/.test(src);
+    });
+    expect(missing.map((f) => relative(SRC, f))).toEqual([]);
+  });
+
+  it("has a Privacy Policy and Terms, linked from the footer and the sign-up form", () => {
+    expect(read("routes", "privacy.tsx")).toContain("Privacy Policy");
+    expect(read("routes", "terms.tsx")).toContain("Terms of Service");
+    const shell = read("components", "app", "AppShell.tsx");
+    expect(shell).toContain('to="/privacy"');
+    expect(shell).toContain('to="/terms"');
+    const auth = read("routes", "auth.tsx");
+    expect(auth).toContain('to="/terms"');
+    expect(auth).toContain('to="/privacy"');
+  });
+
+  it("no gradient text, glowing orbs or labels stacked above page titles", () => {
+    expect(find(/\bbg-clip-text\b|\bblur-3xl\b|radial-gradient\(/g)).toEqual([]);
+    expect(read("components", "app", "TripHeader.tsx")).not.toMatch(/eyebrow/);
+  });
+
+  it("content is simply there: no fade-in on every card, section or page", () => {
+    const css = read("styles.css");
+    expect(css).not.toMatch(/@utility (animate-rise|animate-pop|animate-page|reveal) /);
+    expect(find(/\banimate-(?:rise|pop|page)\b|useScrollReveal|countUp/g)).toEqual([]);
+  });
+
+  it("copy says what the product does, not buzzwords", () => {
+    const buzz =
+      /\b(?:seamless(?:ly)?|effortless(?:ly)?|unlock|supercharge|revolutioni[sz]e|cutting-edge|next-gen|game-chang\w+|AI-powered|smart budgets?|empower\w*|blazing)\b/gi;
+    expect(find(buzz)).toEqual([]);
   });
 });

@@ -87,7 +87,7 @@ function AuthPage() {
 
   return (
     <div className="mx-auto flex max-w-md flex-col px-4 pt-10">
-      <div className="surface-card animate-rise p-6">
+      <div className="surface-card p-6">
         <LogoMark className="size-10" />
 
         {user ? (
@@ -130,7 +130,9 @@ function AuthPage() {
             <p className="mt-1 text-sm text-muted-foreground">
               {mode === "forgot"
                 ? "We'll email you a link to choose a new password."
-                : "Sign in to see real places, drive times and routes for your trips."}
+                : mode === "signup"
+                  ? "Save your trips and plan with real places, drive times and routes."
+                  : "Sign in to see real places, drive times and routes for your trips."}
             </p>
             <form onSubmit={submit} className="mt-6 space-y-4">
               <div>
@@ -165,20 +167,41 @@ function AuthPage() {
                     autoComplete={mode === "signup" ? "new-password" : "current-password"}
                     required
                     minLength={6}
+                    aria-describedby={mode === "signup" ? "password-hint" : undefined}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     className="mt-2 h-11 rounded-xl bg-card"
                   />
+                  {mode === "signup" && (
+                    <p id="password-hint" className="mt-2 text-xs text-muted-foreground">
+                      At least 6 characters.
+                    </p>
+                  )}
                 </div>
               )}
-              <Button type="submit" variant="hero" className="w-full" disabled={busy}>
-                {busy && <Loader2 className="animate-spin" />}
+              <Button type="submit" variant="hero" className="w-full" loading={busy}>
                 {mode === "signin"
                   ? "Sign in"
                   : mode === "signup"
                     ? "Create account"
                     : "Send reset link"}
               </Button>
+              {mode === "signup" && (
+                <p className="text-xs text-muted-foreground">
+                  By creating an account you agree to the{" "}
+                  <Link to="/terms" className="underline underline-offset-2 hover:text-foreground">
+                    Terms of Service
+                  </Link>{" "}
+                  and{" "}
+                  <Link
+                    to="/privacy"
+                    className="underline underline-offset-2 hover:text-foreground"
+                  >
+                    Privacy Policy
+                  </Link>
+                  .
+                </p>
+              )}
             </form>
             <p className="mt-6 text-center text-sm text-muted-foreground">
               {mode === "signup" ? (

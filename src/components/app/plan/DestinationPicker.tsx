@@ -129,7 +129,7 @@ export function DestinationPicker({
         />
       </div>
       {destinationId === CUSTOM_DESTINATION_ID && (
-        <div className="animate-pop mt-4">
+        <div className="mt-4">
           <PlaceInput
             autoFocus
             aria-label="Destination"
@@ -187,7 +187,7 @@ function OptionRow({
       aria-checked={active}
       onClick={onClick}
       style={stagger(index)}
-      className="group animate-rise relative flex min-h-16 w-full items-center gap-4 px-4 py-2 text-left transition-colors duration-150 hover:bg-fill active:bg-fill"
+      className="group relative flex min-h-16 w-full items-center gap-4 px-4 py-2 text-left transition-colors duration-150 hover:bg-fill active:bg-fill"
     >
       <span className="min-w-0 flex-1">
         <span

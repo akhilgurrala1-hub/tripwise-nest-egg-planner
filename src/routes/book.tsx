@@ -150,7 +150,7 @@ function BookPage() {
 
   return (
     <div>
-      <PageHeader eyebrow="Book" title="Book your trip" />
+      <PageHeader title="Book your trip" />
       <p className="page-container mt-4 text-footnote text-muted-foreground">
         Each search opens on the provider's own site with your dates and group filled in. You book
         and pay there; Waypoint never takes payment.
@@ -193,11 +193,11 @@ function BookPage() {
           </p>
           {prep.length > 0 && <PrepList items={prep} />}
           {trip.setup.transportMode === "flight" && <LayoverHelper homeCountry={homeCountry} />}
-          <LivePricesPanel className="animate-rise" />
+          <LivePricesPanel className="" />
         </div>
 
         <aside className="lg:sticky lg:top-28 lg:self-start">
-          <section className="surface-card animate-rise p-6">
+          <section className="surface-card p-6">
             <div className="flex items-center gap-4">
               <ProgressRing value={pct} />
               <div>
@@ -228,7 +228,7 @@ function BookPage() {
               {progress.booked > 0 && (
                 <p
                   className={cn(
-                    "animate-pop pt-1 text-xs",
+                    "pt-1 text-xs",
                     progress.spent > progress.budgeted ? "text-destructive" : "text-success",
                   )}
                 >
@@ -255,7 +255,7 @@ function BookPage() {
 function PrepList({ items }: { items: PrepItem[] }) {
   const { trip } = useTrip();
   return (
-    <section aria-labelledby="book-prep" className="surface-card animate-rise p-6">
+    <section aria-labelledby="book-prep" className="surface-card p-6">
       <h2 id="book-prep" className="title-display text-title-1 leading-tight">
         Before you go
       </h2>
@@ -394,7 +394,7 @@ function BookingCard({
     <article
       style={{ ...style, "--kind": color } as CSSProperties}
       className={cn(
-        "surface-card animate-rise render-lazy relative overflow-hidden p-4 transition-[opacity,border-color] duration-300 [contain-intrinsic-size:auto_200px] sm:p-6",
+        "surface-card render-lazy relative overflow-hidden p-4 transition-[opacity,border-color] duration-300 [contain-intrinsic-size:auto_200px] sm:p-6",
         isNext && "border-[color-mix(in_oklab,var(--primary)_45%,var(--border))]",
         skipped && "opacity-60",
       )}
@@ -409,11 +409,7 @@ function BookingCard({
               : "bg-[color-mix(in_oklab,var(--kind)_14%,var(--card))] text-(--kind)",
           )}
         >
-          {booked ? (
-            <Check key="done" className="animate-pop size-5" />
-          ) : (
-            <Icon className="size-5" />
-          )}
+          {booked ? <Check key="done" className="size-5" /> : <Icon className="size-5" />}
         </span>
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
@@ -456,7 +452,7 @@ function BookingCard({
           )}
 
           {booked && !editing ? (
-            <p className="animate-pop mt-2 text-sm">
+            <p className="mt-2 text-sm">
               <span className="font-medium text-success">Booked</span>
               {record.confirmation && (
                 <span className="text-muted-foreground">
@@ -512,7 +508,7 @@ function BookingCard({
           )}
 
           {editing && (
-            <div className="animate-pop mt-4 grid gap-2 rounded-xl border border-border bg-muted/40 p-4 sm:grid-cols-[1fr_150px_auto] sm:items-end">
+            <div className="mt-4 grid gap-2 rounded-xl border border-border bg-muted/40 p-4 sm:grid-cols-[1fr_150px_auto] sm:items-end">
               <label className="text-xs text-muted-foreground">
                 Confirmation number
                 <Input

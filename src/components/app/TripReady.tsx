@@ -36,7 +36,7 @@ export function TripReady() {
   return (
     <section
       aria-labelledby="trip-ready-title"
-      className="surface-card animate-rise relative overflow-hidden p-6 sm:p-8"
+      className="surface-card relative overflow-hidden p-6 sm:p-8"
     >
       <button
         type="button"
@@ -48,8 +48,7 @@ export function TripReady() {
       </button>
       <div className="grid items-center gap-6 sm:grid-cols-[minmax(0,1fr)_240px]">
         <div className="min-w-0">
-          <p className="eyebrow flex items-center gap-2">Ready</p>
-          <h2 id="trip-ready-title" className="title-display mt-2 text-large-title leading-tight">
+          <h2 id="trip-ready-title" className="title-display text-large-title leading-tight">
             Your trip is planned.
           </h2>
           <p className="tabular mt-2 text-headline text-muted-foreground">

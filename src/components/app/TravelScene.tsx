@@ -84,7 +84,7 @@ export function TravelScene({
       style={{ "--trip": TRIP_COLOR[tripType] } as CSSProperties}
     >
       {caption && (
-        <p key={playKey} className="animate-pop px-4 pt-2 text-footnote text-muted-foreground">
+        <p key={playKey} className="px-4 pt-2 text-footnote text-muted-foreground">
           {caption}
         </p>
       )}

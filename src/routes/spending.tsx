@@ -102,7 +102,7 @@ function SpendingPage() {
 
   return (
     <div>
-      <PageHeader eyebrow="Spending" title="What you've spent" />
+      <PageHeader title="What you've spent" />
       <BudgetTabs current="spent" />
 
       <div className="page-container mt-6 layout-main-aside">
@@ -138,7 +138,7 @@ function SpendingPage() {
                     month: "long",
                     day: "numeric",
                   })}
-                  className="surface-card render-lazy animate-rise p-4 sm:p-6"
+                  className="surface-card render-lazy p-4 sm:p-6"
                   style={stagger(i)}
                 >
                   <div className="flex items-baseline justify-between gap-4">
@@ -191,7 +191,7 @@ function SummaryCard() {
   const { summary, trip } = useSpending();
   const s = summary;
   return (
-    <section className="surface-card animate-rise p-6 sm:p-8" aria-labelledby="spend-summary">
+    <section className="surface-card p-6 sm:p-8" aria-labelledby="spend-summary">
       <h2 id="spend-summary" className="sr-only">
         Summary
       </h2>
@@ -268,11 +268,7 @@ function SummaryCard() {
 function CategoryCard() {
   const { summary } = useSpending();
   return (
-    <section
-      className="surface-card animate-rise p-6"
-      aria-labelledby="spend-cats"
-      style={stagger(1)}
-    >
+    <section className="surface-card p-6" aria-labelledby="spend-cats" style={stagger(1)}>
       <h2 id="spend-cats" className="title-display text-title-1">
         By category
       </h2>
@@ -402,11 +398,7 @@ function ExpenseForm({ editing, onDone }: { editing: Expense | null; onDone: () 
   };
 
   return (
-    <section
-      className="surface-card animate-rise p-6"
-      aria-labelledby="spend-add"
-      style={stagger(1)}
-    >
+    <section className="surface-card p-6" aria-labelledby="spend-add" style={stagger(1)}>
       <div className="flex items-center justify-between gap-4">
         <h2 id="spend-add" className="text-headline font-semibold">
           {editing ? "Change this cost" : "Log a cost"}
@@ -643,7 +635,7 @@ function SplitCard() {
   };
 
   return (
-    <section className="surface-card animate-rise p-6" aria-labelledby="spend-split">
+    <section className="surface-card p-6" aria-labelledby="spend-split">
       <h2 id="spend-split" className="title-display text-title-1 leading-tight">
         Split costs
       </h2>

@@ -99,7 +99,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       {
         name: "description",
         content:
-          "Plan budget-friendly trips, road trips and staycations with smart budgets and itineraries.",
+          "Describe a trip in a sentence. Waypoint estimates the cost to the dollar, plans each day and lists what to book.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },

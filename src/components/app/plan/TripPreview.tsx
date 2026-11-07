@@ -125,7 +125,7 @@ export function TripPreview({
           showText={false}
           className="-mx-1 mb-4"
         />
-        <p key={destLabel} className="title-display animate-pop text-large-title">
+        <p key={destLabel} className="title-display text-large-title">
           {destLabel}
         </p>
         {dest.region && !form.cities?.some((x) => x.name.trim()) && (
@@ -156,7 +156,7 @@ export function TripPreview({
             {shape.travelers} traveler{shape.travelers > 1 ? "s" : ""}
           </li>
           {flying && known && air.airports.some(Boolean) && (
-            <li className="animate-pop flex items-center gap-2">
+            <li className="flex items-center gap-2">
               <Plane />
               <span
                 className="tabular truncate"
@@ -172,7 +172,7 @@ export function TripPreview({
           )}
           {flying &&
             noAirport.map((p) => (
-              <li key={p.name} className="animate-pop flex items-start gap-2 text-destructive">
+              <li key={p.name} className="flex items-start gap-2 text-destructive">
                 <CircleAlert className="mt-1 text-destructive!" />
                 <span>
                   No airport with flights near {p.name}
@@ -181,13 +181,13 @@ export function TripPreview({
               </li>
             ))}
           {coveredLabels(form.coverage).length > 0 && (
-            <li className="animate-pop flex items-start gap-2">
+            <li className="flex items-start gap-2">
               <CircleCheck className="mt-1" />
               <span>Not counted: {coveredLabels(form.coverage).join(", ")}</span>
             </li>
           )}
           {weather.status === "ready" && days.length > 0 && (
-            <li className="animate-pop flex items-center gap-2">
+            <li className="flex items-center gap-2">
               <CloudSun />
               <span className="truncate">{summarize(days, units)}</span>
             </li>

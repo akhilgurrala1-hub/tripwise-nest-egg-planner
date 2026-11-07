@@ -89,7 +89,7 @@ function ItineraryPage() {
 
   return (
     <div>
-      <PageHeader eyebrow="Itinerary" title="Day by day">
+      <PageHeader title="Day by day">
         <div className="flex w-full flex-wrap gap-2 sm:w-auto">
           {/* Real landmarks and restaurants from open data: free, so it's for everyone. */}
           <div className="flex flex-1 sm:flex-none">
@@ -200,7 +200,7 @@ function ItineraryPage() {
           {planner.busy && (
             <div
               role="status"
-              className="surface-card animate-pop flex items-center gap-4 p-4 text-sm text-muted-foreground"
+              className="surface-card flex items-center gap-4 p-4 text-sm text-muted-foreground"
             >
               <LogoMark loading className="size-7 shrink-0" />
               <p className="min-w-0 flex-1">

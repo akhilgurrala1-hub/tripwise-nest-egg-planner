@@ -71,7 +71,7 @@ function SharedTripPage() {
 
 function BadLink() {
   return (
-    <section className="surface-card animate-rise p-6 text-center sm:p-8">
+    <section className="surface-card p-6 text-center sm:p-8">
       <Link2Off className="mx-auto size-8 text-muted-foreground" />
       <h1 className="title-display mt-4 text-3xl">This link doesn't open a trip</h1>
       <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">
@@ -117,7 +117,7 @@ function Preview({ shared }: { shared: SharedTrip }) {
 
   return (
     <div className="space-y-4">
-      <section className="surface-card animate-rise p-6 sm:p-8">
+      <section className="surface-card p-6 sm:p-8">
         <div className="flex items-start gap-4">
           <RouteMark className="hidden w-16 shrink-0 sm:block" />
           <div className="min-w-0">

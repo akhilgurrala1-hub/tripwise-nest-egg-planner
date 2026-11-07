@@ -63,7 +63,7 @@ export function PlanCosts() {
         </p>
       ) : (
         <Button
-          className="animate-pop mt-4 w-full print:hidden"
+          className="mt-4 w-full print:hidden"
           variant="ink"
           onClick={() => {
             tripActions.setOverride("activities", sightseeing);

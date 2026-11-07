@@ -173,3 +173,24 @@ An audit against a "shipped by a mature product team" checklist:
 | No novelty icons             | Sparkles beside suggestions, a magic wand for AI planning                                   | A calendar for planning days, a message bubble for "refine"; sparkles and wands fail a test                    |
 | Copy                         | "unlock real routes and places"                                                             | "save trips and plan with real routes and places"                                                              |
 | Clean console                | Every page logged a React hydration mismatch (the scroll reveal wrote attributes too early) | The reveal uses Web Animations only, never attributes: no mismatch                                             |
+
+## Eighth pass: legal pages and the anti-slop checklist
+
+- **Legal:** a Privacy Policy and Terms of Service written from what the app really does, linked from the footer and the sign-up form.
+- **Checked and already clean:** purple-to-blue gradients, gradient headline text, glowing orbs, three feature cards in a row, fake testimonials, terminal windows, emoji in headings, em dashes, empty bento grids, three-tier pricing, cursor beams, vague button labels, broken embeds, forms that ask too much (sign-up is email and password).
+- **Fixed:**
+
+  | Item                        | Change                                                                                        |
+  | --------------------------- | --------------------------------------------------------------------------------------------- |
+  | Everything fades in         | No fade-ins on cards, sections, pages; no count-ups; the Plan hero alone fades in (240ms)     |
+  | Labels above headlines      | Removed from every page title and the hero                                                    |
+  | Icons everywhere            | The trip bar is plain text; sparkles and wands were already gone                              |
+  | Glass everywhere            | Glass only for the two bars and floating menus; the hero panel and photo labels are solid     |
+  | Untouched shadcn/ui         | 34 unused stock components deleted; dialog and accordion restyled                             |
+  | Buzzword copy               | "smart budgets" and "unlock" replaced with what the app does; a test bans the usual buzzwords |
+  | Cream "tasteful AI" palette | Light paper now comes from the brand blue                                                     |
+  | Box inside a box            | Panels inside cards use a divider line                                                        |
+  | Small and low-contrast text | Smallest text 12px; muted text and placeholders meet 4.5:1                                    |
+  | Keyboard and forms          | The sign-up password field states its rule (6 characters), linked with `aria-describedby`     |
+
+- **Verified:** Impeccable's detector reports 0 anti-patterns on every page of the running app.
