@@ -178,7 +178,7 @@ function RoadTripPage() {
 
   return (
     <div>
-      <PageHeader eyebrow="Road trip" title="Find the stops worth the detour" />
+      <PageHeader title="Find the stops worth the detour" />
 
       <div className="page-container mt-6 layout-main-aside">
         <div className="min-w-0 space-y-6">
@@ -367,21 +367,21 @@ function RoadTripPage() {
           <section className="surface-card p-6">
             <h2 className="title-display text-title-1">Your route plan</h2>
             <dl className="mt-4 grid grid-cols-2 gap-4 text-sm">
-              <div className="rounded-lg border border-border p-4">
+              <div className="border-t border-separator pt-4">
                 <dt className="text-xs text-muted-foreground">Stops added</dt>
                 <dd className="tabular text-lg font-semibold">{rt.includedStops.length}</dd>
               </div>
-              <div className="rounded-lg border border-border p-4">
+              <div className="border-t border-separator pt-4">
                 <dt className="text-xs text-muted-foreground">Extra drive (sample)</dt>
                 <dd className="tabular text-lg font-semibold">+{extraMinutes} min</dd>
               </div>
-              <div className="rounded-lg border border-border p-4">
+              <div className="border-t border-separator pt-4">
                 <dt className="text-xs text-muted-foreground">Stop spend</dt>
                 <dd className="tabular text-lg font-semibold">
                   {formatMoney(stopsTotal, { cents: true })}
                 </dd>
               </div>
-              <div className="rounded-lg border border-border p-4">
+              <div className="border-t border-separator pt-4">
                 <dt className="text-xs text-muted-foreground">Stop budget left</dt>
                 <dd
                   className={cn(
@@ -393,7 +393,7 @@ function RoadTripPage() {
                 </dd>
               </div>
             </dl>
-            <div className="mt-4 rounded-lg border border-border p-4 text-sm">
+            <div className="mt-4 border-t border-separator pt-4 text-sm">
               <p className="text-xs text-muted-foreground">Whole-trip money remaining</p>
               <p
                 className={cn(
@@ -485,7 +485,7 @@ function StopCard({
     <article
       id={`stop-${stop.id}`}
       className={cn(
-        "surface-card animate-rise render-lazy flex gap-4 p-4 transition-[border-color,box-shadow] duration-200 [contain-intrinsic-size:auto_160px]",
+        "surface-card render-lazy flex gap-4 p-4 transition-[border-color,box-shadow] duration-200 [contain-intrinsic-size:auto_160px]",
         included && "border-primary ring-3 ring-primary/12",
       )}
     >
@@ -674,7 +674,7 @@ function NotARoadTrip() {
   const label = TRIP_TYPES.find((t) => t.id === trip.setup.tripType)?.label ?? "This trip";
   return (
     <div>
-      <PageHeader eyebrow="Road trip" title="Stops along the drive" />
+      <PageHeader title="Stops along the drive" />
       <div className="mx-auto mt-6 max-w-2xl px-4">
         <section className="surface-card p-6 text-center">
           <p className="text-headline font-semibold">

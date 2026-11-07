@@ -152,7 +152,7 @@ function IdeaCard({
       type="button"
       style={{ ...style, "--kind": color } as CSSProperties}
       onClick={() => onPick(idea.s.id, idea.tripType)}
-      className="group animate-rise hero-photo relative isolate block aspect-[3/4] w-full overflow-hidden rounded-2xl text-left pressable focus-visible:ring-4 focus-visible:ring-primary/30 focus-visible:outline-none"
+      className="group hero-photo relative isolate block aspect-[3/4] w-full overflow-hidden rounded-2xl text-left pressable focus-visible:ring-4 focus-visible:ring-primary/30 focus-visible:outline-none"
     >
       {/* The place, edge to edge; its name and estimate in white over the darkened bottom. */}
       {photo?.image ? (
@@ -168,7 +168,7 @@ function IdeaCard({
         <RouteMark className="absolute inset-x-0 top-16 -z-10 mx-auto h-16 w-24 text-on-image/40" />
       )}
       <span aria-hidden className="card-scrim absolute inset-0 -z-10" />
-      <span className="material-thin absolute top-4 left-4 rounded-md px-2 py-1 text-micro font-semibold text-foreground">
+      <span className="absolute top-4 left-4 rounded-sm bg-card px-2 py-1 text-micro font-semibold text-foreground">
         {tripTypeInfo(idea.tripType).label}
       </span>
       <ArrowUpRight className="absolute top-4 right-4 size-5 text-on-image/90" />

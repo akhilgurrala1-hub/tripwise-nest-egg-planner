@@ -59,7 +59,7 @@ export function DayCard({
 }) {
   return (
     <section
-      className="surface-card animate-rise render-lazy overflow-hidden print:break-inside-avoid print:shadow-none"
+      className="surface-card render-lazy overflow-hidden print:break-inside-avoid print:shadow-none"
       style={style}
     >
       <header className="flex items-center gap-4 border-b border-border px-6 py-4">

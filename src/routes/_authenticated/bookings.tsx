@@ -76,7 +76,7 @@ function BookingsPage() {
 
   return (
     <div>
-      <PageHeader eyebrow="Bookings" title="Reserve your trip" />
+      <PageHeader title="Reserve your trip" />
       <div className="mx-auto mt-6 max-w-5xl space-y-6 px-4">
         <p className="rounded-2xl bg-muted px-4 py-4 text-sm leading-snug">
           You reserve and pay on the hotel's, airline's or rental company's own site. Waypoint never

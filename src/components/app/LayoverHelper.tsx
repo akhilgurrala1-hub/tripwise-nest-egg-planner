@@ -40,7 +40,7 @@ export function LayoverHelper({ homeCountry }: { homeCountry: string }) {
       : null;
 
   return (
-    <section aria-labelledby="layovers-title" className="surface-card animate-rise p-6 sm:p-6">
+    <section aria-labelledby="layovers-title" className="surface-card p-6 sm:p-6">
       <h2 id="layovers-title" className="title-display text-title-1 leading-tight">
         Layovers
       </h2>

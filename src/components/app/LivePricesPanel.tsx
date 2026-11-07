@@ -280,7 +280,7 @@ function Quote({
   sub?: string | undefined;
 }) {
   return (
-    <div className="rounded-lg border border-border p-4">
+    <div className="border-t border-separator pt-4">
       <p className="flex items-center gap-2 text-xs text-muted-foreground">
         <Icon className="size-3.5" /> {label}
       </p>

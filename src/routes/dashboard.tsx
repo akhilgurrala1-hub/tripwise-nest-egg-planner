@@ -82,11 +82,7 @@ function Dashboard() {
 
   return (
     <div>
-      <PageHeader
-        eyebrow={`Overview · ${style?.label ?? ""} style`}
-        title={place}
-        sampleBanner="card"
-      >
+      <PageHeader title={place} sampleBanner="card">
         {!trip.isSample && <ShareTripButton />}
       </PageHeader>
 
@@ -100,7 +96,7 @@ function Dashboard() {
         <TripReady />
         <div className="flex flex-col gap-4 lg:flex-row">
           {/* Balance */}
-          <section className="surface-card animate-rise min-w-0 flex-1 p-6 sm:p-8">
+          <section className="surface-card min-w-0 flex-1 p-6 sm:p-8">
             <div className="grid gap-6 sm:grid-cols-[1fr_auto] sm:items-end">
               <div>
                 <p className="text-sm text-muted-foreground">
@@ -113,7 +109,7 @@ function Dashboard() {
                   )}
                 >
                   {totals.overBudget ? "−" : ""}
-                  <AnimatedMoney value={Math.abs(totals.remaining)} countUp />
+                  <AnimatedMoney value={Math.abs(totals.remaining)} />
                 </p>
                 <ApproxMoney
                   usd={Math.abs(totals.remaining)}
@@ -131,13 +127,13 @@ function Dashboard() {
                 <div>
                   <dt className="text-muted-foreground">Per person, per day</dt>
                   <dd className="tabular mt-1 text-base font-medium">
-                    <AnimatedMoney value={totals.perPersonPerDay} countUp />
+                    <AnimatedMoney value={totals.perPersonPerDay} />
                   </dd>
                 </div>
                 <div>
                   <dt className="text-muted-foreground">Could save</dt>
                   <dd className="tabular mt-1 text-base font-medium text-success">
-                    <AnimatedMoney value={potentialSavings} countUp />
+                    <AnimatedMoney value={potentialSavings} />
                   </dd>
                 </div>
               </dl>
@@ -307,7 +303,7 @@ function Dashboard() {
                   <button
                     key={id}
                     onClick={() => tripActions.undoSaving(id)}
-                    className="animate-pop inline-flex h-7 items-center gap-2 rounded-md border border-border px-2 text-xs font-medium transition-colors hover:border-muted-foreground/40 active:scale-[0.97]"
+                    className="inline-flex h-7 items-center gap-2 rounded-md border border-border px-2 text-xs font-medium transition-colors hover:border-muted-foreground/40 active:scale-[0.97]"
                     aria-label={`Undo ${SAVING_TITLES[id]}`}
                   >
                     <Check className="size-3 text-success" /> {SAVING_TITLES[id]}
@@ -345,7 +341,7 @@ function SpendingGlance() {
   return (
     <section
       aria-labelledby="glance-spent"
-      className="surface-card animate-rise flex flex-col p-6 lg:w-[300px]"
+      className="surface-card flex flex-col p-6 lg:w-[300px]"
       style={stagger(1)}
     >
       <h2 id="glance-spent" className="eyebrow">
@@ -430,7 +426,7 @@ function NextSteps() {
     );
 
   return (
-    <section className="surface-card animate-rise p-6" style={stagger(1)}>
+    <section className="surface-card p-6" style={stagger(1)}>
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <h2 className="title-display text-title-1">Checklist</h2>

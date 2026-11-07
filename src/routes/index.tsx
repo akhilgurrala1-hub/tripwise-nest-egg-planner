@@ -69,13 +69,13 @@ export const Route = createFileRoute("/")({
       {
         name: "description",
         content:
-          "Pick a destination, dates, travelers and budget. Waypoint builds a smart budget and itinerary for road trips, getaways and staycations.",
+          "Describe a trip in a sentence. Waypoint estimates the cost to the dollar, plans each day and lists what to book, for road trips, flights, cruises, trains and staycations.",
       },
       { property: "og:title", content: "Waypoint | Plan your next trip on any budget" },
       {
         property: "og:description",
         content:
-          "Smart budgets, a protected emergency fund and personalized itineraries for road trips, getaways and staycations.",
+          "A budget worked out line by line, with an emergency fund set aside, a day-by-day plan and a list of what to book.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -341,8 +341,7 @@ function Welcome() {
         <HeroBackdrop dest={dest} origin={form.origin} />
         <div className="page-container flex min-h-[min(92svh,880px)] flex-col justify-end pt-24 pb-8 sm:pb-12 lg:grid lg:grid-cols-12 lg:items-end lg:gap-8">
           <div className="lg:col-span-7">
-            <p className="hero-in on-photo text-headline font-semibold">New trip</p>
-            <h1 className="hero-in on-photo title-display mt-2 text-display" style={stagger(1)}>
+            <h1 className="hero-in on-photo title-display text-display" style={stagger(1)}>
               Where to next?
             </h1>
             <p
@@ -353,7 +352,7 @@ function Welcome() {
               and lists what to book.
             </p>
             <div
-              className="hero-in floating mt-8 rounded-2xl p-2 text-foreground sm:p-4"
+              className="hero-in mt-8 rounded-2xl bg-card p-2 text-foreground shadow-lift sm:p-4"
               style={stagger(3)}
             >
               <TripAssistant
@@ -547,7 +546,7 @@ function Welcome() {
                         key={form.travelers}
                         aria-live="polite"
                         aria-label={`${form.travelers} ${form.travelers === 1 ? "traveler" : "travelers"}`}
-                        className="animate-pop tabular w-7 text-center text-body font-semibold"
+                        className="tabular w-7 text-center text-body font-semibold"
                       >
                         {form.travelers}
                       </span>
@@ -655,7 +654,7 @@ function Welcome() {
           </div>
 
           <aside className="hidden lg:block">
-            <div className="sticky top-28 animate-rise" style={stagger(2)}>
+            <div className="sticky top-28 " style={stagger(2)}>
               <TripPreview
                 form={effective}
                 dest={dest}

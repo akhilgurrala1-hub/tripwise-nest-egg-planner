@@ -66,8 +66,8 @@
   --text-caption: 0.75rem;
   --text-caption--line-height: 1.33;
   --text-caption--letter-spacing: -0.01em;
-  --text-micro: 0.6875rem;
-  --text-micro--line-height: 1.27;
+  --text-micro: 0.75rem;
+  --text-micro--line-height: 1.34;
   --text-micro--letter-spacing: 0.006em;
   /* Tailwind's own names resolve onto the scale; text-sm is the 15px control size. */
   --text-xs: 0.75rem;
@@ -302,52 +302,52 @@
   --radius: 10px;
   color-scheme: light;
   /* apple.com: a light-gray page (#f5f5f7), white tiles, #1d1d1f text. */
-  --background: oklch(0.968 0.008 75);
-  --foreground: oklch(0.218 0.012 70);
+  --background: oklch(0.968 0.008 255);
+  --foreground: oklch(0.218 0.012 255);
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.218 0.012 70);
+  --card-foreground: oklch(0.218 0.012 255);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.218 0.012 70);
+  --popover-foreground: oklch(0.218 0.012 255);
   /* The one accent: interactive, selected, focused. */
   /* Brand blue (#2457E6), the logo's tile color, doubles as the interactive accent. */
   --primary: oklch(0.519 0.223 264.5);
   --primary-deep: oklch(0.455 0.197 264.8);
   --primary-foreground: oklch(0.99 0 0);
   /* Fills (#e8e8ed) for secondary controls and tracks. */
-  --secondary: oklch(0.935 0.007 70);
-  --secondary-foreground: oklch(0.218 0.012 70);
-  --muted: oklch(0.945 0.007 70);
-  --muted-foreground: oklch(0.505 0.012 70);
+  --secondary: oklch(0.935 0.007 255);
+  --secondary-foreground: oklch(0.218 0.012 255);
+  --muted: oklch(0.945 0.007 255);
+  --muted-foreground: oklch(0.475 0.012 255);
   --accent: oklch(0.945 0.018 264);
-  --accent-foreground: oklch(0.218 0.012 70);
-  --fill: oklch(0.218 0.012 70 / 0.06);
+  --accent-foreground: oklch(0.218 0.012 255);
+  --fill: oklch(0.218 0.012 255 / 0.06);
   /* Legacy warm tokens now resolve to the accent / neutrals. */
   --sunset: var(--primary);
   --sunset-foreground: var(--primary-foreground);
   --sunset-soft: oklch(0.955 0.016 264);
   --gold: oklch(0.7 0.12 80);
-  --gold-soft: oklch(0.945 0.007 70);
+  --gold-soft: oklch(0.945 0.007 255);
   --success: oklch(0.49 0.12 152);
   --success-soft: oklch(0.955 0.025 152);
-  --shield: oklch(0.38 0.012 70);
-  --shield-soft: oklch(0.945 0.007 70);
+  --shield: oklch(0.38 0.012 255);
+  --shield-soft: oklch(0.945 0.007 255);
   --shield-foreground: oklch(0.99 0 0);
-  --demo: oklch(0.5 0.012 70);
-  --demo-soft: oklch(0.945 0.007 70);
+  --demo: oklch(0.5 0.012 255);
+  --demo-soft: oklch(0.945 0.007 255);
   --destructive: oklch(0.55 0.2 27);
   --destructive-foreground: oklch(0.99 0 0);
   --destructive-soft: oklch(0.96 0.02 27);
   /* Separators are hairlines: black at low alpha, so they sit right on any surface. */
-  --border: oklch(0.218 0.012 70 / 0.12);
-  --separator: oklch(0.218 0.012 70 / 0.1);
-  --input: oklch(0.218 0.012 70 / 0.18);
+  --border: oklch(0.218 0.012 255 / 0.12);
+  --separator: oklch(0.218 0.012 255 / 0.1);
+  --input: oklch(0.218 0.012 255 / 0.18);
   --ring: oklch(0.519 0.223 264.5);
   /* Brand coral (#FF6B4A): the logo's destination dot. Used sparingly for "you are here / next" cues. */
   --brand-coral: oklch(0.707 0.187 34.1);
   /* Coral as small text (step numbers): darker so it reads at AA contrast on paper. */
   --coral-text: oklch(0.55 0.17 34);
   /* Solid emphasis surface (primary call to action, the balance card). */
-  --ink: oklch(0.218 0.012 70);
+  --ink: oklch(0.218 0.012 255);
   --ink-foreground: oklch(0.985 0 0);
   --on-image: oklch(0.99 0 0);
 
@@ -371,7 +371,7 @@
 
   /* Budget categories: one hue family per group, matched in lightness. */
   --cat-gas: oklch(0.62 0.14 45);
-  --cat-food: oklch(0.7 0.12 75);
+  --cat-food: oklch(0.7 0.12 255);
   --cat-water: oklch(0.65 0.1 220);
   --cat-accommodations: oklch(0.5 0.13 262);
   --cat-parking: oklch(0.58 0.03 260);
@@ -403,13 +403,13 @@
   --shadow-glow-value: 0 1px 2px oklch(0 0 0 / 0.05);
 
   /* Materials: frosted glass for bars and menus (alpha of the base + blur). */
-  --material-base: oklch(0.985 0.006 70);
+  --material-base: oklch(0.985 0.006 255);
   --material-thick: 0.88;
   --material-regular: 0.74;
   --material-thin: 0.6;
   /* The lit top edge of glass, and the hairline under it. */
   --specular: oklch(1 0 0 / 0.7);
-  --material-edge: oklch(0.218 0.012 70 / 0.1);
+  --material-edge: oklch(0.218 0.012 255 / 0.1);
 
   --sidebar: var(--background);
   --sidebar-foreground: var(--foreground);
@@ -552,6 +552,13 @@
   h2,
   h3 {
     text-wrap: balance;
+  }
+
+  /* No single word stranded on a paragraph's last line. */
+  p,
+  li,
+  dd {
+    text-wrap: pretty;
   }
 
   /* One icon set, one weight: every Lucide icon draws at 1.75 whatever its size. */
@@ -898,8 +905,8 @@
   opacity: 1;
   transform: none;
   transition:
-    opacity 300ms ease-out,
-    transform 480ms var(--ease-spring-smooth);
+    opacity 200ms ease-out,
+    transform 250ms var(--ease-spring-smooth);
   transition-delay: calc(var(--i, 0) * 30ms + 60ms);
 }
 
@@ -921,17 +928,15 @@
 
 /* apple.com's hero entrance: each line rises and fades in, one after another. */
 .hero-in {
-  animation: hero-in 1s var(--ease-spring-smooth) both;
-  animation-delay: calc(var(--i, 0) * 110ms + 80ms);
+  animation: hero-in 240ms ease-out both;
+  animation-delay: calc(min(var(--i, 0), 3) * 30ms);
 }
 @keyframes hero-in {
   from {
     opacity: 0;
-    transform: translateY(24px);
   }
   to {
     opacity: 1;
-    transform: none;
   }
 }
 
@@ -966,14 +971,6 @@
 }
 
 /* ---------- Scroll staging (scroll-driven, so it can't stutter or be outrun) ---------- */
-/* A section settles into place as it enters the viewport. */
-@utility reveal {
-  @supports (animation-timeline: view()) {
-    animation: reveal linear both;
-    animation-timeline: view();
-    animation-range: entry 0% entry 60%;
-  }
-}
 /* A hero image that drifts slower than the page and eases out of scale. */
 @utility parallax {
   @supports (animation-timeline: view()) {
@@ -1003,66 +1000,6 @@
 }
 
 /* ---------- Motion ---------- */
-/* Entrances are short (≤ 400ms) and small (≤ 8px): they show where content came from, then get out of the way. */
-
-@utility animate-rise {
-  animation: rise 0.5s var(--ease-spring-smooth) both;
-  animation-delay: calc(min(var(--i, 0), 3) * 30ms);
-}
-
-/* Switching tabs: the new page crossfades in while settling from 99% scale. */
-@utility animate-page {
-  animation: page-in 0.36s var(--ease-spring-smooth) both;
-}
-
-@utility animate-pop {
-  animation: pop 0.4s var(--ease-spring-snappy) both;
-}
-
-@keyframes rise {
-  from {
-    opacity: 0;
-    transform: translateY(8px) scale(0.985);
-  }
-  to {
-    opacity: 1;
-    transform: none;
-  }
-}
-
-@keyframes page-in {
-  from {
-    opacity: 0;
-    transform: scale(0.992);
-  }
-  to {
-    opacity: 1;
-    transform: none;
-  }
-}
-
-@keyframes pop {
-  from {
-    opacity: 0;
-    transform: scale(0.96);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
-}
-
-@keyframes reveal {
-  from {
-    opacity: 0.35;
-    transform: translateY(24px) scale(0.98);
-  }
-  to {
-    opacity: 1;
-    transform: none;
-  }
-}
-
 @keyframes parallax {
   from {
     transform: translateY(-6%) scale(1.08);
@@ -1093,16 +1030,12 @@
 
 /* Reduced motion: entrances become plain crossfades; scroll staging and parallax stop. */
 @media (prefers-reduced-motion: reduce) {
-  .animate-rise,
-  .animate-page,
-  .animate-pop,
   .hero-in,
   .menu-item {
     transform: none !important;
     transition-duration: 160ms !important;
     transition-delay: 0ms !important;
   }
-  .reveal,
   .parallax {
     animation: none !important;
   }
@@ -1201,10 +1134,10 @@ a:focus-visible > .logo .logo-ripple {
   pointer-events: none;
 }
 .intro .logo-tile {
-  animation: logo-land 0.5s cubic-bezier(0.34, 1.4, 0.64, 1) both;
+  animation: logo-land 0.5s var(--ease-out-quint) both;
 }
 .intro .logo-origin {
-  animation: logo-pop 0.32s cubic-bezier(0.34, 1.6, 0.64, 1) 0.18s both;
+  animation: logo-pop 0.32s var(--ease-out-quint) 0.18s both;
 }
 .intro .logo-route {
   /* Gap longer than the path, so no round cap peeks out at the far end before the line arrives. */
@@ -1212,7 +1145,7 @@ a:focus-visible > .logo .logo-ripple {
   animation: logo-draw 0.62s cubic-bezier(0.65, 0, 0.35, 1) 0.28s both;
 }
 .intro .logo-dest {
-  animation: logo-pop 0.36s cubic-bezier(0.34, 1.8, 0.64, 1) 0.82s both;
+  animation: logo-pop 0.36s var(--ease-out-quint) 0.82s both;
 }
 .intro .logo-ripple {
   /* "forwards", not "both": during the delay the ripple must stay at its hidden base style. */
@@ -1380,4 +1313,18 @@ a:focus-visible > .logo .logo-ripple {
   .surface-card {
     outline: 1px solid var(--separator);
   }
+}
+
+/* ---------- Legal pages ---------- */
+/* Lists in the Privacy Policy and Terms: real bullets, indented from the text. */
+.legal ul {
+  list-style: disc;
+  padding-left: 24px;
+}
+.legal li + li {
+  margin-top: 8px;
+}
+.legal strong {
+  font-weight: 600;
+  color: var(--color-foreground);
 }

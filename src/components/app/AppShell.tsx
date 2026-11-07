@@ -22,7 +22,6 @@ import {
 import { useEffect, useState, type ReactNode } from "react";
 
 import { Logo, LogoMark } from "./Logo";
-import { useScrollReveal } from "./scroll-reveal";
 import { useScrolled } from "./use-scrolled";
 import { formatDateRange } from "./TripHeader";
 import { cn } from "@/lib/utils";
@@ -45,6 +44,7 @@ import { usePersonalizedSample } from "@/lib/live/use-home";
 import { setLocalePrefs, useLocale } from "@/lib/live/use-locale";
 import { CURRENCIES } from "@/lib/locale";
 import { usePlanning } from "@/lib/planning-state";
+import { LEGAL } from "@/lib/legal";
 import { useTrip } from "@/lib/trip-store";
 
 const NAV: {
@@ -72,7 +72,6 @@ export function AppShell({ children }: { children: ReactNode }) {
   const active = nav.find((n) => n.to === tabPath)?.to;
   const [menuOpen, setMenuOpen] = useState(false);
   usePreloadTabs();
-  useScrollReveal(pathname);
   // A new page closes the menu.
   useEffect(() => setMenuOpen(false), [pathname]);
   // iOS Safari only shows :active (our press feedback) once a touchstart listener exists.
@@ -133,7 +132,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       <MobileMenu open={menuOpen} items={nav} active={active} onClose={() => setMenuOpen(false)} />
       <LocalNav pathname={pathname} scrolled={scrolled} />
 
-      <main key={pathname} className="animate-page flex-1 pb-20">
+      <main key={pathname} className="flex-1 pb-20">
         {children}
       </main>
       <Footer items={nav} active={active} />
@@ -342,7 +341,7 @@ function Footer({ items, active }: { items: typeof NAV; active: string | undefin
             </>
           )}
         </nav>
-        <div className="grid grid-cols-2 gap-6 border-b border-separator pb-6 sm:grid-cols-3">
+        <div className="grid grid-cols-2 gap-6 border-b border-separator pb-6 sm:grid-cols-4">
           <div>
             <p className="font-semibold text-foreground">Plan</p>
             <ul className="mt-2 space-y-2">
@@ -404,8 +403,39 @@ function Footer({ items, active }: { items: typeof NAV; active: string | undefin
               )}
             </ul>
           </div>
+          <div>
+            <p className="font-semibold text-foreground">Legal</p>
+            <ul className="mt-2 space-y-2">
+              <li>
+                <Link to="/privacy" className="hover:text-foreground hover:underline">
+                  Privacy Policy
+                </Link>
+              </li>
+              <li>
+                <Link to="/terms" className="hover:text-foreground hover:underline">
+                  Terms of Service
+                </Link>
+              </li>
+              <li>
+                <a
+                  href={`mailto:${LEGAL.contactEmail}`}
+                  className="hover:text-foreground hover:underline"
+                >
+                  Contact
+                </a>
+              </li>
+            </ul>
+          </div>
         </div>
-        <p className="pt-4">Copyright © {year} Waypoint. All rights reserved.</p>
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-2 pt-4">
+          <p>Copyright © {year} Waypoint. All rights reserved.</p>
+          <Link to="/privacy" className="hover:text-foreground hover:underline">
+            Privacy Policy
+          </Link>
+          <Link to="/terms" className="hover:text-foreground hover:underline">
+            Terms of Service
+          </Link>
+        </div>
       </div>
     </footer>
   );

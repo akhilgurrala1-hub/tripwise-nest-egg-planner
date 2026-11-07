@@ -134,7 +134,7 @@ function TripsPage() {
 
   return (
     <div>
-      <PageHeader eyebrow="Your account" title="Saved trips" showTrip={false} />
+      <PageHeader title="Saved trips" showTrip={false} />
       <div className="mx-auto mt-6 max-w-4xl space-y-6 px-4">
         <section className="surface-card p-6">
           <h2 className="title-display text-title-1">Trip you're planning now</h2>

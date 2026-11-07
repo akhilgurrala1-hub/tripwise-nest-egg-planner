@@ -46,7 +46,7 @@ export function PriceKeyCheck({
   };
 
   return (
-    <div className={cn("rounded-lg border border-border p-4 text-xs", className)}>
+    <div className={cn("border-t border-separator pt-4 text-xs", className)}>
       {!connected && !import.meta.env.DEV && (
         <p className="text-muted-foreground">
           Live prices aren't available right now, so these amounts are estimates.

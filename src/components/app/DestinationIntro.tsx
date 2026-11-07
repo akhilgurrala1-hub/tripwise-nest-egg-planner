@@ -45,7 +45,7 @@ export function DestinationPhoto({
       </div>
     ) : null;
   return (
-    <figure className={cn("animate-pop", className)}>
+    <figure className={className}>
       {showImage && s.image && (
         <a
           href={s.url}
@@ -103,7 +103,7 @@ export function DestinationHero({
       rel="noopener noreferrer"
       title="Photo from Wikipedia"
       className={cn(
-        "animate-pop group relative block overflow-hidden rounded-2xl shadow-[var(--shadow-soft-value)]",
+        "group relative block overflow-hidden rounded-2xl shadow-[var(--shadow-soft-value)]",
         className,
       )}
     >
@@ -186,7 +186,7 @@ function TravelerTips({
   className?: string;
 }) {
   return (
-    <div className={cn("animate-pop space-y-2", className)}>
+    <div className={cn("space-y-2", className)}>
       {tips.map((t) => {
         const Icon = TIP_ICON[t.topic];
         return (
@@ -220,7 +220,7 @@ export function HolidayList({
 }) {
   if (holidays.length === 0) return null;
   return (
-    <div className={cn("animate-pop rounded-lg border border-border p-4", className)}>
+    <div className={cn("border-t border-separator pt-4", className)}>
       <p className="flex items-center gap-2 text-footnote font-medium">
         <CalendarHeart className="size-4 text-muted-foreground" /> Public holiday
         {holidays.length > 1 ? "s" : ""} during your trip

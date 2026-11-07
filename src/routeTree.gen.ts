@@ -16,10 +16,12 @@ import { Route as BookRouteImport } from './routes/book'
 import { Route as BudgetRouteImport } from './routes/budget'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as ItineraryRouteImport } from './routes/itinerary'
+import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as RoadTripRouteImport } from './routes/road-trip'
 import { Route as SharedRouteImport } from './routes/shared'
 import { Route as SpendingRouteImport } from './routes/spending'
+import { Route as TermsRouteImport } from './routes/terms'
 import { Route as AuthenticatedBookingsRouteImport } from './routes/_authenticated/bookings'
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
 import { Route as AuthenticatedTripsRouteImport } from './routes/_authenticated/trips'
@@ -58,6 +60,11 @@ const ItineraryRoute = ItineraryRouteImport.update({
   path: '/itinerary',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PrivacyRoute = PrivacyRouteImport.update({
+  id: '/privacy',
+  path: '/privacy',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
   id: '/reset-password',
   path: '/reset-password',
@@ -76,6 +83,11 @@ const SharedRoute = SharedRouteImport.update({
 const SpendingRoute = SpendingRouteImport.update({
   id: '/spending',
   path: '/spending',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TermsRoute = TermsRouteImport.update({
+  id: '/terms',
+  path: '/terms',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedBookingsRoute = AuthenticatedBookingsRouteImport.update({
@@ -101,10 +113,12 @@ export interface FileRoutesByFullPath {
   '/budget': typeof BudgetRoute
   '/dashboard': typeof DashboardRoute
   '/itinerary': typeof ItineraryRoute
+  '/privacy': typeof PrivacyRoute
   '/reset-password': typeof ResetPasswordRoute
   '/road-trip': typeof RoadTripRoute
   '/shared': typeof SharedRoute
   '/spending': typeof SpendingRoute
+  '/terms': typeof TermsRoute
   '/bookings': typeof AuthenticatedBookingsRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/trips': typeof AuthenticatedTripsRoute
@@ -116,10 +130,12 @@ export interface FileRoutesByTo {
   '/budget': typeof BudgetRoute
   '/dashboard': typeof DashboardRoute
   '/itinerary': typeof ItineraryRoute
+  '/privacy': typeof PrivacyRoute
   '/reset-password': typeof ResetPasswordRoute
   '/road-trip': typeof RoadTripRoute
   '/shared': typeof SharedRoute
   '/spending': typeof SpendingRoute
+  '/terms': typeof TermsRoute
   '/bookings': typeof AuthenticatedBookingsRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/trips': typeof AuthenticatedTripsRoute
@@ -133,10 +149,12 @@ export interface FileRoutesById {
   '/budget': typeof BudgetRoute
   '/dashboard': typeof DashboardRoute
   '/itinerary': typeof ItineraryRoute
+  '/privacy': typeof PrivacyRoute
   '/reset-password': typeof ResetPasswordRoute
   '/road-trip': typeof RoadTripRoute
   '/shared': typeof SharedRoute
   '/spending': typeof SpendingRoute
+  '/terms': typeof TermsRoute
   '/_authenticated/bookings': typeof AuthenticatedBookingsRoute
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
   '/_authenticated/trips': typeof AuthenticatedTripsRoute
@@ -150,10 +168,12 @@ export interface FileRouteTypes {
     | '/budget'
     | '/dashboard'
     | '/itinerary'
+    | '/privacy'
     | '/reset-password'
     | '/road-trip'
     | '/shared'
     | '/spending'
+    | '/terms'
     | '/bookings'
     | '/profile'
     | '/trips'
@@ -165,10 +185,12 @@ export interface FileRouteTypes {
     | '/budget'
     | '/dashboard'
     | '/itinerary'
+    | '/privacy'
     | '/reset-password'
     | '/road-trip'
     | '/shared'
     | '/spending'
+    | '/terms'
     | '/bookings'
     | '/profile'
     | '/trips'
@@ -181,10 +203,12 @@ export interface FileRouteTypes {
     | '/budget'
     | '/dashboard'
     | '/itinerary'
+    | '/privacy'
     | '/reset-password'
     | '/road-trip'
     | '/shared'
     | '/spending'
+    | '/terms'
     | '/_authenticated/bookings'
     | '/_authenticated/profile'
     | '/_authenticated/trips'
@@ -198,10 +222,12 @@ export interface RootRouteChildren {
   BudgetRoute: typeof BudgetRoute
   DashboardRoute: typeof DashboardRoute
   ItineraryRoute: typeof ItineraryRoute
+  PrivacyRoute: typeof PrivacyRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   RoadTripRoute: typeof RoadTripRoute
   SharedRoute: typeof SharedRoute
   SpendingRoute: typeof SpendingRoute
+  TermsRoute: typeof TermsRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -255,6 +281,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ItineraryRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/privacy': {
+      id: '/privacy'
+      path: '/privacy'
+      fullPath: '/privacy'
+      preLoaderRoute: typeof PrivacyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/reset-password': {
       id: '/reset-password'
       path: '/reset-password'
@@ -281,6 +314,13 @@ declare module '@tanstack/react-router' {
       path: '/spending'
       fullPath: '/spending'
       preLoaderRoute: typeof SpendingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/terms': {
+      id: '/terms'
+      path: '/terms'
+      fullPath: '/terms'
+      preLoaderRoute: typeof TermsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/bookings': {
@@ -330,10 +370,12 @@ const rootRouteChildren: RootRouteChildren = {
   BudgetRoute: BudgetRoute,
   DashboardRoute: DashboardRoute,
   ItineraryRoute: ItineraryRoute,
+  PrivacyRoute: PrivacyRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   RoadTripRoute: RoadTripRoute,
   SharedRoute: SharedRoute,
   SpendingRoute: SpendingRoute,
+  TermsRoute: TermsRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

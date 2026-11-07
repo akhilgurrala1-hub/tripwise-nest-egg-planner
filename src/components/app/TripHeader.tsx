@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { ArrowRight, CalendarDays, ChevronDown, Info, MapPin, Pencil, Users } from "lucide-react";
+import { ArrowRight, ChevronDown, Info } from "lucide-react";
 import { useState, type CSSProperties, type ReactNode } from "react";
 import { toast } from "sonner";
 
@@ -31,13 +31,11 @@ export function formatDateRange(start: string, end: string) {
  * link back to the full setup.
  */
 export function PageHeader({
-  eyebrow,
   title,
   children,
   showTrip = true,
   sampleBanner = "line",
 }: {
-  eyebrow: string;
   title: string;
   children?: ReactNode;
   /** Account pages aren't about the current trip */
@@ -52,7 +50,7 @@ export function PageHeader({
     <div className="band pb-10 sm:pb-12">
       <div className="page-container pt-8 sm:pt-16">
         {sample && sampleBanner === "card" && (
-          <section className="animate-rise mb-8 grid rounded-2xl bg-background grid-cols-[56px_1fr] items-center gap-4 p-6 sm:grid-cols-[72px_1fr_auto] sm:gap-6 sm:p-6 print:hidden">
+          <section className="mb-8 grid rounded-2xl bg-background grid-cols-[56px_1fr] items-center gap-4 p-6 sm:grid-cols-[72px_1fr_auto] sm:gap-6 sm:p-6 print:hidden">
             <RouteMark className="w-14 sm:w-[72px]" />
             <div className="min-w-0">
               <h2 className="title-display text-title-1">This is a sample trip. Make it yours.</h2>
@@ -84,8 +82,7 @@ export function PageHeader({
         )}
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div className="min-w-0">
-            <p className="eyebrow">{eyebrow}</p>
-            <h1 className="title-display mt-1 text-large-title sm:text-display">{title}</h1>
+            <h1 className="title-display text-large-title sm:text-display">{title}</h1>
             {showTrip && <TripBar title={title} />}
           </div>
           <div className="contents print:hidden">{children}</div>
@@ -97,37 +94,24 @@ export function PageHeader({
 
 function TripBar({ title }: { title: string }) {
   const { trip, place, shape } = useTrip();
+  // Plain facts separated by dots: the words say what they are, no icon needed.
+  const facts = [
+    title !== place ? place : null, // not twice: the Overview's title already is the place
+    formatDateRange(trip.setup.startDate, trip.setup.endDate),
+    shape.days === 1 ? "day trip" : `${shape.days} days`,
+    `${shape.travelers} traveler${shape.travelers > 1 ? "s" : ""}`,
+  ].filter(Boolean);
   return (
     <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-footnote">
       <TripTypeChip />
-      {/* Not twice: the Overview's title already is the destination. */}
-      {title !== place && <Chip icon={<MapPin />}>{place}</Chip>}
-      <Chip icon={<CalendarDays />}>
-        {formatDateRange(trip.setup.startDate, trip.setup.endDate)}
-        <span className="text-muted-foreground">
-          {" "}
-          · {shape.days === 1 ? "day trip" : `${shape.days} days`}
-        </span>
-      </Chip>
-      <Chip icon={<Users />}>
-        {shape.travelers} traveler{shape.travelers > 1 ? "s" : ""}
-      </Chip>
+      <p className="tabular min-w-0 truncate text-muted-foreground">{facts.join(" · ")}</p>
       <Link
         to="/"
-        className="inline-flex h-8 items-center gap-2 rounded-md px-1 font-medium text-primary transition-colors hover:underline hover:underline-offset-4 print:hidden"
+        className="inline-flex h-8 items-center rounded-md px-1 font-medium text-primary hover:underline hover:underline-offset-4 print:hidden"
       >
-        <Pencil className="size-3.5" /> Edit trip
+        Edit trip
       </Link>
     </div>
-  );
-}
-
-function Chip({ icon, children }: { icon: ReactNode; children: ReactNode }) {
-  return (
-    <span className="tabular inline-flex max-w-full items-center gap-2 [&>svg]:size-4 [&>svg]:shrink-0 [&>svg]:text-muted-foreground">
-      {icon}
-      <span className="truncate">{children}</span>
-    </span>
   );
 }
 

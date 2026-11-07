@@ -262,7 +262,7 @@ export function ApproxMoney({
   if (!rate) return null;
   return (
     <span
-      className={cn("tabular animate-pop text-muted-foreground", className)}
+      className={cn("tabular text-muted-foreground", className)}
       title={`Converted from US dollars at today's rate (European Central Bank, via Frankfurter)`}
     >
       {formatApprox(usd, currency, rate)}
