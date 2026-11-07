@@ -239,7 +239,7 @@ function PlaceLinks({ item }: { item: ItineraryItem }) {
 function SourceTag({ item }: { item: ItineraryItem }) {
   if (!item.custom) return null;
   return (
-    <span className="ml-2 inline-flex -translate-y-px items-center rounded-[5px] border border-border px-2 text-micro font-medium text-muted-foreground">
+    <span className="ml-2 inline-flex -translate-y-px items-center rounded-xs border border-border px-2 text-micro font-medium text-muted-foreground">
       Yours
     </span>
   );

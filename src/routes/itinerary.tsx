@@ -7,7 +7,8 @@ import {
   Printer,
   RotateCcw,
   Star,
-  Wand2,
+  CalendarDays,
+  MessageSquare,
   X,
 } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -151,13 +152,13 @@ function ItineraryPage() {
               disabled={planner.busy}
               className="flex-1 sm:flex-none"
             >
-              {planner.job === "ai" ? <Loader2 className="animate-spin" /> : <Wand2 />}
+              {planner.job === "ai" ? <Loader2 className="animate-spin" /> : <CalendarDays />}
               {planner.job === "ai" ? "Planning…" : "Plan around my interests"}
             </Button>
           ) : (
             <Button variant="outline" asChild className="flex-1 sm:flex-none">
               <Link to="/auth" search={{ redirect: "/itinerary" }}>
-                <Wand2 /> Sign in for AI planning
+                <CalendarDays /> Sign in for AI planning
               </Link>
             </Button>
           )}
@@ -345,7 +346,7 @@ function RefinePlan({ busy, onRefine }: { busy: boolean; onRefine: (text: string
   return (
     <section className="surface-card p-4 print:hidden">
       <div className="flex items-center gap-2 rounded-lg border border-input bg-fill p-1 pl-4 focus-within:border-primary focus-within:ring-3 focus-within:ring-primary/15">
-        <Wand2 className="size-4 shrink-0 text-muted-foreground" aria-hidden />
+        <MessageSquare className="size-4 shrink-0 text-muted-foreground" aria-hidden />
         <input
           value={text}
           onChange={(e) => setText(e.target.value)}
@@ -360,10 +361,11 @@ function RefinePlan({ busy, onRefine }: { busy: boolean; onRefine: (text: string
         <Button
           size="sm"
           variant="ink"
-          disabled={!text.trim() || busy}
+          disabled={!text.trim()}
+          loading={busy}
           onClick={() => submit(text)}
         >
-          Update
+          {busy ? "Updating…" : "Update"}
         </Button>
       </div>
       <div className="mt-2 flex flex-wrap gap-2">

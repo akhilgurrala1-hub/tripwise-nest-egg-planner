@@ -47,6 +47,7 @@ import {
 } from "@/lib/demo-data";
 import { addDays, dateRangeError, inclusiveDays, isIsoDate, todayIso } from "@/lib/dates";
 import { markJustPlanned } from "@/lib/just-planned";
+import { setPlanning, usePlanning } from "@/lib/planning-state";
 import { useHomePlace } from "@/lib/live/use-home";
 import { useLocale } from "@/lib/live/use-locale";
 import { formatDistance } from "@/lib/locale";
@@ -257,12 +258,20 @@ function Welcome() {
     return { ...setup, destinationPoint, cities: cities.filter((c) => c.name.trim()) };
   };
 
+  const planning = usePlanning();
   const start = async (setup: TripSetup) => {
-    // The budget is fitted after the places are found, so real distances never push it negative.
-    const note = tripActions.startTrip(await locateAll(setup));
-    markJustPlanned(currentTrip().id);
-    if (note) toast.message("Budget set to cover your trip", { description: note, duration: 9000 });
-    navigate({ to: "/dashboard" });
+    if (planning) return;
+    setPlanning(true);
+    try {
+      // The budget is fitted after the places are found, so real distances never push it negative.
+      const note = tripActions.startTrip(await locateAll(setup));
+      markJustPlanned(currentTrip().id);
+      if (note)
+        toast.message("Budget set to cover your trip", { description: note, duration: 9000 });
+      navigate({ to: "/dashboard" });
+    } finally {
+      setPlanning(false);
+    }
   };
 
   const submit = (e: React.FormEvent) => {
@@ -344,7 +353,7 @@ function Welcome() {
               and lists what to book.
             </p>
             <div
-              className="hero-in floating mt-8 rounded-[24px] p-2 text-foreground sm:p-4"
+              className="hero-in floating mt-8 rounded-2xl p-2 text-foreground sm:p-4"
               style={stagger(3)}
             >
               <TripAssistant
@@ -678,8 +687,15 @@ function Welcome() {
                 {distance ? ` · ${distance}` : ""} · about {formatMoney(estimate.planned)}
               </p>
             </div>
-            <Button type="submit" form="plan-form" variant="go" size="lg" className="shrink-0 px-6">
-              Plan trip <ArrowRight />
+            <Button
+              type="submit"
+              form="plan-form"
+              variant="go"
+              size="lg"
+              loading={planning}
+              className="shrink-0 px-6"
+            >
+              {planning ? "Planning…" : "Plan trip"} <ArrowRight />
             </Button>
           </div>
         </div>

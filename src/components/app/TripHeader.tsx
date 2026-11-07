@@ -52,7 +52,7 @@ export function PageHeader({
     <div className="band pb-10 sm:pb-12">
       <div className="page-container pt-8 sm:pt-16">
         {sample && sampleBanner === "card" && (
-          <section className="animate-rise mb-8 grid rounded-[18px] bg-background grid-cols-[56px_1fr] items-center gap-4 p-6 sm:grid-cols-[72px_1fr_auto] sm:gap-6 sm:p-6 print:hidden">
+          <section className="animate-rise mb-8 grid rounded-2xl bg-background grid-cols-[56px_1fr] items-center gap-4 p-6 sm:grid-cols-[72px_1fr_auto] sm:gap-6 sm:p-6 print:hidden">
             <RouteMark className="w-14 sm:w-[72px]" />
             <div className="min-w-0">
               <h2 className="title-display text-title-1">This is a sample trip. Make it yours.</h2>

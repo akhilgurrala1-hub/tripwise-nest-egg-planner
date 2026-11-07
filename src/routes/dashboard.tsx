@@ -202,7 +202,7 @@ function Dashboard() {
               {breakdown.map(({ cat, value }) => (
                 <li key={cat} className="flex flex-wrap items-center gap-x-4 py-2 text-sm">
                   <span
-                    className="size-2 shrink-0 rounded-[3px]"
+                    className="size-2 shrink-0 rounded-xs"
                     style={{ backgroundColor: CATEGORY_COLOR_VAR[cat] }}
                   />
                   <span className="min-w-0 flex-1 truncate">{CATEGORY_LABELS[cat]}</span>
@@ -459,10 +459,10 @@ function NextSteps() {
         aria-valuemin={0}
         aria-valuemax={steps.length}
         aria-valuenow={doneCount}
-        className="mt-4 h-1.5 overflow-hidden rounded-[3px] bg-muted"
+        className="mt-4 h-1.5 overflow-hidden rounded-xs bg-muted"
       >
         <div
-          className="h-full rounded-[3px] bg-success transition-[width] spring-smooth"
+          className="h-full rounded-xs bg-success transition-[width] spring-smooth"
           style={{ width: `${(100 * doneCount) / steps.length}%` }}
         />
       </div>

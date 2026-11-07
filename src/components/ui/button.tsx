@@ -1,6 +1,7 @@
 import * as React from "react";
 import { Slot } from "@radix-ui/react-slot";
 import { cva, type VariantProps } from "class-variance-authority";
+import { Loader2 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 
@@ -43,13 +44,35 @@ const buttonVariants = cva(
 export interface ButtonProps
   extends React.ButtonHTMLAttributes<HTMLButtonElement>, VariantProps<typeof buttonVariants> {
   asChild?: boolean;
+  /**
+   * Work in progress: a spinner takes the icon's place, the label stays (so the
+   * button keeps its size), and the button can't be pressed twice.
+   */
+  loading?: boolean;
 }
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant, size, asChild = false, ...props }, ref) => {
-    const Comp = asChild ? Slot : "button";
+  ({ className, variant, size, asChild = false, loading = false, children, ...props }, ref) => {
+    if (asChild)
+      return (
+        <Slot className={cn(buttonVariants({ variant, size, className }))} ref={ref} {...props}>
+          {children}
+        </Slot>
+      );
     return (
-      <Comp className={cn(buttonVariants({ variant, size, className }))} ref={ref} {...props} />
+      <button
+        className={cn(
+          buttonVariants({ variant, size, className }),
+          loading && "[&>svg:not([data-spinner])]:hidden",
+        )}
+        ref={ref}
+        {...props}
+        disabled={props.disabled || loading}
+        aria-busy={loading || undefined}
+      >
+        {loading && <Loader2 data-spinner aria-hidden className="animate-spin" />}
+        {children}
+      </button>
     );
   },
 );

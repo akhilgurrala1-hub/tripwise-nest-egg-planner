@@ -554,7 +554,7 @@ function CategoryRow({ cat }: { cat: Category }) {
           <span className="relative grid size-8 shrink-0 place-items-center rounded-lg border border-border">
             <Icon className="size-4 text-foreground/80" strokeWidth={1.8} />
             <span
-              className="absolute -right-0.5 -bottom-0.5 size-2 rounded-[3px] ring-2 ring-card"
+              className="absolute -right-0.5 -bottom-0.5 size-2 rounded-xs ring-2 ring-card"
               style={{ backgroundColor: CATEGORY_COLOR_VAR[cat] }}
             />
           </span>
