@@ -186,7 +186,7 @@ function BudgetPage() {
               For flat tires, urgent care or a surprise night's stay.
             </p>
             <p className="money-display mt-6 text-display">
-              <AnimatedMoney value={totals.emergencyFund} />
+              <AnimatedMoney value={totals.emergencyFund} countUp />
             </p>
             <p className="mt-2 text-xs text-muted-foreground">
               {trip.setup.totalBudget > 0

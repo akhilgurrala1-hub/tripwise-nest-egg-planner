@@ -1,9 +1,8 @@
 import { Link } from "@tanstack/react-router";
 import { ArrowRight, CalendarDays, ChevronDown, Info, MapPin, Pencil, Users } from "lucide-react";
-import { useRef, useState, type CSSProperties, type ReactNode } from "react";
+import { useState, type CSSProperties, type ReactNode } from "react";
 import { toast } from "sonner";
 
-import { useLargeTitle } from "./large-title";
 import { RouteMark } from "./Illustrations";
 import { TRIP_COLOR } from "./trip-colors";
 import { TRIP_ICONS, TripTypePicker } from "./TripTypePicker";
@@ -46,55 +45,51 @@ export function PageHeader({
   /** How loudly to say this is the sample trip: a full card (Overview) or one line */
   sampleBanner?: "card" | "line";
 }) {
-  const titleRef = useRef<HTMLHeadingElement>(null);
-  useLargeTitle(titleRef, title);
   const { trip } = useTrip();
   const sample = showTrip && trip.isSample;
   return (
-    <div className="page-container pt-6 sm:pt-10">
-      {sample && sampleBanner === "card" && (
-        <section className="surface-card animate-rise mb-8 grid grid-cols-[56px_1fr] items-center gap-4 p-6 sm:grid-cols-[72px_1fr_auto] sm:gap-6 sm:p-6 print:hidden">
-          <RouteMark className="w-14 sm:w-[72px]" />
-          <div className="min-w-0">
-            <h2 className="title-display text-title-1">This is a sample trip. Make it yours.</h2>
-            <p className="mt-1 max-w-lg text-sm text-muted-foreground">
-              Pick where you're going, your dates and your budget. Everything on these pages updates
-              to match.
-            </p>
-          </div>
-          <Button
-            asChild
-            variant="go"
-            size="lg"
-            className="col-span-2 w-full sm:col-span-1 sm:w-auto"
-          >
-            <Link to="/">
-              Plan your own trip <ArrowRight />
+    // The top of every page is a white band, as on apple.com; the content below sits on gray.
+    <div className="band pb-10 sm:pb-12">
+      <div className="page-container pt-8 sm:pt-16">
+        {sample && sampleBanner === "card" && (
+          <section className="animate-rise mb-8 grid rounded-[18px] bg-background grid-cols-[56px_1fr] items-center gap-4 p-6 sm:grid-cols-[72px_1fr_auto] sm:gap-6 sm:p-6 print:hidden">
+            <RouteMark className="w-14 sm:w-[72px]" />
+            <div className="min-w-0">
+              <h2 className="title-display text-title-1">This is a sample trip. Make it yours.</h2>
+              <p className="mt-1 max-w-lg text-sm text-muted-foreground">
+                Pick where you're going, your dates and your budget. Everything on these pages
+                updates to match.
+              </p>
+            </div>
+            <Button
+              asChild
+              variant="go"
+              size="lg"
+              className="col-span-2 w-full sm:col-span-1 sm:w-auto"
+            >
+              <Link to="/">
+                Plan your own trip <ArrowRight />
+              </Link>
+            </Button>
+          </section>
+        )}
+        {sample && sampleBanner === "line" && (
+          <p className="mb-6 flex flex-wrap items-center gap-x-2 gap-y-1 text-footnote text-muted-foreground print:hidden">
+            <Info className="size-3.5 shrink-0" />
+            You're looking at a sample trip.
+            <Link to="/" className="link-chevron font-semibold">
+              Plan your own
             </Link>
-          </Button>
-        </section>
-      )}
-      {sample && sampleBanner === "line" && (
-        <p className="mb-6 flex flex-wrap items-center gap-x-2 gap-y-1 text-footnote text-muted-foreground print:hidden">
-          <Info className="size-3.5 shrink-0" />
-          You're looking at a sample trip.
-          <Link
-            to="/"
-            className="inline-flex items-center gap-1 font-semibold text-go hover:underline hover:underline-offset-4"
-          >
-            Plan your own <ArrowRight className="size-3.5" />
-          </Link>
-        </p>
-      )}
-      <div className="flex flex-wrap items-end justify-between gap-4">
-        <div className="min-w-0">
-          <p className="eyebrow">{eyebrow}</p>
-          <h1 ref={titleRef} className="title-display mt-2 text-large-title sm:text-display">
-            {title}
-          </h1>
-          {showTrip && <TripBar title={title} />}
+          </p>
+        )}
+        <div className="flex flex-wrap items-end justify-between gap-4">
+          <div className="min-w-0">
+            <p className="eyebrow">{eyebrow}</p>
+            <h1 className="title-display mt-1 text-large-title sm:text-display">{title}</h1>
+            {showTrip && <TripBar title={title} />}
+          </div>
+          <div className="contents print:hidden">{children}</div>
         </div>
-        <div className="contents print:hidden">{children}</div>
       </div>
     </div>
   );

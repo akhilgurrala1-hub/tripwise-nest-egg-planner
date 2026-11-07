@@ -69,7 +69,7 @@ export function LogoMark({
   );
 }
 
-/** Mark + wordmark lockup. The wordmark is set in the system face (SF, or Inter), tightly tracked. */
+/** Mark + wordmark lockup. The wordmark is set in the app face, semibold. */
 export function Logo({
   className,
   markClassName,

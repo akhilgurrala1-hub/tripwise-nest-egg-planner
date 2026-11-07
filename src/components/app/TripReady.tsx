@@ -74,15 +74,15 @@ export function TripReady() {
               <span className="text-muted-foreground">{days === 1 ? "day" : "days"} planned</span>
             </li>
           </ul>
-          <div className="mt-6 flex flex-wrap gap-2">
+          <div className="mt-6 flex flex-wrap items-center gap-4">
             <Button asChild variant="go">
               <Link to="/itinerary">
                 See the days <ArrowRight />
               </Link>
             </Button>
-            <Button asChild variant="outline">
-              <Link to="/book">What to book</Link>
-            </Button>
+            <Link to="/book" className="link-chevron inline-flex h-11 items-center px-2 text-sm">
+              What to book
+            </Link>
           </div>
         </div>
         <RouteList />

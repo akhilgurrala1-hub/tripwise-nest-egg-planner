@@ -196,7 +196,7 @@ function BookPage() {
           <LivePricesPanel className="animate-rise" />
         </div>
 
-        <aside className="lg:sticky lg:top-20 lg:self-start">
+        <aside className="lg:sticky lg:top-28 lg:self-start">
           <section className="surface-card animate-rise p-6">
             <div className="flex items-center gap-4">
               <ProgressRing value={pct} />

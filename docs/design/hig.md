@@ -26,8 +26,8 @@ enforces the rules below, so a violation fails CI.
 
 ## Do
 
-- **Type:** use the levels: `text-display` (hero numbers), `text-large-title` (page titles), `text-title-1` (sections), `text-title-2` (panel titles, card amounts), `text-headline` (emphasis), `text-body` (default), `text-footnote` (secondary), `text-caption`, `text-micro` (labels). Let the level set the weight and tracking.
-- **Labels:** `eyebrow` for the small capitals above a title.
+- **Type:** use the levels: `text-display` (hero headline, hero numbers), `text-large-title` (page titles), `text-title-1` (sections), `text-title-2` (panel titles, card amounts), `text-headline` (emphasis), `text-body` (default), `text-footnote` (secondary), `text-caption`, `text-micro` (labels). Let the level set the weight and tracking.
+- **Labels:** `eyebrow` for the short line above a headline (sentence case). `link-chevron` for "Learn more ›" links.
 - **Space:** use multiples of 8px (`p-2/4/6/8`, `gap-2/4/6`, `mt-2/4/6/8/10`); use 4px (`*-1`) only inside a control (icon to text, label to value).
 - **Layout:** wrap pages in `page-container`; split them with `layout-main-aside` or `layout-5-7` (12 columns). Let whitespace separate groups before you reach for a border.
 - **Surfaces:** content goes on `surface-card`. Anything floating over content uses a material: `material-regular` for bars, `floating` for menus and popovers.
@@ -36,7 +36,7 @@ enforces the rules below, so a violation fails CI.
   - In JS, use `springAt` / `createBoxSpring` / `useTweened`.
   - Use `pressable` on anything tappable.
 - **Direct manipulation:** if something looks movable (a highlight, a rail), let it follow the pointer, rubber-band at the edges and keep its velocity on release.
-- **Scroll:** stage below-the-fold sections with `reveal`; use `parallax` only on a hero photo.
+- **Scroll:** sections below the fold fade up once as they arrive (`useScrollReveal`, automatic in `AppShell`); use `parallax` only on a hero photo.
 - **Reduced motion:** test with it on. Changes must still crossfade.
 
 ## Don't
@@ -45,7 +45,7 @@ enforces the rules below, so a violation fails CI.
 - **No odd or fractional spacing** (`p-5`, `gap-1.5`, `mt-3`) and no arbitrary pixel spacing.
 - **No hand-tuned easing** (`cubic-bezier`, `ease-[...]`) and no transition durations picked by feel for things that move.
 - **No hover lifts or nudges.** Nothing should do something on hover that a finger can't trigger.
-- **No gradients, glows or colored shadows.** No pill-shaped chips: controls are rounded rectangles.
+- **No gradients, glows or colored shadows.** Buttons are capsules; chips, tags and badges are rounded rectangles, never pills.
 - **No serif, script or mono display type.** Mono only for codes people copy.
 - **No staggered cascades on every navigation**, and no more than one moving thing competing for attention.
 - **No borders on cards**, and no heavy dimming behind dialogs.
@@ -84,3 +84,21 @@ Apple patterns added:
 - coral in the UI
 - a bare `<img>`
 - Inter or Google Fonts
+
+## Third pass: apple.com
+
+The app now takes its page structure and motion straight from apple.com, with every feature and the trip assistant unchanged.
+
+| Before                                   | Now                                                                                                      |
+| ---------------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| One tall header with tabs and a trip bar | A 44px global nav, then a sticky local nav for the trip with one capsule button for the page's next step |
+| Phone tab bar at the bottom              | A menu button opens a full-screen menu; its links slide in one after another                             |
+| Collapsing iOS large title               | Each page's title sits in a white band at apple.com sizes (up to 80px on the Plan hero)                  |
+| Two typefaces                            | One family (Instrument Sans) at every size, like SF on apple.com                                         |
+| Rounded-rectangle buttons                | Capsule buttons; "Learn more ›" chevron links for secondary paths                                        |
+| Cards with soft shadows                  | Flat tiles (18px radius) on a light gray page                                                            |
+| Everything on screen at once             | The hero rises in on load; later sections fade up once as they scroll in; key amounts count up when seen |
+| Ideas as a plain rail                    | A gallery with paddles, drag and momentum                                                                |
+| No footer                                | An apple.com footer: sources, breadcrumb, link columns, fine print                                       |
+
+What stays: content already on screen is never hidden, reduced motion turns every movement into a plain crossfade or nothing, and printing shows everything.

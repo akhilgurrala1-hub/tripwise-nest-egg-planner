@@ -162,7 +162,7 @@ export function NumberField({
           if (e.target.value === "") onChange(0);
         }}
         className={cn(
-          "tabular w-full min-w-0 bg-transparent text-headline font-medium outline-none",
+          "tabular w-full min-w-0 bg-transparent text-body font-medium outline-none",
           inputClassName,
         )}
       />

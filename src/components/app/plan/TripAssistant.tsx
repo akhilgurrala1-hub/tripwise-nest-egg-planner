@@ -466,7 +466,7 @@ export function TripAssistant({
             aria-label="Describe your trip"
             className={cn(
               "min-h-9 w-full flex-1 resize-none bg-transparent py-2 leading-relaxed outline-none placeholder:text-muted-foreground",
-              variant === "hero" && !state.turns.length ? "text-headline" : "text-headline",
+              variant === "hero" && !state.turns.length ? "text-headline" : "text-body",
             )}
           />
           <Button

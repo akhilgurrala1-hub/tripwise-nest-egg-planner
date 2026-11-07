@@ -1,5 +1,5 @@
-import { ArrowUpRight } from "lucide-react";
-import type { CSSProperties } from "react";
+import { ArrowUpRight, ChevronLeft, ChevronRight } from "lucide-react";
+import { useState, type CSSProperties } from "react";
 
 import { RouteMark } from "@/components/app/Illustrations";
 import { Photo } from "@/components/app/Photo";
@@ -72,30 +72,63 @@ export function Inspiration({
   onPick: (destinationId: string, tripType: TripType) => void;
 }) {
   const ideas = inspirationIdeas(setup, from);
-  // On narrow screens the ideas are a rail you can drag, fling and bounce off the ends.
+  // A gallery, as on apple.com: one row you can drag, fling and page with the arrows.
   const rail = useDragScroll<HTMLUListElement>();
+  const [edge, setEdge] = useState({ start: true, end: false });
+  const onScroll = () => {
+    const el = rail.current;
+    if (!el) return;
+    setEdge({
+      start: el.scrollLeft <= 2,
+      end: el.scrollLeft + el.clientWidth >= el.scrollWidth - 2,
+    });
+  };
+  const page = (dir: 1 | -1) =>
+    rail.current?.scrollBy({ left: dir * rail.current.clientWidth * 0.8, behavior: "smooth" });
   if (!ideas.length) return null;
   return (
-    <section aria-labelledby="ideas-title" className="mt-12">
+    <section aria-labelledby="ideas-title">
       <div className="flex items-baseline justify-between gap-4">
-        <h2 id="ideas-title" className="title-display text-title-1 sm:text-large-title">
-          Ideas from {fromLabel}
+        <h2 id="ideas-title" className="title-display text-large-title">
+          Ideas from {fromLabel}.
         </h2>
-        <p className="hidden text-xs text-muted-foreground sm:block">
-          Estimated for {setup.travelers} {setup.travelers === 1 ? "traveler" : "travelers"},{" "}
-          {nights} night{nights === 1 ? "" : "s"}
-        </p>
       </div>
+      <p className="mt-2 text-body text-muted-foreground">
+        Estimated for {setup.travelers} {setup.travelers === 1 ? "traveler" : "travelers"}, {nights}{" "}
+        night{nights === 1 ? "" : "s"}, from your door.
+      </p>
       <ul
         ref={rail}
-        className="-mx-4 mt-4 flex snap-x snap-mandatory gap-4 overflow-x-auto px-4 pb-2 sm:mx-0 sm:grid sm:grid-cols-2 sm:overflow-visible sm:px-0 lg:grid-cols-4"
+        onScroll={onScroll}
+        className="-mx-4 mt-6 flex snap-x snap-mandatory scroll-px-4 gap-4 overflow-x-auto px-4 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
       >
         {ideas.map((idea, i) => (
-          <li key={idea.s.id} className="w-[72%] shrink-0 snap-start sm:w-auto">
+          <li key={idea.s.id} className="w-[78%] shrink-0 snap-start sm:w-64">
             <IdeaCard idea={idea} origin={setup.origin} style={stagger(i + 1)} onPick={onPick} />
           </li>
         ))}
       </ul>
+      {/* apple.com's gallery paddles. */}
+      <div className="mt-4 flex justify-end gap-2">
+        <button
+          type="button"
+          onClick={() => page(-1)}
+          disabled={edge.start}
+          aria-label="Previous ideas"
+          className="pressable grid size-9 place-items-center rounded-full bg-fill text-foreground disabled:opacity-35"
+        >
+          <ChevronLeft className="size-5" />
+        </button>
+        <button
+          type="button"
+          onClick={() => page(1)}
+          disabled={edge.end}
+          aria-label="More ideas"
+          className="pressable grid size-9 place-items-center rounded-full bg-fill text-foreground disabled:opacity-35"
+        >
+          <ChevronRight className="size-5" />
+        </button>
+      </div>
     </section>
   );
 }
