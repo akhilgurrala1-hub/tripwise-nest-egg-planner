@@ -630,17 +630,29 @@
   color: var(--color-on-image);
 }
 @utility photo-scrim {
+  /*
+   * An even dimming so even a bright, busy photo can carry white type, deeper on
+   * the left and at the bottom where the words sit; the place still shows on the
+   * right. Phones and tablets put the words over the whole width, so they dim
+   * more evenly.
+   */
   background:
-    linear-gradient(to top, oklch(0 0 0 / 0.6), oklch(0 0 0 / 0) 65%),
-    linear-gradient(to right, oklch(0 0 0 / 0.62), oklch(0 0 0 / 0.3) 55%, oklch(0 0 0 / 0.05));
+    linear-gradient(to top, oklch(0 0 0 / 0.55), oklch(0 0 0 / 0) 60%),
+    linear-gradient(to right, oklch(0 0 0 / 0.6), oklch(0 0 0 / 0.35) 55%, oklch(0 0 0 / 0.1)),
+    oklch(0 0 0 / 0.15);
   @media (width < 64rem) {
-    background: linear-gradient(
-      to top,
-      oklch(0 0 0 / 0.72),
-      oklch(0 0 0 / 0.35) 60%,
-      oklch(0 0 0 / 0.2)
-    );
+    background:
+      linear-gradient(to top, oklch(0 0 0 / 0.7), oklch(0 0 0 / 0.3) 60%, oklch(0 0 0 / 0.2)),
+      oklch(0 0 0 / 0.3);
   }
+}
+
+/* White type on a photo: a soft halo keeps each letter readable over bright spots. */
+@utility on-photo {
+  color: var(--color-on-image);
+  text-shadow:
+    0 1px 2px oklch(0 0 0 / 0.35),
+    0 2px 24px oklch(0 0 0 / 0.35);
 }
 
 /* Under the words at the bottom of a photo card. */

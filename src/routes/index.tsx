@@ -341,12 +341,12 @@ function Welcome() {
         <HeroBackdrop dest={dest} origin={form.origin} />
         <div className="page-container flex min-h-[min(92svh,880px)] flex-col justify-end pt-24 pb-8 sm:pb-12 lg:grid lg:grid-cols-12 lg:items-end lg:gap-8">
           <div className="lg:col-span-7">
-            <p className="hero-in text-headline font-semibold text-on-image/85">New trip</p>
-            <h1 className="hero-in title-display mt-2 text-display" style={stagger(1)}>
+            <p className="hero-in on-photo text-headline font-semibold">New trip</p>
+            <h1 className="hero-in on-photo title-display mt-2 text-display" style={stagger(1)}>
               Where to next?
             </h1>
             <p
-              className="hero-in mt-4 max-w-xl text-headline font-normal text-on-image/85"
+              className="hero-in on-photo mt-4 max-w-xl text-headline font-medium"
               style={stagger(2)}
             >
               Say it however you like. Waypoint works out the budget to the dollar, plans the days
