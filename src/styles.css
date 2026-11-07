@@ -45,7 +45,7 @@
   --text-large-title--line-height: 1.08;
   --text-large-title--letter-spacing: -0.005em;
   --text-large-title--font-weight: 600;
-  --text-title-1: clamp(1.75rem, 1.45rem + 1.2vw, 2.5rem);
+  --text-title-1: 2rem;
   --text-title-1--line-height: 1.1;
   --text-title-1--letter-spacing: 0em;
   --text-title-1--font-weight: 600;
@@ -584,6 +584,13 @@
     background: color-mix(in oklab, var(--primary) 25%, transparent);
   }
 
+  /* The parts the browser draws (caret, native checkboxes and ranges, scrollbars) wear the palette too. */
+  html {
+    accent-color: var(--color-primary);
+    caret-color: var(--color-primary);
+    scrollbar-color: color-mix(in oklab, var(--foreground) 28%, transparent) transparent;
+  }
+
   /*
    * Reduced motion: nothing moves, but changes still crossfade (opacity and color
    * only, quickly), so the page never jumps abruptly between states.
@@ -666,9 +673,10 @@
 @utility card-scrim {
   background: linear-gradient(
     to top,
-    oklch(0 0 0 / 0.72),
-    oklch(0 0 0 / 0.25) 45%,
-    oklch(0 0 0 / 0) 70%
+    oklch(0 0 0 / 0.82),
+    oklch(0 0 0 / 0.55) 40%,
+    oklch(0 0 0 / 0.15) 70%,
+    oklch(0 0 0 / 0)
   );
 }
 
@@ -926,33 +934,19 @@
   animation-timing-function: ease-out;
 }
 
-/* apple.com's hero entrance: each line rises and fades in, one after another. */
-.hero-in {
-  animation: hero-in 240ms ease-out both;
-  animation-delay: calc(min(var(--i, 0), 3) * 30ms);
-}
-@keyframes hero-in {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
 /* ---------- Springs ---------- */
 /* Transitions that move use a spring: snappy for controls, smooth for surfaces. */
 @utility spring-snappy {
   transition-timing-function: var(--ease-spring-snappy);
-  transition-duration: 500ms;
+  transition-duration: 250ms;
 }
 @utility spring-smooth {
   transition-timing-function: var(--ease-spring-smooth);
-  transition-duration: 680ms;
+  transition-duration: 280ms;
 }
 @utility spring-bouncy {
   transition-timing-function: var(--ease-spring-bouncy);
-  transition-duration: 610ms;
+  transition-duration: 300ms;
 }
 
 /*
@@ -963,20 +957,10 @@
   transition-property: transform, background-color, color, border-color, box-shadow, opacity;
   transition-timing-function:
     var(--ease-spring-press), ease-out, ease-out, ease-out, ease-out, ease-out;
-  transition-duration: 360ms, 150ms, 150ms, 150ms, 150ms, 150ms;
+  transition-duration: 200ms, 150ms, 150ms, 150ms, 150ms, 150ms;
   &:active:not(:disabled) {
     transform: scale(0.97);
     transition-duration: 0ms, 150ms, 150ms, 150ms, 150ms, 150ms;
-  }
-}
-
-/* ---------- Scroll staging (scroll-driven, so it can't stutter or be outrun) ---------- */
-/* A hero image that drifts slower than the page and eases out of scale. */
-@utility parallax {
-  @supports (animation-timeline: view()) {
-    animation: parallax linear both;
-    animation-timeline: view();
-    animation-range: cover 0% cover 100%;
   }
 }
 
@@ -1000,15 +984,6 @@
 }
 
 /* ---------- Motion ---------- */
-@keyframes parallax {
-  from {
-    transform: translateY(-6%) scale(1.08);
-  }
-  to {
-    transform: translateY(6%) scale(1);
-  }
-}
-
 @keyframes skeleton-breathe {
   0%,
   100% {
@@ -1028,16 +1003,12 @@
   }
 }
 
-/* Reduced motion: entrances become plain crossfades; scroll staging and parallax stop. */
+/* Reduced motion: the phone menu crossfades instead of sliding. */
 @media (prefers-reduced-motion: reduce) {
-  .hero-in,
   .menu-item {
     transform: none !important;
     transition-duration: 160ms !important;
     transition-delay: 0ms !important;
-  }
-  .parallax {
-    animation: none !important;
   }
 }
 
@@ -1050,37 +1021,7 @@
 .travel-scene .scene-bob {
   transform-box: fill-box;
   transform-origin: 50% 100%;
-  animation: scene-bob 3.4s ease-in-out infinite;
 }
-.travel-scene .scene-wave {
-  animation: scene-wave 3.6s linear infinite;
-}
-.travel-scene .scene-wave-slow {
-  animation: scene-wave-slow 6s linear infinite;
-}
-@keyframes scene-bob {
-  0%,
-  100% {
-    transform: rotate(-1.2deg) translateY(0);
-  }
-  50% {
-    transform: rotate(1.2deg) translateY(-0.8px);
-  }
-}
-@keyframes scene-wave {
-  to {
-    transform: translateX(-40px);
-  }
-}
-@keyframes scene-wave-slow {
-  from {
-    transform: translateX(-48px);
-  }
-  to {
-    transform: translateX(0);
-  }
-}
-
 /* ---------- Brand mark motion ---------- */
 /* The mark's parts are animated in SVG user space around their own centers. */
 .logo-mark .logo-tile,
@@ -1092,11 +1033,6 @@
 }
 .logo-mark .logo-ripple {
   opacity: 0;
-}
-/* Hovering the header logo sends a ripple out from the destination. */
-a:hover > .logo .logo-ripple,
-a:focus-visible > .logo .logo-ripple {
-  animation: logo-ripple 0.7s var(--ease-out-quint);
 }
 
 /* Loading: the route keeps re-drawing toward the destination. */
@@ -1170,7 +1106,7 @@ a:focus-visible > .logo .logo-ripple {
 @keyframes logo-pop {
   from {
     opacity: 0;
-    transform: scale(0);
+    transform: scale(0.6);
   }
   to {
     opacity: 1;

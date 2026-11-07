@@ -78,7 +78,7 @@ export function TravelScene({
   return (
     <div
       className={cn(
-        "relative overflow-hidden rounded-xl border border-border bg-[color-mix(in_oklab,var(--trip)_7%,var(--card))] transition-[background-color] duration-500 select-none",
+        "relative overflow-hidden rounded-xl border border-border bg-[color-mix(in_oklab,var(--trip)_7%,var(--card))] transition-[background-color] duration-200 select-none",
         className,
       )}
       style={{ "--trip": TRIP_COLOR[tripType] } as CSSProperties}
@@ -98,7 +98,7 @@ export function TravelScene({
         <Scene kind={kind} />
       </svg>
       {kind !== "home" && (from || to) && (
-        <div className="pointer-events-none absolute inset-x-3.5 bottom-1.5 flex justify-between gap-4 text-micro text-muted-foreground">
+        <div className="flex justify-between gap-4 px-4 pb-2 text-micro text-muted-foreground">
           <span className="truncate">{from}</span>
           <span className="truncate text-right font-medium text-foreground">{to}</span>
         </div>
@@ -543,7 +543,7 @@ function play(kind: SceneKind, svg: SVGSVGElement): Animation[] {
 
 /** Arrival: grows in, overshoots a little, settles. */
 const POP: Keyframe[] = [
-  { transform: "scale(0)", opacity: 0 },
-  { transform: "scale(1.3)", opacity: 1, offset: 0.6 },
+  { transform: "scale(0.6)", opacity: 0 },
+  { transform: "scale(1.1)", opacity: 1, offset: 0.6 },
   { transform: "scale(1)", opacity: 1 },
 ];

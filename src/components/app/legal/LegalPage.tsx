@@ -34,9 +34,17 @@ export function LegalPage({
 }
 
 /** A numbered section: its title and its paragraphs or lists. */
-export function Section({ title, children }: { title: string; children: ReactNode }) {
+export function Section({
+  title,
+  id,
+  children,
+}: {
+  title: string;
+  id?: string;
+  children: ReactNode;
+}) {
   return (
-    <section className="mt-10 first:mt-0">
+    <section id={id} className="mt-10 scroll-mt-24 first:mt-0">
       <h2 className="title-display text-title-2">{title}</h2>
       <div className="mt-4 space-y-4 text-body text-foreground/90">{children}</div>
     </section>

@@ -156,7 +156,7 @@ function Dashboard() {
               </div>
               {totals.overBudget && (
                 <span
-                  className="absolute -top-1 -bottom-1 w-0.5 rounded-full bg-foreground transition-[left] duration-500"
+                  className="absolute -top-1 -bottom-1 w-0.5 rounded-full bg-foreground transition-[left] duration-200"
                   style={{ left: `${spendLine}%` }}
                   aria-hidden
                 />
@@ -470,7 +470,7 @@ function NextSteps() {
               <>
                 <span
                   className={cn(
-                    "tabular grid size-6 shrink-0 place-items-center rounded-full border text-micro font-medium transition-colors duration-300",
+                    "tabular grid size-6 shrink-0 place-items-center rounded-full border text-micro font-medium transition-colors duration-200",
                     s.done
                       ? "border-foreground bg-foreground text-background"
                       : s === next
@@ -495,7 +495,7 @@ function NextSteps() {
               <span className="mx-1 h-px min-w-3 flex-1 overflow-hidden bg-border">
                 <span
                   className={cn(
-                    "block h-full bg-foreground transition-[width] duration-500",
+                    "block h-full bg-foreground transition-[width] duration-200",
                     s.done ? "w-full" : "w-0",
                   )}
                 />

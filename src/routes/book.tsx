@@ -394,7 +394,7 @@ function BookingCard({
     <article
       style={{ ...style, "--kind": color } as CSSProperties}
       className={cn(
-        "surface-card render-lazy relative overflow-hidden p-4 transition-[opacity,border-color] duration-300 [contain-intrinsic-size:auto_200px] sm:p-6",
+        "surface-card render-lazy relative overflow-hidden p-4 transition-[opacity,border-color] duration-200 [contain-intrinsic-size:auto_200px] sm:p-6",
         isNext && "border-[color-mix(in_oklab,var(--primary)_45%,var(--border))]",
         skipped && "opacity-60",
       )}
@@ -403,7 +403,7 @@ function BookingCard({
       <div className="flex gap-4">
         <span
           className={cn(
-            "grid size-10 shrink-0 place-items-center rounded-xl transition-colors duration-300",
+            "grid size-10 shrink-0 place-items-center rounded-xl transition-colors duration-200",
             booked
               ? "bg-success text-white"
               : "bg-[color-mix(in_oklab,var(--kind)_14%,var(--card))] text-(--kind)",

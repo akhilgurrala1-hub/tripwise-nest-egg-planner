@@ -112,7 +112,7 @@ export function TripPreview({
       style={{ "--trip": color } as CSSProperties}
     >
       <div className="flex items-center gap-2 px-6 pt-6 text-footnote font-medium">
-        <span className="grid size-7 place-items-center rounded-lg bg-[color-mix(in_oklab,var(--trip)_12%,transparent)] transition-colors duration-500">
+        <span className="grid size-7 place-items-center rounded-lg bg-[color-mix(in_oklab,var(--trip)_12%,transparent)] transition-colors duration-200">
           <Icon className="size-4" style={{ color }} strokeWidth={2} />
         </span>
         {tripTypeInfo(form.tripType).label}
@@ -125,7 +125,7 @@ export function TripPreview({
           showText={false}
           className="-mx-1 mb-4"
         />
-        <p key={destLabel} className="title-display text-large-title">
+        <p key={destLabel} className="title-display text-title-1">
           {destLabel}
         </p>
         {dest.region && !form.cities?.some((x) => x.name.trim()) && (

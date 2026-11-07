@@ -6,7 +6,7 @@ import { toast } from "sonner";
 
 import { InterestChips, NumberField, FieldError } from "@/components/app/bits";
 import { stagger } from "@/components/app/motion";
-import { HeroBackdrop, HeroCredit } from "@/components/app/DestinationIntro";
+import { HeroBackdrop } from "@/components/app/DestinationIntro";
 import { DestinationPicker } from "@/components/app/plan/DestinationPicker";
 import { CoveragePicker } from "@/components/app/plan/CoveragePicker";
 import { OriginField } from "@/components/app/plan/OriginField";
@@ -341,20 +341,14 @@ function Welcome() {
         <HeroBackdrop dest={dest} origin={form.origin} />
         <div className="page-container flex min-h-[min(92svh,880px)] flex-col justify-end pt-24 pb-8 sm:pb-12 lg:grid lg:grid-cols-12 lg:items-end lg:gap-8">
           <div className="lg:col-span-7">
-            <h1 className="hero-in on-photo title-display text-display" style={stagger(1)}>
-              Where to next?
+            <h1 className="on-photo title-display text-display">
+              Plan your trip, priced to the dollar.
             </h1>
-            <p
-              className="hero-in on-photo mt-4 max-w-xl text-headline font-medium"
-              style={stagger(2)}
-            >
-              Say it however you like. Waypoint works out the budget to the dollar, plans the days
-              and lists what to book.
+            <p className="on-photo mt-4 max-w-xl text-headline font-medium">
+              Say where, when and who, however you like. Waypoint works out every cost, plans each
+              day and lists what to book.
             </p>
-            <div
-              className="hero-in mt-8 rounded-2xl bg-card p-2 text-foreground shadow-lift sm:p-4"
-              style={stagger(3)}
-            >
+            <div className="mt-8 rounded-2xl bg-card p-2 text-foreground shadow-lift sm:p-4">
               <TripAssistant
                 variant="hero"
                 homeCity={form.origin}
@@ -373,9 +367,6 @@ function Welcome() {
               />
             </div>
           </div>
-          <p className="mt-6 lg:col-span-5 lg:mt-0 lg:justify-self-end">
-            <HeroCredit dest={dest} origin={form.origin} />
-          </p>
         </div>
       </section>
       <div className="page-container pt-12 pb-10 sm:pt-16">
@@ -412,7 +403,7 @@ function Welcome() {
               }}
             />
 
-            <h2 id="plan-steps" className="title-display mt-14 scroll-mt-32 text-large-title">
+            <h2 id="plan-steps" className="title-display mt-14 scroll-mt-32 text-title-1">
               Or plan it yourself
             </h2>
 
@@ -717,7 +708,7 @@ function Section({
   return (
     <section className="grid gap-4 py-10 sm:grid-cols-[160px_1fr] sm:gap-8" style={style}>
       <div className="flex items-baseline gap-2 sm:block">
-        <h2 className="text-headline font-semibold sm:mt-2">{title}</h2>
+        <h3 className="text-headline font-semibold sm:mt-2">{title}</h3>
         {aside && <p className="ml-auto text-xs text-muted-foreground sm:mt-1 sm:ml-0">{aside}</p>}
       </div>
       <div className="min-w-0">{children}</div>

@@ -58,15 +58,15 @@ const TIMEOUT_MS = 60_000;
 /** Quick starts: a short label to tap, and the full message it sends. */
 const EXAMPLES: { label: string; message: string }[] = [
   {
-    label: "Mountain weekend for 2",
+    label: "Plan a mountain weekend for 2",
     message: "A long weekend in the mountains for 2 in March, under $1,500",
   },
   {
-    label: "Beach week, family of 4",
+    label: "Plan a beach week for 4",
     message: "Somewhere warm with a beach for a family of 4 this summer",
   },
   {
-    label: "A short cruise",
+    label: "Find a short cruise",
     message: "A 4-night cruise from the closest port, comfortable but not fancy",
   },
   { label: "Surprise me", message: "Surprise me with somewhere new for a long weekend" },

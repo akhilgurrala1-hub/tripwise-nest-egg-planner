@@ -328,7 +328,7 @@ export function Segmented<V extends string>({
         ref={thumbRef}
         aria-hidden
         className={cn(
-          "pointer-events-none absolute top-0 left-0 rounded-lg bg-card shadow-[0_1px_3px_oklch(0_0_0/0.12),0_0_0_0.5px_oklch(0_0_0/0.06)] [transition:opacity_160ms_ease-out,scale_360ms_var(--ease-spring-press)] dark:bg-secondary",
+          "pointer-events-none absolute top-0 left-0 rounded-lg bg-card shadow-[0_1px_3px_oklch(0_0_0/0.12),0_0_0_0.5px_oklch(0_0_0/0.06)] [transition:opacity_160ms_ease-out,scale_200ms_var(--ease-spring-press)] dark:bg-secondary",
           ready ? "opacity-100" : "opacity-0",
           // Pressing anywhere on the control squeezes the highlight at once, like a real switch.
           pressed && "scale-[0.96] [transition-duration:160ms,0ms]",
