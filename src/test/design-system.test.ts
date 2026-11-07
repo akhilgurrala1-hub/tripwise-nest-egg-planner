@@ -136,6 +136,14 @@ describe("no template tells", () => {
     expect(find(/<em className="text-primary">/g)).toEqual([]);
   });
 
+  it("blue marks only what you can press or what's selected: no decorative or status blue", () => {
+    // Icons and plain text in the accent color read as buttons that aren't there.
+    const icon = /<(?!Link\b|Button\b)[A-Z]\w*\s+className="[^"]*\btext-primary(?![\w-])[^"]*"/g;
+    const text =
+      /<(?:span|p|div|dd|dt|li|h[1-6])\b[^>]*className="[^"]*\btext-primary(?![\w-])[^"]*"/g;
+    expect([...find(icon, (p) => p.startsWith("components/ui/")), ...find(text)]).toEqual([]);
+  });
+
   it("coral stays in the logo and the route art; the UI has one brand color", () => {
     const art = (p: string) =>
       /Logo\.tsx$|Illustrations\.tsx$|TravelScene\.tsx$|Intro\.tsx$/.test(p);
@@ -146,6 +154,14 @@ describe("no template tells", () => {
 
   it("photos go through Photo (loading placeholder, fade-in, fallback), never a bare img", () => {
     expect(find(/<img\b/g, (p) => p.endsWith("Photo.tsx"))).toEqual([]);
+  });
+
+  it("pairs a serif display face with the text face, both self-hosted", () => {
+    const css = readFileSync(join(SRC, "styles.css"), "utf8");
+    const face = (name: string) => css.match(new RegExp(`--font-${name}:\\s*"([^"]+)"`))?.[1];
+    expect(face("display")).toBe("Newsreader Variable");
+    expect(face("sans")).toBe("Instrument Sans Variable");
+    expect(css).toContain('@import "@fontsource-variable/newsreader');
   });
 
   it("uses its own type pairing, self-hosted: no Inter, no Google Fonts", () => {

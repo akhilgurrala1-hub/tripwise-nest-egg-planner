@@ -6,6 +6,7 @@ import { toast } from "sonner";
 
 import { InterestChips, NumberField, FieldError } from "@/components/app/bits";
 import { stagger } from "@/components/app/motion";
+import { HeroPhoto } from "@/components/app/DestinationIntro";
 import { DestinationPicker } from "@/components/app/plan/DestinationPicker";
 import { CoveragePicker } from "@/components/app/plan/CoveragePicker";
 import { OriginField } from "@/components/app/plan/OriginField";
@@ -322,38 +323,49 @@ function Welcome() {
           </Link>
         </div>
       )}
-      {/* The hero: one question, centered on a white band, the assistant right under it. */}
-      <section className="band overflow-hidden pt-14 pb-16 sm:pt-20 sm:pb-20">
-        <div className="page-container text-center">
-          <p className="hero-in eyebrow">New trip</p>
-          <h1 className="hero-in title-display mt-2 text-display" style={stagger(1)}>
-            Where to next?
-          </h1>
-          <p
-            className="hero-in mx-auto mt-4 max-w-2xl text-headline font-normal text-muted-foreground"
-            style={stagger(2)}
-          >
-            Say it however you like. Waypoint works out the budget to the dollar, plans the days and
-            lists what to book.
-          </p>
-          <div className="hero-in mx-auto mt-10 max-w-2xl text-left" style={stagger(3)}>
-            <TripAssistant
-              variant="hero"
-              homeCity={form.origin}
-              from={originPoint}
-              onBuild={(draft) => void start(fromDraft(draft))}
-              onFill={(draft) => {
-                const next = fromDraft(draft);
-                touched.current = true;
-                destPicked.current = true;
-                reserveTouched.current = false;
-                setBudgetOwn(!next.budgetAuto);
-                setForm(next);
-                toast("Filled in below. Adjust anything, then plan the trip.");
-                document.getElementById("plan-steps")?.scrollIntoView({ behavior: "smooth" });
-              }}
-            />
+      {/*
+        The hero, asymmetric: the question and the assistant left-aligned in columns
+        1-7, the destination's real photo in 8-12, cropped off the page's right edge.
+      */}
+      <section className="band overflow-hidden pt-12 pb-16 sm:pt-16 lg:pb-0">
+        <div className="page-container lg:grid lg:grid-cols-12 lg:gap-8">
+          <div className="lg:col-span-7 lg:pb-20">
+            <p className="hero-in eyebrow">New trip</p>
+            <h1 className="hero-in title-display mt-2 text-display" style={stagger(1)}>
+              Where to next?
+            </h1>
+            <p
+              className="hero-in mt-4 max-w-xl text-headline font-normal text-muted-foreground"
+              style={stagger(2)}
+            >
+              Say it however you like. Waypoint works out the budget to the dollar, plans the days
+              and lists what to book.
+            </p>
+            <div className="hero-in mt-10" style={stagger(3)}>
+              <TripAssistant
+                variant="hero"
+                homeCity={form.origin}
+                from={originPoint}
+                onBuild={(draft) => void start(fromDraft(draft))}
+                onFill={(draft) => {
+                  const next = fromDraft(draft);
+                  touched.current = true;
+                  destPicked.current = true;
+                  reserveTouched.current = false;
+                  setBudgetOwn(!next.budgetAuto);
+                  setForm(next);
+                  toast("Filled in below. Adjust anything, then plan the trip.");
+                  document.getElementById("plan-steps")?.scrollIntoView({ behavior: "smooth" });
+                }}
+              />
+            </div>
           </div>
+          <HeroPhoto
+            dest={dest}
+            origin={form.origin}
+            className="hero-in bleed-right mt-10 aspect-[16/10] rounded-[18px] lg:col-span-5 lg:mt-0 lg:aspect-auto lg:min-h-full lg:rounded-r-none lg:rounded-b-none"
+            style={stagger(4)}
+          />
         </div>
       </section>
       <div className="page-container pt-12 pb-10 sm:pt-16">

@@ -60,7 +60,7 @@ export function WeatherChip({ day, className }: { day: DayWeather; className?: s
         {tempValue(day.highF, units)}° / {tempValue(day.lowF, units)}°
       </span>
       {day.precipChance !== null && day.precipChance >= 20 && (
-        <span className="tabular inline-flex items-center gap-1 text-primary">
+        <span className="tabular inline-flex items-center gap-1 text-muted-foreground">
           <Umbrella className="size-3" />
           {day.precipChance}%
         </span>
@@ -164,7 +164,7 @@ export function WeatherCard({ className }: { className?: string }) {
                     </span>
                   </p>
                   {d.precipChance !== null && (
-                    <p className="tabular text-micro text-primary">
+                    <p className="tabular text-micro text-muted-foreground">
                       <Umbrella className="inline size-3" /> {d.precipChance}%
                     </p>
                   )}
@@ -177,7 +177,7 @@ export function WeatherCard({ className }: { className?: string }) {
           </ol>
           {wet.length > 0 && (
             <p className="mt-4 text-xs text-foreground">
-              <Umbrella className="mr-1 inline size-3.5 -translate-y-px text-primary" />
+              <Umbrella className="mr-1 inline size-3.5 -translate-y-px text-muted-foreground" />
               Wet weather is likely on{" "}
               {wet.map((d) => formatCalendarDate(d.date, { weekday: "long" })).join(", ")}. Keep an
               indoor plan for those days.

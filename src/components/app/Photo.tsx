@@ -82,7 +82,7 @@ export function EmptyState({
     <div className={cn("surface-card flex items-start gap-4 p-6", className)}>
       <span
         aria-hidden
-        className="grid size-11 shrink-0 place-items-center rounded-xl bg-accent text-primary [&_svg]:size-5"
+        className="grid size-11 shrink-0 place-items-center rounded-xl bg-fill text-foreground [&_svg]:size-5"
       >
         {icon}
       </span>

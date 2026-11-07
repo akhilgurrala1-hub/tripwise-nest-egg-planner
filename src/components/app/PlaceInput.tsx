@@ -114,7 +114,7 @@ export function PlaceInput({
                 i === active ? "bg-secondary" : "hover:bg-secondary/70",
               )}
             >
-              <MapPin className="size-3.5 shrink-0 text-primary" />
+              <MapPin className="size-3.5 shrink-0 text-muted-foreground" />
               <span className="font-semibold">{p.name}</span>
               <span className="truncate text-muted-foreground">
                 {[p.admin1, p.countryCode === "US" ? "" : p.country].filter(Boolean).join(", ")}

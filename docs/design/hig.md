@@ -46,7 +46,7 @@ enforces the rules below, so a violation fails CI.
 - **No hand-tuned easing** (`cubic-bezier`, `ease-[...]`) and no transition durations picked by feel for things that move.
 - **No hover lifts or nudges.** Nothing should do something on hover that a finger can't trigger.
 - **No gradients, glows or colored shadows.** Buttons are capsules; chips, tags and badges are rounded rectangles, never pills.
-- **No serif, script or mono display type.** Mono only for codes people copy.
+- **No script or mono display type, and no serif below headline size.** The serif (Newsreader) is for `title-display` headlines only; mono only for codes people copy.
 - **No staggered cascades on every navigation**, and no more than one moving thing competing for attention.
 - **No borders on cards**, and no heavy dimming behind dialogs.
 
@@ -115,3 +115,38 @@ Checked against Apple's _Designing Fluid Interfaces_ and _Principles of Great De
 | No abrupt brightness jumps        | Light/dark switched in one frame                                     | A 280ms crossfade of the whole page (View Transitions, where supported)                           |
 | Reduce Transparency / Contrast    | Glass stayed see-through                                             | Solid surfaces; with Increase Contrast also defined edges and darker secondary text               |
 | Multimodal feedback, used sparely | None                                                                 | A light haptic tick on the same frame as a switch flip or a segmented snap (Vibration API phones) |
+
+## Fifth pass: art direction (no AI defaults)
+
+The five decisions, made concretely, so the site can't fall back on what every generated site looks like.
+
+**1. Type, paired.**
+
+- Headlines: Newsreader Variable (Production Type, OFL, self-hosted with its optical-size axis), weight 500, through `title-display`. Display 48 to 80px, line-height 1.05, tracking -0.015em; large title 32 to 48px / 1.08; title-1 28 to 40px / 1.1.
+- Text, controls and every number: Instrument Sans Variable. Body 17px / 1.47 at -0.022em; footnote 14px / 1.43; caption 12px / 1.33. Amounts (`money-display`) stay in the sans, weight 600, -0.015em, so figures read cleanly.
+
+**2. Color as tokens, one accent in one role.**
+
+- Ink `oklch(0.218 0.004 286)` on paper `oklch(0.97 0.002 286)`, with white bands and tiles (`--card`).
+- One accent, brand blue `#2457E6` (`--primary`), in one role: what you can press, or what's selected. Decorative icons and data (rain chances, a holiday marker) are gray; warnings use `--destructive`. A test fails on blue icons or blue plain text.
+- No gradients (tested).
+
+**3. Layout, structural and asymmetric.**
+
+- Plan hero on a 12-column grid: eyebrow, headline, subhead and the assistant left-aligned in columns 1 to 7.
+- The destination's photo fills columns 8 to 12 and runs off the window's right edge and down to the band's bottom.
+- Below it, the gray content area changes rhythm: the Ideas gallery (8 columns) beside the trip preview (4).
+- On phones the photo follows the assistant as a 16:10 crop, so the first screen still has one thing to do.
+
+**4. Motion, specified.**
+
+- One orchestrated entrance: `hero-in`, each line rising 24px and fading in over 1s on the smooth spring, staggered 110ms after an 80ms start.
+- One scroll behavior: sections below the fold rise 32px and fade in once (opacity 0.9s ease-out, transform 1.1s on the smooth spring).
+- Hovers only change color, never position.
+- Reduced motion keeps crossfades only.
+
+**5. Real assets, art-directed.**
+
+- The hero photo is the trip's real destination from Wikipedia, at 1280px where Wikimedia has it.
+- It is hard-cropped (`object-cover`), with no box around it on large screens, and its name sits on a strip of glass (`material-thin`) with the credit link.
+- No placeholder art: while it loads, a skeleton in its shape; if there's no photo, nothing.

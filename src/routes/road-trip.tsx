@@ -288,16 +288,13 @@ function RoadTripPage() {
           <section className="space-y-4" aria-live="polite">
             {view === "auth-loading" || view === "loading" ? (
               <StateCard
-                icon={<Loader2 className="size-5 animate-spin text-primary" />}
+                icon={<Loader2 className="size-5 animate-spin" />}
                 title="Looking along your route…"
               >
                 Finding viewpoints, food and places worth the detour.
               </StateCard>
             ) : view === "needs-search" ? (
-              <StateCard
-                icon={<Search className="size-5 text-primary" />}
-                title="Where does the road take you?"
-              >
+              <StateCard icon={<Search className="size-5" />} title="Where does the road take you?">
                 Add your start and destination above, then tap <strong>Find real stops</strong>.
               </StateCard>
             ) : view === "unavailable" ? (
@@ -389,7 +386,7 @@ function RoadTripPage() {
                 <dd
                   className={cn(
                     "tabular text-lg font-semibold",
-                    stopBudgetLeft < 0 && "text-primary",
+                    stopBudgetLeft < 0 && "text-destructive",
                   )}
                 >
                   {formatMoney(stopBudgetLeft, { cents: true })}
@@ -401,7 +398,7 @@ function RoadTripPage() {
               <p
                 className={cn(
                   "tabular text-headline font-semibold",
-                  totals.overBudget && "text-primary",
+                  totals.overBudget && "text-destructive",
                 )}
               >
                 {formatMoney(totals.remaining, { cents: true })}

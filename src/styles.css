@@ -3,6 +3,7 @@
 @import "tw-animate-css";
 /* One family, self-hosted (OFL), the way Apple sets everything in one face. */
 @import "@fontsource-variable/instrument-sans";
+@import "@fontsource-variable/newsreader/opsz.css";
 
 @custom-variant dark (&:where(.dark, .dark *));
 
@@ -26,9 +27,10 @@
   --font-sans:
     "Instrument Sans Variable", "Instrument Sans", ui-sans-serif, -apple-system, BlinkMacSystemFont,
     "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  /* Headlines: Newsreader (Production Type, OFL), a serif with optical sizes that
+     sharpens as it grows. Text, controls and numbers stay in Instrument Sans. */
   --font-display:
-    "Instrument Sans Variable", "Instrument Sans", ui-sans-serif, -apple-system, BlinkMacSystemFont,
-    "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    "Newsreader Variable", "Newsreader", ui-serif, "New York", Georgia, "Times New Roman", serif;
   --font-mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace;
 
   /*
@@ -610,6 +612,16 @@
   border-radius: 18px;
 }
 
+/*
+ * Runs an element past page-container's right edge to the edge of the window
+ * (from lg up), so a photo crops off the page instead of sitting in a box.
+ */
+@utility bleed-right {
+  @media (width >= 64rem) {
+    margin-right: calc((100vw - min(1024px, 100vw)) / -2 - 24px);
+  }
+}
+
 /* A full-width white band, for the top of a page (apple.com's white hero over gray content). */
 @utility band {
   background-color: var(--color-card);
@@ -643,16 +655,19 @@
 /* Titles: the display cut of the system face. Size, weight and tracking come from the text-* level. */
 @utility title-display {
   font-family: var(--font-display);
+  /* A serif carries a headline at medium weight; the scale's 600 is for the sans. */
+  --tw-font-weight: 500;
+  font-weight: 500;
   text-wrap: balance;
   & em {
     font-style: normal;
   }
 }
 
-/* Amounts that matter: display face, its natural figures (even-width digits leave
+/* Amounts that matter: the text face at display size, its natural figures (even-width digits leave
    gaps around commas at this size), tight. Columns of numbers use `tabular`. */
 @utility money-display {
-  font-family: var(--font-display);
+  font-family: var(--font-sans);
   font-weight: 600;
   letter-spacing: -0.015em;
   line-height: 1;

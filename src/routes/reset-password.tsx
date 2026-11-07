@@ -52,7 +52,7 @@ function ResetPassword() {
   return (
     <div className="mx-auto max-w-md px-4 pt-10">
       <div className="surface-card p-6">
-        <KeyRound className="size-8 text-primary" />
+        <KeyRound className="size-8 text-foreground" />
         <h1 className="title-display mt-4 text-4xl">Choose a new password</h1>
         {ready ? (
           <form onSubmit={submit} className="mt-6 space-y-4">
