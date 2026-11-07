@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, type CSSProperties } from "react";
 import { CalendarHeart, ExternalLink, Footprints, ShieldCheck } from "lucide-react";
 
 import { safeExternalUrl } from "@/lib/booking";
@@ -186,7 +186,7 @@ function TravelerTips({
         const Icon = TIP_ICON[t.topic];
         return (
           <div key={t.topic} className="flex gap-2">
-            <Icon className="mt-1 size-4 shrink-0 text-primary" aria-hidden />
+            <Icon className="mt-1 size-4 shrink-0 text-muted-foreground" aria-hidden />
             <p className="text-footnote leading-relaxed text-muted-foreground">
               <span className="font-semibold text-foreground">{t.topic}.</span> {t.text}
             </p>
@@ -217,7 +217,7 @@ export function HolidayList({
   return (
     <div className={cn("animate-pop rounded-lg border border-border p-4", className)}>
       <p className="flex items-center gap-2 text-footnote font-medium">
-        <CalendarHeart className="size-4 text-primary" /> Public holiday
+        <CalendarHeart className="size-4 text-muted-foreground" /> Public holiday
         {holidays.length > 1 ? "s" : ""} during your trip
       </p>
       <ul className="mt-2 space-y-1 text-xs text-muted-foreground">
@@ -235,5 +235,66 @@ export function HolidayList({
         Expect closures and bigger crowds, so book popular spots ahead.
       </p>
     </div>
+  );
+}
+
+/** Asks Wikimedia for a sharper copy of a thumbnail (it makes standard sizes on demand). */
+function sharper(url: string, width: number) {
+  const size = /\/\d+px-(?=[^/]+$)/;
+  return size.test(url) ? url.replace(size, `/${width}px-`) : url;
+}
+
+/**
+ * The Plan page's hero photo: the trip's destination, hard-cropped and running off
+ * the right edge of the page, its name on a strip of glass. Credited by linking to
+ * the source; nothing at all when there's no photo.
+ */
+export function HeroPhoto({
+  dest,
+  origin,
+  className,
+  style,
+}: {
+  dest: DemoDestination;
+  origin: string;
+  className?: string;
+  style?: CSSProperties;
+}) {
+  const q = useDestinationSummary(dest, origin);
+  const s = q.data;
+  const [tries, setTries] = useState<{ src: string; step: number } | null>(null);
+  if (q.isLoading)
+    return (
+      <div className={className} style={style} role="status" aria-label="Loading photo">
+        <Skeleton className="size-full rounded-none" />
+      </div>
+    );
+  if (!s?.image) return null;
+  // Try a sharper copy first, then the original thumbnail, then nothing.
+  const step = tries?.src === s.image ? tries.step : 0;
+  if (step > 1) return null;
+  const src = step === 0 ? sharper(s.image, 1280) : s.image;
+  return (
+    <figure className={cn("relative overflow-hidden", className)} style={style}>
+      <Photo
+        key={src}
+        src={src}
+        alt={s.title}
+        lazy={false}
+        className="absolute inset-0"
+        onFail={() => setTries({ src: s.image!, step: step + 1 })}
+      />
+      <figcaption className="material-thin absolute bottom-4 left-4 flex max-w-[calc(100%-2rem)] flex-col rounded-xl px-4 py-2">
+        <span className="truncate text-footnote font-semibold">{dest.name}</span>
+        <a
+          href={s.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-caption text-muted-foreground hover:underline"
+        >
+          Photo from Wikipedia
+        </a>
+      </figcaption>
+    </figure>
   );
 }

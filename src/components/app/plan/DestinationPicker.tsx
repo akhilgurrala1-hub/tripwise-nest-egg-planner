@@ -70,7 +70,7 @@ export function DestinationPicker({
   return (
     <div>
       <p className="mb-2 flex items-center gap-2 text-footnote text-muted-foreground">
-        <Sparkles className="size-3.5 text-primary" />
+        <Sparkles className="size-3.5" />
         {tripType === "staycation"
           ? "Planned around your home city"
           : from

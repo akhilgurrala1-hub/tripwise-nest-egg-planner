@@ -345,7 +345,7 @@ function RefinePlan({ busy, onRefine }: { busy: boolean; onRefine: (text: string
   return (
     <section className="surface-card p-4 print:hidden">
       <div className="flex items-center gap-2 rounded-lg border border-input bg-fill p-1 pl-4 focus-within:border-primary focus-within:ring-3 focus-within:ring-primary/15">
-        <Wand2 className="size-4 shrink-0 text-primary" aria-hidden />
+        <Wand2 className="size-4 shrink-0 text-muted-foreground" aria-hidden />
         <input
           value={text}
           onChange={(e) => setText(e.target.value)}

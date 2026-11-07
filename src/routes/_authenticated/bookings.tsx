@@ -314,7 +314,7 @@ function BookingCard({ b, onChange }: { b: BookingRow; onChange: () => void }) {
         b.status === "cancelled" && "opacity-60",
       )}
     >
-      <span className="grid size-10 shrink-0 place-items-center rounded-full bg-secondary text-primary">
+      <span className="grid size-10 shrink-0 place-items-center rounded-full bg-secondary text-foreground">
         <Icon className="size-4" />
       </span>
       <div className="min-w-0 flex-1">

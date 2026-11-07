@@ -501,7 +501,7 @@ export function TripAssistant({
                     title={ex.message}
                     className="group flex h-10 items-center gap-2 rounded-lg border border-border bg-card px-4 text-body transition-[border-color,transform] duration-150 hover:border-primary active:scale-[0.97]"
                   >
-                    <CornerDownRight className="size-3.5 shrink-0 text-primary" />
+                    <CornerDownRight className="size-3.5 shrink-0 text-muted-foreground" />
                     {ex.label}
                   </button>
                 </li>
