@@ -23,6 +23,7 @@ import { useEffect, useState, type ReactNode } from "react";
 
 import { Logo, LogoMark } from "./Logo";
 import { useScrollReveal } from "./scroll-reveal";
+import { useScrolled } from "./use-scrolled";
 import { formatDateRange } from "./TripHeader";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -73,13 +74,22 @@ export function AppShell({ children }: { children: ReactNode }) {
   useScrollReveal(pathname);
   // A new page closes the menu.
   useEffect(() => setMenuOpen(false), [pathname]);
+  // iOS Safari only shows :active (our press feedback) once a touchstart listener exists.
+  useEffect(() => {
+    const noop = () => {};
+    document.addEventListener("touchstart", noop, { passive: true });
+    return () => document.removeEventListener("touchstart", noop);
+  }, []);
+  const scrolled = useScrolled();
+  const hasLocalNav = pathname in LOCAL_CTA;
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
       {/* Global nav, as on apple.com: a thin glass bar, small links in the middle. */}
       <header
+        data-scrolled={scrolled && !hasLocalNav && !menuOpen}
         className={cn(
-          "sticky top-0 z-50 print:hidden",
+          "scroll-edge sticky top-0 z-50 print:hidden",
           menuOpen ? "bg-background" : "material-thick",
         )}
       >
@@ -120,7 +130,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         </div>
       </header>
       <MobileMenu open={menuOpen} items={nav} active={active} onClose={() => setMenuOpen(false)} />
-      <LocalNav pathname={pathname} />
+      <LocalNav pathname={pathname} scrolled={scrolled} />
 
       <main key={pathname} className="animate-page flex-1 pb-20">
         {children}
@@ -191,8 +201,9 @@ function MobileMenu({
       role="dialog"
       aria-modal="true"
       aria-label="Menu"
-      hidden={!open}
-      className="fixed inset-x-0 top-11 bottom-0 z-[45] overflow-y-auto bg-background px-8 pt-6 pb-10 md:hidden"
+      data-open={open}
+      inert={!open}
+      className="mobile-menu fixed inset-x-0 top-11 bottom-0 z-[45] overflow-y-auto bg-background px-8 pt-6 pb-10 md:hidden"
     >
       <ul className="space-y-2">
         {items.map((item, i) => (
@@ -262,7 +273,7 @@ const LOCAL_CTA: Record<
  * apple.com's local nav: a second glass bar under the global one with the page's
  * subject on the left (the trip) and its one action on the right, a capsule.
  */
-function LocalNav({ pathname }: { pathname: string }) {
+function LocalNav({ pathname, scrolled }: { pathname: string; scrolled: boolean }) {
   const { trip, place } = useTrip();
   const cta = LOCAL_CTA[pathname];
   if (!cta) return null;
@@ -270,7 +281,8 @@ function LocalNav({ pathname }: { pathname: string }) {
   return (
     <nav
       aria-label="This trip"
-      className="material-thick sticky top-11 z-40 border-b border-separator print:hidden"
+      data-scrolled={scrolled}
+      className="material-thick scroll-edge sticky top-11 z-40 print:hidden"
     >
       <div className="page-container flex h-13 items-center justify-between gap-4">
         <p className="min-w-0 truncate text-headline">{trip.isSample ? "Sample trip" : place}</p>

@@ -5,7 +5,7 @@ const KEY = "waypoint.theme";
 
 /** Runs before first paint (inlined in the document head) so the right theme shows immediately. */
 /** Browser-chrome color per theme: the page background, so the toolbar blends in. */
-export const THEME_COLORS = { light: "#FBFBFC", dark: "#111216" } as const;
+export const THEME_COLORS = { light: "#F5F5F6", dark: "#070708" } as const;
 
 export const THEME_BOOT_SCRIPT = `(function(){var d=false;try{var p=localStorage.getItem("${KEY}")||"system";d=p==="dark"||(p==="system"&&window.matchMedia("(prefers-color-scheme: dark)").matches);document.documentElement.classList.toggle("dark",d);}catch(e){}var m=document.createElement("meta");m.name="theme-color";m.content=d?"${THEME_COLORS.dark}":"${THEME_COLORS.light}";document.head.appendChild(m);})();`;
 
@@ -19,8 +19,15 @@ function apply(pref: ThemePref) {
   const dark =
     pref === "dark" ||
     (pref === "system" && window.matchMedia("(prefers-color-scheme: dark)").matches);
-  document.documentElement.classList.toggle("dark", dark);
-  setThemeColor(dark);
+  if (document.documentElement.classList.contains("dark") === dark) return;
+  const swap = () => {
+    document.documentElement.classList.toggle("dark", dark);
+    setThemeColor(dark);
+  };
+  // Crossfade the whole page so the brightness eases over instead of jumping.
+  const doc = document as Document & { startViewTransition?: (cb: () => void) => unknown };
+  if (doc.startViewTransition) doc.startViewTransition(swap);
+  else swap();
 }
 
 export function useTheme() {

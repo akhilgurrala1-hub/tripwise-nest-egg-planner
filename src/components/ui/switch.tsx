@@ -1,12 +1,13 @@
 import * as React from "react";
 import * as SwitchPrimitives from "@radix-ui/react-switch";
 
+import { haptic } from "@/lib/haptics";
 import { cn } from "@/lib/utils";
 
 const Switch = React.forwardRef<
   React.ElementRef<typeof SwitchPrimitives.Root>,
   React.ComponentPropsWithoutRef<typeof SwitchPrimitives.Root>
->(({ className, ...props }, ref) => (
+>(({ className, onCheckedChange, ...props }, ref) => (
   <SwitchPrimitives.Root
     // iOS switch: 51 × 31, gray off, brand blue on; the knob springs across and
     // stretches while held, like the real one.
@@ -15,6 +16,11 @@ const Switch = React.forwardRef<
       className,
     )}
     {...props}
+    // A light tick as the switch flips (where the device supports it).
+    onCheckedChange={(checked) => {
+      haptic();
+      onCheckedChange?.(checked);
+    }}
     ref={ref}
   >
     <SwitchPrimitives.Thumb

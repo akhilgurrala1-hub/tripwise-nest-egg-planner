@@ -102,3 +102,16 @@ The app now takes its page structure and motion straight from apple.com, with ev
 | No footer                                | An apple.com footer: sources, breadcrumb, link columns, fine print                                       |
 
 What stays: content already on screen is never hidden, reduced motion turns every movement into a plain crossfade or nothing, and printing shows everything.
+
+## Fourth pass: fluid details
+
+Checked against Apple's _Designing Fluid Interfaces_ and _Principles of Great Design_:
+
+| Principle                         | What was missing                                                     | Now                                                                                               |
+| --------------------------------- | -------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
+| Respond on touch-down             | iPhone Safari never showed the press state (it needs a `touchstart`) | A passive `touchstart` listener; `touch-action: manipulation` removes the double-tap wait         |
+| Interruptible, same path in/out   | The phone menu vanished on close and couldn't be turned around       | Transitions in and out along one path; tapping again mid-way reverses from where it is            |
+| Scroll edge, not hard dividers    | A permanent line under the trip bar                                  | The hairline fades in only once content is passing under the bar                                  |
+| No abrupt brightness jumps        | Light/dark switched in one frame                                     | A 280ms crossfade of the whole page (View Transitions, where supported)                           |
+| Reduce Transparency / Contrast    | Glass stayed see-through                                             | Solid surfaces; with Increase Contrast also defined edges and darker secondary text               |
+| Multimodal feedback, used sparely | None                                                                 | A light haptic tick on the same frame as a switch flip or a segmented snap (Vibration API phones) |
