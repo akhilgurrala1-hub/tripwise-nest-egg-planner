@@ -1,4 +1,4 @@
-import { useState, type CSSProperties } from "react";
+import { useState } from "react";
 import { CalendarHeart, ExternalLink, Footprints, ShieldCheck } from "lucide-react";
 
 import { safeExternalUrl } from "@/lib/booking";
@@ -89,9 +89,13 @@ export function DestinationHero({
   className?: string;
 }) {
   const s = useDestinationSummary(dest, origin).data;
-  const [failed, setFailed] = useState(false);
-  // Better no hero than a broken one: a photo that can't load takes the hero with it.
-  if (!s?.image || failed) return null;
+  const [tries, setTries] = useState<{ src: string; step: number } | null>(null);
+  // Better no hero than a broken one: try sharper copies, then the thumbnail, then nothing.
+  if (!s?.image) return null;
+  const step = tries?.src === s.image ? tries.step : 0;
+  if (step >= HERO_SIZES.length) return null;
+  const size = HERO_SIZES[step]!;
+  const src = size ? sharper(s.image, size) : s.image;
   return (
     <a
       href={s.url}
@@ -104,12 +108,13 @@ export function DestinationHero({
       )}
     >
       <Photo
-        src={s.image}
+        key={src}
+        src={src}
         alt={s.title}
         lazy={false}
         className="absolute inset-0"
         imgClassName="parallax"
-        onFail={() => setFailed(true)}
+        onFail={() => setTries({ src: s.image!, step: step + 1 })}
       />
     </a>
   );
@@ -238,6 +243,9 @@ export function HolidayList({
   );
 }
 
+/** Widths to try for a full-width photo, sharpest first; 0 is the original thumbnail. */
+const HERO_SIZES = [1920, 1280, 0];
+
 /** Asks Wikimedia for a sharper copy of a thumbnail (it makes standard sizes on demand). */
 function sharper(url: string, width: number) {
   const size = /\/\d+px-(?=[^/]+$)/;
@@ -245,56 +253,47 @@ function sharper(url: string, width: number) {
 }
 
 /**
- * The Plan page's hero photo: the trip's destination, hard-cropped and running off
- * the right edge of the page, its name on a strip of glass. Credited by linking to
- * the source; nothing at all when there's no photo.
+ * The Plan page's backdrop: the trip's destination, full-bleed behind the hero,
+ * under a scrim so white type reads on it. Tries a 1920px copy, then 1280px, then
+ * the 960px thumbnail; with no photo the section's own deep color stays.
  */
-export function HeroPhoto({
-  dest,
-  origin,
-  className,
-  style,
-}: {
-  dest: DemoDestination;
-  origin: string;
-  className?: string;
-  style?: CSSProperties;
-}) {
+export function HeroBackdrop({ dest, origin }: { dest: DemoDestination; origin: string }) {
   const q = useDestinationSummary(dest, origin);
   const s = q.data;
   const [tries, setTries] = useState<{ src: string; step: number } | null>(null);
-  if (q.isLoading)
-    return (
-      <div className={className} style={style} role="status" aria-label="Loading photo">
-        <Skeleton className="size-full rounded-none" />
-      </div>
-    );
   if (!s?.image) return null;
-  // Try a sharper copy first, then the original thumbnail, then nothing.
   const step = tries?.src === s.image ? tries.step : 0;
-  if (step > 1) return null;
-  const src = step === 0 ? sharper(s.image, 1280) : s.image;
+  if (step >= HERO_SIZES.length) return null;
+  const size = HERO_SIZES[step]!;
+  const src = size ? sharper(s.image, size) : s.image;
   return (
-    <figure className={cn("relative overflow-hidden", className)} style={style}>
+    <>
       <Photo
         key={src}
         src={src}
-        alt={s.title}
+        alt=""
         lazy={false}
-        className="absolute inset-0"
+        className="absolute inset-0 -z-10"
+        imgClassName="parallax"
         onFail={() => setTries({ src: s.image!, step: step + 1 })}
       />
-      <figcaption className="material-thin absolute bottom-4 left-4 flex max-w-[calc(100%-2rem)] flex-col rounded-xl px-4 py-2">
-        <span className="truncate text-footnote font-semibold">{dest.name}</span>
-        <a
-          href={s.url}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-caption text-muted-foreground hover:underline"
-        >
-          Photo from Wikipedia
-        </a>
-      </figcaption>
-    </figure>
+      <div aria-hidden className="photo-scrim absolute inset-0 -z-10" />
+    </>
+  );
+}
+
+/** The backdrop's credit: the place's name and a link to the photo's source. */
+export function HeroCredit({ dest, origin }: { dest: DemoDestination; origin: string }) {
+  const s = useDestinationSummary(dest, origin).data;
+  if (!s?.image) return null;
+  return (
+    <a
+      href={s.url}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="text-caption text-on-image/80 hover:text-on-image hover:underline"
+    >
+      {dest.name} · Photo from Wikipedia
+    </a>
   );
 }

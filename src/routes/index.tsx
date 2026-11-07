@@ -6,7 +6,7 @@ import { toast } from "sonner";
 
 import { InterestChips, NumberField, FieldError } from "@/components/app/bits";
 import { stagger } from "@/components/app/motion";
-import { HeroPhoto } from "@/components/app/DestinationIntro";
+import { HeroBackdrop, HeroCredit } from "@/components/app/DestinationIntro";
 import { DestinationPicker } from "@/components/app/plan/DestinationPicker";
 import { CoveragePicker } from "@/components/app/plan/CoveragePicker";
 import { OriginField } from "@/components/app/plan/OriginField";
@@ -324,24 +324,29 @@ function Welcome() {
         </div>
       )}
       {/*
-        The hero, asymmetric: the question and the assistant left-aligned in columns
-        1-7, the destination's real photo in 8-12, cropped off the page's right edge.
+        The hero: the destination's real photo, full-bleed, with the question in
+        white over its darker left side and the assistant on a pane of glass.
+        Left-aligned in columns 1-7; the place shows through on the right.
       */}
-      <section className="band overflow-hidden pt-12 pb-16 sm:pt-16 lg:pb-0">
-        <div className="page-container lg:grid lg:grid-cols-12 lg:gap-8">
-          <div className="lg:col-span-7 lg:pb-20">
-            <p className="hero-in eyebrow">New trip</p>
+      <section className="hero-photo relative isolate overflow-hidden">
+        <HeroBackdrop dest={dest} origin={form.origin} />
+        <div className="page-container flex min-h-[min(92svh,880px)] flex-col justify-end pt-24 pb-8 sm:pb-12 lg:grid lg:grid-cols-12 lg:items-end lg:gap-8">
+          <div className="lg:col-span-7">
+            <p className="hero-in text-headline font-semibold text-on-image/85">New trip</p>
             <h1 className="hero-in title-display mt-2 text-display" style={stagger(1)}>
               Where to next?
             </h1>
             <p
-              className="hero-in mt-4 max-w-xl text-headline font-normal text-muted-foreground"
+              className="hero-in mt-4 max-w-xl text-headline font-normal text-on-image/85"
               style={stagger(2)}
             >
               Say it however you like. Waypoint works out the budget to the dollar, plans the days
               and lists what to book.
             </p>
-            <div className="hero-in mt-10" style={stagger(3)}>
+            <div
+              className="hero-in floating mt-8 rounded-[24px] p-2 text-foreground sm:p-4"
+              style={stagger(3)}
+            >
               <TripAssistant
                 variant="hero"
                 homeCity={form.origin}
@@ -360,12 +365,9 @@ function Welcome() {
               />
             </div>
           </div>
-          <HeroPhoto
-            dest={dest}
-            origin={form.origin}
-            className="hero-in bleed-right mt-10 aspect-[16/10] rounded-[18px] lg:col-span-5 lg:mt-0 lg:aspect-auto lg:min-h-full lg:rounded-r-none lg:rounded-b-none"
-            style={stagger(4)}
-          />
+          <p className="mt-6 lg:col-span-5 lg:mt-0 lg:justify-self-end">
+            <HeroCredit dest={dest} origin={form.origin} />
+          </p>
         </div>
       </section>
       <div className="page-container pt-12 pb-10 sm:pt-16">

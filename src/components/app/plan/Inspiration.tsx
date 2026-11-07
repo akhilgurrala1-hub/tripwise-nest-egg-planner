@@ -103,7 +103,7 @@ export function Inspiration({
         className="-mx-4 mt-6 flex snap-x snap-mandatory scroll-px-4 gap-4 overflow-x-auto px-4 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
       >
         {ideas.map((idea, i) => (
-          <li key={idea.s.id} className="w-[78%] shrink-0 snap-start sm:w-64">
+          <li key={idea.s.id} className="w-[72%] shrink-0 snap-start sm:w-72">
             <IdeaCard idea={idea} origin={setup.origin} style={stagger(i + 1)} onPick={onPick} />
           </li>
         ))}
@@ -152,41 +152,37 @@ function IdeaCard({
       type="button"
       style={{ ...style, "--kind": color } as CSSProperties}
       onClick={() => onPick(idea.s.id, idea.tripType)}
-      className="group animate-rise surface-card block w-full overflow-hidden text-left pressable focus-visible:ring-4 focus-visible:ring-primary/20 focus-visible:outline-none"
+      className="group animate-rise hero-photo relative isolate block aspect-[3/4] w-full overflow-hidden rounded-[18px] text-left pressable focus-visible:ring-4 focus-visible:ring-primary/30 focus-visible:outline-none"
     >
-      <span className="relative block aspect-[4/3] overflow-hidden bg-[color-mix(in_oklab,var(--kind)_10%,var(--card))]">
-        {photo?.image ? (
-          <Photo
-            src={photo.image}
-            alt=""
-            className="absolute inset-0"
-            fallback={
-              <RouteMark className="absolute inset-0 m-auto h-16 w-24 text-(--kind) opacity-60" />
-            }
-          />
-        ) : (
-          <RouteMark className="absolute inset-0 m-auto h-16 w-24 text-(--kind) opacity-60" />
-        )}
-        <span className="absolute top-2.5 left-2.5 rounded-md bg-card px-2 py-1 text-micro font-medium text-foreground">
-          {tripTypeInfo(idea.tripType).label}
-        </span>
+      {/* The place, edge to edge; its name and estimate in white over the darkened bottom. */}
+      {photo?.image ? (
+        <Photo
+          src={photo.image}
+          alt=""
+          className="absolute inset-0 -z-10"
+          fallback={
+            <RouteMark className="absolute inset-x-0 top-16 -z-10 mx-auto h-16 w-24 text-on-image/40" />
+          }
+        />
+      ) : (
+        <RouteMark className="absolute inset-x-0 top-16 -z-10 mx-auto h-16 w-24 text-on-image/40" />
+      )}
+      <span aria-hidden className="card-scrim absolute inset-0 -z-10" />
+      <span className="material-thin absolute top-4 left-4 rounded-md px-2 py-1 text-micro font-semibold text-foreground">
+        {tripTypeInfo(idea.tripType).label}
       </span>
-      <span className="block p-4">
-        <span className="flex items-start justify-between gap-2">
-          <span className="min-w-0">
-            <span className="block truncate text-body font-semibold">{idea.s.name}</span>
-            <span className="block truncate text-xs text-muted-foreground">
-              {idea.s.region}
-              {idea.s.distanceLabel ? ` · ${idea.s.distanceLabel}` : ""}
-            </span>
-          </span>
-          <ArrowUpRight className="mt-1 size-4 shrink-0 text-muted-foreground" />
+      <ArrowUpRight className="absolute top-4 right-4 size-5 text-on-image/90" />
+      <span className="absolute inset-x-0 bottom-0 block p-4">
+        <span className="title-display block truncate text-title-2">{idea.s.name}</span>
+        <span className="mt-1 block truncate text-footnote text-on-image/80">
+          {idea.s.region}
+          {idea.s.distanceLabel ? ` · ${idea.s.distanceLabel}` : ""}
         </span>
-        <span className="mt-4 flex items-baseline gap-1 text-footnote whitespace-nowrap">
-          <span className="text-muted-foreground">about</span>
-          <span className="money-display text-title-2">{formatMoney(idea.cost)}</span>
+        <span className="mt-2 flex items-baseline gap-1 text-footnote whitespace-nowrap">
+          <span className="text-on-image/80">about</span>
+          <span className="money-display text-headline">{formatMoney(idea.cost)}</span>
         </span>
-        <span className="mt-1 block truncate text-xs text-muted-foreground">{idea.s.tagline}</span>
+        <span className="mt-1 block truncate text-caption text-on-image/75">{idea.s.tagline}</span>
       </span>
     </button>
   );

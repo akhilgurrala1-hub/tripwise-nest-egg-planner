@@ -294,52 +294,52 @@
   --radius: 10px;
   color-scheme: light;
   /* apple.com: a light-gray page (#f5f5f7), white tiles, #1d1d1f text. */
-  --background: oklch(0.97 0.002 286);
-  --foreground: oklch(0.218 0.004 286);
+  --background: oklch(0.968 0.008 75);
+  --foreground: oklch(0.218 0.012 70);
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.218 0.004 286);
+  --card-foreground: oklch(0.218 0.012 70);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.218 0.004 286);
+  --popover-foreground: oklch(0.218 0.012 70);
   /* The one accent: interactive, selected, focused. */
   /* Brand blue (#2457E6), the logo's tile color, doubles as the interactive accent. */
   --primary: oklch(0.519 0.223 264.5);
   --primary-deep: oklch(0.455 0.197 264.8);
   --primary-foreground: oklch(0.99 0 0);
   /* Fills (#e8e8ed) for secondary controls and tracks. */
-  --secondary: oklch(0.935 0.003 286);
-  --secondary-foreground: oklch(0.218 0.004 286);
-  --muted: oklch(0.945 0.003 286);
-  --muted-foreground: oklch(0.505 0.007 286);
+  --secondary: oklch(0.935 0.007 70);
+  --secondary-foreground: oklch(0.218 0.012 70);
+  --muted: oklch(0.945 0.007 70);
+  --muted-foreground: oklch(0.505 0.012 70);
   --accent: oklch(0.945 0.018 264);
-  --accent-foreground: oklch(0.218 0.004 286);
-  --fill: oklch(0.218 0.004 286 / 0.06);
+  --accent-foreground: oklch(0.218 0.012 70);
+  --fill: oklch(0.218 0.012 70 / 0.06);
   /* Legacy warm tokens now resolve to the accent / neutrals. */
   --sunset: var(--primary);
   --sunset-foreground: var(--primary-foreground);
   --sunset-soft: oklch(0.955 0.016 264);
   --gold: oklch(0.7 0.12 80);
-  --gold-soft: oklch(0.945 0.003 286);
+  --gold-soft: oklch(0.945 0.007 70);
   --success: oklch(0.49 0.12 152);
   --success-soft: oklch(0.955 0.025 152);
-  --shield: oklch(0.38 0.006 286);
-  --shield-soft: oklch(0.945 0.003 286);
+  --shield: oklch(0.38 0.012 70);
+  --shield-soft: oklch(0.945 0.007 70);
   --shield-foreground: oklch(0.99 0 0);
-  --demo: oklch(0.5 0.008 286);
-  --demo-soft: oklch(0.945 0.003 286);
+  --demo: oklch(0.5 0.012 70);
+  --demo-soft: oklch(0.945 0.007 70);
   --destructive: oklch(0.55 0.2 27);
   --destructive-foreground: oklch(0.99 0 0);
   --destructive-soft: oklch(0.96 0.02 27);
   /* Separators are hairlines: black at low alpha, so they sit right on any surface. */
-  --border: oklch(0.218 0.004 286 / 0.12);
-  --separator: oklch(0.218 0.004 286 / 0.1);
-  --input: oklch(0.218 0.004 286 / 0.18);
+  --border: oklch(0.218 0.012 70 / 0.12);
+  --separator: oklch(0.218 0.012 70 / 0.1);
+  --input: oklch(0.218 0.012 70 / 0.18);
   --ring: oklch(0.519 0.223 264.5);
   /* Brand coral (#FF6B4A): the logo's destination dot. Used sparingly for "you are here / next" cues. */
   --brand-coral: oklch(0.707 0.187 34.1);
   /* Coral as small text (step numbers): darker so it reads at AA contrast on paper. */
   --coral-text: oklch(0.55 0.17 34);
   /* Solid emphasis surface (primary call to action, the balance card). */
-  --ink: oklch(0.218 0.004 286);
+  --ink: oklch(0.218 0.012 70);
   --ink-foreground: oklch(0.985 0 0);
   --on-image: oklch(0.99 0 0);
 
@@ -395,13 +395,13 @@
   --shadow-glow-value: 0 1px 2px oklch(0 0 0 / 0.05);
 
   /* Materials: frosted glass for bars and menus (alpha of the base + blur). */
-  --material-base: oklch(0.985 0.002 286);
+  --material-base: oklch(0.985 0.006 70);
   --material-thick: 0.88;
   --material-regular: 0.74;
   --material-thin: 0.6;
   /* The lit top edge of glass, and the hairline under it. */
   --specular: oklch(1 0 0 / 0.7);
-  --material-edge: oklch(0.218 0.004 286 / 0.1);
+  --material-edge: oklch(0.218 0.012 70 / 0.1);
 
   --sidebar: var(--background);
   --sidebar-foreground: var(--foreground);
@@ -416,34 +416,34 @@
 .dark {
   color-scheme: dark;
   /* Near-black page, #1d1d1f tiles: Apple's dark pages, a shade off pure black. */
-  --background: oklch(0.13 0.003 286);
-  --foreground: oklch(0.97 0.002 286);
-  --card: oklch(0.215 0.004 286);
-  --card-foreground: oklch(0.97 0.002 286);
-  --popover: oklch(0.26 0.005 286);
-  --popover-foreground: oklch(0.97 0.002 286);
+  --background: oklch(0.165 0.024 258);
+  --foreground: oklch(0.97 0.006 258);
+  --card: oklch(0.215 0.026 258);
+  --card-foreground: oklch(0.97 0.006 258);
+  --popover: oklch(0.26 0.022 258);
+  --popover-foreground: oklch(0.97 0.006 258);
   --primary: oklch(0.7 0.16 264);
   --primary-deep: oklch(0.76 0.13 264);
   --primary-foreground: oklch(0.16 0.01 260);
-  --secondary: oklch(0.27 0.005 286);
-  --secondary-foreground: oklch(0.97 0.002 286);
-  --muted: oklch(0.25 0.004 286);
-  --muted-foreground: oklch(0.7 0.008 286);
+  --secondary: oklch(0.27 0.022 258);
+  --secondary-foreground: oklch(0.97 0.006 258);
+  --muted: oklch(0.25 0.022 258);
+  --muted-foreground: oklch(0.7 0.006 258);
   --accent: oklch(0.28 0.03 264);
-  --accent-foreground: oklch(0.97 0.002 286);
+  --accent-foreground: oklch(0.97 0.006 258);
   --fill: oklch(1 0 0 / 0.08);
   --sunset: var(--primary);
   --sunset-foreground: var(--primary-foreground);
   --sunset-soft: oklch(0.27 0.03 264);
   --gold: oklch(0.78 0.11 80);
-  --gold-soft: oklch(0.25 0.004 286);
+  --gold-soft: oklch(0.25 0.022 258);
   --success: oklch(0.74 0.14 152);
   --success-soft: oklch(0.26 0.035 152);
-  --shield: oklch(0.86 0.004 286);
-  --shield-soft: oklch(0.27 0.005 286);
-  --shield-foreground: oklch(0.16 0.004 286);
-  --demo: oklch(0.7 0.008 286);
-  --demo-soft: oklch(0.25 0.004 286);
+  --shield: oklch(0.86 0.006 258);
+  --shield-soft: oklch(0.27 0.022 258);
+  --shield-foreground: oklch(0.16 0.022 258);
+  --demo: oklch(0.7 0.006 258);
+  --demo-soft: oklch(0.25 0.022 258);
   --destructive: oklch(0.7 0.17 25);
   --destructive-foreground: oklch(0.16 0.01 260);
   --destructive-soft: oklch(0.28 0.045 25);
@@ -453,8 +453,8 @@
   --ring: oklch(0.7 0.16 264);
   --brand-coral: oklch(0.74 0.17 36);
   --coral-text: oklch(0.76 0.15 38);
-  --ink: oklch(0.97 0.002 286);
-  --ink-foreground: oklch(0.16 0.004 286);
+  --ink: oklch(0.97 0.006 258);
+  --ink-foreground: oklch(0.16 0.022 258);
   --on-image: oklch(0.99 0 0);
 
   --go: var(--primary);
@@ -494,7 +494,7 @@
   --shadow-lift-value: 0 16px 48px -12px oklch(0 0 0 / 0.8);
   --shadow-glow-value: none;
 
-  --material-base: oklch(0.18 0.004 286);
+  --material-base: oklch(0.18 0.022 258);
   --material-thick: 0.86;
   --material-regular: 0.72;
   --material-thin: 0.58;
@@ -613,13 +613,36 @@
 }
 
 /*
- * Runs an element past page-container's right edge to the edge of the window
- * (from lg up), so a photo crops off the page instead of sitting in a box.
+ * The photo hero: a deep color under the photo (all that shows when there's no
+ * photo), white type, and a scrim that darkens where the words sit (left and
+ * bottom) and lets the place show on the right.
  */
-@utility bleed-right {
-  @media (width >= 64rem) {
-    margin-right: calc((100vw - min(1024px, 100vw)) / -2 - 24px);
+@utility hero-photo {
+  background-color: oklch(0.24 0.03 258);
+  color: var(--color-on-image);
+}
+@utility photo-scrim {
+  background:
+    linear-gradient(to top, oklch(0 0 0 / 0.6), oklch(0 0 0 / 0) 65%),
+    linear-gradient(to right, oklch(0 0 0 / 0.62), oklch(0 0 0 / 0.3) 55%, oklch(0 0 0 / 0.05));
+  @media (width < 64rem) {
+    background: linear-gradient(
+      to top,
+      oklch(0 0 0 / 0.72),
+      oklch(0 0 0 / 0.35) 60%,
+      oklch(0 0 0 / 0.2)
+    );
   }
+}
+
+/* Under the words at the bottom of a photo card. */
+@utility card-scrim {
+  background: linear-gradient(
+    to top,
+    oklch(0 0 0 / 0.72),
+    oklch(0 0 0 / 0.25) 45%,
+    oklch(0 0 0 / 0) 70%
+  );
 }
 
 /* A full-width white band, for the top of a page (apple.com's white hero over gray content). */
