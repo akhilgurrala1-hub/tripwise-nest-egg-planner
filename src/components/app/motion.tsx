@@ -422,20 +422,54 @@ export function AnimatedMoney({
   value,
   cents,
   className,
+  countUp = false,
 }: {
   value: number;
   cents?: boolean;
   className?: string;
+  /**
+   * apple.com's count-up: when the amount first scrolls into view it counts up from
+   * zero. Only for amounts that start below the fold, so nothing on screen blinks.
+   */
+  countUp?: boolean;
 }) {
-  const v = useTweened(value);
+  const ref = useRef<HTMLSpanElement>(null);
+  const [armed, setArmed] = useState<"idle" | "waiting" | "done">("idle");
+  useIsoLayoutEffect(() => {
+    if (!countUp || armed !== "idle") return;
+    const el = ref.current;
+    if (!el || typeof IntersectionObserver === "undefined" || prefersReducedMotion())
+      return setArmed("done");
+    if (el.getBoundingClientRect().top < window.innerHeight) return setArmed("done");
+    setArmed("waiting");
+  }, [countUp, armed]);
+  useEffect(() => {
+    if (armed !== "waiting" || !ref.current) return;
+    const io = new IntersectionObserver(
+      ([e]) => {
+        if (e?.isIntersecting) {
+          setArmed("done");
+          io.disconnect();
+        }
+      },
+      { threshold: 0.6 },
+    );
+    io.observe(ref.current);
+    return () => io.disconnect();
+  }, [armed]);
+  const target = armed === "waiting" ? 0 : value;
+  const v = useTweened(target, armed === "done" && countUp ? COUNT_UP : SPRINGS.smooth);
   // Settle on the exact value so the last frame never shows a rounding artifact.
-  const display = Math.abs(v - value) < 0.005 ? value : v;
+  const display = Math.abs(v - target) < 0.005 ? target : v;
   return (
-    <span className={cn("tabular", className)}>
+    <span ref={ref} className={cn("tabular", className)}>
       {formatMoney(display, cents ? { cents: true } : {})}
     </span>
   );
 }
+
+/** A slower, calmer spring for counting up a big number. */
+const COUNT_UP: SpringConfig = { response: 1.1, damping: 1 };
 
 /** Staggered entrance for a list: pass the item index. */
 export const stagger = (i: number): CSSProperties =>

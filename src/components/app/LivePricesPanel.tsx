@@ -123,7 +123,7 @@ export function LivePricesPanel({ className }: { className?: string }) {
   };
 
   return (
-    <section id="live-prices" className={cn("surface-card scroll-mt-24 p-6", className)}>
+    <section id="live-prices" className={cn("surface-card scroll-mt-32 p-6", className)}>
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div className="min-w-0">
           <h2 className="title-display text-title-1">Live prices</h2>

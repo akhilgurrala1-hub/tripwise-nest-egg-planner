@@ -113,7 +113,7 @@ function Dashboard() {
                   )}
                 >
                   {totals.overBudget ? "−" : ""}
-                  <AnimatedMoney value={Math.abs(totals.remaining)} />
+                  <AnimatedMoney value={Math.abs(totals.remaining)} countUp />
                 </p>
                 <ApproxMoney
                   usd={Math.abs(totals.remaining)}
@@ -131,13 +131,13 @@ function Dashboard() {
                 <div>
                   <dt className="text-muted-foreground">Per person, per day</dt>
                   <dd className="tabular mt-1 text-base font-medium">
-                    <AnimatedMoney value={totals.perPersonPerDay} />
+                    <AnimatedMoney value={totals.perPersonPerDay} countUp />
                   </dd>
                 </div>
                 <div>
                   <dt className="text-muted-foreground">Could save</dt>
                   <dd className="tabular mt-1 text-base font-medium text-success">
-                    <AnimatedMoney value={potentialSavings} />
+                    <AnimatedMoney value={potentialSavings} countUp />
                   </dd>
                 </div>
               </dl>
