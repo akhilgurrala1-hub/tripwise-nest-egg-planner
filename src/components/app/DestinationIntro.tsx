@@ -291,7 +291,7 @@ export function HeroCredit({ dest, origin }: { dest: DemoDestination; origin: st
       href={s.url}
       target="_blank"
       rel="noopener noreferrer"
-      className="text-caption text-on-image/80 hover:text-on-image hover:underline"
+      className="on-photo text-caption hover:underline"
     >
       {dest.name} · Photo from Wikipedia
     </a>

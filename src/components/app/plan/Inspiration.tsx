@@ -172,7 +172,7 @@ function IdeaCard({
         {tripTypeInfo(idea.tripType).label}
       </span>
       <ArrowUpRight className="absolute top-4 right-4 size-5 text-on-image/90" />
-      <span className="absolute inset-x-0 bottom-0 block p-4">
+      <span className="on-photo absolute inset-x-0 bottom-0 block p-4">
         <span className="title-display block truncate text-title-2">{idea.s.name}</span>
         <span className="mt-1 block truncate text-footnote text-on-image/80">
           {idea.s.region}
