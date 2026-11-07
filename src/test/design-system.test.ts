@@ -105,6 +105,18 @@ describe("surfaces", () => {
     expect(pills).toEqual([]);
   });
 
+  it("rounds corners from the four-radius scale only, never by hand", () => {
+    expect(find(/\brounded(?:-[a-z]{1,2})?-\[(?!inherit\])[^\]]+\]/g)).toEqual([]);
+  });
+
+  it("fields share one shape: text inputs, text areas and selects", () => {
+    for (const f of ["input", "textarea", "select"]) {
+      const src = readFileSync(join(SRC, "components", "ui", `${f}.tsx`), "utf8");
+      expect(src, `${f}.tsx`).toMatch(/rounded-xl border border-input bg-fill/);
+      expect(src, `${f}.tsx`).not.toMatch(/\bshadow-sm\b/);
+    }
+  });
+
   it("floating menus use the floating material", () => {
     expect(find(/rounded-md border bg-popover/g)).toEqual([]);
   });
@@ -119,6 +131,22 @@ describe("surfaces", () => {
         expect(block, `${material} under ${query}`).toContain(material);
       expect(block).toContain("backdrop-filter: none");
     }
+  });
+});
+
+describe("buttons", () => {
+  it("show work in progress: spinner in place of the icon, label kept, pressed once", async () => {
+    const { renderToStaticMarkup } = await import("react-dom/server");
+    const { createElement } = await import("react");
+    const { Button } = await import("@/components/ui/button");
+    const html = renderToStaticMarkup(createElement(Button, { loading: true }, "Save"));
+    expect(html).toContain("disabled");
+    expect(html).toContain('aria-busy="true"');
+    expect(html).toContain("data-spinner");
+    expect(html).toContain("Save");
+    const idle = renderToStaticMarkup(createElement(Button, null, "Save"));
+    expect(idle).not.toContain("data-spinner");
+    expect(idle).not.toContain("aria-busy");
   });
 });
 
@@ -142,6 +170,12 @@ describe("no template tells", () => {
     const text =
       /<(?:span|p|div|dd|dt|li|h[1-6])\b[^>]*className="[^"]*\btext-primary(?![\w-])[^"]*"/g;
     expect([...find(icon, (p) => p.startsWith("components/ui/")), ...find(text)]).toEqual([]);
+  });
+
+  it("no sparkles or magic wands standing in for features", () => {
+    expect(
+      find(/\b(?:Sparkles?|Wand2?|WandSparkles)\b/g, (p) => p.startsWith("components/ui/")),
+    ).toEqual([]);
   });
 
   it("coral stays in the logo and the route art; the UI has one brand color", () => {

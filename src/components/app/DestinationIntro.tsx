@@ -103,7 +103,7 @@ export function DestinationHero({
       rel="noopener noreferrer"
       title="Photo from Wikipedia"
       className={cn(
-        "animate-pop group relative block overflow-hidden rounded-[20px] shadow-[var(--shadow-soft-value)]",
+        "animate-pop group relative block overflow-hidden rounded-2xl shadow-[var(--shadow-soft-value)]",
         className,
       )}
     >

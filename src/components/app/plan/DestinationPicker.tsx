@@ -1,4 +1,4 @@
-import { Car, Home, MapPin, Plane, Ship, Sparkles, TrainFront, Check } from "lucide-react";
+import { Car, Home, MapPin, Plane, Ship, TrainFront, Check } from "lucide-react";
 import type { ReactNode } from "react";
 
 import { stagger } from "@/components/app/motion";
@@ -70,7 +70,6 @@ export function DestinationPicker({
   return (
     <div>
       <p className="mb-2 flex items-center gap-2 text-footnote text-muted-foreground">
-        <Sparkles className="size-3.5" />
         {tripType === "staycation"
           ? "Planned around your home city"
           : from

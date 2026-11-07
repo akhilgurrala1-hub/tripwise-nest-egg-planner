@@ -44,6 +44,7 @@ import { useTheme, type ThemePref } from "@/lib/theme";
 import { usePersonalizedSample } from "@/lib/live/use-home";
 import { setLocalePrefs, useLocale } from "@/lib/live/use-locale";
 import { CURRENCIES } from "@/lib/locale";
+import { usePlanning } from "@/lib/planning-state";
 import { useTrip } from "@/lib/trip-store";
 
 const NAV: {
@@ -275,6 +276,7 @@ const LOCAL_CTA: Record<
  */
 function LocalNav({ pathname, scrolled }: { pathname: string; scrolled: boolean }) {
   const { trip, place } = useTrip();
+  const planning = usePlanning();
   const cta = LOCAL_CTA[pathname];
   if (!cta) return null;
   const s = trip.setup;
@@ -292,8 +294,8 @@ function LocalNav({ pathname, scrolled }: { pathname: string; scrolled: boolean 
             {s.travelers === 1 ? "traveler" : "travelers"}
           </span>
           {cta.form ? (
-            <Button type="submit" form={cta.form} size="sm" variant="go">
-              {cta.label}
+            <Button type="submit" form={cta.form} size="sm" variant="go" loading={planning}>
+              {planning ? "Planning…" : cta.label}
             </Button>
           ) : (
             <Button asChild size="sm" variant="go">

@@ -33,6 +33,7 @@ import { useLocale } from "@/lib/live/use-locale";
 import { useWeatherFor } from "@/lib/live/use-live";
 import { summarize } from "@/lib/live/weather";
 import type { TripSetup } from "@/lib/trip-store";
+import { usePlanning } from "@/lib/planning-state";
 import { cn } from "@/lib/utils";
 
 /**
@@ -62,6 +63,7 @@ export function TripPreview({
   distance: string | null;
   className?: string;
 }) {
+  const planning = usePlanning();
   const Icon = TRIP_ICONS[form.tripType];
   const color = TRIP_COLOR[form.tripType];
   const weather = useWeatherFor(dest, form.origin, form.startDate, form.endDate);
@@ -260,8 +262,15 @@ export function TripPreview({
             })}
           </ul>
         </div>
-        <Button type="submit" form={formId} variant="go" size="lg" className="mt-6 w-full">
-          Plan trip <ArrowRight />
+        <Button
+          type="submit"
+          form={formId}
+          variant="go"
+          size="lg"
+          loading={planning}
+          className="mt-6 w-full"
+        >
+          {planning ? "Planning…" : "Plan trip"} <ArrowRight />
         </Button>
       </div>
     </section>

@@ -159,3 +159,17 @@ The site still read as gray boxes, so the destination's photo now leads:
 - **Ideas:** tall 3:4 photo cards with the name in the serif, distance and the estimate in white.
 - **Overview:** the destination photo runs edge to edge under the title.
 - **Color:** warm paper instead of cool gray in light mode; deep navy instead of black in dark mode.
+
+## Seventh pass: product-team polish
+
+An audit against a "shipped by a mature product team" checklist:
+
+| Check                        | Found                                                                                       | Now                                                                                                            |
+| ---------------------------- | ------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| One radius family            | Seven radius steps plus hand-set 3, 5, 10, 18, 20 and 24px corners                          | Four roles: 3px bars, 6px items inside surfaces, 12px controls, 18px surfaces; buttons are capsules (tested)   |
+| One field family             | Text input 44px on a fill; text area and select 36px, transparent, with a drop shadow       | All three: 44px, 12px corners, fill, the same blue focus ring, no shadow (tested)                              |
+| Shadows with a purpose       | Stray `shadow-sm` on fields, toggles and the menubar; a generic `shadow` on cards           | Tiles are flat; only things that float carry the lift shadow                                                   |
+| Loading on every slow action | "Plan trip" (looks places up first), "Update" on the itinerary had no feedback              | `Button loading`: spinner in place of the icon, label kept, pressed once; all three Plan trip buttons share it |
+| No novelty icons             | Sparkles beside suggestions, a magic wand for AI planning                                   | A calendar for planning days, a message bubble for "refine"; sparkles and wands fail a test                    |
+| Copy                         | "unlock real routes and places"                                                             | "save trips and plan with real routes and places"                                                              |
+| Clean console                | Every page logged a React hydration mismatch (the scroll reveal wrote attributes too early) | The reveal uses Web Animations only, never attributes: no mismatch                                             |

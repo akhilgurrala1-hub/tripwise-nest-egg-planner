@@ -24,7 +24,8 @@ export const Route = createFileRoute("/auth")({
       { property: "og:title", content: "Sign in | Waypoint" },
       {
         property: "og:description",
-        content: "Create a free Waypoint account to unlock real routes and places.",
+        content:
+          "Create a free Waypoint account to save trips and plan with real routes and places.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },

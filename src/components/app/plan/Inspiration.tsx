@@ -152,7 +152,7 @@ function IdeaCard({
       type="button"
       style={{ ...style, "--kind": color } as CSSProperties}
       onClick={() => onPick(idea.s.id, idea.tripType)}
-      className="group animate-rise hero-photo relative isolate block aspect-[3/4] w-full overflow-hidden rounded-[18px] text-left pressable focus-visible:ring-4 focus-visible:ring-primary/30 focus-visible:outline-none"
+      className="group animate-rise hero-photo relative isolate block aspect-[3/4] w-full overflow-hidden rounded-2xl text-left pressable focus-visible:ring-4 focus-visible:ring-primary/30 focus-visible:outline-none"
     >
       {/* The place, edge to edge; its name and estimate in white over the darkened bottom. */}
       {photo?.image ? (
