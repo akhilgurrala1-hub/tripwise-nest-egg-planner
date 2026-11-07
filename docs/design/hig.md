@@ -127,9 +127,9 @@ The five decisions, made concretely, so the site can't fall back on what every g
 
 **2. Color as tokens, one accent in one role.**
 
-- Ink `oklch(0.218 0.004 286)` on paper `oklch(0.97 0.002 286)`, with white bands and tiles (`--card`).
+- Warm ink `oklch(0.218 0.012 70)` on warm paper `oklch(0.968 0.008 75)`, with white bands and tiles (`--card`); dark mode is deep navy `oklch(0.165 0.024 258)` with navy tiles.
 - One accent, brand blue `#2457E6` (`--primary`), in one role: what you can press, or what's selected. Decorative icons and data (rain chances, a holiday marker) are gray; warnings use `--destructive`. A test fails on blue icons or blue plain text.
-- No gradients (tested).
+- No decorative gradients (tested in components). The only gradients are photo scrims, defined once in `styles.css` (`photo-scrim`, `card-scrim`).
 
 **3. Layout, structural and asymmetric.**
 
@@ -150,3 +150,12 @@ The five decisions, made concretely, so the site can't fall back on what every g
 - The hero photo is the trip's real destination from Wikipedia, at 1280px where Wikimedia has it.
 - It is hard-cropped (`object-cover`), with no box around it on large screens, and its name sits on a strip of glass (`material-thin`) with the credit link.
 - No placeholder art: while it loads, a skeleton in its shape; if there's no photo, nothing.
+
+## Sixth pass: photo-led
+
+The site still read as gray boxes, so the destination's photo now leads:
+
+- **Plan hero:** the photo fills the hero edge to edge (up to 92% of the screen's height). The question is in white over a scrim that darkens the left and bottom. The assistant sits on a pane of glass, and the credit is bottom right.
+- **Ideas:** tall 3:4 photo cards with the name in the serif, distance and the estimate in white.
+- **Overview:** the destination photo runs edge to edge under the title.
+- **Color:** warm paper instead of cool gray in light mode; deep navy instead of black in dark mode.

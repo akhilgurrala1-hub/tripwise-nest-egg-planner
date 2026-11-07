@@ -90,14 +90,14 @@ function Dashboard() {
         {!trip.isSample && <ShareTripButton />}
       </PageHeader>
 
+      {/* The place first, edge to edge like a magazine spread: then the money. */}
+      <DestinationHero
+        dest={dest}
+        origin={trip.setup.origin}
+        className="aspect-[4/3] w-full rounded-none sm:aspect-[21/9] sm:max-h-[560px]"
+      />
       <div className="page-container mt-8 space-y-4">
         <TripReady />
-        {/* The place first, large, like a travel magazine: then the money. */}
-        <DestinationHero
-          dest={dest}
-          origin={trip.setup.origin}
-          className="aspect-[4/3] w-full sm:aspect-[21/9] sm:max-h-[400px]"
-        />
         <div className="flex flex-col gap-4 lg:flex-row">
           {/* Balance */}
           <section className="surface-card animate-rise min-w-0 flex-1 p-6 sm:p-8">
