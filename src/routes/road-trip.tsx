@@ -329,7 +329,7 @@ function RoadTripPage() {
                   .{" "}
                   {view === "demo"
                     ? "These are example stops, not real places. Tap Find real stops to see what's along your road."
-                    : "Route and places from OpenStreetMap. Detour times and costs are estimates, so check before you go."}
+                    : `Route from OpenStreetMap, sights from Wikipedia${realOk?.food ? ", food from OpenStreetMap" : ""}. Detour times and costs are estimates, so check before you go.${realOk && !realOk.food ? " Food stops couldn't load right now; try again later for places to eat." : ""}`}
                 </p>
                 {visible.length === 0 ? (
                   <StateCard
@@ -529,7 +529,8 @@ function StopCard({
             rel="noreferrer"
             className="mt-2 inline-flex items-center gap-1 text-xs font-medium text-primary underline-offset-2 hover:underline"
           >
-            View on OpenStreetMap <ExternalLink className="size-3" />
+            {stop.mapsUrl.includes("wikipedia.org") ? "Read on Wikipedia" : "View on OpenStreetMap"}{" "}
+            <ExternalLink className="size-3" />
           </a>
         )}
       </div>
@@ -641,7 +642,8 @@ function RouteMap({
         </div>
       </div>
       <p className="mt-4 text-micro text-muted-foreground">
-        Not a map, just a sketch of where sample stops fall along the drive. Find real stops for a live map.
+        Not a map, just a sketch of where sample stops fall along the drive. Find real stops for a
+        live map.
       </p>
     </section>
   );

@@ -20,8 +20,17 @@ type MapInstance = import("maplibre-gl").Map;
 
 let lib: Promise<MapLib> | null = null;
 function loadMapLibre(): Promise<MapLib> {
-  lib ??= Promise.all([import("maplibre-gl"), import("maplibre-gl/dist/maplibre-gl.css")])
-    .then(([m]) => (m as unknown as { default?: MapLib }).default ?? m)
+  lib ??= Promise.all([
+    import("maplibre-gl"),
+    // Vite builds MapLibre's worker (with what it imports) and gives its address.
+    import("maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url"),
+    import("maplibre-gl/dist/maplibre-gl.css"),
+  ])
+    .then(([m, worker]) => {
+      const maplibre = (m as unknown as { default?: MapLib }).default ?? m;
+      maplibre.setWorkerUrl((worker as { default: string }).default);
+      return maplibre;
+    })
     .catch((e) => {
       lib = null;
       throw e;
@@ -82,7 +91,7 @@ export function OpenRouteMap({
         });
         map.current = m;
         m.addControl(new maplibre.NavigationControl({ showCompass: false }), "top-right");
-        m.on("error", () => !cancelled && m.loaded() === false && setStatus("error"));
+        m.on("error", () => !cancelled && !m.loaded() && setStatus("error"));
         m.on("load", () => {
           if (cancelled) return;
           m.addSource("route", {
@@ -148,6 +157,10 @@ export function OpenRouteMap({
           });
           m.on("mouseenter", "stops", () => (m.getCanvas().style.cursor = "pointer"));
           m.on("mouseleave", "stops", () => (m.getCanvas().style.cursor = ""));
+          // Credits stay one tap away (the "i" button) instead of covering the map.
+          m.getContainer()
+            .querySelector(".maplibregl-ctrl-attrib")
+            ?.classList.remove("maplibregl-compact-show");
           setStatus("ready");
         });
       })
@@ -169,9 +182,10 @@ export function OpenRouteMap({
 
   return (
     <div className="relative h-80 overflow-hidden rounded-2xl bg-fill">
+      {/* Sized, not absolutely placed: MapLibre's stylesheet makes its container position: relative. */}
       <div
         ref={el}
-        className="absolute inset-0"
+        className="h-full w-full"
         role="region"
         aria-label="Map of your route. Each stop is also in the list."
       />

@@ -449,33 +449,63 @@ export function parseWikiRouteStops(bodies: unknown[], route: RealRoute): RouteS
   return out.sort((a, b) => b._score - a._score).map(({ _score, ...s }) => s);
 }
 
-/**
- * The 50 articles nearest a point on the road (Wikipedia's geosearch, which is
- * cheap for Wikipedia to answer, unlike full-text search), with descriptions,
- * coordinates and a month of page views to rank them.
- */
-async function wikiSightsNear(at: LatLng, signal?: AbortSignal): Promise<unknown> {
+/** One Wikipedia API call, asking once more after a short wait if it's busy. */
+async function wikiApi(params: Record<string, string>, signal?: AbortSignal): Promise<unknown> {
   const u = new URL(WIKI);
-  const params: Record<string, string> = {
+  for (const [key, v] of Object.entries({
     action: "query",
     format: "json",
     origin: "*",
-    generator: "geosearch",
-    ggscoord: `${at.lat.toFixed(4)}|${at.lng.toFixed(4)}`,
-    ggsradius: "10000",
-    ggslimit: "50",
-    prop: "description|coordinates|pageviews|info",
-    colimit: "max",
-    pvipdays: "30",
-  };
-  for (const [key, v] of Object.entries(params)) u.searchParams.set(key, v);
+    ...params,
+  }))
+    u.searchParams.set(key, v);
   for (let attempt = 0; ; attempt++) {
     const res = await fetch(u.toString(), signal ? { signal } : {});
     if (res.ok) return res.json();
-    // Busy: wait a moment and ask once more.
     if (res.status !== 429 || attempt > 0) throw new Error(`Wikipedia error (${res.status})`);
-    await new Promise((r) => setTimeout(r, 1200));
+    await new Promise((r) => setTimeout(r, 1500));
   }
+}
+
+type WikiPages = Record<string, Record<string, unknown>>;
+const pagesOf = (body: unknown): WikiPages =>
+  (body as { query?: { pages?: WikiPages } })?.query?.pages ?? {};
+
+/**
+ * The 50 articles nearest a point on the road with their short descriptions,
+ * coordinates and length. Geosearch is cheap for Wikipedia to answer.
+ */
+function wikiNear(at: LatLng, signal?: AbortSignal) {
+  return wikiApi(
+    {
+      generator: "geosearch",
+      ggscoord: `${at.lat.toFixed(4)}|${at.lng.toFixed(4)}`,
+      ggsradius: "10000",
+      ggslimit: "50",
+      prop: "description|coordinates|info",
+      colimit: "max",
+    },
+    signal,
+  );
+}
+
+/**
+ * The likely sights among all the articles found along the road: described as
+ * something travelers visit and close enough to the road, longest articles
+ * first, so one page-views request can rank the best 50.
+ */
+export function sightCandidates(pages: WikiPages, route: RealRoute, max = 50): string[] {
+  const cum = cumulative(route.path);
+  return Object.entries(pages)
+    .filter(([, p]) => {
+      const description = String(p["description"] ?? "");
+      const c = (p["coordinates"] as { lat: number; lon: number }[] | undefined)?.[0];
+      if (!c || !classifySight(description) || NOT_STOPS.test(description)) return false;
+      return placeOnRoute({ lat: c.lat, lng: c.lon }, route.path, cum).offKm <= SIGHT_MAX_KM;
+    })
+    .sort(([, a], [, b]) => Number(b["length"] ?? 0) - Number(a["length"] ?? 0))
+    .slice(0, max)
+    .map(([id]) => id);
 }
 
 /** Best first, taken in turn from each fifth of the route so stops aren't all near one town. */
@@ -485,17 +515,6 @@ export function spreadAlongRoute<T extends { position: number }>(list: T[], keep
   const out: T[] = [];
   for (let i = 0; out.length < keep && buckets.some((b) => b.length > i); i++)
     for (const b of buckets) if (b[i] && out.length < keep) out.push(b[i]!);
-  return out;
-}
-
-/** Run `fn` over the items two at a time (Wikipedia asks clients not to flood it). */
-async function inPairs<T, R>(
-  items: T[],
-  fn: (item: T) => Promise<R>,
-): Promise<PromiseSettledResult<R>[]> {
-  const out: PromiseSettledResult<R>[] = [];
-  for (let i = 0; i < items.length; i += 2)
-    out.push(...(await Promise.allSettled(items.slice(i, i + 2).map(fn))));
   return out;
 }
 
@@ -527,23 +546,47 @@ export async function fetchStopsAlongRoute(
   route: RealRoute,
   signal?: AbortSignal,
 ): Promise<{ stops: RouteStop[]; food: boolean }> {
-  const [wiki, food] = await Promise.all([
-    inPairs(routeSamplePoints(route.path), (p) => wikiSightsNear(p, signal)),
-    foodAlongRoute(route, signal).catch((e) => {
+  const food = foodAlongRoute(route, signal).catch((e) => {
+    if (signal?.aborted) throw e;
+    return null;
+  });
+  // One point at a time: a handful of cheap requests, never a burst.
+  const pages: WikiPages = {};
+  let answered = 0;
+  for (const point of routeSamplePoints(route.path)) {
+    try {
+      Object.assign(pages, pagesOf(await wikiNear(point, signal)));
+      answered++;
+    } catch (e) {
       if (signal?.aborted) throw e;
-      return null;
-    }),
-  ]);
-  const bodies = wiki.filter((r) => r.status === "fulfilled").map((r) => r.value);
-  if (bodies.length === 0) throw new Error("Wikipedia didn't respond.");
-  const sights = parseWikiRouteStops(bodies, route);
+    }
+  }
+  if (answered === 0) throw new Error("Wikipedia didn't respond.");
+  const ids = sightCandidates(pages, route);
+  // Rank by how many people read about each place; without views, the stricter rules apply.
+  if (ids.length) {
+    try {
+      const views = pagesOf(
+        await wikiApi({ pageids: ids.join("|"), prop: "pageviews", pvipdays: "30" }, signal),
+      );
+      for (const id of ids)
+        if (views[id]?.["pageviews"]) pages[id]!["pageviews"] = views[id]!["pageviews"];
+    } catch (e) {
+      if (signal?.aborted) throw e;
+    }
+  }
+  const sights = parseWikiRouteStops(
+    [{ query: { pages: Object.fromEntries(ids.map((id) => [id, pages[id]!])) } }],
+    route,
+  );
+  const meals = await food;
   const names = new Set(sights.map((s) => s.name.toLowerCase()));
-  const meals = (food ?? []).filter((s) => !names.has(s.name.toLowerCase()));
+  const extra = (meals ?? []).filter((s) => !names.has(s.name.toLowerCase()));
   const stops = [
-    ...spreadAlongRoute(sights, MAX_STOPS - Math.min(12, meals.length)),
-    ...spreadAlongRoute(meals, 12),
+    ...spreadAlongRoute(sights, MAX_STOPS - Math.min(12, extra.length)),
+    ...spreadAlongRoute(extra, 12),
   ].sort((a, b) => a.position - b.position);
-  return { stops, food: food !== null };
+  return { stops, food: meals !== null };
 }
 
 export type OpenRouteResult =
