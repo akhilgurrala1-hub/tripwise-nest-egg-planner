@@ -195,12 +195,12 @@ describe("no template tells", () => {
     expect(find(/<img\b/g, (p) => p.endsWith("Photo.tsx"))).toEqual([]);
   });
 
-  it("pairs a serif display face with the text face, both self-hosted", () => {
+  it("sets headlines and text in one self-hosted face, like an app (no magazine serif)", () => {
     const css = readFileSync(join(SRC, "styles.css"), "utf8");
     const face = (name: string) => css.match(new RegExp(`--font-${name}:\\s*"([^"]+)"`))?.[1];
-    expect(face("display")).toBe("Newsreader Variable");
+    expect(face("display")).toBe("Instrument Sans Variable");
     expect(face("sans")).toBe("Instrument Sans Variable");
-    expect(css).toContain('@import "@fontsource-variable/newsreader');
+    expect(css).not.toMatch(/newsreader/i);
   });
 
   it("uses its own type pairing, self-hosted: no Inter, no Google Fonts", () => {

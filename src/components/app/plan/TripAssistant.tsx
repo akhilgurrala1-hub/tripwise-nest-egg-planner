@@ -277,15 +277,17 @@ export function TripAssistant({
     setText("");
   };
 
+  /** The empty hero composer is drawn as a search bar. */
+  const search = variant === "hero" && state.turns.length === 0;
   const lastAssistant = [...state.turns].reverse().find((t) => t.role === "assistant") as
     Extract<Turn, { role: "assistant" }> | undefined;
 
   return (
     <section
       className={cn(
-        "overflow-hidden",
-        // As the page's hero, the composer itself is the card until the conversation starts.
-        variant === "hero" && state.turns.length === 0 ? "" : "surface-card",
+        // As the page's hero, the composer itself is the card until the conversation starts
+        // (and nothing clips the bar's shadow).
+        search ? "" : "surface-card overflow-hidden",
       )}
     >
       {variant === "hero" ? (
@@ -439,10 +441,11 @@ export function TripAssistant({
       >
         <div
           className={cn(
-            "flex flex-col gap-2 rounded-2xl border p-2 pl-4 transition-[border-color,box-shadow,background-color] focus-within:border-primary focus-within:bg-card focus-within:ring-4 focus-within:ring-primary/10 sm:flex-row sm:items-end",
-            variant === "hero" && state.turns.length === 0
-              ? "border-border bg-card shadow-[var(--shadow-soft-value)] sm:p-4 sm:pl-6"
-              : "border-input bg-background/70",
+            "flex gap-2 rounded-2xl border transition-[border-color,box-shadow,background-color] focus-within:border-primary focus-within:ring-4 focus-within:ring-primary/10",
+            search
+              ? // The hero: one wide search-style bar, like a travel app's "Where to?"
+                "items-center border-border bg-card p-2 pl-6 shadow-lift"
+              : "flex-col border-input bg-background/70 p-2 pl-4 focus-within:bg-card sm:flex-row sm:items-end",
           )}
         >
           <textarea
@@ -454,34 +457,47 @@ export function TripAssistant({
                 void send(text);
               }
             }}
-            rows={state.turns.length ? 1 : variant === "hero" ? 2 : 3}
+            rows={search ? 1 : state.turns.length ? 1 : 3}
             maxLength={1200}
             placeholder={
               state.turns.length
                 ? "Answer or add details…"
-                : variant === "hero"
-                  ? "Rome for a week in May, 2 of us…"
+                : search
+                  ? "Rome for a week in May, 2 of us"
                   : "e.g. A long weekend somewhere with hiking and good food, 2 of us, about $1,200"
             }
             aria-label="Describe your trip"
             className={cn(
-              "min-h-9 w-full flex-1 resize-none bg-transparent py-2 leading-relaxed outline-none placeholder:text-muted-foreground",
-              variant === "hero" && !state.turns.length ? "text-headline" : "text-body",
+              "w-full flex-1 resize-none bg-transparent leading-relaxed outline-none placeholder:text-muted-foreground",
+              search ? "min-h-0 py-2 text-body sm:text-headline" : "min-h-9 py-2 text-body",
             )}
           />
-          <Button
-            type="submit"
-            size="icon"
-            variant="ink"
-            disabled={!text.trim() || busy}
-            aria-label="Send"
-            className="size-10 shrink-0 self-end rounded-xl"
-          >
-            <ArrowUp />
-          </Button>
+          {search ? (
+            <Button
+              type="submit"
+              variant="hero"
+              size="lg"
+              disabled={!text.trim() || busy}
+              className="shrink-0 px-4 sm:px-6"
+            >
+              <ArrowUp className="sm:hidden" />
+              <span className="sr-only sm:not-sr-only">Plan</span>
+            </Button>
+          ) : (
+            <Button
+              type="submit"
+              size="icon"
+              variant="ink"
+              disabled={!text.trim() || busy}
+              aria-label="Send"
+              className="size-10 shrink-0 self-end rounded-xl"
+            >
+              <ArrowUp />
+            </Button>
+          )}
         </div>
         {!user && !authLoading && (
-          <p className="mt-2 px-1 text-xs text-muted-foreground">
+          <p className={cn("mt-2 px-1 text-xs text-muted-foreground", search && "text-center")}>
             Waypoint's own planner answers right away.{" "}
             <Link to="/auth" search={{ redirect: "/" }} className="underline underline-offset-2">
               Sign in
@@ -491,15 +507,18 @@ export function TripAssistant({
         )}
         {state.turns.length === 0 && (
           <div className="mt-4">
-            <p className="eyebrow px-1">Or start with</p>
-            <ul className="mt-2 flex flex-wrap gap-2">
+            <p className={cn("eyebrow px-1", search && "sr-only")}>Or start with</p>
+            <ul className={cn("mt-2 flex flex-wrap gap-2", search && "justify-center")}>
               {EXAMPLES.map((ex) => (
                 <li key={ex.label}>
                   <button
                     type="button"
                     onClick={() => void send(ex.message)}
                     title={ex.message}
-                    className="group flex h-10 items-center gap-2 rounded-lg border border-border bg-card px-4 text-body transition-[border-color,transform] duration-150 hover:border-primary active:scale-[0.97]"
+                    className={cn(
+                      "group flex items-center gap-2 rounded-lg border border-border bg-card transition-[border-color,transform] duration-150 hover:border-primary active:scale-[0.97]",
+                      search ? "h-9 px-4 text-footnote" : "h-10 px-4 text-body",
+                    )}
                   >
                     <CornerDownRight className="size-3.5 shrink-0 text-muted-foreground" />
                     {ex.label}

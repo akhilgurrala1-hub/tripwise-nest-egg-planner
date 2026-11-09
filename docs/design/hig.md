@@ -217,3 +217,15 @@ An audit against a "shipped by a mature product team" checklist:
 - No fade-in or parallax on the hero.
 - Quick starts are actions ("Plan a mountain weekend for 2"); idea-card photos zoom 1.03 inside their frame on hover.
 - Not applied, on purpose: its landing-page rules (one section per screen, at most two actions in the hero, a 2px card lift on hover) don't fit an app's working screens, and the lift conflicts with Emil's rules and our hover test.
+
+## Tenth pass: clean travel app (November 2026)
+
+The owner picked a "clean travel app" direction over the magazine look, because the site still felt "chopped". Changes:
+
+- **One face.** Newsreader is gone. Headlines are Instrument Sans at 650 with tight tracking, so the app reads as one product instead of a magazine with app controls in it. `title-1` is now 26px and `title-2` 22px, and page titles stop at `text-large-title`.
+- **Home screen.** The dark full-bleed photo hero is replaced by a white band with "Where to next?" and one wide search-style bar (with a "Plan" button), quick starts as small centered chips. One question and one input, the pattern people know from travel apps.
+- **Listing cards.** Ideas show the photo on top and the facts under it in normal text: no white text on scrims, nothing to fight for legibility. Fallback without a photo is a gray tile with a gray trip icon.
+- **Layout.** The ideas row runs the full width. The manual form stacks headings over controls instead of a 160px label column that squeezed the trip-type picker into wrapping.
+- **Smaller numbers where they're secondary.** The emergency fund figure on the Budget page drops from display size to large title. The Overview keeps one big number (left to spend).
+
+Checked with Impeccable's detector (0 findings on every page) and axe in light, dark and mobile (clean).

@@ -1,5 +1,5 @@
-import { ArrowUpRight, ChevronLeft, ChevronRight } from "lucide-react";
-import { useState, type CSSProperties } from "react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
+import { useEffect, useState, type CSSProperties } from "react";
 
 import { Photo } from "@/components/app/Photo";
 import { stagger, useDragScroll } from "@/components/app/motion";
@@ -9,6 +9,7 @@ import { getDestination, modeForTripType, tripTypeInfo, type TripType } from "@/
 import { useDestinationSummary } from "@/lib/live/use-open-data";
 import { recommendDestinations, type Suggestion } from "@/lib/recommend";
 import { TRIP_COLOR } from "@/components/app/trip-colors";
+import { TRIP_ICONS } from "@/components/app/TripTypePicker";
 import { estimatedSpend } from "@/lib/trip/budget-fit";
 import type { TripSetup } from "@/lib/trip/types";
 
@@ -82,6 +83,14 @@ export function Inspiration({
       end: el.scrollLeft + el.clientWidth >= el.scrollWidth - 2,
     });
   };
+  // When the ideas change (the start city is found after load), begin at the first one again:
+  // scroll snapping would otherwise follow the card it was on to its new place.
+  const order = ideas.map((idea) => idea.s.id).join();
+  useEffect(() => {
+    const el = rail.current;
+    if (el) el.scrollLeft = 0;
+    setEdge({ start: true, end: false });
+  }, [order, rail]);
   const page = (dir: 1 | -1) =>
     rail.current?.scrollBy({ left: dir * rail.current.clientWidth * 0.8, behavior: "smooth" });
   if (!ideas.length) return null;
@@ -102,7 +111,7 @@ export function Inspiration({
         className="-mx-4 mt-6 flex snap-x snap-mandatory scroll-px-4 gap-4 overflow-x-auto px-4 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
       >
         {ideas.map((idea, i) => (
-          <li key={idea.s.id} className="w-[72%] shrink-0 snap-start sm:w-72">
+          <li key={idea.s.id} className="w-[70%] shrink-0 snap-start sm:w-72">
             <IdeaCard idea={idea} origin={setup.origin} style={stagger(i + 1)} onPick={onPick} />
           </li>
         ))}
@@ -146,38 +155,44 @@ function IdeaCard({
   const dest = getDestination(idea.s.id);
   const photo = useDestinationSummary(dest, origin).data;
   const color = TRIP_COLOR[idea.tripType];
+  const Icon = TRIP_ICONS[idea.tripType];
   return (
     <button
       type="button"
       style={{ ...style, "--kind": color } as CSSProperties}
       onClick={() => onPick(idea.s.id, idea.tripType)}
-      className="group hero-photo relative isolate block aspect-[3/4] w-full overflow-hidden rounded-2xl text-left pressable focus-visible:ring-4 focus-visible:ring-primary/30 focus-visible:outline-none"
+      className="group block w-full rounded-2xl text-left pressable focus-visible:ring-4 focus-visible:ring-primary/30 focus-visible:outline-none"
     >
-      {/* The place, edge to edge; its name and estimate in white over the darkened bottom. */}
-      {photo?.image ? (
-        <Photo
-          src={photo.image}
-          alt=""
-          className="absolute inset-0 -z-10"
-          imgClassName="transition-[opacity,scale] duration-300 ease-out group-hover:scale-[1.03]"
-        />
-      ) : null}
-      <span aria-hidden className="card-scrim absolute inset-0 -z-10" />
-      <span className="absolute top-4 left-4 rounded-sm bg-card px-2 py-1 text-micro font-semibold text-foreground">
-        {tripTypeInfo(idea.tripType).label}
+      {/* The place on top, the facts under it: a travel app's listing card. */}
+      <span className="relative isolate block aspect-[4/3] overflow-hidden rounded-2xl bg-fill">
+        {photo?.image ? (
+          <Photo
+            src={photo.image}
+            alt=""
+            className="absolute inset-0 -z-10"
+            imgClassName="transition-[opacity,scale] duration-300 ease-out group-hover:scale-[1.03]"
+          />
+        ) : (
+          <Icon
+            aria-hidden
+            className="absolute inset-0 m-auto size-10 text-muted-foreground"
+            strokeWidth={1.5}
+          />
+        )}
+        <span className="absolute top-3 left-3 rounded-sm bg-card px-2 py-1 text-micro font-semibold text-foreground">
+          {tripTypeInfo(idea.tripType).label}
+        </span>
       </span>
-      <ArrowUpRight className="absolute top-4 right-4 size-5 text-on-image/90" />
-      <span className="on-photo absolute inset-x-0 bottom-0 block p-4">
-        <span className="title-display block truncate text-title-2">{idea.s.name}</span>
-        <span className="mt-1 block truncate text-footnote text-on-image/80">
+      <span className="mt-4 block px-1">
+        <span className="block truncate text-headline font-semibold">{idea.s.name}</span>
+        <span className="mt-1 block truncate text-footnote text-muted-foreground">
           {idea.s.region}
           {idea.s.distanceLabel ? ` · ${idea.s.distanceLabel}` : ""}
         </span>
         <span className="mt-2 flex items-baseline gap-1 text-footnote whitespace-nowrap">
-          <span className="text-on-image/80">about</span>
-          <span className="money-display text-headline">{formatMoney(idea.cost)}</span>
+          <span className="money-display text-body">{formatMoney(idea.cost)}</span>
+          <span className="text-muted-foreground">estimated</span>
         </span>
-        <span className="mt-1 block truncate text-caption text-on-image/75">{idea.s.tagline}</span>
       </span>
     </button>
   );
