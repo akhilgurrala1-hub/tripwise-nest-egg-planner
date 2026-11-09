@@ -1,4 +1,4 @@
-import { Link } from "@tanstack/react-router";
+import { Link, useRouterState } from "@tanstack/react-router";
 import { ArrowRight, ChevronDown, Info } from "lucide-react";
 import { useState, type CSSProperties, type ReactNode } from "react";
 import { toast } from "sonner";
@@ -11,6 +11,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { formatCalendarDate } from "@/lib/dates";
 import { tripTypeInfo } from "@/lib/demo-data";
 import { tripActions, useTrip } from "@/lib/trip-store";
+import { cn } from "@/lib/utils";
 
 /** "Dec 3 – 6, 2026", "Dec 30, 2026 – Jan 2, 2027" or "Dec 3, 2026" — never shifted by the viewer's time zone. */
 export function formatDateRange(start: string, end: string) {
@@ -24,6 +25,16 @@ export function formatDateRange(start: string, end: string) {
     return `${formatCalendarDate(start, monthDay)} – ${Number(end.slice(8, 10))}, ${end.slice(0, 4)}`;
   return `${formatCalendarDate(start, monthDay)} – ${formatCalendarDate(end, full)}`;
 }
+
+/** Each page's next step for the trip, a capsule beside the title. */
+const NEXT_STEP: Record<string, { label: string; to: "/book" | "/itinerary" | "/dashboard" }> = {
+  "/dashboard": { label: "See the days", to: "/itinerary" },
+  "/budget": { label: "Book", to: "/book" },
+  "/spending": { label: "Book", to: "/book" },
+  "/itinerary": { label: "Book", to: "/book" },
+  "/road-trip": { label: "Book", to: "/book" },
+  "/book": { label: "Overview", to: "/dashboard" },
+};
 
 /**
  * Page title plus the trip it's about. The trip bar is the same on every planning
@@ -44,35 +55,32 @@ export function PageHeader({
   sampleBanner?: "card" | "line";
 }) {
   const { trip } = useTrip();
+  const pathname = useRouterState({ select: (r) => r.location.pathname });
+  const next = showTrip ? NEXT_STEP[pathname] : undefined;
   const sample = showTrip && trip.isSample;
   return (
-    // The top of every page is a white band, as on apple.com; the content below sits on gray.
-    <div className="band pb-10 sm:pb-12">
-      <div className="page-container pt-8 sm:pt-16">
+    // An app's page header: title, the trip it's about, and the page's actions; no banner.
+    <div className="pb-6 sm:pb-8">
+      <div className="page-container pt-6 sm:pt-10">
         {sample && sampleBanner === "card" && (
-          <section className="mb-8 grid rounded-2xl bg-background grid-cols-[56px_1fr] items-center gap-4 p-6 sm:grid-cols-[72px_1fr_auto] sm:gap-6 sm:p-6 print:hidden">
-            <RouteMark className="w-14 sm:w-[72px]" />
-            <div className="min-w-0">
-              <h2 className="text-headline font-semibold">This is a sample trip. Make it yours.</h2>
-              <p className="mt-1 max-w-lg text-sm text-muted-foreground">
-                Pick where you're going, your dates and your budget. Everything on these pages
-                updates to match.
+          <section className="mb-6 flex items-center gap-4 rounded-2xl bg-card p-4 sm:p-6 print:hidden">
+            <RouteMark className="hidden w-14 shrink-0 sm:block" />
+            <div className="min-w-0 flex-1">
+              <h2 className="text-body font-semibold sm:text-headline">This is a sample trip.</h2>
+              <p className="mt-1 text-footnote text-muted-foreground">
+                Plan your own and every page updates to match.
               </p>
             </div>
-            <Button
-              asChild
-              variant="go"
-              size="lg"
-              className="col-span-2 w-full sm:col-span-1 sm:w-auto"
-            >
+            <Button asChild variant="go" className="shrink-0">
               <Link to="/">
-                Plan your own trip <ArrowRight />
+                Plan yours <ArrowRight />
               </Link>
             </Button>
           </section>
         )}
         {sample && sampleBanner === "line" && (
-          <p className="mb-6 flex flex-wrap items-center gap-x-2 gap-y-1 text-footnote text-muted-foreground print:hidden">
+          // The sidebar already says so on large screens.
+          <p className="mb-6 flex flex-wrap items-center gap-x-2 gap-y-1 text-footnote text-muted-foreground lg:hidden print:hidden">
             <Info className="size-3.5 shrink-0" />
             You're looking at a sample trip.
             <Link to="/" className="link-chevron font-semibold">
@@ -85,7 +93,22 @@ export function PageHeader({
             <h1 className="title-display text-large-title">{title}</h1>
             {showTrip && <TripBar title={title} />}
           </div>
-          <div className="contents print:hidden">{children}</div>
+          <div
+            className={cn(
+              "w-full flex-wrap items-center gap-2 sm:w-auto print:hidden",
+              // Phones move between pages with the tab bar, so a header with only the next step hides it.
+              children ? "flex" : "hidden sm:flex",
+            )}
+          >
+            {children}
+            {next && (
+              <Button asChild variant="go" className="hidden sm:inline-flex">
+                <Link to={next.to}>
+                  {next.label} <ArrowRight />
+                </Link>
+              </Button>
+            )}
+          </div>
         </div>
       </div>
     </div>
@@ -104,7 +127,7 @@ function TripBar({ title }: { title: string }) {
   return (
     <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-footnote">
       <TripTypeChip />
-      <p className="tabular min-w-0 truncate text-muted-foreground">{facts.join(" · ")}</p>
+      <p className="tabular min-w-0 text-muted-foreground">{facts.join(" · ")}</p>
       <Link
         to="/"
         className="inline-flex h-8 items-center rounded-md px-1 font-medium text-primary hover:underline hover:underline-offset-4 print:hidden"

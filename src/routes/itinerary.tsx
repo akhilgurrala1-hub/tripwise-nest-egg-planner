@@ -197,7 +197,7 @@ function ItineraryPage() {
           )}
         </div>
 
-        <aside className="space-y-4 lg:sticky lg:top-28 lg:self-start">
+        <aside className="space-y-4 lg:sticky lg:top-8 lg:self-start">
           <PlanCosts />
           {itin && itin.tips.length > 0 && (
             <section className="surface-card p-6">

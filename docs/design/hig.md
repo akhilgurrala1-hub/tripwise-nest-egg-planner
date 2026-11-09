@@ -229,3 +229,15 @@ The owner picked a "clean travel app" direction over the magazine look, because 
 - **Smaller numbers where they're secondary.** The emergency fund figure on the Budget page drops from display size to large title. The Overview keeps one big number (left to spend).
 
 Checked with Impeccable's detector (0 findings on every page) and axe in light, dark and mobile (clean).
+
+## Eleventh pass: an app frame for every screen (November 2026)
+
+The owner said the site still looked bad on every device and that the passes kept "doing the same thing". They had: each pass changed tokens, type and the hero but kept a marketing-website frame (a 44px global nav, a second local nav bar, a white title band, an apple.com footer) squeezed or stretched to fit. This pass changes the frame itself:
+
+- **Phones:** a slim top bar and a bottom tab bar (Plan, Overview, Budget, Days, More). More is a sheet above the tabs with the trip, every section and the account and legal links. Pinned bars sit above the tabs (`--tabbar`).
+- **Tablets:** an icon rail with labels down the left.
+- **Laptops and desktops:** a sidebar with the current trip, the sections and the account, always in view. Content sits beside it at up to 1216px.
+- **Page headers:** title, trip facts and actions on the page itself, with the next step as a capsule. No banner and no second bar.
+- **Footer:** one quiet block instead of link columns.
+
+Checked at 360, 390, 820, 1280 and 1920px wide (no sideways overflow), axe in light, dark and mobile (clean), and Impeccable on seven pages (0 findings).

@@ -360,7 +360,7 @@ function RoadTripPage() {
         </div>
 
         {/* Route plan */}
-        <aside className="space-y-4 lg:sticky lg:top-28 lg:self-start">
+        <aside className="space-y-4 lg:sticky lg:top-8 lg:self-start">
           <section className="surface-card p-6">
             <h2 className="title-display text-title-1">Your route plan</h2>
             <dl className="mt-4 grid grid-cols-2 gap-4 text-sm">
