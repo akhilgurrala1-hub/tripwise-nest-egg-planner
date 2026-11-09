@@ -3,7 +3,6 @@
 @import "tw-animate-css";
 /* One family, self-hosted (OFL), the way Apple sets everything in one face. */
 @import "@fontsource-variable/instrument-sans";
-@import "@fontsource-variable/newsreader/opsz.css";
 
 @custom-variant dark (&:where(.dark, .dark *));
 
@@ -27,10 +26,10 @@
   --font-sans:
     "Instrument Sans Variable", "Instrument Sans", ui-sans-serif, -apple-system, BlinkMacSystemFont,
     "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-  /* Headlines: Newsreader (Production Type, OFL), a serif with optical sizes that
-     sharpens as it grows. Text, controls and numbers stay in Instrument Sans. */
+  /* Headlines: the same face, set tighter and heavier, like a native travel app. */
   --font-display:
-    "Newsreader Variable", "Newsreader", ui-serif, "New York", Georgia, "Times New Roman", serif;
+    "Instrument Sans Variable", "Instrument Sans", ui-sans-serif, -apple-system, BlinkMacSystemFont,
+    "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   --font-mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace;
 
   /*
@@ -45,12 +44,12 @@
   --text-large-title--line-height: 1.08;
   --text-large-title--letter-spacing: -0.005em;
   --text-large-title--font-weight: 600;
-  --text-title-1: 2rem;
-  --text-title-1--line-height: 1.1;
+  --text-title-1: 1.625rem;
+  --text-title-1--line-height: 1.15;
   --text-title-1--letter-spacing: 0em;
   --text-title-1--font-weight: 600;
-  --text-title-2: 1.75rem;
-  --text-title-2--line-height: 1.14;
+  --text-title-2: 1.375rem;
+  --text-title-2--line-height: 1.18;
   --text-title-2--letter-spacing: 0.007em;
   --text-title-2--font-weight: 600;
   --text-headline: 1.3125rem;
@@ -634,52 +633,6 @@
   border-radius: var(--radius-2xl);
 }
 
-/*
- * The photo hero: a deep color under the photo (all that shows when there's no
- * photo), white type, and a scrim that darkens where the words sit (left and
- * bottom) and lets the place show on the right.
- */
-@utility hero-photo {
-  background-color: oklch(0.24 0.03 258);
-  color: var(--color-on-image);
-}
-@utility photo-scrim {
-  /*
-   * An even dimming so even a bright, busy photo can carry white type, deeper on
-   * the left and at the bottom where the words sit; the place still shows on the
-   * right. Phones and tablets put the words over the whole width, so they dim
-   * more evenly.
-   */
-  background:
-    linear-gradient(to top, oklch(0 0 0 / 0.55), oklch(0 0 0 / 0) 60%),
-    linear-gradient(to right, oklch(0 0 0 / 0.6), oklch(0 0 0 / 0.35) 55%, oklch(0 0 0 / 0.1)),
-    oklch(0 0 0 / 0.15);
-  @media (width < 64rem) {
-    background:
-      linear-gradient(to top, oklch(0 0 0 / 0.7), oklch(0 0 0 / 0.3) 60%, oklch(0 0 0 / 0.2)),
-      oklch(0 0 0 / 0.3);
-  }
-}
-
-/* White type on a photo: a soft halo keeps each letter readable over bright spots. */
-@utility on-photo {
-  color: var(--color-on-image);
-  text-shadow:
-    0 1px 2px oklch(0 0 0 / 0.35),
-    0 2px 24px oklch(0 0 0 / 0.35);
-}
-
-/* Under the words at the bottom of a photo card. */
-@utility card-scrim {
-  background: linear-gradient(
-    to top,
-    oklch(0 0 0 / 0.82),
-    oklch(0 0 0 / 0.55) 40%,
-    oklch(0 0 0 / 0.15) 70%,
-    oklch(0 0 0 / 0)
-  );
-}
-
 /* A full-width white band, for the top of a page (apple.com's white hero over gray content). */
 @utility band {
   background-color: var(--color-card);
@@ -710,12 +663,12 @@
   }
 }
 
-/* Titles: the display cut of the system face. Size, weight and tracking come from the text-* level. */
+/* Titles: the system face, semibold and tightened as it grows (size comes from the text-* level). */
 @utility title-display {
   font-family: var(--font-display);
-  /* A serif carries a headline at medium weight; the scale's 600 is for the sans. */
-  --tw-font-weight: 500;
-  font-weight: 500;
+  --tw-font-weight: 650;
+  font-weight: 650;
+  letter-spacing: -0.022em;
   text-wrap: balance;
   & em {
     font-style: normal;

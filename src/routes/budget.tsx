@@ -185,7 +185,7 @@ function BudgetPage() {
             <p className="mt-2 text-footnote leading-relaxed text-muted-foreground">
               For flat tires, urgent care or a surprise night's stay.
             </p>
-            <p className="money-display mt-6 text-display">
+            <p className="money-display mt-6 text-large-title">
               <AnimatedMoney value={totals.emergencyFund} />
             </p>
             <p className="mt-2 text-xs text-muted-foreground">

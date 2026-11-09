@@ -121,7 +121,7 @@ function Preview({ shared }: { shared: SharedTrip }) {
         <div className="flex items-start gap-4">
           <RouteMark className="hidden w-16 shrink-0 sm:block" />
           <div className="min-w-0">
-            <h1 className="title-display text-large-title sm:text-display">{dest.name}</h1>
+            <h1 className="title-display text-large-title">{dest.name}</h1>
             <p className="mt-2 text-footnote text-muted-foreground">A trip shared with you</p>
             <div className="mt-4 flex flex-wrap gap-x-4 gap-y-2 text-footnote">
               <Fact icon={<TypeIcon />}>{type.label}</Fact>

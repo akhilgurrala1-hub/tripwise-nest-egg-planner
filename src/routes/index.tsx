@@ -6,7 +6,6 @@ import { toast } from "sonner";
 
 import { InterestChips, NumberField, FieldError } from "@/components/app/bits";
 import { stagger } from "@/components/app/motion";
-import { HeroBackdrop } from "@/components/app/DestinationIntro";
 import { DestinationPicker } from "@/components/app/plan/DestinationPicker";
 import { CoveragePicker } from "@/components/app/plan/CoveragePicker";
 import { OriginField } from "@/components/app/plan/OriginField";
@@ -333,22 +332,19 @@ function Welcome() {
         </div>
       )}
       {/*
-        The hero: the destination's real photo, full-bleed, with the question in
-        white over its darker left side and the assistant on a pane of glass.
-        Left-aligned in columns 1-7; the place shows through on the right.
+        The hero, like a travel app's home screen: one question and one
+        search-style bar to answer it in plain words, quick starts under it.
+        Photos come right after, in the trip ideas.
       */}
-      <section className="hero-photo relative isolate overflow-hidden">
-        <HeroBackdrop dest={dest} origin={form.origin} />
-        <div className="page-container flex min-h-[min(92svh,880px)] flex-col justify-end pt-24 pb-8 sm:pb-12 lg:grid lg:grid-cols-12 lg:items-end lg:gap-8">
-          <div className="lg:col-span-7">
-            <h1 className="on-photo title-display text-display">
-              Plan your trip, priced to the dollar.
-            </h1>
-            <p className="on-photo mt-4 max-w-xl text-headline font-medium">
-              Say where, when and who, however you like. Waypoint works out every cost, plans each
-              day and lists what to book.
+      <section className="band border-b border-separator">
+        <div className="page-container pt-12 pb-10 sm:pt-20 sm:pb-14">
+          <div className="mx-auto max-w-3xl">
+            <h1 className="title-display text-center text-large-title">Where to next?</h1>
+            <p className="mx-auto mt-4 max-w-xl text-center text-body text-muted-foreground">
+              Say where, when and who, however you like. Waypoint prices the whole trip to the
+              dollar, plans each day and lists what to book.
             </p>
-            <div className="mt-8 rounded-2xl bg-card p-2 text-foreground shadow-lift sm:p-4">
+            <div className="mt-8">
               <TripAssistant
                 variant="hero"
                 homeCity={form.origin}
@@ -369,41 +365,40 @@ function Welcome() {
           </div>
         </div>
       </section>
-      <div className="page-container pt-12 pb-10 sm:pt-16">
-        <div className="layout-main-aside lg:gap-y-8">
-          <div className="min-w-0">
-            <Inspiration
-              setup={effective}
-              from={originPoint}
-              fromLabel={fromLabel === "home" ? "home" : fromLabel}
-              nights={shape.nights}
-              onPick={(destinationId, tripType) => {
-                destPicked.current = true;
-                touched.current = true;
-                update({
-                  tripType,
-                  destinationId,
-                  customDestination: "",
-                  destinationPoint: null,
-                  cities: [],
-                  transportMode: modeForTripType(tripType, form.transportMode),
-                });
-                toast(
-                  `${getDestination(destinationId).name} it is. Adjust anything below, then plan the trip.`,
-                  {
-                    action: {
-                      label: "See the plan",
-                      onClick: () =>
-                        document
-                          .getElementById("plan-steps")
-                          ?.scrollIntoView({ behavior: "smooth" }),
-                    },
-                  },
-                );
-              }}
-            />
+      <div className="page-container pt-10 pb-10 sm:pt-14">
+        {/* Ideas get the full width, like a travel app's rail; the form and its live preview follow. */}
+        <Inspiration
+          setup={effective}
+          from={originPoint}
+          fromLabel={fromLabel === "home" ? "home" : fromLabel}
+          nights={shape.nights}
+          onPick={(destinationId, tripType) => {
+            destPicked.current = true;
+            touched.current = true;
+            update({
+              tripType,
+              destinationId,
+              customDestination: "",
+              destinationPoint: null,
+              cities: [],
+              transportMode: modeForTripType(tripType, form.transportMode),
+            });
+            toast(
+              `${getDestination(destinationId).name} it is. Adjust anything below, then plan the trip.`,
+              {
+                action: {
+                  label: "See the plan",
+                  onClick: () =>
+                    document.getElementById("plan-steps")?.scrollIntoView({ behavior: "smooth" }),
+                },
+              },
+            );
+          }}
+        />
 
-            <h2 id="plan-steps" className="title-display mt-14 scroll-mt-32 text-title-1">
+        <div className="mt-14 layout-main-aside lg:gap-y-8">
+          <div className="min-w-0">
+            <h2 id="plan-steps" className="title-display scroll-mt-32 text-title-1">
               Or plan it yourself
             </h2>
 
@@ -706,12 +701,13 @@ function Section({
   style?: React.CSSProperties;
 }) {
   return (
-    <section className="grid gap-4 py-10 sm:grid-cols-[160px_1fr] sm:gap-8" style={style}>
-      <div className="flex items-baseline gap-2 sm:block">
-        <h3 className="text-headline font-semibold sm:mt-2">{title}</h3>
-        {aside && <p className="ml-auto text-xs text-muted-foreground sm:mt-1 sm:ml-0">{aside}</p>}
+    // Heading above its controls, full width: an app's form, not a two-column document.
+    <section className="py-8" style={style}>
+      <div className="flex items-baseline gap-2">
+        <h3 className="text-headline font-semibold">{title}</h3>
+        {aside && <p className="ml-auto text-xs text-muted-foreground">{aside}</p>}
       </div>
-      <div className="min-w-0">{children}</div>
+      <div className="mt-4 min-w-0">{children}</div>
     </section>
   );
 }

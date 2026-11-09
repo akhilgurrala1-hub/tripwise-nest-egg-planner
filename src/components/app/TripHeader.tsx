@@ -82,7 +82,7 @@ export function PageHeader({
         )}
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div className="min-w-0">
-            <h1 className="title-display text-large-title sm:text-display">{title}</h1>
+            <h1 className="title-display text-large-title">{title}</h1>
             {showTrip && <TripBar title={title} />}
           </div>
           <div className="contents print:hidden">{children}</div>
