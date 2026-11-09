@@ -1,9 +1,8 @@
 import type { Interest } from "../demo-data";
 
 /**
- * Mapping-service contract. The demo provider implements it today; a real
- * provider (Google Maps, Mapbox, HERE, …) can be dropped in later without
- * changing the road-trip screen.
+ * Mapping-service contract. The demo provider gives sample stops; real routes and
+ * stops come from free open data (`open-route.ts`: OSRM and OpenStreetMap).
  */
 
 export interface LatLng {
@@ -49,13 +48,11 @@ export type CostSource = "demo" | "listed" | "price-level" | "unknown";
 export interface RealRoute {
   distanceMiles: number;
   durationMinutes: number;
-  encodedPolyline: string;
+  /** The road, start to end (simplified) */
+  path: LatLng[];
   start: LatLng;
   end: LatLng;
 }
-
-export type RealStopsResult =
-  { ok: true; route: RealRoute; stops: RouteStop[] } | { ok: false; error: string };
 
 export interface RouteRequest {
   origin: string;

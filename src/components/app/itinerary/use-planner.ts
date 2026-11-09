@@ -36,8 +36,7 @@ import { useTripWeather } from "@/lib/live/use-live";
 import { useTripAirports } from "@/lib/live/use-airports";
 import { useUsdRate } from "@/lib/live/use-locale";
 import { currencyForCountry } from "@/lib/locale";
-import { cabinInfo, travelPoint } from "@/lib/demo-data";
-import { getDestinationPlaces } from "@/lib/places/destination-places.functions";
+import { cabinInfo } from "@/lib/demo-data";
 import { fetchLandmarks, fetchRestaurants } from "@/lib/live/open-data";
 import type { GuideTip } from "@/lib/live/travel-guide";
 import {
@@ -46,7 +45,7 @@ import {
   useTripCountry,
   useTripHolidays,
 } from "@/lib/live/use-open-data";
-import type { DestinationPlacesResult, RealPlace } from "@/lib/places/types";
+import type { RealPlace } from "@/lib/places/types";
 import { currentTrip, planKey, tripActions, useTrip } from "@/lib/trip-store";
 
 /** The AI planner usually answers in 15–40s; past this we stop waiting and keep the current plan. */
@@ -56,7 +55,6 @@ const PARALLEL_PARTS = 3;
 const PLACES_TIMEOUT_MS = 30_000;
 
 /** Map lookups are billed, so identical searches in one session reuse the first answer. */
-const placesCache = new Map<string, DestinationPlacesResult>();
 /** Open-data lookups are free but shared services, so they're reused too. */
 interface NearbyPlaces {
   sights: RealPlace[];
@@ -67,7 +65,7 @@ interface NearbyPlaces {
 }
 const openCache = new Map<string, NearbyPlaces>();
 
-export type PlannerJob = "ai" | "places" | "open" | null;
+export type PlannerJob = "ai" | "open" | null;
 
 const label = (list: readonly { id: string; label: string }[], id: string) =>
   list.find((x) => x.id === id)?.label ?? id;
@@ -103,7 +101,7 @@ export function usePlanner() {
   /** A real-places plan for each city, joined into the whole trip (multi-city trips). */
   const joinCities = (
     found: readonly ({ sights: RealPlace[]; restaurants: RealPlace[] } | null)[],
-    source: "google" | "open",
+    source: "open",
     tips: string[] = [],
   ): Itinerary =>
     stitchCityPlans(
@@ -458,98 +456,6 @@ export function usePlanner() {
     }
   };
 
-  const planWithRealPlaces = async () => {
-    const key = planKey(currentTrip());
-    // Where the place is, so the map search stays in the right town ("Athens, GA", not Greece).
-    const nearOf = (p: GeoPoint | null | undefined) =>
-      p
-        ? { near: { lat: Math.round(p.lat * 1000) / 1000, lon: Math.round(p.lon * 1000) / 1000 } }
-        : {};
-    const request = {
-      destination: destinationQuery(dest, trip.setup.origin, prefs?.home_city),
-      interests: trip.setup.interests,
-      style: trip.setup.style,
-      ...nearOf(travelPoint(dest, trip.setup.destinationPoint)),
-    };
-    const cacheKey = JSON.stringify(request);
-    const { ctrl, done } = start("places", PLACES_TIMEOUT_MS);
-    try {
-      if (multi) {
-        const perCity = await Promise.all(
-          legs.map(async (leg) => {
-            const { near: _near, ...rest } = request;
-            const req = leg.main
-              ? request
-              : { ...rest, destination: leg.name, ...nearOf(leg.point) };
-            const k = JSON.stringify(req);
-            let r = placesCache.get(k);
-            if (!r) {
-              r = await getDestinationPlaces({ data: req, signal: ctrl.signal });
-              if (r.ok) placesCache.set(k, r);
-            }
-            return r;
-          }),
-        );
-        if (ctrl.signal.aborted) return failed(ctrl, "", planWithRealPlaces);
-        const firstError = perCity.find((r) => !r.ok);
-        if (perCity.every((r) => !r.ok)) {
-          toast.error(firstError && !firstError.ok ? firstError.error : "No places came back.", {
-            action: { label: "Try again", onClick: planWithRealPlaces },
-          });
-          return;
-        }
-        land(
-          () =>
-            tripActions.setItineraryFor(
-              key,
-              joinCities(
-                perCity.map((r) => (r.ok ? r : null)),
-                "google",
-              ),
-            ),
-          `Itinerary built from real places in all ${legs.length} cities`,
-        );
-        return;
-      }
-      let res = placesCache.get(cacheKey);
-      if (!res) {
-        res = await getDestinationPlaces({ data: request, signal: ctrl.signal });
-        if (res.ok) placesCache.set(cacheKey, res);
-      }
-      if (ctrl.signal.aborted) return failed(ctrl, "", planWithRealPlaces);
-      if (!res.ok) {
-        toast.error(res.error, { action: { label: "Try again", onClick: planWithRealPlaces } });
-        return;
-      }
-      const places = res;
-      land(
-        () =>
-          tripActions.setItineraryFor(
-            key,
-            buildRealItinerary({
-              sights: places.sights,
-              restaurants: places.restaurants,
-              destName: dest.name,
-              days: shape.days,
-              startDate: trip.setup.startDate,
-              interests: trip.setup.interests,
-              tripType: trip.setup.tripType,
-              mealBudgetPerPersonDay: totals.categories.food / shape.travelers / shape.days,
-            }),
-          ),
-        "Itinerary built from real places on Google Maps",
-      );
-    } catch {
-      failed(
-        ctrl,
-        "Couldn't reach the map service. Your current plan is unchanged.",
-        planWithRealPlaces,
-      );
-    } finally {
-      done();
-    }
-  };
-
   /** Real landmarks (Wikipedia) and restaurants (OpenStreetMap): free, for everyone. */
   const planWithOpenData = async () => {
     const key = planKey(currentTrip());
@@ -631,5 +537,5 @@ export function usePlanner() {
     toast("Stopped. Your current plan is unchanged.");
   };
 
-  return { job, busy: job !== null, planWithAi, planWithRealPlaces, planWithOpenData, cancel };
+  return { job, busy: job !== null, planWithAi, planWithOpenData, cancel };
 }

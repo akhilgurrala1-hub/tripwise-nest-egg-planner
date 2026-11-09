@@ -99,9 +99,10 @@ function PrivacyPage() {
           <li>
             <strong>From your browser, for everyone:</strong> Open-Meteo (weather and place search),
             Wikipedia, Wikivoyage and Wikimedia (photos, introductions, travel guides, landmarks),
-            OpenStreetMap&rsquo;s Overpass service (restaurants), Nager.Date (public holidays) and
-            Frankfurter (exchange rates). Like any website, they see your IP address when your
-            browser asks them for something.
+            OpenStreetMap&rsquo;s Overpass service (restaurants and stops along a drive), Nager.Date
+            (public holidays), Frankfurter (exchange rates), and on the Road trip page the OSRM
+            routing service and OpenFreeMap (the map), both built on OpenStreetMap. Like any
+            website, they see your IP address when your browser asks them for something.
           </li>
           <li>
             <strong>Only when you tap &ldquo;Use my location&rdquo;:</strong> your device&rsquo;s
@@ -111,10 +112,12 @@ function PrivacyPage() {
           </li>
           <li>
             <strong>Only for signed-in travelers, when you press the button:</strong> the AI planner
-            and trip assistant (your trip details and messages go through the Lovable AI gateway to
-            the model provider that answers), Google Maps (routes and places), and SerpApi (Google
-            Flights and Google Hotels prices) and the U.S. Energy Information Administration (gas
-            prices) for live prices.
+            and trip assistant send your trip details and messages to Google&rsquo;s Gemini API to
+            write an answer. Waypoint uses Gemini&rsquo;s free tier, under which Google may use what
+            it receives to improve its products and people at Google may review it, so please
+            don&rsquo;t put anything private in a message. Live prices send places and dates to
+            SerpApi (Google Flights and Google Hotels prices) and the U.S. Energy Information
+            Administration (gas prices).
           </li>
           <li>
             <strong>Hosting:</strong> Waypoint runs on Cloudflare, and accounts and saved trips are

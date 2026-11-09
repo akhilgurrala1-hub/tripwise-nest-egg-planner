@@ -63,8 +63,8 @@ function TermsPage() {
           </li>
           <li>
             <strong>AI answers can be wrong.</strong> Plans from the AI planner and replies from the
-            trip assistant are labeled as unverified. Check opening hours, prices and availability
-            yourself.
+            trip assistant are written by Google&rsquo;s Gemini models and labeled as unverified.
+            Check opening hours, prices and availability yourself.
           </li>
           <li>
             <strong>Travel rules are guidance.</strong> Passport, visa, entry and layover
@@ -129,9 +129,10 @@ function TermsPage() {
           Waypoint&rsquo;s design, code and name belong to us. Some content belongs to others and is
           used under its license: text and photos from Wikipedia, Wikivoyage and Wikimedia Commons
           (CC BY-SA and the photographers&rsquo; licenses), map data from OpenStreetMap contributors
-          (ODbL), towns from GeoNames (CC BY), weather from Open-Meteo (CC BY 4.0), airports from
-          OurAirports (public domain) and passport data from the Passport Index dataset (MIT).
-          Credits appear where the content is shown.
+          (ODbL), driving routes from OSRM and the road-trip map from OpenFreeMap (OpenMapTiles and
+          OpenStreetMap data), towns from GeoNames (CC BY), weather from Open-Meteo (CC BY 4.0),
+          airports from OurAirports (public domain) and passport data from the Passport Index
+          dataset (MIT). Credits appear where the content is shown.
         </p>
       </Section>
 

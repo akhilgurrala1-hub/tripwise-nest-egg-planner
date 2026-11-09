@@ -81,10 +81,15 @@ describe("model settings", () => {
   });
 
   it("can be switched with Lovable Cloud secrets, ignoring junk", () => {
-    expect(modelFor("planner", { AI_PLANNER_MODEL: "google/gemini-3-pro" })).toBe(
-      "google/gemini-3-pro",
+    expect(modelFor("planner", { AI_PLANNER_MODEL: "google/gemini-3.8-flash" })).toBe(
+      "gemini-3.8-flash",
+    );
+    expect(modelFor("planner", { AI_PLANNER_MODEL: " models/Gemini-3.5-Flash " })).toBe(
+      "gemini-3.5-flash",
     );
     expect(modelFor("chat", { AI_CHAT_MODEL: "not a model; rm" })).toBe(DEFAULT_MODEL);
+    // An old Lovable gateway id can't reach Gemini, so it's ignored.
+    expect(modelFor("chat", { AI_CHAT_MODEL: "openai/gpt-6-astra" })).toBe(DEFAULT_MODEL);
     expect(effortFor("planner", { AI_PLANNER_EFFORT: "High" })).toBe("high");
     expect(effortFor("planner", { AI_PLANNER_EFFORT: "max" })).toBe("low");
   });
@@ -115,7 +120,7 @@ describe("the AI planner's review pass", () => {
   beforeEach(() => {
     sdk.answers = [];
     sdk.calls = [];
-    vi.stubEnv("LOVABLE_API_KEY", "test-key");
+    vi.stubEnv("GEMINI_API_KEY", "test-key");
   });
 
   it("makes one call when the first plan is fine", async () => {
@@ -183,54 +188,57 @@ describe("when the AI service fails", () => {
   beforeEach(() => {
     sdk.answers = [];
     sdk.calls = [];
-    vi.stubEnv("LOVABLE_API_KEY", "test-key");
+    vi.stubEnv("GEMINI_API_KEY", "test-key");
   });
 
-  it("tries the plain chat API, then a fallback model, before giving up", async () => {
-    sdk.answers.push(
-      apiError(400, "Unsupported parameter"),
-      apiError(404, "Model not found"),
-      ANSWER,
-    );
+  it("moves on to the next free model when one is busy or its daily quota is used up", async () => {
+    sdk.answers.push(apiError(503, "high demand"), apiError(429, "Quota exceeded"), ANSWER);
     const res = await runTripChat(CHAT);
     expect(res.ok).toBe(true);
     expect(sdk.calls.map((c) => c.model)).toEqual([
       DEFAULT_MODEL,
-      DEFAULT_MODEL,
       fallbackModels()[0],
+      fallbackModels()[1],
     ]);
+    expect(new Set([DEFAULT_MODEL, ...fallbackModels()]).size).toBe(1 + fallbackModels().length);
   });
 
-  it("says why when every attempt fails", async () => {
-    for (let i = 0; i < 4; i++)
-      sdk.answers.push(apiError(404, "Model openai/gpt-6-astra not found"));
+  it("says why when every attempt fails, preferring a real reason over busy", async () => {
+    sdk.answers.push(apiError(503, "high demand"), apiError(404, "Model gemini-x not found"));
+    for (let i = 0; i < 2; i++) sdk.answers.push(apiError(503, "high demand"));
     const res = await runTripChat(CHAT);
     expect(res).toMatchObject({
       ok: false,
       status: 404,
       error: "The assistant couldn't answer. Try again.",
-      detail: "Model openai/gpt-6-astra not found",
+      detail: "Model gemini-x not found",
     });
+
+    for (let i = 0; i < 4; i++) sdk.answers.push(apiError(503, "high demand"));
+    const busy = await runTripChat(CHAT);
+    expect(busy).toMatchObject({ ok: false, status: 503 });
+    expect(!busy.ok && busy.error).toContain("busy");
   });
 
-  it("doesn't retry (or spend more) when credits run out or it's rate limited", async () => {
-    sdk.answers.push(apiError(402, "Not enough credits"));
+  it("stops at once on a wrong key or no paid credit, since no other model would work", async () => {
+    sdk.answers.push(apiError(400, "API key not valid. Please pass a valid API key."));
     const a = await runTripChat(CHAT);
     expect(sdk.calls).toHaveLength(1);
-    expect(a).toMatchObject({ ok: false, status: 402 });
-    expect(!a.ok && a.error).toContain("out of AI credits");
+    expect(a).toMatchObject({ ok: false, status: 401 });
+    expect(!a.ok && a.error).toContain("GEMINI_API_KEY");
 
     sdk.calls = [];
-    sdk.answers.push(apiError(429, "Slow down"));
+    sdk.answers.push(apiError(402, "Billing required"));
     const b = await runTripChat(CHAT);
     expect(sdk.calls).toHaveLength(1);
-    expect(b).toMatchObject({ ok: false, status: 429 });
+    expect(!b.ok && b.error).toContain("no credit left");
   });
 
-  it("explains a workspace without AI access", async () => {
-    for (let i = 0; i < 4; i++) sdk.answers.push(apiError(403, "AI is disabled"));
+  it("explains when no key is set", async () => {
+    vi.stubEnv("GEMINI_API_KEY", "");
     const res = await runTripChat(CHAT);
-    expect(!res.ok && res.error).toContain("Turn on Lovable AI");
+    expect(res).toMatchObject({ ok: false, status: 401 });
+    expect(sdk.calls).toHaveLength(0);
   });
 
   it("reads the service's message without echoing secrets", () => {
@@ -252,5 +260,14 @@ describe("when the AI service fails", () => {
     const res = await generateAiItinerary(REQ);
     expect(res.ok).toBe(true);
     expect(sdk.calls).toHaveLength(2);
+  });
+});
+
+describe("the Gemini key", () => {
+  it("is read from the documented secret or a common variant, cleaned of pasted quotes", async () => {
+    const { geminiKey } = await import("@/lib/ai/gateway.server");
+    expect(geminiKey({ GEMINI_API_KEY: ' "abc123" ' })).toBe("abc123");
+    expect(geminiKey({ GOOGLE_API_KEY: "xyz" })).toBe("xyz");
+    expect(geminiKey({ GEMINI_API_KEY: "  ", LOVABLE_API_KEY: "x" })).toBeNull();
   });
 });

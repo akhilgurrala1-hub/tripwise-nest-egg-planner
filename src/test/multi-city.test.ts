@@ -245,7 +245,7 @@ describe("multi-city trips", () => {
 
   it("the AI planner is told which city every day is in", async () => {
     sdk.answers.push({ days: [], tips: [] }, { days: [], tips: [] });
-    process.env["LOVABLE_API_KEY"] = "test";
+    process.env["GEMINI_API_KEY"] = "test";
     await generateAiItinerary({
       destination: "Rome, Italy",
       region: "",

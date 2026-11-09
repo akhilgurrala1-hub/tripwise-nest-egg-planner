@@ -19,10 +19,6 @@ export const LIMITS = {
   aiPlan: { max: 60, windowMs: HOUR },
   /** Turns with the trip assistant */
   aiChat: { max: 80, windowMs: HOUR },
-  /** Real places in the destination (Google Maps) */
-  places: { max: 30, windowMs: HOUR },
-  /** Real stops along a route (Google Maps) */
-  stops: { max: 30, windowMs: HOUR },
   /** Live flight, hotel and gas prices (SerpApi, EIA) */
   prices: { max: 20, windowMs: HOUR },
   /** "Test connection" for the price keys */

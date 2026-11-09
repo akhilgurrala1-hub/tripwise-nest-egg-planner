@@ -1,12 +1,10 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import {
   Car,
-  ChevronDown,
   Loader2,
   MapPin,
   Printer,
   RotateCcw,
-  Star,
   CalendarDays,
   MessageSquare,
   X,
@@ -23,18 +21,11 @@ import { stagger } from "@/components/app/motion";
 import { ShareTripButton } from "@/components/app/ShareTrip";
 import { PageHeader } from "@/components/app/TripHeader";
 import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { useAuth } from "@/lib/auth-context";
 import { formatMoney, stopCost } from "@/lib/budget";
 import { useTripWeather } from "@/lib/live/use-live";
 import { useTripHolidays } from "@/lib/live/use-open-data";
 import { tripActions, useTrip } from "@/lib/trip-store";
-import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/itinerary")({
   head: () => ({
@@ -79,7 +70,7 @@ function useProgressiveCount(total: number): number {
 }
 
 function ItineraryPage() {
-  const { trip, shape } = useTrip();
+  const { trip } = useTrip();
   const { user } = useAuth();
   const weather = useTripWeather();
   const planner = usePlanner();
@@ -92,58 +83,16 @@ function ItineraryPage() {
       <PageHeader title="Day by day">
         <div className="flex w-full flex-wrap gap-2 sm:w-auto">
           {/* Real landmarks and restaurants from open data: free, so it's for everyone. */}
-          <div className="flex flex-1 sm:flex-none">
-            <Button
-              variant="ink"
-              onClick={planner.planWithOpenData}
-              disabled={planner.busy}
-              className={cn("flex-1", user && "rounded-r-none")}
-            >
-              {planner.job === "open" || planner.job === "places" ? (
-                <Loader2 className="animate-spin" />
-              ) : (
-                <MapPin />
-              )}
-              {planner.job === "open" || planner.job === "places"
-                ? "Finding places…"
-                : "Use real places"}
-            </Button>
-            {user && (
-              <DropdownMenu modal={false}>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="ink"
-                    size="icon"
-                    disabled={planner.busy}
-                    className="rounded-l-none border-l border-ink-foreground/20"
-                    aria-label="More ways to find real places"
-                  >
-                    <ChevronDown />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-64">
-                  <DropdownMenuItem onClick={planner.planWithOpenData}>
-                    <MapPin className="size-4" />
-                    <span>
-                      Travel guide picks
-                      <span className="block text-xs text-muted-foreground">
-                        Wikivoyage, Wikipedia and OpenStreetMap
-                      </span>
-                    </span>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={planner.planWithRealPlaces}>
-                    <Star className="size-4" />
-                    <span>
-                      Google Maps places
-                      <span className="block text-xs text-muted-foreground">
-                        With ratings and price levels
-                      </span>
-                    </span>
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            )}
-          </div>
+          <Button
+            variant="ink"
+            onClick={planner.planWithOpenData}
+            loading={planner.job === "open"}
+            disabled={planner.busy}
+            className="flex-1 sm:flex-none"
+          >
+            <MapPin />
+            {planner.job === "open" ? "Finding places…" : "Use real places"}
+          </Button>
           {user ? (
             /* AI planning spends credits, so it's for signed-in travelers. */
             <Button

@@ -10,5 +10,5 @@ export const LEGAL = {
   governingLaw: "the State of Arizona",
   venue: "the state and federal courts located in Maricopa County, Arizona",
   /** When these versions of the pages took effect. */
-  effective: "November 7, 2026",
+  effective: "November 9, 2026",
 } as const;

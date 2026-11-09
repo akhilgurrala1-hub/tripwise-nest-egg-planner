@@ -45,7 +45,7 @@ export interface ItineraryDay {
 }
 
 export interface Itinerary {
-  /** google = Google Maps; open = Wikipedia landmarks + OpenStreetMap restaurants (free) */
+  /** open = travel guide, Wikipedia and OpenStreetMap places (free); google = older plans from Google Maps */
   source: "demo" | "ai" | "google" | "open";
   days: ItineraryDay[];
   tips: string[];
@@ -437,7 +437,7 @@ export function buildRealItinerary(opts: {
   /** The food budget per person per day: meals that would blow it aren't picked */
   mealBudgetPerPersonDay?: number;
 }): Itinerary {
-  const { destName, days, startDate, interests, tripType, source = "google" } = opts;
+  const { destName, days, startDate, interests, tripType, source = "open" } = opts;
   const sights = [...opts.sights].sort(
     (a, b) => placeScore(b, interests) - placeScore(a, interests),
   );

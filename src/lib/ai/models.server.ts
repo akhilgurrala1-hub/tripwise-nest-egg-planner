@@ -1,24 +1,38 @@
 /**
- * Which model each AI task runs on, and how hard it thinks. Defaults keep today's
- * cost; a stronger model can be switched on without a code change by setting
- * these secrets in Lovable Cloud (every call goes through the Lovable AI gateway):
+ * Which Gemini model each AI task runs on, and how hard it thinks. Every call goes
+ * to Google's Gemini API (free tier) with the project's own key, never through
+ * Lovable AI, so planning spends no Lovable credits.
  *
- * - AI_PLANNER_MODEL / AI_CHAT_MODEL: a gateway model id, e.g. "openai/gpt-6-astra"
+ * Optional Lovable Cloud secrets change the defaults without a code change:
+ * - AI_PLANNER_MODEL / AI_CHAT_MODEL: a Gemini model id, e.g. "gemini-3.8-flash"
  * - AI_PLANNER_EFFORT / AI_CHAT_EFFORT: "low" (default), "medium" or "high"
+ * - AI_FALLBACK_MODELS: comma-separated Gemini ids tried when the first is busy
  *
- * More effort or a bigger model gives better plans but spends more AI credits per
- * request, so raise them only once the budget allows.
+ * Free-tier quotas are per model and per day, so the fallbacks are other free
+ * models: when one is busy or used up, the next still answers.
  */
-export const DEFAULT_MODEL = "openai/gpt-6-astra";
+export const DEFAULT_MODEL = "gemini-3.6-flash";
 
 export type AiTask = "planner" | "chat";
 export type Effort = "low" | "medium" | "high";
 
-const MODEL_ID = /^[a-z0-9-]+\/[a-z0-9][a-z0-9.\-:]*$/i;
+/**
+ * A Gemini or Gemma id, with an optional "google/" or "models/" prefix (dropped).
+ * Anything else, such as an old gateway id like "openai/gpt-6-astra", is ignored.
+ */
+export function geminiModel(raw: string | undefined): string | null {
+  const v = (raw ?? "")
+    .trim()
+    .replace(/^["']|["']$/g, "")
+    .replace(/^(google|models)\//i, "")
+    .toLowerCase();
+  return /^(gemini|gemma)-[a-z0-9][a-z0-9.-]*$/.test(v) ? v : null;
+}
 
 export function modelFor(task: AiTask, env: Record<string, string | undefined> = process.env) {
-  const v = env[task === "planner" ? "AI_PLANNER_MODEL" : "AI_CHAT_MODEL"]?.trim() ?? "";
-  return MODEL_ID.test(v) ? v : DEFAULT_MODEL;
+  return (
+    geminiModel(env[task === "planner" ? "AI_PLANNER_MODEL" : "AI_CHAT_MODEL"]) ?? DEFAULT_MODEL
+  );
 }
 
 export function effortFor(
@@ -29,15 +43,10 @@ export function effortFor(
   return v === "medium" || v === "high" ? v : "low";
 }
 
-/** Provider options shared by every call: reasoning on, nothing stored by the provider. */
-export function reasoningOptions(task: AiTask) {
-  return {
-    openai: {
-      forceReasoning: true,
-      reasoningEffort: effortFor(task),
-      reasoningSummary: "auto",
-      store: false,
-      include: ["reasoning.encrypted_content"],
-    },
-  };
+/** Provider options for every call: Gemini maps reasoning_effort onto its thinking level. */
+export function reasoningOptions(
+  task: AiTask,
+  env: Record<string, string | undefined> = process.env,
+) {
+  return { openai: { reasoningEffort: effortFor(task, env) } };
 }

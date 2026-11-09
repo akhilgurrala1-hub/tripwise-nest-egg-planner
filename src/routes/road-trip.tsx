@@ -1,5 +1,4 @@
 import { useQuery } from "@tanstack/react-query";
-import { useServerFn } from "@tanstack/react-start";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import {
   Check,
@@ -24,7 +23,7 @@ import { toast } from "sonner";
 
 import { InterestChips, NumberField, SourceNote } from "@/components/app/bits";
 import { Segmented } from "@/components/app/motion";
-import { RealRouteMap } from "@/components/app/RealRouteMap";
+import { OpenRouteMap } from "@/components/app/OpenRouteMap";
 import { PageHeader } from "@/components/app/TripHeader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -38,13 +37,11 @@ import {
   matchesFilter,
   rankStops,
   whyItMatches,
-  type RealStopsResult,
   type RouteStop,
   type StopFilter,
   type StopKind,
 } from "@/lib/routing";
-import { useAuth } from "@/lib/auth-context";
-import { getRealStops } from "@/lib/places/real-stops.functions";
+import { findOpenRoute, type OpenRouteResult } from "@/lib/routing/open-route";
 import { tripActions, useTrip } from "@/lib/trip-store";
 import { cn } from "@/lib/utils";
 
@@ -77,6 +74,16 @@ const KIND: Record<StopKind, { icon: LucideIcon; label: string }> = {
   "free-activity": { icon: Footprints, label: "Free activity" },
 };
 
+interface RouteSearch {
+  origin: string;
+  destination: string;
+  from: { lat: number; lng: number } | null;
+  to: { lat: number; lng: number } | null;
+}
+
+/** The last route looked up, so coming back to the page shows it again. */
+let lastSearch: RouteSearch | null = null;
+
 function segmentLabel(pos: number, origin: string, destination: string) {
   if (pos < 0.34) return `Early in the drive${origin ? ` from ${origin}` : ""}`;
   if (pos < 0.67) return "Midway";
@@ -84,21 +91,25 @@ function segmentLabel(pos: number, origin: string, destination: string) {
 }
 
 function RoadTripPage() {
-  const { trip, totals, shape, stopsTotal } = useTrip();
+  const { trip, dest, totals, shape, stopsTotal } = useTrip();
   const rt = trip.roadTrip;
   const [filter, setFilter] = useState<StopFilter>("all");
   const provider = getRouteProvider();
   const driving = isDrivingMode(trip.inputs.transportMode);
 
-  const { user, loading: authLoading } = useAuth();
-  const realMode = !!user;
-  const fetchRealStops = useServerFn(getRealStops);
-  const [search, setSearch] = useState<{
-    origin: string;
-    destination: string;
-    interests: Interest[];
-  } | null>(null);
+  const [search, setSearchState] = useState<RouteSearch | null>(() =>
+    lastSearch &&
+    lastSearch.origin === rt.origin.trim() &&
+    lastSearch.destination === rt.destination.trim()
+      ? lastSearch
+      : null,
+  );
+  const setSearch = (s: RouteSearch) => {
+    lastSearch = s;
+    setSearchState(s);
+  };
 
+  // Sample stops until the traveler looks up their real road.
   const demo = useQuery({
     queryKey: ["route-stops", provider.id, rt.origin, rt.destination],
     queryFn: () =>
@@ -108,50 +119,53 @@ function RoadTripPage() {
         interests: rt.interests,
         maxDetourMinutes: rt.maxDetourMinutes,
       }),
-    enabled: !realMode,
+    enabled: !search,
   });
 
+  // Free open data from the browser, only after a tap, cached for the session.
   const real = useQuery({
-    queryKey: ["real-stops", search],
-    queryFn: () => fetchRealStops({ data: search! }),
-    enabled: realMode && !!search,
-    staleTime: 30 * 60 * 1000,
+    queryKey: ["open-route", search],
+    queryFn: ({ signal }) => findOpenRoute(search!, signal),
+    enabled: !!search,
+    staleTime: Infinity,
+    gcTime: 60 * 60 * 1000,
     retry: false,
   });
 
   const realResult = real.data;
   const realOk =
-    realResult?.ok === true ? (realResult as Extract<RealStopsResult, { ok: true }>) : null;
+    realResult?.ok === true ? (realResult as Extract<OpenRouteResult, { ok: true }>) : null;
   const realError =
     realResult && realResult.ok === false ? (realResult as { error: string }).error : null;
-  const stops: RouteStop[] = realMode ? (realOk?.stops ?? []) : (demo.data ?? []);
+  const stops: RouteStop[] = search ? (realOk?.stops ?? []) : (demo.data ?? []);
   // Exactly one of these states renders at a time.
-  const view:
-    "auth-loading" | "demo" | "needs-search" | "loading" | "unavailable" | "empty" | "results" =
-    authLoading
-      ? "auth-loading"
-      : !realMode
-        ? demo.isLoading
-          ? "loading"
-          : "demo"
-        : !search
-          ? "needs-search"
-          : real.isFetching
-            ? "loading"
-            : real.isError || realError
-              ? "unavailable"
-              : realOk && realOk.stops.length === 0
-                ? "empty"
-                : realOk
-                  ? "results"
-                  : "loading";
+  const view: "demo" | "loading" | "unavailable" | "empty" | "results" = !search
+    ? demo.isLoading
+      ? "loading"
+      : "demo"
+    : real.isFetching
+      ? "loading"
+      : real.isError || realError
+        ? "unavailable"
+        : realOk && realOk.stops.length === 0
+          ? "empty"
+          : realOk
+            ? "results"
+            : "loading";
   const canSearch = rt.origin.trim().length >= 2 && rt.destination.trim().length >= 2;
-  const runSearch = () =>
+  const runSearch = () => {
+    const origin = rt.origin.trim();
+    const destination = rt.destination.trim();
+    const p = trip.setup.originPoint;
+    const d = trip.setup.destinationPoint;
     setSearch({
-      origin: rt.origin.trim(),
-      destination: rt.destination.trim(),
-      interests: [...rt.interests].sort(),
+      origin,
+      destination,
+      // The trip's own points are exact; a typed place is looked up by name.
+      from: p && origin === trip.setup.origin.trim() ? { lat: p.lat, lng: p.lon } : null,
+      to: d && destination === dest.name.trim() ? { lat: d.lat, lng: d.lon } : null,
     });
+  };
   const scrollToStop = useCallback(
     (id: string) =>
       document
@@ -248,29 +262,16 @@ function RoadTripPage() {
               <p className="mb-2 text-footnote text-muted-foreground">Interests</p>
               <InterestChips value={rt.interests} onToggle={toggleInterest} />
             </div>
-            {authLoading ? null : realMode ? (
-              <Button
-                variant="hero"
-                className="w-full"
-                disabled={!canSearch || real.isFetching}
-                onClick={runSearch}
-              >
-                {real.isFetching ? <Loader2 className="animate-spin" /> : <Search />}
-                {real.isFetching ? "Looking along your route…" : "Find real stops"}
-              </Button>
-            ) : (
-              <div className="flex flex-wrap items-center justify-between gap-4 rounded-lg bg-muted px-4 py-4 text-sm">
-                <p>
-                  <span className="font-medium">You're seeing sample stops.</span> Sign in to
-                  explore real places, routes and drive times.
-                </p>
-                <Button asChild size="sm" variant="outline">
-                  <Link to="/auth" search={{ redirect: "/road-trip" }}>
-                    Sign in
-                  </Link>
-                </Button>
-              </div>
-            )}
+            <Button
+              variant="hero"
+              className="w-full"
+              disabled={!canSearch || real.isFetching}
+              loading={real.isFetching}
+              onClick={runSearch}
+            >
+              <Search />
+              {real.isFetching ? "Looking along your route…" : "Find real stops"}
+            </Button>
           </section>
 
           {view === "results" && realOk && (
@@ -286,21 +287,17 @@ function RoadTripPage() {
           )}
 
           <section className="space-y-4" aria-live="polite">
-            {view === "auth-loading" || view === "loading" ? (
+            {view === "loading" ? (
               <StateCard
                 icon={<Loader2 className="size-5 animate-spin" />}
                 title="Looking along your route…"
               >
                 Finding viewpoints, food and places worth the detour.
               </StateCard>
-            ) : view === "needs-search" ? (
-              <StateCard icon={<Search className="size-5" />} title="Where does the road take you?">
-                Add your start and destination above, then tap <strong>Find real stops</strong>.
-              </StateCard>
             ) : view === "unavailable" ? (
               <StateCard
                 icon={<Flag className="size-5 text-destructive" />}
-                title="We couldn't reach the map service"
+                title="We couldn't look up this route"
               >
                 {realError ?? "Please try again in a moment."} Your budget and saved stops are safe.
               </StateCard>
@@ -331,8 +328,8 @@ function RoadTripPage() {
                     : ""}
                   .{" "}
                   {view === "demo"
-                    ? "These are example stops, not real businesses. Sign in to see real places along your route."
-                    : "Places and drive times come from Google Maps. Costs are estimates, so check before you go."}
+                    ? "These are example stops, not real places. Tap Find real stops to see what's along your road."
+                    : `Route from OpenStreetMap, sights from Wikipedia${realOk?.food ? ", food from OpenStreetMap" : ""}. Detour times and costs are estimates, so check before you go.${realOk && !realOk.food ? " Food stops couldn't load right now; try again later for places to eat." : ""}`}
                 </p>
                 {visible.length === 0 ? (
                   <StateCard
@@ -372,7 +369,7 @@ function RoadTripPage() {
                 <dd className="tabular text-lg font-semibold">{rt.includedStops.length}</dd>
               </div>
               <div className="border-t border-separator pt-4">
-                <dt className="text-xs text-muted-foreground">Extra drive (sample)</dt>
+                <dt className="text-xs text-muted-foreground">Extra drive (est.)</dt>
                 <dd className="tabular text-lg font-semibold">+{extraMinutes} min</dd>
               </div>
               <div className="border-t border-separator pt-4">
@@ -412,7 +409,7 @@ function RoadTripPage() {
           {realOk ? (
             <section className="surface-card p-4">
               <h2 className="title-display mb-4 text-title-1">Route map</h2>
-              <RealRouteMap
+              <OpenRouteMap
                 route={realOk.route}
                 stops={withinDetour}
                 includedIds={includedIds}
@@ -532,7 +529,8 @@ function StopCard({
             rel="noreferrer"
             className="mt-2 inline-flex items-center gap-1 text-xs font-medium text-primary underline-offset-2 hover:underline"
           >
-            View on Google Maps <ExternalLink className="size-3" />
+            {stop.mapsUrl.includes("wikipedia.org") ? "Read on Wikipedia" : "View on OpenStreetMap"}{" "}
+            <ExternalLink className="size-3" />
           </a>
         )}
       </div>
@@ -644,7 +642,8 @@ function RouteMap({
         </div>
       </div>
       <p className="mt-4 text-micro text-muted-foreground">
-        Not a map, just a sketch of where sample stops fall along the drive. Sign in for a live map.
+        Not a map, just a sketch of where sample stops fall along the drive. Find real stops for a
+        live map.
       </p>
     </section>
   );
