@@ -1,7 +1,7 @@
 import { generateText, Output } from "ai";
 import { z } from "zod";
 
-import { aiAttempts, aiErrorInfo, withFallbacks } from "./gateway.server";
+import { aiAttempts, aiErrorInfo, withFallbacks, geminiKey } from "./gateway.server";
 
 const SERVER_TIMEOUT_MS = 50_000;
 
@@ -116,7 +116,7 @@ export async function runTripChat(
   req: TripChatRequest,
   clientSignal?: AbortSignal,
 ): Promise<TripChatResult> {
-  const apiKey = process.env["LOVABLE_API_KEY"];
+  const apiKey = geminiKey();
   if (!apiKey) return { ok: false, status: 401, error: "The AI assistant isn't configured yet." };
   const context = [
     `Today: ${req.today} (${new Date(`${req.today}T12:00:00Z`).toLocaleDateString("en-US", { weekday: "long", timeZone: "UTC" })})`,
@@ -145,6 +145,7 @@ export async function runTripChat(
       async ({ model, providerOptions }) => {
         // generateText (not streaming) so gateway errors keep their status and message.
         const result = await generateText({
+          maxRetries: 0,
           ...(abortSignal ? { abortSignal } : {}),
           model,
           instructions: `${INSTRUCTIONS}\n\n${context}`,
@@ -168,10 +169,11 @@ export async function runTripChat(
       return {
         ok: false,
         status,
-        error: "The workspace is out of AI credits. Add credits in Lovable to keep chatting.",
+        error:
+          "The Gemini API key has no credit left for this model. Check its plan in Google AI Studio.",
         detail,
       };
-    if (status === 429)
+    if (status === 429 || status === 503)
       return {
         ok: false,
         status,
@@ -182,7 +184,7 @@ export async function runTripChat(
       return {
         ok: false,
         status,
-        error: "AI isn't enabled for this workspace. Turn on Lovable AI in the project settings.",
+        error: "The Gemini API key was refused. Check GEMINI_API_KEY in Lovable Cloud secrets.",
         detail,
       };
     return { ok: false, status, error: "The assistant couldn't answer. Try again.", detail };

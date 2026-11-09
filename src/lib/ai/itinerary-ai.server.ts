@@ -2,7 +2,7 @@ import { generateText, Output, type ModelMessage } from "ai";
 import { z } from "zod";
 
 import { planProblems } from "../ai-quality";
-import { aiAttempts, aiErrorInfo, withFallbacks } from "./gateway.server";
+import { aiAttempts, aiErrorInfo, withFallbacks, geminiKey } from "./gateway.server";
 
 /** A review pass only starts if the first answer came back within this, so both fit in the timeout. */
 const REPAIR_DEADLINE_MS = 40_000;
@@ -86,9 +86,10 @@ function describeError(err: unknown): { status: number; error: string; detail: s
     return {
       status,
       detail,
-      error: "The workspace is out of AI credits. Add credits in Lovable to keep planning with AI.",
+      error:
+        "The Gemini API key has no credit left for this model. Check its plan in Google AI Studio.",
     };
-  if (status === 429)
+  if (status === 429 || status === 503)
     return {
       status,
       detail,
@@ -98,7 +99,7 @@ function describeError(err: unknown): { status: number; error: string; detail: s
     return {
       status,
       detail,
-      error: "AI isn't enabled for this workspace. Turn on Lovable AI in the project settings.",
+      error: "The Gemini API key was refused. Check GEMINI_API_KEY in Lovable Cloud secrets.",
     };
   return {
     status,
@@ -122,7 +123,7 @@ export async function generateAiItinerary(
   req: AiItineraryRequest,
   clientSignal?: AbortSignal,
 ): Promise<AiItineraryResult> {
-  const apiKey = process.env["LOVABLE_API_KEY"];
+  const apiKey = geminiKey();
   if (!apiKey) return { ok: false, status: 401, error: "AI planning isn't configured yet." };
 
   const cities = req.cities ?? [];
@@ -172,6 +173,7 @@ export async function generateAiItinerary(
       async (attempt) => {
         // generateText (not streaming) so gateway errors keep their status and message.
         const result = await generateText({
+          maxRetries: 0,
           ...(abortSignal ? { abortSignal } : {}),
           model: attempt.model,
           instructions: INSTRUCTIONS,

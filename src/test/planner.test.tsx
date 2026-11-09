@@ -7,7 +7,6 @@ const ai = vi.hoisted(() => ({ fn: vi.fn() }));
 const toasts = vi.hoisted(() => ({ error: vi.fn(), success: vi.fn(), plain: vi.fn() }));
 
 vi.mock("@/lib/ai-itinerary.functions", () => ({ createAiItinerary: ai.fn }));
-vi.mock("@/lib/places/destination-places.functions", () => ({ getDestinationPlaces: vi.fn() }));
 vi.mock("@/integrations/supabase/client", () => ({ supabase: {} }));
 vi.mock("@/lib/live/location.functions", () => ({ getVisitorLocation: async () => null }));
 // Grounding lookups are free web calls; here they find one real landmark.

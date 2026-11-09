@@ -332,7 +332,7 @@ export async function fetchLandmarks(
 
 // ---------- Restaurants (OpenStreetMap) ----------
 
-const OVERPASS = [
+export const OVERPASS_URLS = [
   "https://overpass-api.de/api/interpreter",
   "https://overpass.private.coffee/api/interpreter",
 ];
@@ -425,7 +425,7 @@ export async function fetchRestaurants(
 ): Promise<RealPlace[]> {
   const a = `${at.lat},${at.lon}`;
   const query = `[out:json][timeout:20];(nwr(around:3000,${a})["amenity"="restaurant"]["name"]["wikidata"];nwr(around:2000,${a})["amenity"="restaurant"]["name"]["website"][!"brand"];nwr(around:800,${a})["amenity"="restaurant"]["name"][!"brand"];);out center 200;`;
-  for (const url of OVERPASS) {
+  for (const url of OVERPASS_URLS) {
     try {
       const res = await fetch(url, {
         method: "POST",

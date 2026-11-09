@@ -1,5 +1,4 @@
 import { Link, useNavigate, useRouter, useRouterState } from "@tanstack/react-router";
-import { useQueryClient } from "@tanstack/react-query";
 import {
   Bookmark,
   CalendarCheck,
@@ -473,7 +472,6 @@ function usePreloadTabs() {
 function AccountButton() {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
-  const queryClient = useQueryClient();
 
   if (loading) return <span className="size-9" aria-hidden />;
   if (!user) {
@@ -487,8 +485,6 @@ function AccountButton() {
   }
 
   const signOut = async () => {
-    await queryClient.cancelQueries({ queryKey: ["real-stops"] });
-    queryClient.removeQueries({ queryKey: ["real-stops"] });
     await supabase.auth.signOut();
     navigate({ to: "/auth", search: { redirect: undefined }, replace: true });
   };

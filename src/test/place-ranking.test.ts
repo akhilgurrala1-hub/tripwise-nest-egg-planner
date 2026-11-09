@@ -246,19 +246,3 @@ describe("sights in the order worth seeing them", () => {
     expect(names[0]).toBe("Colosseum");
   });
 });
-
-describe("map results stay in the destination", () => {
-  it("drops a result from another town with the same name", async () => {
-    const { nearEnough } = await import("@/lib/places/destination-places.server");
-    const athensGa = { lat: 33.96, lon: -83.38 };
-    expect(
-      nearEnough({ location: { latitude: 33.95, longitude: -83.37 } } as never, athensGa),
-    ).toBe(true);
-    expect(nearEnough({ location: { latitude: 37.97, longitude: 23.72 } } as never, athensGa)).toBe(
-      false,
-    );
-    // Unknown location, or no destination point: kept.
-    expect(nearEnough({} as never, athensGa)).toBe(true);
-    expect(nearEnough({ location: { latitude: 37.97, longitude: 23.72 } } as never)).toBe(true);
-  });
-});
