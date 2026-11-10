@@ -8,8 +8,8 @@ import type { LatLng, RealRoute, RouteStop } from "@/lib/routing/types";
  * page, after a route is found.
  */
 
-const BLUE = "#2457E6";
-const CORAL = "#FF6B4A";
+const BLUE = "#0B5C5A";
+const CORAL = "#E0501A";
 const STYLE = {
   light: "https://tiles.openfreemap.org/styles/positron",
   dark: "https://tiles.openfreemap.org/styles/dark",

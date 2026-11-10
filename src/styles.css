@@ -2,8 +2,8 @@
 @source "../src";
 @import "tw-animate-css";
 /* One family, self-hosted (OFL), the way Apple sets everything in one face. */
-@import "@fontsource-variable/instrument-sans";
-@import "@fontsource-variable/host-grotesk";
+@import "@fontsource-variable/figtree";
+@import "@fontsource-variable/bricolage-grotesque";
 
 @custom-variant dark (&:where(.dark, .dark *));
 
@@ -25,11 +25,11 @@
 
 @theme inline {
   --font-sans:
-    "Instrument Sans Variable", "Instrument Sans", ui-sans-serif, -apple-system, BlinkMacSystemFont,
-    "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    "Figtree Variable", "Figtree", ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    Roboto, "Helvetica Neue", Arial, sans-serif;
   /* Headlines and amounts: Host Grotesk, an exact neo-grotesk, set tight. Text stays Instrument Sans. */
   --font-display:
-    "Host Grotesk Variable", "Host Grotesk", "Instrument Sans Variable", ui-sans-serif,
+    "Bricolage Grotesque Variable", "Bricolage Grotesque", "Figtree Variable", ui-sans-serif,
     -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   --font-mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace;
 
@@ -320,83 +320,83 @@
   --radius: 10px;
   color-scheme: light;
   /* apple.com: a light-gray page (#f5f5f7), white tiles, #1d1d1f text. */
-  --background: oklch(0.968 0.008 255);
-  --foreground: oklch(0.218 0.012 255);
+  --background: oklch(0.971 0.003 170);
+  --foreground: oklch(0.218 0.012 185);
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.218 0.012 255);
+  --card-foreground: oklch(0.218 0.012 185);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.218 0.012 255);
+  --popover-foreground: oklch(0.218 0.012 185);
   /* The one accent: interactive, selected, focused. */
   /* Brand blue (#2457E6), the logo's tile color, doubles as the interactive accent. */
-  --primary: oklch(0.519 0.223 264.5);
-  --primary-deep: oklch(0.455 0.197 264.8);
+  --primary: oklch(0.431 0.071 192);
+  --primary-deep: oklch(0.37 0.064 192);
   --primary-foreground: oklch(0.99 0 0);
   /* Fills (#e8e8ed) for secondary controls and tracks. */
-  --secondary: oklch(0.935 0.007 255);
-  --secondary-foreground: oklch(0.218 0.012 255);
-  --muted: oklch(0.945 0.007 255);
-  --muted-foreground: oklch(0.475 0.012 255);
-  --accent: oklch(0.945 0.018 264);
-  --accent-foreground: oklch(0.218 0.012 255);
-  --fill: oklch(0.218 0.012 255 / 0.06);
+  --secondary: oklch(0.935 0.007 185);
+  --secondary-foreground: oklch(0.218 0.012 185);
+  --muted: oklch(0.945 0.007 185);
+  --muted-foreground: oklch(0.475 0.012 185);
+  --accent: oklch(0.94 0.018 190);
+  --accent-foreground: oklch(0.218 0.012 185);
+  --fill: oklch(0.218 0.012 185 / 0.06);
   /* Legacy warm tokens now resolve to the accent / neutrals. */
   --sunset: var(--primary);
   --sunset-foreground: var(--primary-foreground);
-  --sunset-soft: oklch(0.955 0.016 264);
+  --sunset-soft: oklch(0.95 0.018 190);
   --gold: oklch(0.7 0.12 80);
-  --gold-soft: oklch(0.945 0.007 255);
+  --gold-soft: oklch(0.945 0.007 185);
   --success: oklch(0.49 0.12 152);
   --success-soft: oklch(0.955 0.025 152);
-  --shield: oklch(0.38 0.012 255);
-  --shield-soft: oklch(0.945 0.007 255);
+  --shield: oklch(0.38 0.012 185);
+  --shield-soft: oklch(0.945 0.007 185);
   --shield-foreground: oklch(0.99 0 0);
-  --demo: oklch(0.5 0.012 255);
-  --demo-soft: oklch(0.945 0.007 255);
+  --demo: oklch(0.5 0.012 185);
+  --demo-soft: oklch(0.945 0.007 185);
   --destructive: oklch(0.55 0.2 27);
   --destructive-foreground: oklch(0.99 0 0);
   --destructive-soft: oklch(0.96 0.02 27);
   /* Separators are hairlines: black at low alpha, so they sit right on any surface. */
-  --border: oklch(0.218 0.012 255 / 0.12);
-  --separator: oklch(0.218 0.012 255 / 0.1);
-  --input: oklch(0.218 0.012 255 / 0.18);
-  --ring: oklch(0.519 0.223 264.5);
+  --border: oklch(0.218 0.012 185 / 0.12);
+  --separator: oklch(0.218 0.012 185 / 0.1);
+  --input: oklch(0.218 0.012 185 / 0.18);
+  --ring: oklch(0.431 0.071 192);
   /* Brand coral (#FF6B4A): the logo's destination dot. Used sparingly for "you are here / next" cues. */
-  --brand-coral: oklch(0.707 0.187 34.1);
+  --brand-coral: oklch(0.6 0.19 38);
   /* Coral as small text (step numbers): darker so it reads at AA contrast on paper. */
-  --coral-text: oklch(0.55 0.17 34);
+  --coral-text: oklch(0.54 0.18 38);
   /* Solid emphasis surface (primary call to action, the balance card). */
-  --ink: oklch(0.218 0.012 255);
+  --ink: oklch(0.218 0.012 185);
   --ink-foreground: oklch(0.985 0 0);
   --on-image: oklch(0.99 0 0);
 
   /* "Go" actions (Plan trip, See the days) use the brand blue: one action color. */
-  --go: var(--primary);
-  --go-deep: var(--primary-deep);
-  --go-foreground: var(--primary-foreground);
-  --go-soft: var(--accent);
+  --go: oklch(0.56 0.185 38);
+  --go-deep: oklch(0.5 0.175 38);
+  --go-foreground: oklch(0.99 0 0);
+  --go-soft: oklch(0.95 0.03 50);
 
   /* Travel styles: Savvy green, Comfort blue, Luxe violet. */
   --style-budget: oklch(0.52 0.13 160);
-  --style-comfort: oklch(0.55 0.18 258);
-  --style-luxury: oklch(0.52 0.2 310);
+  --style-comfort: oklch(0.5 0.1 215);
+  --style-luxury: oklch(0.45 0.13 25);
 
   /* Trip types: each kind of trip has its own hue (the trip chip, suggestions). */
-  --trip-road: oklch(0.55 0.2 264);
-  --trip-flight: oklch(0.6 0.15 232);
-  --trip-cruise: oklch(0.58 0.11 195);
-  --trip-rail: oklch(0.55 0.17 300);
+  --trip-road: oklch(0.46 0.08 192);
+  --trip-flight: oklch(0.55 0.12 238);
+  --trip-cruise: oklch(0.45 0.1 258);
+  --trip-rail: oklch(0.5 0.14 25);
   --trip-home: oklch(0.68 0.15 62);
 
   /* Budget categories: one hue family per group, matched in lightness. */
   --cat-gas: oklch(0.62 0.14 45);
-  --cat-food: oklch(0.7 0.12 255);
+  --cat-food: oklch(0.72 0.12 80);
   --cat-water: oklch(0.65 0.1 220);
-  --cat-accommodations: oklch(0.5 0.13 262);
-  --cat-parking: oklch(0.58 0.03 260);
-  --cat-tolls: oklch(0.58 0.1 300);
-  --cat-taxes: oklch(0.68 0.01 260);
+  --cat-accommodations: oklch(0.45 0.08 192);
+  --cat-parking: oklch(0.58 0.03 185);
+  --cat-tolls: oklch(0.5 0.1 20);
+  --cat-taxes: oklch(0.68 0.01 185);
   --cat-activities: oklch(0.6 0.12 160);
-  --cat-misc: oklch(0.78 0.02 260);
+  --cat-misc: oklch(0.78 0.02 185);
   --cat-transportation: oklch(0.55 0.12 235);
   --cat-snacks: oklch(0.66 0.13 20);
   --cat-stops: oklch(0.62 0.11 135);
@@ -421,13 +421,13 @@
   --shadow-glow-value: 0 1px 2px oklch(0 0 0 / 0.05);
 
   /* Materials: frosted glass for bars and menus (alpha of the base + blur). */
-  --material-base: oklch(0.985 0.006 255);
+  --material-base: oklch(0.985 0.006 185);
   --material-thick: 0.88;
   --material-regular: 0.74;
   --material-thin: 0.6;
   /* The lit top edge of glass, and the hairline under it. */
   --specular: oklch(1 0 0 / 0.7);
-  --material-edge: oklch(0.218 0.012 255 / 0.1);
+  --material-edge: oklch(0.218 0.012 185 / 0.1);
 
   --sidebar: var(--background);
   --sidebar-foreground: var(--foreground);
@@ -442,71 +442,71 @@
 .dark {
   color-scheme: dark;
   /* Near-black page, #1d1d1f tiles: Apple's dark pages, a shade off pure black. */
-  --background: oklch(0.165 0.024 258);
-  --foreground: oklch(0.97 0.006 258);
-  --card: oklch(0.215 0.026 258);
-  --card-foreground: oklch(0.97 0.006 258);
-  --popover: oklch(0.26 0.022 258);
-  --popover-foreground: oklch(0.97 0.006 258);
-  --primary: oklch(0.7 0.16 264);
-  --primary-deep: oklch(0.76 0.13 264);
-  --primary-foreground: oklch(0.16 0.01 260);
-  --secondary: oklch(0.27 0.022 258);
-  --secondary-foreground: oklch(0.97 0.006 258);
-  --muted: oklch(0.25 0.022 258);
-  --muted-foreground: oklch(0.7 0.006 258);
-  --accent: oklch(0.28 0.03 264);
-  --accent-foreground: oklch(0.97 0.006 258);
+  --background: oklch(0.186 0.014 187);
+  --foreground: oklch(0.97 0.006 185);
+  --card: oklch(0.236 0.017 183);
+  --card-foreground: oklch(0.97 0.006 185);
+  --popover: oklch(0.26 0.022 185);
+  --popover-foreground: oklch(0.97 0.006 185);
+  --primary: oklch(0.75 0.104 190);
+  --primary-deep: oklch(0.8 0.09 190);
+  --primary-foreground: oklch(0.17 0.02 190);
+  --secondary: oklch(0.27 0.022 185);
+  --secondary-foreground: oklch(0.97 0.006 185);
+  --muted: oklch(0.25 0.022 185);
+  --muted-foreground: oklch(0.7 0.006 185);
+  --accent: oklch(0.29 0.03 190);
+  --accent-foreground: oklch(0.97 0.006 185);
   --fill: oklch(1 0 0 / 0.08);
   --sunset: var(--primary);
   --sunset-foreground: var(--primary-foreground);
-  --sunset-soft: oklch(0.27 0.03 264);
+  --sunset-soft: oklch(0.28 0.03 190);
   --gold: oklch(0.78 0.11 80);
-  --gold-soft: oklch(0.25 0.022 258);
+  --gold-soft: oklch(0.25 0.022 185);
   --success: oklch(0.74 0.14 152);
   --success-soft: oklch(0.26 0.035 152);
-  --shield: oklch(0.86 0.006 258);
-  --shield-soft: oklch(0.27 0.022 258);
-  --shield-foreground: oklch(0.16 0.022 258);
-  --demo: oklch(0.7 0.006 258);
-  --demo-soft: oklch(0.25 0.022 258);
+  --shield: oklch(0.86 0.006 185);
+  --shield-soft: oklch(0.27 0.022 185);
+  --shield-foreground: oklch(0.16 0.022 185);
+  --demo: oklch(0.7 0.006 185);
+  --demo-soft: oklch(0.25 0.022 185);
   --destructive: oklch(0.7 0.17 25);
-  --destructive-foreground: oklch(0.16 0.01 260);
+  --destructive-foreground: oklch(0.16 0.01 185);
   --destructive-soft: oklch(0.28 0.045 25);
   --border: oklch(1 0 0 / 0.14);
   --separator: oklch(1 0 0 / 0.12);
   --input: oklch(1 0 0 / 0.2);
-  --ring: oklch(0.7 0.16 264);
-  --brand-coral: oklch(0.74 0.17 36);
-  --coral-text: oklch(0.76 0.15 38);
-  --ink: oklch(0.97 0.006 258);
-  --ink-foreground: oklch(0.16 0.022 258);
+  --ring: oklch(0.75 0.104 190);
+  --brand-coral: oklch(0.75 0.16 47);
+  --coral-text: oklch(0.78 0.14 48);
+  --ink: oklch(0.97 0.006 185);
+  --ink-foreground: oklch(0.16 0.022 185);
   --on-image: oklch(0.99 0 0);
 
-  --go: var(--primary);
-  --go-deep: var(--primary-deep);
-  --go-foreground: var(--primary-foreground);
-  --go-soft: var(--accent);
+  --go: oklch(0.75 0.16 47);
+  --go-deep: oklch(0.8 0.14 47);
+  --go-foreground: oklch(0.17 0.02 40);
+  --go-soft: oklch(0.3 0.05 45);
 
   --style-budget: oklch(0.74 0.13 160);
-  --style-comfort: oklch(0.72 0.14 258);
-  --style-luxury: oklch(0.72 0.15 310);
+  --style-comfort: oklch(0.74 0.1 215);
+  --style-luxury: oklch(0.74 0.12 25);
 
-  --trip-road: oklch(0.7 0.15 264);
-  --trip-flight: oklch(0.74 0.12 232);
-  --trip-cruise: oklch(0.74 0.1 195);
-  --trip-rail: oklch(0.72 0.13 300);
+  --trip-road: oklch(0.74 0.1 190);
+  --trip-flight: oklch(0.74 0.11 238);
+  --trip-cruise: oklch(0.72 0.11 258);
+  --trip-rail: oklch(0.74 0.12 25);
   --trip-home: oklch(0.8 0.13 70);
 
   --cat-gas: oklch(0.72 0.13 45);
   --cat-food: oklch(0.8 0.11 78);
   --cat-water: oklch(0.74 0.09 220);
-  --cat-accommodations: oklch(0.68 0.12 262);
-  --cat-parking: oklch(0.66 0.03 260);
-  --cat-tolls: oklch(0.7 0.1 300);
-  --cat-taxes: oklch(0.6 0.01 260);
+  --cat-accommodations: oklch(0.7 0.09 192);
+  --cat-parking: oklch(0.66 0.03 185);
+  --cat-tolls: oklch(0.72 0.1 20);
+  --cat-taxes: oklch(0.6 0.01 185);
   --cat-activities: oklch(0.72 0.12 160);
-  --cat-misc: oklch(0.5 0.01 260);
+  --cat-misc: oklch(0.5 0.01 185);
   --cat-transportation: oklch(0.7 0.11 235);
   --cat-snacks: oklch(0.74 0.12 20);
   --cat-stops: oklch(0.74 0.1 135);
@@ -520,7 +520,7 @@
   --shadow-lift-value: 0 16px 48px -12px oklch(0 0 0 / 0.8);
   --shadow-glow-value: none;
 
-  --material-base: oklch(0.18 0.022 258);
+  --material-base: oklch(0.18 0.022 185);
   --material-thick: 0.86;
   --material-regular: 0.72;
   --material-thin: 0.58;
@@ -650,6 +650,7 @@
 @utility surface-card {
   background-color: var(--color-card);
   border-radius: var(--radius-2xl);
+  box-shadow: inset 0 0 0 1px var(--separator);
 }
 
 /* A full-width white band, for the top of a page (apple.com's white hero over gray content). */
@@ -685,9 +686,9 @@
 /* Titles: the system face, semibold and tightened as it grows (size comes from the text-* level). */
 @utility title-display {
   font-family: var(--font-display);
-  --tw-font-weight: 600;
-  font-weight: 600;
-  letter-spacing: -0.03em;
+  --tw-font-weight: 700;
+  font-weight: 700;
+  letter-spacing: -0.035em;
   text-wrap: balance;
   & em {
     font-style: normal;
@@ -698,8 +699,8 @@
    gaps around commas at this size), tight. Columns of numbers use `tabular`. */
 @utility money-display {
   font-family: var(--font-display);
-  font-weight: 600;
-  letter-spacing: -0.025em;
+  font-weight: 700;
+  letter-spacing: -0.03em;
   line-height: 1;
   font-variant-numeric: lining-nums proportional-nums;
 }
@@ -1228,4 +1229,41 @@
 .legal strong {
   font-weight: 600;
   color: var(--color-foreground);
+}
+
+/* The sidebar is a deep teal field in both themes: the tokens inside it are re-set, so every
+   control in it (links, account button, trip summary) reads correctly without per-component colors. */
+.theme-deep {
+  color-scheme: dark;
+  background-color: oklch(0.431 0.071 192);
+  --background: oklch(0.38 0.065 192);
+  --foreground: oklch(0.97 0.008 180);
+  --card-foreground: oklch(0.97 0.008 180);
+  --card: oklch(0.36 0.05 192);
+  --muted-foreground: oklch(0.91 0.045 178);
+  --primary: oklch(0.86 0.09 185);
+  --primary-foreground: oklch(0.2 0.03 192);
+  --secondary: oklch(0.38 0.05 192);
+  --secondary-foreground: oklch(0.97 0.008 180);
+  --accent: oklch(0.4 0.05 192);
+  --fill: oklch(1 0 0 / 0.09);
+  --separator: oklch(1 0 0 / 0.14);
+  --border: oklch(1 0 0 / 0.18);
+  --input: oklch(1 0 0 / 0.24);
+  --ring: oklch(0.86 0.09 185);
+  color: var(--foreground);
+}
+.dark .theme-deep {
+  background-color: oklch(0.33 0.06 192);
+}
+/* The sidebar is the darkest teal, so the page's own teal field reads as a separate surface. */
+.theme-deep.sidebar-ink,
+.dark .theme-deep.sidebar-ink {
+  background-color: oklch(0.25 0.04 190);
+  --background: oklch(0.3 0.045 190);
+  --card: oklch(0.31 0.045 190);
+}
+.theme-deep .logo-tile {
+  stroke: oklch(1 0 0 / 0.3);
+  stroke-width: 1;
 }

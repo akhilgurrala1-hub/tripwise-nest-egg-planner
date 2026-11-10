@@ -162,7 +162,7 @@ function TripSummary({ onCard = false }: { onCard?: boolean }) {
 function Sidebar({ items, pathname }: { items: typeof NAV; pathname: string }) {
   const { user } = useAuth();
   return (
-    <header className="sticky top-0 hidden h-dvh flex-col border-r border-separator bg-card md:flex print:hidden">
+    <header className="theme-deep sidebar-ink sticky top-0 hidden h-dvh flex-col md:flex print:hidden">
       <div className="flex h-16 shrink-0 items-center justify-center px-4 lg:justify-start lg:px-6">
         <Link to="/" className="flex items-center rounded-md" aria-label="Waypoint home">
           <LogoMark className="size-8 lg:hidden" />
@@ -251,9 +251,9 @@ function SideLink({
       aria-current={on ? "page" : undefined}
       title={label}
       className={cn(
-        "pressable flex flex-col items-center gap-1 rounded-lg px-1 py-2 text-micro transition-colors duration-150 lg:h-10 lg:flex-row lg:gap-4 lg:px-4 lg:py-0 lg:text-footnote",
+        "pressable relative flex flex-col items-center gap-1 rounded-lg px-1 py-2 text-micro transition-colors duration-150 lg:h-10 lg:flex-row lg:gap-4 lg:px-4 lg:py-0 lg:text-footnote",
         on
-          ? "bg-primary/10 font-semibold text-primary"
+          ? "bg-fill font-semibold text-foreground before:absolute before:inset-y-2 before:left-0 before:w-[3px] before:rounded-xs before:bg-go"
           : "text-foreground/75 hover:bg-fill hover:text-foreground",
       )}
     >

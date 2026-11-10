@@ -200,11 +200,11 @@ describe("no template tells", () => {
     expect(find(/<img\b/g, (p) => p.endsWith("Photo.tsx"))).toEqual([]);
   });
 
-  it("sets headlines in Host Grotesk and text in Instrument Sans, both self-hosted (no magazine serif)", () => {
+  it("sets headlines in Bricolage Grotesque and text in Figtree, both self-hosted (no magazine serif)", () => {
     const css = readFileSync(join(SRC, "styles.css"), "utf8");
     const face = (name: string) => css.match(new RegExp(`--font-${name}:\\s*"([^"]+)"`))?.[1];
-    expect(face("display")).toBe("Host Grotesk Variable");
-    expect(face("sans")).toBe("Instrument Sans Variable");
+    expect(face("display")).toBe("Bricolage Grotesque Variable");
+    expect(face("sans")).toBe("Figtree Variable");
     expect(css).not.toMatch(/newsreader/i);
   });
 
