@@ -1,6 +1,7 @@
 import { Link, useNavigate, useRouter, useRouterState } from "@tanstack/react-router";
 import {
   Bookmark,
+  Menu,
   CalendarCheck,
   Coins,
   Compass,
@@ -18,7 +19,7 @@ import {
   Wallet,
   type LucideIcon,
 } from "lucide-react";
-import { useEffect, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 
 import { Logo, LogoMark } from "./Logo";
 import { useScrolled } from "./use-scrolled";
@@ -42,7 +43,6 @@ import { useTheme, type ThemePref } from "@/lib/theme";
 import { usePersonalizedSample } from "@/lib/live/use-home";
 import { setLocalePrefs, useLocale } from "@/lib/live/use-locale";
 import { CURRENCIES } from "@/lib/locale";
-import { usePlanning } from "@/lib/planning-state";
 import { LEGAL } from "@/lib/legal";
 import { useTrip } from "@/lib/trip-store";
 
@@ -70,6 +70,10 @@ export function AppShell({ children }: { children: ReactNode }) {
   const tabPath = pathname === "/spending" ? "/budget" : pathname;
   const active = nav.find((n) => n.to === tabPath)?.to;
   const [menuOpen, setMenuOpen] = useState(false);
+  const closeMenu = useCallback(() => setMenuOpen(false), []);
+  // Every page that isn't one of the four tabs lives under More (Book, Road trip,
+  // account and legal pages), so More is the current tab there.
+  const moreActive = !(TABS as string[]).includes(tabPath);
   usePreloadTabs();
   // A new page closes the menu.
   useEffect(() => setMenuOpen(false), [pathname]);
@@ -80,112 +84,278 @@ export function AppShell({ children }: { children: ReactNode }) {
     return () => document.removeEventListener("touchstart", noop);
   }, []);
   const scrolled = useScrolled();
-  const hasLocalNav = pathname in LOCAL_CTA;
 
+  /*
+   * One app frame that adapts to the screen:
+   * - phones: a slim top bar and a bottom tab bar within thumb reach;
+   * - tablets (768px+): an icon rail on the left;
+   * - laptops and desktops (1024px+): a sidebar with the trip and every section.
+   * Content scrolls on its own; navigation never moves.
+   */
   return (
-    <div className="flex min-h-screen flex-col bg-background">
-      {/* Global nav, as on apple.com: a thin glass bar, small links in the middle. */}
-      <header
-        data-scrolled={scrolled && !hasLocalNav && !menuOpen}
-        className={cn(
-          "scroll-edge sticky top-0 z-50 print:hidden",
-          menuOpen ? "bg-background" : "material-thick",
-        )}
-      >
-        <div className="page-container flex h-11 items-center justify-between gap-4">
-          <Link
-            to="/"
-            className="flex items-center rounded-md"
-            aria-label="Waypoint home"
-            onClick={() => setMenuOpen(false)}
-          >
-            <Logo markClassName="size-6" wordClassName="text-sm font-semibold" />
-          </Link>
-          <nav className="hidden md:block" aria-label="Main">
-            <ul className="flex items-center gap-8">
-              {nav.map((item) => (
-                <li key={item.to}>
-                  <Link
-                    to={item.to}
-                    aria-current={item.to === active ? "page" : undefined}
-                    className={cn(
-                      "text-caption transition-colors duration-200",
-                      item.to === active
-                        ? "text-foreground"
-                        : "text-foreground/70 hover:text-foreground",
-                    )}
-                  >
-                    {item.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </nav>
-          <div className="flex items-center gap-1">
-            <ThemeToggle />
-            <AccountButton />
-            <MenuButton open={menuOpen} onToggle={() => setMenuOpen((o) => !o)} />
+    <div className="min-h-dvh bg-background md:grid md:grid-cols-[5rem_minmax(0,1fr)] lg:grid-cols-[16rem_minmax(0,1fr)]">
+      <Sidebar items={nav} pathname={pathname} />
+      <div className="flex min-h-dvh min-w-0 flex-col">
+        <header
+          data-scrolled={scrolled && !menuOpen}
+          className={cn(
+            "scroll-edge sticky top-0 z-50 md:hidden print:hidden",
+            menuOpen ? "bg-background" : "material-thick",
+          )}
+        >
+          <div className="flex h-12 items-center justify-between gap-2 px-4">
+            <Link
+              to="/"
+              className="flex items-center rounded-md"
+              aria-label="Waypoint home"
+              onClick={() => setMenuOpen(false)}
+            >
+              <Logo markClassName="size-6" wordClassName="text-sm font-semibold" />
+            </Link>
+            <div className="flex items-center gap-1">
+              <ThemeToggle />
+              <AccountButton />
+            </div>
           </div>
-        </div>
-      </header>
-      <MobileMenu open={menuOpen} items={nav} active={active} onClose={() => setMenuOpen(false)} />
-      <LocalNav pathname={pathname} scrolled={scrolled} />
-
-      <main key={pathname} className="flex-1 pb-20">
-        {children}
-      </main>
-      <Footer items={nav} active={active} />
+        </header>
+        <main key={pathname} className="pb-tabbar flex-1">
+          {children}
+        </main>
+        <Footer />
+      </div>
+      <TabBar
+        items={nav}
+        active={active}
+        moreActive={moreActive}
+        menuOpen={menuOpen}
+        onMenu={() => setMenuOpen((o) => !o)}
+      />
+      <MobileMenu open={menuOpen} items={nav} pathname={pathname} onClose={closeMenu} />
     </div>
   );
 }
 
-/** apple.com's menu button: two lines that turn into an X. Phones only. */
-function MenuButton({ open, onToggle }: { open: boolean; onToggle: () => void }) {
+/** The current trip in a sentence: where, when, who. */
+function TripSummary({ onCard = false }: { onCard?: boolean }) {
+  const { trip, place } = useTrip();
+  const s = trip.setup;
   return (
-    <button
-      type="button"
-      onClick={onToggle}
-      aria-expanded={open}
-      aria-controls="mobile-menu"
-      aria-label={open ? "Close menu" : "Menu"}
-      className="relative grid size-11 place-items-center md:hidden"
+    <div className={cn("rounded-xl p-4", onCard ? "bg-card" : "bg-background")}>
+      <p className="text-caption text-muted-foreground">
+        {trip.isSample ? "Sample trip" : "Your trip"}
+      </p>
+      <p className="mt-1 truncate text-body font-semibold" title={place}>
+        {place}
+      </p>
+      <p className="tabular mt-1 text-caption text-muted-foreground">
+        {formatDateRange(s.startDate, s.endDate)} · {s.travelers}{" "}
+        {s.travelers === 1 ? "traveler" : "travelers"}
+      </p>
+      <Link to="/" className="mt-2 inline-block text-caption font-semibold text-primary">
+        {trip.isSample ? "Plan your own" : "Edit trip"}
+      </Link>
+    </div>
+  );
+}
+
+/** Tablets get an icon rail; laptops and desktops the full sidebar. Phones use the tab bar. */
+function Sidebar({ items, pathname }: { items: typeof NAV; pathname: string }) {
+  const { user } = useAuth();
+  return (
+    <header className="sticky top-0 hidden h-dvh flex-col border-r border-separator bg-card md:flex print:hidden">
+      <div className="flex h-16 shrink-0 items-center justify-center px-4 lg:justify-start lg:px-6">
+        <Link to="/" className="flex items-center rounded-md" aria-label="Waypoint home">
+          <LogoMark className="size-8 lg:hidden" />
+          <Logo
+            className="hidden lg:flex"
+            markClassName="size-7"
+            wordClassName="text-headline font-semibold"
+          />
+        </Link>
+      </div>
+      <div className="hidden px-4 lg:block">
+        <TripSummary />
+      </div>
+      <nav aria-label="Main" className="mt-4 min-h-0 flex-1 overflow-y-auto px-2 lg:px-4">
+        <ul className="space-y-1">
+          {items.map((item) => (
+            <li key={item.to}>
+              <SideLink
+                to={item.to}
+                icon={item.icon}
+                label={item.label}
+                on={item.to === pathname}
+              />
+            </li>
+          ))}
+        </ul>
+        <p className="mt-6 hidden px-4 text-caption font-semibold text-muted-foreground lg:block">
+          {user ? "Account" : "More"}
+        </p>
+        <ul className="mt-2 space-y-1 border-t border-separator pt-2 lg:border-0 lg:pt-0">
+          <li>
+            <SideLink to="/spending" icon={Coins} label="Spending" on={pathname === "/spending"} />
+          </li>
+          {user && (
+            <>
+              <li>
+                <SideLink
+                  to="/trips"
+                  icon={Bookmark}
+                  label="Saved trips"
+                  on={pathname === "/trips"}
+                />
+              </li>
+              <li>
+                <SideLink
+                  to="/bookings"
+                  icon={Ticket}
+                  label="Bookings"
+                  on={pathname === "/bookings"}
+                />
+              </li>
+              <li>
+                <SideLink
+                  to="/profile"
+                  icon={Settings2}
+                  label="Profile"
+                  on={pathname === "/profile"}
+                />
+              </li>
+            </>
+          )}
+        </ul>
+      </nav>
+      <div className="flex shrink-0 flex-col items-center gap-2 border-t border-separator p-4 lg:flex-row lg:justify-between">
+        <AccountButton />
+        <ThemeToggle />
+      </div>
+    </header>
+  );
+}
+
+function SideLink({
+  to,
+  icon: Icon,
+  label,
+  on,
+}: {
+  to: (typeof NAV)[number]["to"] | "/spending" | "/trips" | "/bookings" | "/profile";
+  icon: LucideIcon;
+  label: string;
+  on: boolean;
+}) {
+  return (
+    <Link
+      to={to}
+      aria-current={on ? "page" : undefined}
+      title={label}
+      className={cn(
+        "pressable flex flex-col items-center gap-1 rounded-lg px-1 py-2 text-micro transition-colors duration-150 lg:h-10 lg:flex-row lg:gap-4 lg:px-4 lg:py-0 lg:text-footnote",
+        on
+          ? "bg-primary/10 font-semibold text-primary"
+          : "text-foreground/75 hover:bg-fill hover:text-foreground",
+      )}
     >
-      <span aria-hidden className="relative block h-3 w-4">
-        <span
-          className={cn(
-            "absolute left-0 block h-[1.5px] w-4 rounded-full bg-foreground transition-[top,rotate] duration-300",
-            open ? "top-[5px] rotate-45" : "top-0.5",
-          )}
-        />
-        <span
-          className={cn(
-            "absolute left-0 block h-[1.5px] w-4 rounded-full bg-foreground transition-[top,rotate] duration-300",
-            open ? "top-[5px] -rotate-45" : "top-[9px]",
-          )}
-        />
-      </span>
-    </button>
+      <Icon className="size-5 shrink-0 lg:size-[18px]" strokeWidth={on ? 2.2 : 1.8} />
+      <span className="max-w-full truncate">{label}</span>
+    </Link>
+  );
+}
+
+/** Phones: the main sections within thumb reach, and More for everything else. */
+const TABS: (typeof NAV)[number]["to"][] = ["/", "/dashboard", "/budget", "/itinerary"];
+
+function TabBar({
+  items,
+  active,
+  moreActive,
+  menuOpen,
+  onMenu,
+}: {
+  items: typeof NAV;
+  active: string | undefined;
+  moreActive: boolean;
+  menuOpen: boolean;
+  onMenu: () => void;
+}) {
+  const tabs = items.filter((i) => TABS.includes(i.to));
+  return (
+    <nav
+      aria-label="Tabs"
+      className="material-thick fixed inset-x-0 bottom-0 z-50 border-t border-separator pb-safe md:hidden print:hidden"
+    >
+      <ul className="grid h-14 grid-cols-5">
+        {tabs.map((item) => {
+          const on = item.to === active && !menuOpen;
+          const Icon = item.icon;
+          return (
+            <li key={item.to}>
+              <Link
+                to={item.to}
+                aria-current={on ? "page" : undefined}
+                className={cn(
+                  "pressable flex h-full flex-col items-center justify-center gap-1 text-micro",
+                  on ? "font-semibold text-primary" : "text-muted-foreground",
+                )}
+              >
+                <Icon className="size-5" strokeWidth={on ? 2.2 : 1.8} />
+                {item.label === "Itinerary" ? "Days" : item.label}
+              </Link>
+            </li>
+          );
+        })}
+        <li>
+          <button
+            type="button"
+            id="more-button"
+            onClick={onMenu}
+            aria-expanded={menuOpen}
+            aria-controls="mobile-menu"
+            className={cn(
+              "pressable flex h-full w-full flex-col items-center justify-center gap-1 text-micro",
+              menuOpen || moreActive ? "font-semibold text-primary" : "text-muted-foreground",
+            )}
+          >
+            <Menu className="size-5" strokeWidth={menuOpen || moreActive ? 2.2 : 1.8} />
+            More
+          </button>
+        </li>
+      </ul>
+    </nav>
   );
 }
 
 /**
- * The phone menu, as on apple.com: the page gives way to a full-screen list of big
- * links that drop in one after another. Escape or a link closes it.
+ * The phone's More sheet: the trip, every section and the account pages, above the
+ * tab bar. Escape, a link or the More tab closes it. It isn't modal (the tab bar
+ * stays usable), but opening it moves keyboard focus into it and Escape hands
+ * focus back to the More tab.
  */
 function MobileMenu({
   open,
   items,
-  active,
+  pathname,
   onClose,
 }: {
   open: boolean;
   items: typeof NAV;
-  active: string | undefined;
+  pathname: string;
   onClose: () => void;
 }) {
+  const { user } = useAuth();
+  const sheet = useRef<HTMLDivElement>(null);
+  // Only when it opens, so re-renders while open never pull focus back to the top.
+  useEffect(() => {
+    if (open) sheet.current?.querySelector<HTMLElement>("a[href], button")?.focus();
+  }, [open]);
   useEffect(() => {
     if (!open) return;
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== "Escape") return;
+      onClose();
+      document.getElementById("more-button")?.focus();
+    };
     window.addEventListener("keydown", onKey);
     const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
@@ -194,251 +364,98 @@ function MobileMenu({
       document.body.style.overflow = prev;
     };
   }, [open, onClose]);
+  const extra = [
+    { to: "/spending" as const, label: "Spending", icon: Coins },
+    ...(user
+      ? [
+          { to: "/trips" as const, label: "Saved trips", icon: Bookmark },
+          { to: "/bookings" as const, label: "Bookings", icon: Ticket },
+          { to: "/profile" as const, label: "Profile", icon: Settings2 },
+        ]
+      : []),
+  ];
+  const rows = [...items, ...extra];
   return (
     <div
       id="mobile-menu"
+      ref={sheet}
       role="dialog"
-      aria-modal="true"
-      aria-label="Menu"
+      aria-label="More"
       data-open={open}
       inert={!open}
-      className="mobile-menu fixed inset-x-0 top-11 bottom-0 z-[45] overflow-y-auto bg-background px-8 pt-6 pb-10 md:hidden"
+      className="mobile-menu fixed inset-x-0 top-12 bottom-[var(--tabbar)] z-[45] overflow-y-auto bg-background px-4 pt-4 pb-8 md:hidden"
     >
-      <ul className="space-y-2">
-        {items.map((item, i) => (
-          <li
-            key={item.to}
-            className="menu-item"
-            style={{ ["--i" as string]: i } as React.CSSProperties}
-          >
-            <Link
-              to={item.to}
-              aria-current={item.to === active ? "page" : undefined}
-              onClick={onClose}
-              className={cn(
-                "block py-1 text-title-2",
-                item.to === active ? "text-foreground" : "text-foreground/80",
-              )}
+      <div className="menu-item" style={{ ["--i" as string]: 0 } as React.CSSProperties}>
+        <TripSummary onCard />
+      </div>
+      <ul className="mt-4 divide-y divide-separator overflow-hidden rounded-xl bg-card">
+        {rows.map((item, i) => {
+          const Icon = item.icon;
+          return (
+            <li
+              key={item.to}
+              className="menu-item"
+              style={{ ["--i" as string]: i + 1 } as React.CSSProperties}
             >
-              {item.label}
-            </Link>
-          </li>
-        ))}
+              <Link
+                to={item.to}
+                aria-current={item.to === pathname ? "page" : undefined}
+                onClick={onClose}
+                className={cn(
+                  "flex h-12 items-center gap-4 px-4 text-body",
+                  item.to === pathname ? "font-semibold text-primary" : "text-foreground",
+                )}
+              >
+                <Icon className="size-5 text-muted-foreground" strokeWidth={1.8} />
+                {item.label}
+              </Link>
+            </li>
+          );
+        })}
       </ul>
-      <ul
-        className="mt-8 space-y-2"
-        style={{ ["--i" as string]: items.length } as React.CSSProperties}
-      >
-        {[
-          { to: "/spending" as const, label: "Spending" },
-          { to: "/trips" as const, label: "Saved trips" },
-          { to: "/bookings" as const, label: "Bookings" },
-          { to: "/profile" as const, label: "Profile" },
-        ].map((l, i) => (
-          <li
-            key={l.to}
-            className="menu-item"
-            style={{ ["--i" as string]: items.length + i } as React.CSSProperties}
-          >
-            <Link
-              to={l.to}
-              onClick={onClose}
-              className="block py-1 text-body text-muted-foreground"
-            >
-              {l.label}
-            </Link>
-          </li>
-        ))}
-      </ul>
+      <p className="mt-6 flex flex-wrap gap-x-4 gap-y-2 px-4 text-caption text-muted-foreground">
+        <Link to="/privacy" onClick={onClose}>
+          Privacy Policy
+        </Link>
+        <Link to="/terms" onClick={onClose}>
+          Terms of Service
+        </Link>
+      </p>
     </div>
   );
 }
 
-/** What the local nav's button does on each page: the next step for the trip. */
-const LOCAL_CTA: Record<
-  string,
-  { label: string; to?: "/book" | "/itinerary" | "/dashboard"; form?: string }
-> = {
-  "/": { label: "Plan trip", form: "plan-form" },
-  "/dashboard": { label: "See the days", to: "/itinerary" },
-  "/budget": { label: "Book", to: "/book" },
-  "/spending": { label: "Book", to: "/book" },
-  "/itinerary": { label: "Book", to: "/book" },
-  "/road-trip": { label: "Book", to: "/book" },
-  "/book": { label: "Overview", to: "/dashboard" },
-};
-
-/**
- * apple.com's local nav: a second glass bar under the global one with the page's
- * subject on the left (the trip) and its one action on the right, a capsule.
- */
-function LocalNav({ pathname, scrolled }: { pathname: string; scrolled: boolean }) {
-  const { trip, place } = useTrip();
-  const planning = usePlanning();
-  const cta = LOCAL_CTA[pathname];
-  if (!cta) return null;
-  const s = trip.setup;
-  return (
-    <nav
-      aria-label="This trip"
-      data-scrolled={scrolled}
-      className="material-thick scroll-edge sticky top-11 z-40 print:hidden"
-    >
-      <div className="page-container flex h-13 items-center justify-between gap-4">
-        <p className="min-w-0 truncate text-headline">{trip.isSample ? "Sample trip" : place}</p>
-        <div className="flex shrink-0 items-center gap-4">
-          <span className="tabular hidden text-caption text-muted-foreground sm:inline">
-            {formatDateRange(s.startDate, s.endDate)} · {s.travelers}{" "}
-            {s.travelers === 1 ? "traveler" : "travelers"}
-          </span>
-          {cta.form ? (
-            <Button type="submit" form={cta.form} size="sm" variant="go" loading={planning}>
-              {planning ? "Planning…" : cta.label}
-            </Button>
-          ) : (
-            <Button asChild size="sm" variant="go">
-              <Link to={cta.to!}>{cta.label}</Link>
-            </Button>
-          )}
-        </div>
-      </div>
-    </nav>
-  );
-}
-
-/**
- * apple.com's footer: small gray type, where the numbers and pictures come from,
- * the site's links in columns, and a last line with the copyright.
- */
-function Footer({ items, active }: { items: typeof NAV; active: string | undefined }) {
-  const { user } = useAuth();
-  const current = items.find((i) => i.to === active);
+/** One quiet block at the end of every page: what the numbers are, credits and the legal links. */
+function Footer() {
   const year = new Date().getFullYear();
   return (
-    <footer className="border-t border-separator bg-background text-caption text-muted-foreground print:hidden">
-      <div className="page-container py-6">
-        <div className="space-y-2 border-b border-separator pb-4">
-          <p>
-            Costs are estimates until live prices are connected, and every amount is worked out in
-            US dollars. Waypoint never books or takes payment: you book on each provider&apos;s own
-            site.
-          </p>
-          <p>
-            Photos and place information from Wikipedia, Wikivoyage, OpenStreetMap and other open
-            sources.{" "}
-            <Link to="/terms" hash="credits" className="hover:text-foreground hover:underline">
-              Credits and licenses
-            </Link>
-          </p>
-        </div>
-        <nav aria-label="Breadcrumb" className="flex items-center gap-2 py-4">
-          <Link to="/" aria-label="Waypoint home" className="text-foreground">
-            <LogoMark className="size-4" />
-          </Link>
-          {current && (
-            <>
-              <span aria-hidden>›</span>
-              <span className="text-foreground">{current.label}</span>
-            </>
-          )}
-        </nav>
-        <div className="grid grid-cols-2 gap-6 border-b border-separator pb-6 sm:grid-cols-4">
-          <div>
-            <p className="font-semibold text-foreground">Plan</p>
-            <ul className="mt-2 space-y-2">
-              {items.map((i) => (
-                <li key={i.to}>
-                  <Link to={i.to} className="hover:text-foreground hover:underline">
-                    {i.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-          <div>
-            <p className="font-semibold text-foreground">Your trip</p>
-            <ul className="mt-2 space-y-2">
-              <li>
-                <Link to="/spending" className="hover:text-foreground hover:underline">
-                  Spending
-                </Link>
-              </li>
-              <li>
-                <Link to="/book" className="hover:text-foreground hover:underline">
-                  Before you go
-                </Link>
-              </li>
-            </ul>
-          </div>
-          <div>
-            <p className="font-semibold text-foreground">Account</p>
-            <ul className="mt-2 space-y-2">
-              {user ? (
-                <>
-                  <li>
-                    <Link to="/trips" className="hover:text-foreground hover:underline">
-                      Saved trips
-                    </Link>
-                  </li>
-                  <li>
-                    <Link to="/bookings" className="hover:text-foreground hover:underline">
-                      Bookings
-                    </Link>
-                  </li>
-                  <li>
-                    <Link to="/profile" className="hover:text-foreground hover:underline">
-                      Profile
-                    </Link>
-                  </li>
-                </>
-              ) : (
-                <li>
-                  <Link
-                    to="/auth"
-                    search={{ redirect: undefined }}
-                    className="hover:text-foreground hover:underline"
-                  >
-                    Sign in
-                  </Link>
-                </li>
-              )}
-            </ul>
-          </div>
-          <div>
-            <p className="font-semibold text-foreground">Legal</p>
-            <ul className="mt-2 space-y-2">
-              <li>
-                <Link to="/privacy" className="hover:text-foreground hover:underline">
-                  Privacy Policy
-                </Link>
-              </li>
-              <li>
-                <Link to="/terms" className="hover:text-foreground hover:underline">
-                  Terms of Service
-                </Link>
-              </li>
-              <li>
-                <a
-                  href={`mailto:${LEGAL.contactEmail}`}
-                  className="hover:text-foreground hover:underline"
-                >
-                  Contact
-                </a>
-              </li>
-            </ul>
-          </div>
-        </div>
-        <div className="flex flex-wrap items-center gap-x-4 gap-y-2 pt-4">
-          <p>
-            Copyright © {year} {LEGAL.owner}. All rights reserved.
-          </p>
+    <footer className="text-caption text-muted-foreground print:hidden">
+      <div className="page-container space-y-2 border-t border-separator py-6">
+        <p>
+          Costs are estimates until live prices are connected, worked out in US dollars. Waypoint
+          never books or takes payment: you book on each provider&apos;s own site. Photos and place
+          information from Wikipedia, Wikivoyage, OpenStreetMap and other open sources.
+        </p>
+        <p className="flex flex-wrap items-center gap-x-4 gap-y-2">
+          <span>
+            © {year} {LEGAL.owner}
+          </span>
           <Link to="/privacy" className="hover:text-foreground hover:underline">
             Privacy Policy
           </Link>
           <Link to="/terms" className="hover:text-foreground hover:underline">
             Terms of Service
           </Link>
-        </div>
+          <Link to="/terms" hash="credits" className="hover:text-foreground hover:underline">
+            Credits and licenses
+          </Link>
+          <a
+            href={`mailto:${LEGAL.contactEmail}`}
+            className="hover:text-foreground hover:underline"
+          >
+            Contact
+          </a>
+        </p>
       </div>
     </footer>
   );

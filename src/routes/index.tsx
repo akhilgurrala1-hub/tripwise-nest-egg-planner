@@ -337,7 +337,7 @@ function Welcome() {
         Photos come right after, in the trip ideas.
       */}
       <section className="band border-b border-separator">
-        <div className="page-container pt-12 pb-10 sm:pt-20 sm:pb-14">
+        <div className="page-container pt-8 pb-8 sm:pt-16 sm:pb-12">
           <div className="mx-auto max-w-3xl">
             <h1 className="title-display text-center text-large-title">Where to next?</h1>
             <p className="mx-auto mt-4 max-w-xl text-center text-body text-muted-foreground">
@@ -640,7 +640,7 @@ function Welcome() {
           </div>
 
           <aside className="hidden lg:block">
-            <div className="sticky top-28 " style={stagger(2)}>
+            <div className="sticky top-8" style={stagger(2)}>
               <TripPreview
                 form={effective}
                 dest={dest}
@@ -659,7 +659,7 @@ function Welcome() {
         <div
           inert={!showBar}
           className={cn(
-            "sticky bottom-[calc(1rem+env(safe-area-inset-bottom))] z-20 mt-6 transition-[opacity,translate] spring-smooth md:bottom-4 lg:hidden",
+            "sticky bottom-[calc(var(--tabbar)+1rem)] z-20 mt-6 transition-[opacity,translate] spring-smooth md:bottom-4 lg:hidden",
             showBar ? "opacity-100" : "pointer-events-none translate-y-3 opacity-0",
           )}
         >

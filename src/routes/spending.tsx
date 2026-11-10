@@ -179,7 +179,7 @@ function SpendingPage() {
           )}
         </div>
 
-        <aside className="space-y-4 lg:sticky lg:top-28 lg:self-start">
+        <aside className="space-y-4 lg:sticky lg:top-8 lg:self-start">
           <SplitCard />
         </aside>
       </div>
