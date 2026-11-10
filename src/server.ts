@@ -3,6 +3,7 @@ import "./lib/error-capture";
 import { consumeLastCapturedError } from "./lib/error-capture";
 import { renderErrorPage } from "./lib/error-page";
 import { cloudflareGeo, vercelGeo } from "./lib/live/visitor-geo";
+import { SECURITY_HEADERS } from "./lib/security-headers";
 
 type ServerEntry = {
   fetch: (request: Request, env: unknown, ctx: unknown) => Promise<Response> | Response;
@@ -66,17 +67,6 @@ function withVisitorGeo(request: Request): Request {
   if (geo) headers.set(GEO_HEADER, encodeURIComponent(JSON.stringify(geo)));
   return new Request(request, { headers });
 }
-
-/**
- * Safe defaults on every response: no MIME sniffing, no full URLs (which can hold a
- * shared trip) sent to other sites, and only the browser features the app uses
- * (location, after the traveler taps "Use my location").
- */
-const SECURITY_HEADERS: Record<string, string> = {
-  "x-content-type-options": "nosniff",
-  "referrer-policy": "strict-origin-when-cross-origin",
-  "permissions-policy": "geolocation=(self), camera=(), microphone=(), payment=(), usb=()",
-};
 
 function withSecurityHeaders(response: Response): Response {
   const headers = new Headers(response.headers);

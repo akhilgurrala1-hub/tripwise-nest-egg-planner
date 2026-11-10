@@ -48,7 +48,7 @@ export function DestinationPhoto({
     <figure className={className}>
       {showImage && s.image && (
         <a
-          href={s.url}
+          href={safeExternalUrl(s.url)}
           target="_blank"
           rel="noopener noreferrer"
           title="Photo from Wikipedia"
@@ -61,7 +61,7 @@ export function DestinationPhoto({
         <figcaption className="mt-4 text-footnote leading-relaxed text-muted-foreground">
           {s.extract}{" "}
           <a
-            href={s.url}
+            href={safeExternalUrl(s.url)}
             target="_blank"
             rel="noopener noreferrer"
             title="Wikipedia article"
@@ -98,7 +98,7 @@ export function DestinationHero({
   const src = size ? sharper(s.image, size) : s.image;
   return (
     <a
-      href={s.url}
+      href={safeExternalUrl(s.url)}
       target="_blank"
       rel="noopener noreferrer"
       title="Photo from Wikipedia"
@@ -158,7 +158,7 @@ export function DestinationCard({
           {reviews.map((l) => (
             <a
               key={l.site}
-              href={l.url}
+              href={safeExternalUrl(l.url)}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-1 font-semibold text-primary underline-offset-2 hover:underline"

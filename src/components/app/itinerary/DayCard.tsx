@@ -222,7 +222,7 @@ function PlaceLinks({ item }: { item: ItineraryItem }) {
       {links.map((l) => (
         <a
           key={l.site}
-          href={l.url}
+          href={safeExternalUrl(l.url)}
           target="_blank"
           rel="noopener noreferrer"
           aria-label={`${l.label} for ${item.name}`}

@@ -497,7 +497,7 @@ function BookingCard({
                 <div className="mt-4 flex flex-wrap gap-2">
                   {item.links.map((l, li) => (
                     <Button key={l.label} asChild size="sm" variant={li === 0 ? "ink" : "outline"}>
-                      <a href={l.url} target="_blank" rel="noopener noreferrer">
+                      <a href={safeExternalUrl(l.url)} target="_blank" rel="noopener noreferrer">
                         {l.label} <ExternalLink />
                       </a>
                     </Button>
