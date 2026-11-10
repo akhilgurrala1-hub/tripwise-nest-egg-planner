@@ -91,3 +91,17 @@
 - Towns (`python -m waypoint_data towns cities500.txt /usr/share/dict/words`): GeoNames (CC BY 4.0) towns of 50,000+, 15,000+ in the countries travelers visit most, and a hand-picked list of small destinations (`MUST_HAVE`: Sedona, Hallstatt, Positano...); towns the airport table has, city neighborhoods (within 8 km of a place 10 times bigger) and names that are never towns (small words, months, seasons, trip words: `NEVER`) are left out; Japanese "-shi" is dropped. Each row says whether the name is an everyday word (from a word list where common words are lowercase). Loaded on demand (its own chunk, about 280 KB gzipped). `check` validates it and audits every catalog place and cruise port against where its town really is (`check_locations`, within 60 km, by state in the US).
 - Legal (`/privacy`, `/terms`, frame in `src/components/app/legal/LegalPage.tsx`, facts in `src/lib/legal.ts`: Waypoint is owned and run solely by Akhil Reddy Gurrala, an individual in Arizona, USA, named on both pages and in the footer copyright; contact akhilgurrala1@gmail.com; Arizona law, Maricopa County courts). The Privacy Policy describes what the app really stores and sends (browser storage, account tables, every third-party service including Gemini's free-tier terms, share links in the fragment, no ads or analytics) and must be updated when that changes (new table, new service, new data sent to the AI). The footer has a Legal column and the sign-up form links both pages (tested). Not legal advice: have a lawyer review before relying on them.
 
+
+## Agent skills
+
+### Issue tracker
+
+Issues live in this repo's GitHub Issues (`gh` CLI). See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+The five default labels: `needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`. See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+Single-context: one `GLOSSARY.md` and `docs/adr/` at the repo root. See `docs/agents/domain.md`.
