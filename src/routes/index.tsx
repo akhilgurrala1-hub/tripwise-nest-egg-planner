@@ -1,6 +1,6 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { ArrowRight, Minus, Plus } from "lucide-react";
+import { ArrowRight, ChevronDown, Minus, Plus } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 
@@ -98,6 +98,8 @@ function Welcome() {
   // Phones: the pinned "Plan trip" bar waits until the manual steps, so the first screen
   // has one thing to do (describe the trip) instead of two.
   const [showBar, setShowBar] = useState(false);
+  // Style, interests, coverage and the emergency fund wait under "More options".
+  const [moreOptions, setMoreOptions] = useState(false);
   useEffect(() => {
     const el = document.getElementById("plan-steps");
     if (!el || typeof IntersectionObserver === "undefined") {
@@ -341,8 +343,7 @@ function Welcome() {
           <div className="mx-auto max-w-3xl">
             <h1 className="title-display text-center text-large-title">Where to next?</h1>
             <p className="mx-auto mt-4 max-w-xl text-center text-body text-muted-foreground">
-              Say where, when and who, however you like. Waypoint prices the whole trip to the
-              dollar, plans each day and lists what to book.
+              Prices the whole trip to the dollar, plans each day and lists what to book.
             </p>
             <div className="mt-8">
               <TripAssistant
@@ -414,8 +415,6 @@ function Welcome() {
                   mode={form.transportMode}
                   onTripType={setTripType}
                   onMode={(m) => update({ transportMode: m })}
-                  from={form.origin.split(",")[0]?.trim() || "Home"}
-                  to={destLabel}
                 />
                 {form.transportMode === "flight" && (
                   <>
@@ -449,11 +448,8 @@ function Welcome() {
                 <div className="mt-6">
                   <DestinationPicker
                     tripType={form.tripType}
-                    interests={form.interests}
                     destinationId={form.destinationId}
                     customDestination={form.customDestination}
-                    from={originPoint}
-                    fromLabel={fromLabel}
                     error={destError}
                     onPick={(destinationId) => {
                       destPicked.current = true;
@@ -554,22 +550,8 @@ function Welcome() {
                 </div>
               </Section>
 
-              <Section title="Style" style={stagger(4)}>
-                <StylePicker value={form.style} onChange={(style) => update({ style })} />
-                <p className="mt-6 mb-2 text-sm text-muted-foreground">Interests</p>
-                <InterestChips value={form.interests} onToggle={toggleInterest} />
-              </Section>
-
-              <Section title="What you pay for" style={stagger(5)}>
-                <CoveragePicker
-                  value={form.coverage}
-                  mode={form.transportMode}
-                  onChange={(coverage) => update({ coverage })}
-                />
-              </Section>
-
               <Section title="Budget" style={stagger(5)}>
-                <div className="grid gap-4 sm:grid-cols-2">
+                <div className="sm:max-w-xs">
                   <div>
                     <Label className="text-footnote font-normal text-muted-foreground">
                       Total budget
@@ -614,10 +596,29 @@ function Welcome() {
                       </p>
                     )}
                   </div>
-                  <div>
-                    <Label className="text-footnote font-normal text-muted-foreground">
-                      Emergency fund
-                    </Label>
+                </div>
+              </Section>
+
+              <MoreOptions
+                open={moreOptions || !!reserveError}
+                onToggle={() => setMoreOptions((o) => !o)}
+              >
+                <Section title="Style">
+                  <StylePicker value={form.style} onChange={(style) => update({ style })} />
+                  <p className="mt-6 mb-2 text-sm text-muted-foreground">Interests</p>
+                  <InterestChips value={form.interests} onToggle={toggleInterest} />
+                </Section>
+
+                <Section title="What you pay for">
+                  <CoveragePicker
+                    value={form.coverage}
+                    mode={form.transportMode}
+                    onChange={(coverage) => update({ coverage })}
+                  />
+                </Section>
+
+                <Section title="Emergency fund">
+                  <div className="sm:max-w-xs">
                     <NumberField
                       aria-label="Emergency fund"
                       invalid={!!reserveError}
@@ -625,7 +626,7 @@ function Welcome() {
                       prefix="$"
                       step={25}
                       value={emergencyFund}
-                      className="mt-2 h-12"
+                      className="h-12"
                       inputClassName="text-xl"
                       onChange={(n) => {
                         reserveTouched.current = true;
@@ -634,8 +635,8 @@ function Welcome() {
                     />
                     {reserveError && <FieldError id="reserve-error">{reserveError}</FieldError>}
                   </div>
-                </div>
-              </Section>
+                </Section>
+              </MoreOptions>
             </form>
           </div>
 
@@ -684,6 +685,43 @@ function Welcome() {
             </Button>
           </div>
         </div>
+      </div>
+    </div>
+  );
+}
+
+/** The optional parts of the form, folded away until asked for. */
+function MoreOptions({
+  open,
+  onToggle,
+  children,
+}: {
+  open: boolean;
+  onToggle: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <div>
+      <button
+        type="button"
+        aria-expanded={open}
+        aria-controls="more-options"
+        onClick={onToggle}
+        className="flex h-14 w-full items-center justify-between text-left text-headline font-semibold"
+      >
+        More options
+        <span className="flex items-center gap-2 text-footnote font-normal text-muted-foreground">
+          <span className="hidden sm:inline">
+            Style, interests, what you pay for, emergency fund
+          </span>
+          <ChevronDown
+            aria-hidden
+            className={cn("size-5 transition-transform duration-150", open && "rotate-180")}
+          />
+        </span>
+      </button>
+      <div id="more-options" hidden={!open} className="divide-y divide-border">
+        {children}
       </div>
     </div>
   );

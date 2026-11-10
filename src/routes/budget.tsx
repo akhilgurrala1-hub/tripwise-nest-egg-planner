@@ -567,9 +567,6 @@ function CategoryRow({ cat }: { cat: Category }) {
                 <Badge variant="success">Live</Badge>
               ) : null}
             </div>
-            <p className="truncate text-xs font-normal text-muted-foreground">
-              {isCustom ? "Your amount" : formula}
-            </p>
           </div>
           <div className="mr-1 text-right">
             <p className="text-sm font-medium">
@@ -582,6 +579,10 @@ function CategoryRow({ cat }: { cat: Category }) {
         </div>
       </AccordionTrigger>
       <AccordionContent className="bg-muted/40 px-4 pt-1 pb-4">
+        {/* How the amount is worked out, shown once the row is opened. */}
+        <p className="mb-4 text-footnote text-muted-foreground">
+          {isCustom ? "Your amount" : formula}
+        </p>
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">{fields}</div>
         {canOverride && (
           <div className="mt-4 flex flex-wrap items-end gap-4 border-t border-dashed border-border pt-4">

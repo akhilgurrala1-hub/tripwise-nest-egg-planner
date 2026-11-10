@@ -3,7 +3,6 @@ import { ArrowRight, ChevronDown, Info } from "lucide-react";
 import { useState, type CSSProperties, type ReactNode } from "react";
 import { toast } from "sonner";
 
-import { RouteMark } from "./Illustrations";
 import { TRIP_COLOR } from "./trip-colors";
 import { TRIP_ICONS, TripTypePicker } from "./TripTypePicker";
 import { Button } from "@/components/ui/button";
@@ -26,7 +25,7 @@ export function formatDateRange(start: string, end: string) {
   return `${formatCalendarDate(start, monthDay)} – ${formatCalendarDate(end, full)}`;
 }
 
-/** Each page's next step for the trip, a capsule beside the title. */
+/** Each page's next step for the trip, a button beside the title. */
 const NEXT_STEP: Record<string, { label: string; to: "/book" | "/itinerary" | "/dashboard" }> = {
   "/dashboard": { label: "See the days", to: "/itinerary" },
   "/budget": { label: "Book", to: "/book" },
@@ -45,14 +44,11 @@ export function PageHeader({
   title,
   children,
   showTrip = true,
-  sampleBanner = "line",
 }: {
   title: string;
   children?: ReactNode;
   /** Account pages aren't about the current trip */
   showTrip?: boolean;
-  /** How loudly to say this is the sample trip: a full card (Overview) or one line */
-  sampleBanner?: "card" | "line";
 }) {
   const { trip } = useTrip();
   const pathname = useRouterState({ select: (r) => r.location.pathname });
@@ -62,23 +58,7 @@ export function PageHeader({
     // An app's page header: title, the trip it's about, and the page's actions; no banner.
     <div className="pb-6 sm:pb-8">
       <div className="page-container pt-6 sm:pt-10">
-        {sample && sampleBanner === "card" && (
-          <section className="mb-6 flex items-center gap-4 rounded-2xl bg-card p-4 sm:p-6 print:hidden">
-            <RouteMark className="hidden w-14 shrink-0 sm:block" />
-            <div className="min-w-0 flex-1">
-              <h2 className="text-body font-semibold sm:text-headline">This is a sample trip.</h2>
-              <p className="mt-1 text-footnote text-muted-foreground">
-                Plan your own and every page updates to match.
-              </p>
-            </div>
-            <Button asChild variant="go" className="shrink-0">
-              <Link to="/">
-                Plan yours <ArrowRight />
-              </Link>
-            </Button>
-          </section>
-        )}
-        {sample && sampleBanner === "line" && (
+        {sample && (
           // The sidebar already says so on large screens.
           <p className="mb-6 flex flex-wrap items-center gap-x-2 gap-y-1 text-footnote text-muted-foreground lg:hidden print:hidden">
             <Info className="size-3.5 shrink-0" />
@@ -140,7 +120,7 @@ function TripBar({ title }: { title: string }) {
 
 /** The trip type, switchable from any page: the budget is re-estimated and the change explained. */
 function TripTypeChip() {
-  const { trip, dest } = useTrip();
+  const { trip } = useTrip();
   const [open, setOpen] = useState(false);
   const Icon = TRIP_ICONS[trip.setup.tripType];
   return (
@@ -169,8 +149,6 @@ function TripTypeChip() {
           compact
           tripType={trip.setup.tripType}
           mode={trip.setup.transportMode}
-          from={trip.setup.origin.split(",")[0]?.trim() || "Home"}
-          to={dest.name}
           onTripType={(t) => {
             const [headline, ...details] = tripActions.setTripType(t);
             if (headline)

@@ -190,8 +190,7 @@ describe("no template tells", () => {
   });
 
   it("coral stays in the logo and the route art; the UI has one brand color", () => {
-    const art = (p: string) =>
-      /Logo\.tsx$|Illustrations\.tsx$|TravelScene\.tsx$|Intro\.tsx$/.test(p);
+    const art = (p: string) => /Logo\.tsx$|Illustrations\.tsx$|Intro\.tsx$/.test(p);
     expect(
       find(/\b(?:text|bg|border|ring|fill|stroke)-(?:brand-coral|coral-text)\b/g, art),
     ).toEqual([]);

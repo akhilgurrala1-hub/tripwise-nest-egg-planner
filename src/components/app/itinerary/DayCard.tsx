@@ -22,7 +22,7 @@ import { formatMoney } from "@/lib/budget";
 import { formatCalendarDate } from "@/lib/dates";
 import type { Itinerary, ItineraryDay, ItineraryItem, ItemKind, SlotTime } from "@/lib/itinerary";
 import { destinationQuery } from "@/lib/live/place";
-import { isWetDay, type DayWeather } from "@/lib/live/weather";
+import type { DayWeather } from "@/lib/live/weather";
 import { placeReviewLinks } from "@/lib/reviews";
 import { useTrip } from "@/lib/trip-store";
 
@@ -83,13 +83,6 @@ export function DayCard({
         <div className="flex flex-wrap items-center gap-2 border-b border-border px-6 py-2 sm:hidden">
           <WeatherChip day={weather} />
         </div>
-      )}
-      {weather && isWetDay(weather) && (
-        <p className="border-b border-border bg-shield-soft px-6 py-2 text-xs">
-          {weather.label}{" "}
-          {weather.source === "forecast" ? "in the forecast" : "is common on this date"}. Have an
-          indoor backup (a museum, market or long lunch) ready for outdoor stops.
-        </p>
       )}
       <ol className="relative px-6 py-4">
         {day.items.map((item, idx) => (
