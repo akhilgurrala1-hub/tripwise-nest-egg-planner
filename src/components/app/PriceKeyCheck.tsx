@@ -57,8 +57,9 @@ export function PriceKeyCheck({
         <div className="space-y-2 text-muted-foreground">
           <p className="font-medium text-foreground">Live prices aren't connected yet</p>
           <p>
-            In Lovable, open <strong className="text-foreground">Cloud → Secrets</strong> and add
-            these, then publish the app again so it picks them up:
+            In Vercel, open{" "}
+            <strong className="text-foreground">Settings → Environment Variables</strong> and add
+            these, then redeploy so the app picks them up:
           </p>
           <ul className="space-y-1 pl-1">
             {Object.values(SERVICE).map((s) => (

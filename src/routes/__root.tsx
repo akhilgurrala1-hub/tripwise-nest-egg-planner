@@ -8,10 +8,9 @@ import {
   Scripts,
   type ErrorComponentProps,
 } from "@tanstack/react-router";
-import { useEffect, type ReactNode } from "react";
+import type { ReactNode } from "react";
 
 import appCss from "../styles.css?url";
-import { reportLovableError } from "../lib/lovable-error-reporting";
 import { AppShell } from "@/components/app/AppShell";
 import { Toaster } from "@/components/ui/sonner";
 import { AuthProvider } from "@/lib/auth-context";
@@ -45,9 +44,6 @@ function NotFoundComponent() {
 function ErrorComponent({ error, reset }: ErrorComponentProps) {
   console.error(error);
   const router = useRouter();
-  useEffect(() => {
-    reportLovableError(error, { boundary: "tanstack_root_error_component" });
-  }, [error]);
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
@@ -78,8 +74,9 @@ function ErrorComponent({ error, reset }: ErrorComponentProps) {
   );
 }
 
-/** Social previews need absolute image URLs. */
-const SITE_URL = "https://tripwise-nest-egg-planner.lovable.app";
+/** Social previews need absolute image URLs. Set VITE_SITE_URL to the production domain. */
+const SITE_URL =
+  (import.meta.env["VITE_SITE_URL"] as string | undefined) ?? "https://waypoint-travel.vercel.app";
 
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
   head: () => ({

@@ -38,7 +38,7 @@
 ## After funding (costs money)
 
 - [ ] AI on Claude with web search for live events, hours and prices
-- [ ] Own Supabase, hosting and Google Maps key (leave Lovable, no badge)
+- [x] Own Supabase and hosting on Vercel (left Lovable; Google Maps no longer used)
 - [ ] Live hotel/flight prices (SerpApi) and gas prices (EIA)
 - [ ] Reliable sign-up emails (custom SMTP, e.g. Resend)
 
