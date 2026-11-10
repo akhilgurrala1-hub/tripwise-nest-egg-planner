@@ -134,7 +134,7 @@ export function LayoverHelper({ homeCountry }: { homeCountry: string }) {
         Entry rules from the Passport Index (updated {visas?.updated ?? "recently"}). They change,
         and airport transit rules have exceptions, so confirm with{" "}
         <a
-          href={OFFICIAL_CHECK.url}
+          href={safeExternalUrl(OFFICIAL_CHECK.url)}
           target="_blank"
           rel="noopener noreferrer"
           className="font-medium text-primary hover:underline"
