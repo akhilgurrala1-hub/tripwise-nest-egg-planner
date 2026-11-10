@@ -10,7 +10,7 @@ import { DestinationPicker } from "@/components/app/plan/DestinationPicker";
 import { CoveragePicker } from "@/components/app/plan/CoveragePicker";
 import { OriginField } from "@/components/app/plan/OriginField";
 import { StylePicker } from "@/components/app/plan/StylePicker";
-import { Inspiration } from "@/components/app/plan/Inspiration";
+import { HeroPhotos, Inspiration, inspirationIdeas } from "@/components/app/plan/Inspiration";
 import { StopsPicker } from "@/components/app/plan/StopsPicker";
 import { formatDateRange } from "@/components/app/TripHeader";
 import { TripAssistant } from "@/components/app/plan/TripAssistant";
@@ -322,6 +322,31 @@ function Welcome() {
   const approximate =
     !touched.current && home.place?.source === "approximate" && form.origin === home.place.label;
 
+  const heroIdeas = inspirationIdeas(effective, originPoint, 3);
+
+  const pickIdea = (destinationId: string, tripType: TripType) => {
+    destPicked.current = true;
+    touched.current = true;
+    update({
+      tripType,
+      destinationId,
+      customDestination: "",
+      destinationPoint: null,
+      cities: [],
+      transportMode: modeForTripType(tripType, form.transportMode),
+    });
+    toast(
+      `${getDestination(destinationId).name} it is. Adjust anything below, then plan the trip.`,
+      {
+        action: {
+          label: "See the plan",
+          onClick: () =>
+            document.getElementById("plan-steps")?.scrollIntoView({ behavior: "smooth" }),
+        },
+      },
+    );
+  };
+
   return (
     <div>
       {/* A trip in progress: apple.com's ribbon, one tap back to it. */}
@@ -339,30 +364,35 @@ function Welcome() {
         Photos come right after, in the trip ideas.
       */}
       <section className="band border-b border-separator">
-        <div className="page-container pt-8 pb-8 sm:pt-16 sm:pb-12">
-          <div className="mx-auto max-w-3xl">
-            <h1 className="title-display text-center text-large-title">Where to next?</h1>
-            <p className="mx-auto mt-4 max-w-xl text-center text-body text-muted-foreground">
-              Prices the whole trip to the dollar, plans each day and lists what to book.
-            </p>
-            <div className="mt-8">
-              <TripAssistant
-                variant="hero"
-                homeCity={form.origin}
-                from={originPoint}
-                onBuild={(draft) => void start(fromDraft(draft))}
-                onFill={(draft) => {
-                  const next = fromDraft(draft);
-                  touched.current = true;
-                  destPicked.current = true;
-                  reserveTouched.current = false;
-                  setBudgetOwn(!next.budgetAuto);
-                  setForm(next);
-                  toast("Filled in below. Adjust anything, then plan the trip.");
-                  document.getElementById("plan-steps")?.scrollIntoView({ behavior: "smooth" });
-                }}
-              />
+        <div className="page-container pt-8 pb-8 sm:pt-16 sm:pb-16">
+          <div className="grid items-center gap-12 xl:grid-cols-2">
+            <div className="max-w-xl xl:max-w-none">
+              <h1 className="title-display text-center text-display xl:text-left">
+                Where to next?
+              </h1>
+              <p className="mx-auto mt-4 max-w-xl text-center text-body text-muted-foreground xl:mx-0 xl:text-left">
+                Prices the whole trip to the dollar, plans each day and lists what to book.
+              </p>
+              <div className="mt-8">
+                <TripAssistant
+                  variant="hero"
+                  homeCity={form.origin}
+                  from={originPoint}
+                  onBuild={(draft) => void start(fromDraft(draft))}
+                  onFill={(draft) => {
+                    const next = fromDraft(draft);
+                    touched.current = true;
+                    destPicked.current = true;
+                    reserveTouched.current = false;
+                    setBudgetOwn(!next.budgetAuto);
+                    setForm(next);
+                    toast("Filled in below. Adjust anything, then plan the trip.");
+                    document.getElementById("plan-steps")?.scrollIntoView({ behavior: "smooth" });
+                  }}
+                />
+              </div>
             </div>
+            <HeroPhotos ideas={heroIdeas} origin={form.origin} onPick={pickIdea} />
           </div>
         </div>
       </section>
@@ -373,28 +403,7 @@ function Welcome() {
           from={originPoint}
           fromLabel={fromLabel === "home" ? "home" : fromLabel}
           nights={shape.nights}
-          onPick={(destinationId, tripType) => {
-            destPicked.current = true;
-            touched.current = true;
-            update({
-              tripType,
-              destinationId,
-              customDestination: "",
-              destinationPoint: null,
-              cities: [],
-              transportMode: modeForTripType(tripType, form.transportMode),
-            });
-            toast(
-              `${getDestination(destinationId).name} it is. Adjust anything below, then plan the trip.`,
-              {
-                action: {
-                  label: "See the plan",
-                  onClick: () =>
-                    document.getElementById("plan-steps")?.scrollIntoView({ behavior: "smooth" }),
-                },
-              },
-            );
-          }}
+          onPick={pickIdea}
         />
 
         <div className="mt-14 layout-main-aside lg:gap-y-8">

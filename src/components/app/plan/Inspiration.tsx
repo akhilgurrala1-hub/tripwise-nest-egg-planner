@@ -13,14 +13,14 @@ import { TRIP_ICONS } from "@/components/app/TripTypePicker";
 import { estimatedSpend } from "@/lib/trip/budget-fit";
 import type { TripSetup } from "@/lib/trip/types";
 
-interface Idea {
+export interface Idea {
   s: Suggestion;
   tripType: TripType;
   cost: number;
 }
 
 /** A drive and a flight, alternating, so the row shows both kinds of trip from home. */
-function inspirationIdeas(setup: TripSetup, from: GeoPoint | null, limit = 4): Idea[] {
+export function inspirationIdeas(setup: TripSetup, from: GeoPoint | null, limit = 4): Idea[] {
   const kinds: TripType[] =
     setup.tripType === "cruise" || setup.tripType === "staycation"
       ? ["road-trip", "flight"]
@@ -192,6 +192,78 @@ function IdeaCard({
         <span className="mt-2 flex items-baseline gap-1 text-footnote whitespace-nowrap">
           <span className="money-display text-body">{formatMoney(idea.cost)}</span>
           <span className="text-muted-foreground">estimated</span>
+        </span>
+      </span>
+    </button>
+  );
+}
+
+/**
+ * The hero's picture: three real places from the traveler's start, one tall and two
+ * short, each a tap away from becoming the destination. Large screens only; phones
+ * go straight to the ideas row.
+ */
+export function HeroPhotos({
+  ideas,
+  origin,
+  onPick,
+}: {
+  ideas: Idea[];
+  origin: string;
+  onPick: (destinationId: string, tripType: TripType) => void;
+}) {
+  const shown = ideas.slice(0, 3);
+  if (shown.length < 3) return null;
+  return (
+    <ul className="hidden h-[26rem] grid-cols-2 grid-rows-2 gap-4 xl:grid">
+      {shown.map((idea, i) => (
+        <li key={idea.s.id} className={i === 0 ? "row-span-2" : undefined}>
+          <HeroTile idea={idea} origin={origin} onPick={onPick} />
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+function HeroTile({
+  idea,
+  origin,
+  onPick,
+}: {
+  idea: Idea;
+  origin: string;
+  onPick: (destinationId: string, tripType: TripType) => void;
+}) {
+  const dest = getDestination(idea.s.id);
+  const photo = useDestinationSummary(dest, origin).data;
+  const Icon = TRIP_ICONS[idea.tripType];
+  return (
+    <button
+      type="button"
+      onClick={() => onPick(idea.s.id, idea.tripType)}
+      className="group relative isolate block size-full overflow-hidden rounded-2xl bg-fill text-left pressable focus-visible:ring-4 focus-visible:ring-primary/30 focus-visible:outline-none"
+    >
+      {photo?.image ? (
+        <Photo
+          src={photo.image}
+          alt=""
+          lazy={false}
+          className="absolute inset-0 -z-10"
+          imgClassName="transition-[opacity,scale] duration-300 ease-out group-hover:scale-[1.03]"
+        />
+      ) : (
+        <Icon
+          aria-hidden
+          className="absolute inset-0 m-auto size-10 text-muted-foreground"
+          strokeWidth={1.5}
+        />
+      )}
+      <span className="absolute bottom-4 left-4 max-w-[calc(100%-2rem)] rounded-md bg-card px-4 py-2">
+        <span className="block truncate text-footnote font-semibold text-foreground">
+          {idea.s.name}
+        </span>
+        <span className="block truncate text-caption text-muted-foreground">
+          {formatMoney(idea.cost)} estimated
         </span>
       </span>
     </button>
