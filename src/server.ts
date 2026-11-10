@@ -2,6 +2,7 @@ import "./lib/error-capture";
 
 import { consumeLastCapturedError } from "./lib/error-capture";
 import { renderErrorPage } from "./lib/error-page";
+import { cloudflareGeo, vercelGeo } from "./lib/live/visitor-geo";
 
 type ServerEntry = {
   fetch: (request: Request, env: unknown, ctx: unknown) => Promise<Response> | Response;
@@ -48,34 +49,21 @@ function isH3SwallowedErrorBody(body: string): boolean {
 const GEO_HEADER = "x-waypoint-visitor-geo";
 
 /**
- * Cloudflare attaches the visitor's approximate city to each request (`request.cf`).
- * It's passed on as an internal header so the app can suggest a starting point
- * without asking a third party. Anything a client sent under that name is replaced.
+ * Vercel (`x-vercel-ip-*` headers) or Cloudflare (`request.cf`) attaches the visitor's
+ * approximate city to each request. It's passed on as an internal header so the app can
+ * suggest a starting point without asking a third party. Anything a client sent under
+ * that name is replaced.
  */
 function withVisitorGeo(request: Request): Request {
   const cf = (request as Request & { cf?: Record<string, unknown> }).cf;
-  // Never trust the header from outside, even where there's no Cloudflare data.
-  if (!cf && !request.headers.has(GEO_HEADER)) return request;
+  // Never trust the header from outside, even where there's no location data.
+  if (!cf && !request.headers.has(GEO_HEADER) && !request.headers.has("x-vercel-ip-latitude")) {
+    return request;
+  }
   const headers = new Headers(request.headers);
   headers.delete(GEO_HEADER);
-  if (!cf) return new Request(request, { headers });
-  const lat = Number(cf["latitude"]);
-  const lon = Number(cf["longitude"]);
-  if (Number.isFinite(lat) && Number.isFinite(lon)) {
-    headers.set(
-      GEO_HEADER,
-      encodeURIComponent(
-        JSON.stringify({
-          city: cf["city"] ?? "",
-          regionCode: cf["regionCode"] ?? "",
-          region: cf["region"] ?? "",
-          country: cf["country"] ?? "",
-          lat,
-          lon,
-        }),
-      ),
-    );
-  }
+  const geo = cf ? cloudflareGeo(cf) : vercelGeo(request.headers);
+  if (geo) headers.set(GEO_HEADER, encodeURIComponent(JSON.stringify(geo)));
   return new Request(request, { headers });
 }
 

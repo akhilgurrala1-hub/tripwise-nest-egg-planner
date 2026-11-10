@@ -1,6 +1,6 @@
 /**
  * Calls to Google's Gemini API through its OpenAI-compatible endpoint, with the
- * project's own key (free tier; no Lovable AI credits). Each task tries its model,
+ * project's own key (free tier). Each task tries its model,
  * then other free models, so one busy model or a used-up daily quota doesn't break
  * the feature. Never retried: a cancel, a timeout, a bad key, or running out of
  * paid credit (402).
@@ -28,7 +28,7 @@ const KEY_NAMES = [
   "GOOGLE_AI_STUDIO_KEY",
 ];
 
-/** The Gemini key from Lovable Cloud secrets, cleaned of pasted spaces or quotes. */
+/** The Gemini key from the environment (Vercel), cleaned of pasted spaces or quotes. */
 export function geminiKey(env: Record<string, string | undefined> = process.env): string | null {
   for (const name of KEY_NAMES) {
     const key = (env[name] ?? "")

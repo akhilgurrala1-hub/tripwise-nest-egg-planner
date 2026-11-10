@@ -14,9 +14,7 @@ A dashboard showing total planned expenses, remaining money, and potential savin
 
 Use example prices and locations clearly labeled as demonstrations until real travel-data integrations are available. Make the app functional with editable budgets and working calculations. Use a premium, modern design that feels friendly to both budget and luxury travelers. Do not implement real bookings or payments yet.
 
-- **Ship faster**: describe what you want to build and Lovable handles the code.
-- **Stay in sync**: every change made in Lovable is committed straight to this repository.
-- **Full ownership**: this code is yours. Push to `main` on GitHub and your changes sync back into Lovable, ready for your next prompt.
+Hosted on Vercel, with accounts and saved trips in Supabase. See "Hosting" in `AGENTS.md`.
 
 ## Development
 

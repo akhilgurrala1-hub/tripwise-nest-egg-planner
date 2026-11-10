@@ -1,9 +1,8 @@
 /**
  * Which Gemini model each AI task runs on, and how hard it thinks. Every call goes
- * to Google's Gemini API (free tier) with the project's own key, never through
- * Lovable AI, so planning spends no Lovable credits.
+ * to Google's Gemini API (free tier) with the project's own key.
  *
- * Optional Lovable Cloud secrets change the defaults without a code change:
+ * Optional environment variables change the defaults without a code change:
  * - AI_PLANNER_MODEL / AI_CHAT_MODEL: a Gemini model id, e.g. "gemini-3.8-flash"
  * - AI_PLANNER_EFFORT / AI_CHAT_EFFORT: "low" (default), "medium" or "high"
  * - AI_FALLBACK_MODELS: comma-separated Gemini ids tried when the first is busy
