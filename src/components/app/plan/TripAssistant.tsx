@@ -69,7 +69,6 @@ const EXAMPLES: { label: string; message: string }[] = [
     label: "Find a short cruise",
     message: "A 4-night cruise from the closest port, comfortable but not fancy",
   },
-  { label: "Surprise me", message: "Surprise me with somewhere new for a long weekend" },
 ];
 
 /** Places Waypoint knows well near the traveler, so the assistant's ideas can be planned in detail. */
@@ -496,8 +495,9 @@ export function TripAssistant({
             </Button>
           )}
         </div>
-        {!user && !authLoading && (
-          <p className={cn("mt-2 px-1 text-xs text-muted-foreground", search && "text-center")}>
+        {/* The hero keeps one line under the bar (the quick starts); the full panel explains AI. */}
+        {!user && !authLoading && !search && (
+          <p className="mt-2 px-1 text-xs text-muted-foreground">
             Waypoint's own planner answers right away.{" "}
             <Link to="/auth" search={{ redirect: "/" }} className="underline underline-offset-2">
               Sign in

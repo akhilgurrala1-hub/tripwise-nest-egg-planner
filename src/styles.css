@@ -379,7 +379,7 @@
   --style-comfort: oklch(0.55 0.18 258);
   --style-luxury: oklch(0.52 0.2 310);
 
-  /* Trip types: each kind of trip has its own hue (scenes, the trip chip, suggestions). */
+  /* Trip types: each kind of trip has its own hue (the trip chip, suggestions). */
   --trip-road: oklch(0.55 0.2 264);
   --trip-flight: oklch(0.6 0.15 232);
   --trip-cruise: oklch(0.58 0.11 195);
@@ -986,16 +986,6 @@
   }
 }
 
-/* ---------- Travel scenes ---------- */
-/* Parts scale and turn around their own centers; the ship rocks from its keel. */
-.travel-scene .scene-part {
-  transform-box: fill-box;
-  transform-origin: center;
-}
-.travel-scene .scene-bob {
-  transform-box: fill-box;
-  transform-origin: 50% 100%;
-}
 /* ---------- Brand mark motion ---------- */
 /* The mark's parts are animated in SVG user space around their own centers. */
 .logo-mark .logo-tile,

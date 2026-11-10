@@ -425,18 +425,14 @@ function MobileMenu({
   );
 }
 
-/** One quiet block at the end of every page: what the numbers are, credits and the legal links. */
+/** One quiet line at the end of every page: what the numbers are and the legal links (photo sources are under Credits). */
 function Footer() {
   const year = new Date().getFullYear();
   return (
     <footer className="text-caption text-muted-foreground print:hidden">
-      <div className="page-container space-y-2 border-t border-separator py-6">
-        <p>
-          Costs are estimates until live prices are connected, worked out in US dollars. Waypoint
-          never books or takes payment: you book on each provider&apos;s own site. Photos and place
-          information from Wikipedia, Wikivoyage, OpenStreetMap and other open sources.
-        </p>
+      <div className="page-container border-t border-separator py-6">
         <p className="flex flex-wrap items-center gap-x-4 gap-y-2">
+          <span>Estimates in US dollars. Waypoint never books or takes payment.</span>
           <span>
             © {year} {LEGAL.owner}
           </span>

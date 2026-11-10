@@ -2,7 +2,6 @@ import { Car, Home, Plane, Ship, TrainFront, type LucideIcon } from "lucide-reac
 
 import { Segmented } from "./motion";
 import { TRIP_COLOR } from "./trip-colors";
-import { TravelScene } from "./TravelScene";
 import {
   TRANSPORT_MODES,
   TRIP_TYPES,
@@ -29,8 +28,6 @@ export function TripTypePicker({
   mode,
   onTripType,
   onMode,
-  from,
-  to,
   compact,
   className,
 }: {
@@ -38,8 +35,6 @@ export function TripTypePicker({
   mode: TransportMode;
   onTripType: (t: TripType) => void;
   onMode: (m: TransportMode) => void;
-  from?: string;
-  to?: string;
   /** Tighter layout for popovers */
   compact?: boolean;
   className?: string;
@@ -74,14 +69,6 @@ export function TripTypePicker({
             ariaLabel: t.label,
           };
         })}
-      />
-      <TravelScene
-        className="mt-4"
-        tripType={tripType}
-        mode={mode}
-        caption={`${info.blurb}.`}
-        from={tripType === "staycation" ? "" : (from ?? "")}
-        to={to ?? ""}
       />
       {modes.length > 1 && (
         <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2">

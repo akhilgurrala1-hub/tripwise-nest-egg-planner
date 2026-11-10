@@ -24,6 +24,8 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth-context";
 import { formatMoney, stopCost } from "@/lib/budget";
 import { useTripWeather } from "@/lib/live/use-live";
+import { isWetDay, type DayWeather } from "@/lib/live/weather";
+import { formatCalendarDate } from "@/lib/dates";
 import { useTripHolidays } from "@/lib/live/use-open-data";
 import { tripActions, useTrip } from "@/lib/trip-store";
 
@@ -167,6 +169,8 @@ function ItineraryPage() {
           )}
 
           {trip.roadTrip.includedStops.length > 0 && <DriveStops />}
+
+          {itin && <WetDaysNote dates={itin.days.map((d) => d.date)} weather={weather.byDate} />}
 
           {!itin || itin.days.length === 0 ? (
             <div className="surface-card p-8 text-center">
@@ -331,5 +335,23 @@ function RefinePlan({ busy, onRefine }: { busy: boolean; onRefine: (text: string
         ))}
       </div>
     </section>
+  );
+}
+
+/** One note for the whole trip when rain, snow or storms are likely, instead of one per day. */
+function WetDaysNote({ dates, weather }: { dates: string[]; weather: Map<string, DayWeather> }) {
+  const wet = dates.filter((d) => {
+    const w = weather.get(d);
+    return w ? isWetDay(w) : false;
+  });
+  if (wet.length === 0) return null;
+  const days = wet.map((d) => formatCalendarDate(d, { weekday: "long" }));
+  const list =
+    days.length === 1 ? days[0] : `${days.slice(0, -1).join(", ")} and ${days[days.length - 1]}`;
+  return (
+    <p className="rounded-xl bg-shield-soft px-4 py-2 text-footnote">
+      Wet weather is likely on {list}. Keep an indoor backup (a museum, market or long lunch) for
+      outdoor stops.
+    </p>
   );
 }
