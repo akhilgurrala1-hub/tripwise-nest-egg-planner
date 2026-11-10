@@ -200,10 +200,10 @@ describe("no template tells", () => {
     expect(find(/<img\b/g, (p) => p.endsWith("Photo.tsx"))).toEqual([]);
   });
 
-  it("sets headlines and text in one self-hosted face, like an app (no magazine serif)", () => {
+  it("sets headlines in Host Grotesk and text in Instrument Sans, both self-hosted (no magazine serif)", () => {
     const css = readFileSync(join(SRC, "styles.css"), "utf8");
     const face = (name: string) => css.match(new RegExp(`--font-${name}:\\s*"([^"]+)"`))?.[1];
-    expect(face("display")).toBe("Instrument Sans Variable");
+    expect(face("display")).toBe("Host Grotesk Variable");
     expect(face("sans")).toBe("Instrument Sans Variable");
     expect(css).not.toMatch(/newsreader/i);
   });

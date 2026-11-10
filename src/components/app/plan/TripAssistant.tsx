@@ -508,7 +508,12 @@ export function TripAssistant({
         {state.turns.length === 0 && (
           <div className="mt-4">
             <p className={cn("eyebrow px-1", search && "sr-only")}>Or start with</p>
-            <ul className={cn("mt-2 flex flex-wrap gap-2", search && "justify-center")}>
+            <ul
+              className={cn(
+                "mt-2 flex flex-wrap gap-2",
+                search && "justify-center xl:justify-start",
+              )}
+            >
               {EXAMPLES.map((ex) => (
                 <li key={ex.label}>
                   <button

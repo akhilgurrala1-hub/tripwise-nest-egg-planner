@@ -57,6 +57,13 @@ export function tidyExtract(text: string): string {
 const NOT_A_PLACE =
   /\b(film|movie|album|song|single|band|novel|book|television|tv series|sitcom|video game|episode|musical|opera|magazine|newspaper|football club|sports team|surname|given name|disambiguation|ship|aircraft|company|brand|character)\b/i;
 
+/**
+ * Wikipedia's lead image for a region is often a map, flag or locator drawn as a PNG or SVG.
+ * Photos are JPEGs, so anything else (or a file named like a map) is no photo of the place.
+ */
+const NOT_A_PHOTO =
+  /\.(png|svg|gif)(\.\w+)?(\?|$)|[/_ -](map|maps|locator|location|flag|seal|coat_of_arms|logo|diagram)[_. -]/i;
+
 /** How far an article's coordinates may be from the destination and still describe it. */
 const MAX_KM = 350;
 
@@ -91,7 +98,8 @@ export function parseSummary(body: unknown, near?: GeoPoint | null): PlaceSummar
   return {
     title,
     extract: extract.length > 360 ? `${extract.slice(0, 357).trimEnd()}…` : extract,
-    image: typeof thumb?.source === "string" ? thumb.source : null,
+    image:
+      typeof thumb?.source === "string" && !NOT_A_PHOTO.test(thumb.source) ? thumb.source : null,
     url: String(page["fullurl"] ?? `https://en.wikipedia.org/wiki/${encodeURIComponent(title)}`),
   };
 }
