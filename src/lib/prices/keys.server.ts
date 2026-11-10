@@ -1,5 +1,5 @@
 /**
- * The price services' API keys, read from Lovable Cloud secrets. The documented
+ * The price services' API keys, read from environment variables (Vercel). The documented
  * names are SERPAPI_API_KEY and EIA_API_KEY; common variants are accepted too, so
  * a key saved as "SERPAPI_KEY" or with a stray space still works.
  */

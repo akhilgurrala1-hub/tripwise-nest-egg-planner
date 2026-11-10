@@ -184,7 +184,8 @@ export async function runTripChat(
       return {
         ok: false,
         status,
-        error: "The Gemini API key was refused. Check GEMINI_API_KEY in Lovable Cloud secrets.",
+        error:
+          "The Gemini API key was refused. Check GEMINI_API_KEY in the Vercel environment variables.",
         detail,
       };
     return { ok: false, status, error: "The assistant couldn't answer. Try again.", detail };

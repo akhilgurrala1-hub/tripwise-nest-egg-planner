@@ -120,10 +120,9 @@ function PrivacyPage() {
             Administration (gas prices).
           </li>
           <li>
-            <strong>Hosting:</strong> Waypoint runs on Cloudflare, and accounts and saved trips are
-            stored with Lovable Cloud (built on Supabase). Cloudflare tells our server the
-            approximate city your connection comes from, which we use only to suggest a starting
-            city. It isn&rsquo;t stored.
+            <strong>Hosting:</strong> Waypoint runs on Vercel, and accounts and saved trips are
+            stored with Supabase. Vercel tells our server the approximate city your connection comes
+            from, which we use only to suggest a starting city. It isn&rsquo;t stored.
           </li>
         </ul>
         <p>

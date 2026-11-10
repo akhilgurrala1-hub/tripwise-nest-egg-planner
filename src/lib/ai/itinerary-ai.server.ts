@@ -99,7 +99,8 @@ function describeError(err: unknown): { status: number; error: string; detail: s
     return {
       status,
       detail,
-      error: "The Gemini API key was refused. Check GEMINI_API_KEY in Lovable Cloud secrets.",
+      error:
+        "The Gemini API key was refused. Check GEMINI_API_KEY in the Vercel environment variables.",
     };
   return {
     status,
