@@ -363,7 +363,7 @@ function Welcome() {
         search-style bar to answer it in plain words, quick starts under it.
         Photos come right after, in the trip ideas.
       */}
-      <section className="band border-b border-separator">
+      <section className="theme-deep">
         <div className="page-container pt-8 pb-8 sm:pt-16 sm:pb-16">
           <div className="grid items-center gap-12 xl:grid-cols-2">
             <div className="max-w-xl xl:max-w-none">

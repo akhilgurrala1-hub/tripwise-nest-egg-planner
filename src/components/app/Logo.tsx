@@ -1,14 +1,13 @@
 import { cn } from "@/lib/utils";
 
 /**
- * The Waypoint mark: a route drawn as a "W", leaving a hollow origin ring and
- * arriving at a coral destination dot, on a brand-blue tile. Geometry lives on a
- * 32-unit grid and matches public/favicon.svg exactly; keep the two in step.
- * Brand colors are fixed (not theme tokens) so the mark looks the same everywhere.
+ * The Waypoint mark: one route, a hollow origin ring, a single zigzag up and an
+ * orange destination dot, on a deep teal tile. Geometry lives on a 32-unit grid
+ * and matches public/favicon.svg exactly; keep the two in step. Brand colors are
+ * fixed (not theme tokens) so the mark looks the same everywhere.
  */
-export const BRAND = { blue: "#2457E6", coral: "#FF6B4A", white: "#FFFFFF" } as const;
-export const ROUTE_PATH =
-  "M7.2 11.6 C9.1 17.4 10.1 22 11.8 22 C13.5 22 14.4 14.3 16 14.3 C17.6 14.3 18.5 22 20.2 22 C21.9 22 22.9 17.4 24.8 11.6";
+export const BRAND = { teal: "#0B5C5A", orange: "#E0501A", white: "#FFFFFF" } as const;
+export const ROUTE_PATH = "M7.4 22.4 L15 12.4 L20 20 L25.6 10.2";
 
 export function LogoMark({
   className,
@@ -28,41 +27,42 @@ export function LogoMark({
       aria-hidden={title ? undefined : true}
       aria-label={title}
     >
-      <rect className="logo-tile" width="32" height="32" rx="8" fill={BRAND.blue} />
+      <rect className="logo-tile" width="32" height="32" rx="7" fill={BRAND.teal} />
       <path
         className="logo-route"
         d={ROUTE_PATH}
         fill="none"
         stroke={BRAND.white}
-        strokeWidth="2.7"
+        strokeWidth="3.6"
         strokeLinecap="round"
+        strokeLinejoin="round"
         pathLength={100}
       />
       <circle
         className="logo-origin"
-        cx="7.2"
-        cy="11.2"
-        r="2.25"
-        fill={BRAND.blue}
+        cx="7.4"
+        cy="22.4"
+        r="2.5"
+        fill={BRAND.teal}
         stroke={BRAND.white}
-        strokeWidth="1.7"
+        strokeWidth="1.8"
       />
       <circle
         className="logo-ripple"
-        cx="24.8"
-        cy="11.2"
-        r="3.1"
+        cx="25.6"
+        cy="10.2"
+        r="3.6"
         fill="none"
-        stroke={BRAND.coral}
+        stroke={BRAND.orange}
         strokeWidth="1.2"
       />
       <circle
         className="logo-dest"
-        cx="24.8"
-        cy="11.2"
-        r="3.1"
-        fill={BRAND.coral}
-        stroke={BRAND.blue}
+        cx="25.6"
+        cy="10.2"
+        r="3.6"
+        fill={BRAND.orange}
+        stroke={BRAND.teal}
         strokeWidth="1.2"
       />
     </svg>

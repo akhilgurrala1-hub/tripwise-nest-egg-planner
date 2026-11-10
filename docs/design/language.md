@@ -13,28 +13,28 @@ enforced rules and the audit history are in `hig.md` and `src/test/design-system
 
 ## Brand
 
-| Part       | Value                                                                                                                                    |
-| ---------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
-| Mark       | A route drawn as a "W": hollow origin ring to a coral destination dot, on a blue tile (`Logo.tsx`; source of truth `public/favicon.svg`) |
-| Brand blue | `#2457E6` (`--primary`), fixed across themes                                                                                             |
-| Coral      | `#FF6B4A` (`--brand-coral`), only for "next / destination" cues and the logo                                                             |
-| Name       | Waypoint. Owner and contact are in `src/lib/legal.ts`                                                                                    |
+| Part   | Value                                                                                                                                               |
+| ------ | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Mark   | One route: hollow origin ring, a zigzag up, an orange destination dot, white on a deep teal tile (`Logo.tsx`; source of truth `public/favicon.svg`) |
+| Teal   | `#0B5C5A` (`--primary`), fixed in the mark                                                                                                          |
+| Orange | `#E0501A` in the mark; `--go` in the UI marks what moves the trip forward                                                                           |
+| Name   | Waypoint. Owner and contact are in `src/lib/legal.ts`                                                                                               |
 
 ## Color
 
-- **Light:** paper tinted from the brand blue, `oklch(0.968 0.008 255)`, with white cards and blue-black ink. Never cream, never pure white pages.
-- **Dark:** deep navy `oklch(0.165 0.024 258)` with lifted navy cards, never pure black.
-- **One accent.** Blue marks only what you can press or what is selected. Green (`go`) is for actions that move the trip forward. Warnings use `destructive`. Decorative icons and data stay gray.
-- **Trip types keep a hue** (`--trip-road`, `-flight`, `-cruise`, `-rail`, `-home`), used as a light tint (5 to 16%), never white text on color.
-- No gradients, glows or colored shadows. Violet is not used.
+- **Light:** cool mineral paper `oklch(0.971 0.003 170)`, white cards with a hairline edge, near-black teal ink. Never cream.
+- **Dark:** deep teal-black `oklch(0.186 0.014 187)` with lifted teal-black cards, never pure black.
+- **Deep teal fields:** the sidebar (darkest) and the Plan hero (brand teal) are `.theme-deep`. Text on them is white or a tinted near-white, never gray.
+- **Two roles.** Teal marks what you can press or what is selected. Orange (`go`) marks the action that moves the trip forward and "next" cues. Over budget uses `destructive` with a sign and a word, never color alone.
+- Trip types keep a hue (`--trip-*`), used as a light tint. No gradients, glows or violet.
 
 ## Type
 
-| Role                  | Face                                                  | Use                              |
-| --------------------- | ----------------------------------------------------- | -------------------------------- |
-| Headlines and amounts | Host Grotesk Variable, semibold 600, tracking -0.03em | `title-display`, `money-display` |
-| Text and controls     | Instrument Sans Variable                              | everything else                  |
-| Codes people copy     | system mono                                           | only that                        |
+| Role                  | Face                                                      | Use                              |
+| --------------------- | --------------------------------------------------------- | -------------------------------- |
+| Headlines and amounts | Bricolage Grotesque Variable, bold 700, tracking -0.035em | `title-display`, `money-display` |
+| Text and controls     | Figtree Variable                                          | everything else                  |
+| Codes people copy     | system mono                                               | only that                        |
 
 Both are self-hosted (OFL). No Inter, no Google Fonts request, no serif.
 
@@ -46,7 +46,7 @@ The scale has nine levels, each with its own size, line height, tracking and wei
 - **8px grid.** Multiples of 8 for padding, gaps and margins; 4px only inside a control.
 - **Pages** sit in `page-container` (up to 1216px, 16/24/40px side padding) and split on the 12-column grid: `layout-main-aside` (8 + 4) or `layout-5-7`.
 - **One app frame per screen size:** phones get a 48px top bar and a bottom tab bar (Plan, Overview, Budget, Days, More); tablets a left icon rail; laptops a 256px sidebar with the current trip.
-- **Plan hero:** the question, promise and assistant bar on the left, three real destination photos on the right from 1280px; one centered column below that.
+- **Plan hero:** a deep teal field: the question, promise and assistant bar on the left, three real destination photos on the right from 1280px; one centered column below that.
 - Whitespace separates groups before a border does. Panels inside cards use a divider, never a box in a box.
 
 ## Shape
