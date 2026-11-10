@@ -105,6 +105,12 @@ describe("surfaces", () => {
     expect(pills).toEqual([]);
   });
 
+  it("draws buttons as rounded rectangles, never pills", () => {
+    const button = SOURCES.find((f) => f.path.endsWith("components/ui/button.tsx"));
+    expect(button).toBeDefined();
+    expect(button!.text).not.toMatch(/\brounded-full\b/);
+  });
+
   it("rounds corners from the four-radius scale only, never by hand", () => {
     expect(find(/\brounded(?:-[a-z]{1,2})?-\[(?!inherit\])[^\]]+\]/g)).toEqual([]);
   });

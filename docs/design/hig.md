@@ -45,7 +45,7 @@ enforces the rules below, so a violation fails CI.
 - **No odd or fractional spacing** (`p-5`, `gap-1.5`, `mt-3`) and no arbitrary pixel spacing.
 - **No hand-tuned easing** (`cubic-bezier`, `ease-[...]`) and no transition durations picked by feel for things that move.
 - **No hover lifts or nudges.** Nothing should do something on hover that a finger can't trigger.
-- **No gradients, glows or colored shadows.** Buttons are capsules; chips, tags and badges are rounded rectangles, never pills.
+- **No gradients, glows or colored shadows.** Buttons, chips, tags and badges are rounded rectangles (buttons 12px), never pills.
 - **No script or mono display type, and no serif below headline size.** The serif (Newsreader) is for `title-display` headlines only; mono only for codes people copy.
 - **No staggered cascades on every navigation**, and no more than one moving thing competing for attention.
 - **No borders on cards**, and no heavy dimming behind dialogs.
@@ -237,7 +237,11 @@ The owner said the site still looked bad on every device and that the passes kep
 - **Phones:** a slim top bar and a bottom tab bar (Plan, Overview, Budget, Days, More). More is a sheet above the tabs with the trip, every section and the account and legal links. Pinned bars sit above the tabs (`--tabbar`).
 - **Tablets:** an icon rail with labels down the left.
 - **Laptops and desktops:** a sidebar with the current trip, the sections and the account, always in view. Content sits beside it at up to 1216px.
-- **Page headers:** title, trip facts and actions on the page itself, with the next step as a capsule. No banner and no second bar.
+- **Page headers:** title, trip facts and actions on the page itself, with the next step as a button. No banner and no second bar.
 - **Footer:** one quiet block instead of link columns.
 
 Checked at 360, 390, 820, 1280 and 1920px wide (no sideways overflow), axe in light, dark and mobile (clean), and Impeccable on seven pages (0 findings).
+
+## Twelfth pass: no pill buttons (November 2026)
+
+The owner ruled out pill-shaped buttons, along with the other marks of a generated site (purple gradients, emoji icons, em dashes, fake reviews, metrics or counters, scroll and cursor effects, vague hero copy). Buttons drop the capsule for the 12px control corner that fields and menus already use; round shapes stay only where nothing is written on them (icon buttons, avatars, dots, switches). `design-system.test.ts` fails if `button.tsx` uses `rounded-full` again.
