@@ -71,7 +71,8 @@ writeFileSync(
 );
 
 // Social share image (1200×630).
-const fontDir = (name) => new URL(`../node_modules/@fontsource-variable/${name}/files/`, import.meta.url).pathname;
+const fontDir = (name) =>
+  new URL(`../node_modules/@fontsource-variable/${name}/files/`, import.meta.url).pathname;
 const face = (family, name, file) =>
   `@font-face{font-family:${family};font-weight:200 900;src:url(data:font/woff2;base64,${readFileSync(join(fontDir(name), file)).toString("base64")}) format("woff2")}`;
 const routeBig = inner.replace(/stroke-width="3.6"/, 'stroke-width="3"');
