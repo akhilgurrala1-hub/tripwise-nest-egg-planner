@@ -19,7 +19,7 @@ import {
   Wallet,
   type LucideIcon,
 } from "lucide-react";
-import { useEffect, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 
 import { Logo, LogoMark } from "./Logo";
 import { useScrolled } from "./use-scrolled";
@@ -70,6 +70,10 @@ export function AppShell({ children }: { children: ReactNode }) {
   const tabPath = pathname === "/spending" ? "/budget" : pathname;
   const active = nav.find((n) => n.to === tabPath)?.to;
   const [menuOpen, setMenuOpen] = useState(false);
+  const closeMenu = useCallback(() => setMenuOpen(false), []);
+  // Every page that isn't one of the four tabs lives under More (Book, Road trip,
+  // account and legal pages), so More is the current tab there.
+  const moreActive = !(TABS as string[]).includes(tabPath);
   usePreloadTabs();
   // A new page closes the menu.
   useEffect(() => setMenuOpen(false), [pathname]);
@@ -90,7 +94,7 @@ export function AppShell({ children }: { children: ReactNode }) {
    */
   return (
     <div className="min-h-dvh bg-background md:grid md:grid-cols-[5rem_minmax(0,1fr)] lg:grid-cols-[16rem_minmax(0,1fr)]">
-      <Sidebar items={nav} active={active} />
+      <Sidebar items={nav} pathname={pathname} />
       <div className="flex min-h-dvh min-w-0 flex-col">
         <header
           data-scrolled={scrolled && !menuOpen}
@@ -122,10 +126,11 @@ export function AppShell({ children }: { children: ReactNode }) {
       <TabBar
         items={nav}
         active={active}
+        moreActive={moreActive}
         menuOpen={menuOpen}
         onMenu={() => setMenuOpen((o) => !o)}
       />
-      <MobileMenu open={menuOpen} items={nav} active={active} onClose={() => setMenuOpen(false)} />
+      <MobileMenu open={menuOpen} items={nav} pathname={pathname} onClose={closeMenu} />
     </div>
   );
 }
@@ -154,7 +159,7 @@ function TripSummary({ onCard = false }: { onCard?: boolean }) {
 }
 
 /** Tablets get an icon rail; laptops and desktops the full sidebar. Phones use the tab bar. */
-function Sidebar({ items, active }: { items: typeof NAV; active: string | undefined }) {
+function Sidebar({ items, pathname }: { items: typeof NAV; pathname: string }) {
   const { user } = useAuth();
   return (
     <header className="sticky top-0 hidden h-dvh flex-col border-r border-separator bg-card md:flex print:hidden">
@@ -175,7 +180,12 @@ function Sidebar({ items, active }: { items: typeof NAV; active: string | undefi
         <ul className="space-y-1">
           {items.map((item) => (
             <li key={item.to}>
-              <SideLink to={item.to} icon={item.icon} label={item.label} on={item.to === active} />
+              <SideLink
+                to={item.to}
+                icon={item.icon}
+                label={item.label}
+                on={item.to === pathname}
+              />
             </li>
           ))}
         </ul>
@@ -184,15 +194,33 @@ function Sidebar({ items, active }: { items: typeof NAV; active: string | undefi
         </p>
         <ul className="mt-2 space-y-1 border-t border-separator pt-2 lg:border-0 lg:pt-0">
           <li>
-            <SideLink to="/spending" icon={Coins} label="Spending" on={false} />
+            <SideLink to="/spending" icon={Coins} label="Spending" on={pathname === "/spending"} />
           </li>
           {user && (
             <>
               <li>
-                <SideLink to="/trips" icon={Bookmark} label="Saved trips" on={false} />
+                <SideLink
+                  to="/trips"
+                  icon={Bookmark}
+                  label="Saved trips"
+                  on={pathname === "/trips"}
+                />
               </li>
               <li>
-                <SideLink to="/profile" icon={Settings2} label="Profile" on={false} />
+                <SideLink
+                  to="/bookings"
+                  icon={Ticket}
+                  label="Bookings"
+                  on={pathname === "/bookings"}
+                />
+              </li>
+              <li>
+                <SideLink
+                  to="/profile"
+                  icon={Settings2}
+                  label="Profile"
+                  on={pathname === "/profile"}
+                />
               </li>
             </>
           )}
@@ -212,7 +240,7 @@ function SideLink({
   label,
   on,
 }: {
-  to: (typeof NAV)[number]["to"] | "/spending" | "/trips" | "/profile";
+  to: (typeof NAV)[number]["to"] | "/spending" | "/trips" | "/bookings" | "/profile";
   icon: LucideIcon;
   label: string;
   on: boolean;
@@ -241,17 +269,17 @@ const TABS: (typeof NAV)[number]["to"][] = ["/", "/dashboard", "/budget", "/itin
 function TabBar({
   items,
   active,
+  moreActive,
   menuOpen,
   onMenu,
 }: {
   items: typeof NAV;
   active: string | undefined;
+  moreActive: boolean;
   menuOpen: boolean;
   onMenu: () => void;
 }) {
   const tabs = items.filter((i) => TABS.includes(i.to));
-  // Pages that live under More (Book, Road trip) light up More.
-  const moreActive = !!active && !TABS.includes(active as (typeof TABS)[number]);
   return (
     <nav
       aria-label="Tabs"
@@ -280,6 +308,7 @@ function TabBar({
         <li>
           <button
             type="button"
+            id="more-button"
             onClick={onMenu}
             aria-expanded={menuOpen}
             aria-controls="mobile-menu"
@@ -299,23 +328,34 @@ function TabBar({
 
 /**
  * The phone's More sheet: the trip, every section and the account pages, above the
- * tab bar. Escape, a link or the More tab closes it.
+ * tab bar. Escape, a link or the More tab closes it. It isn't modal (the tab bar
+ * stays usable), but opening it moves keyboard focus into it and Escape hands
+ * focus back to the More tab.
  */
 function MobileMenu({
   open,
   items,
-  active,
+  pathname,
   onClose,
 }: {
   open: boolean;
   items: typeof NAV;
-  active: string | undefined;
+  pathname: string;
   onClose: () => void;
 }) {
   const { user } = useAuth();
+  const sheet = useRef<HTMLDivElement>(null);
+  // Only when it opens, so re-renders while open never pull focus back to the top.
+  useEffect(() => {
+    if (open) sheet.current?.querySelector<HTMLElement>("a[href], button")?.focus();
+  }, [open]);
   useEffect(() => {
     if (!open) return;
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== "Escape") return;
+      onClose();
+      document.getElementById("more-button")?.focus();
+    };
     window.addEventListener("keydown", onKey);
     const prev = document.body.style.overflow;
     document.body.style.overflow = "hidden";
@@ -338,8 +378,8 @@ function MobileMenu({
   return (
     <div
       id="mobile-menu"
+      ref={sheet}
       role="dialog"
-      aria-modal="true"
       aria-label="More"
       data-open={open}
       inert={!open}
@@ -359,11 +399,11 @@ function MobileMenu({
             >
               <Link
                 to={item.to}
-                aria-current={item.to === active ? "page" : undefined}
+                aria-current={item.to === pathname ? "page" : undefined}
                 onClick={onClose}
                 className={cn(
                   "flex h-12 items-center gap-4 px-4 text-body",
-                  item.to === active ? "font-semibold text-primary" : "text-foreground",
+                  item.to === pathname ? "font-semibold text-primary" : "text-foreground",
                 )}
               >
                 <Icon className="size-5 text-muted-foreground" strokeWidth={1.8} />

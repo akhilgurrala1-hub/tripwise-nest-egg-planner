@@ -780,7 +780,6 @@
 
 /* ---------- Layout: 8px spacing, 12-column grid ---------- */
 
-/* The page's column, as on apple.com: about 980px of content, 16px margins on phones, 24 above. */
 /* The content column beside the sidebar: wide enough for big screens, roomy margins on every size. */
 @utility page-container {
   margin-inline: auto;
