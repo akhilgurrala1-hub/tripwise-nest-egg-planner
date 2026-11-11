@@ -15,6 +15,7 @@ export function Photo({
   fallback = null,
   onFail,
   lazy = true,
+  priority = false,
 }: {
   src: string;
   alt: string;
@@ -25,6 +26,8 @@ export function Photo({
   fallback?: ReactNode;
   onFail?: () => void;
   lazy?: boolean;
+  /** The picture the page is waiting for: fetched first, never lazy. */
+  priority?: boolean;
 }) {
   const [state, setState] = useState<"loading" | "loaded" | "failed">("loading");
   useEffect(() => setState("loading"), [src]);
@@ -35,7 +38,8 @@ export function Photo({
       <img
         src={src}
         alt={alt}
-        loading={lazy ? "lazy" : "eager"}
+        loading={lazy && !priority ? "lazy" : "eager"}
+        fetchPriority={priority ? "high" : undefined}
         decoding="async"
         // A photo already in the cache never fires onLoad after hydration; the ref catches it.
         ref={(el) => {

@@ -9,6 +9,8 @@ import { formatMoney } from "@/lib/budget";
 import type { GeoPoint } from "@/lib/catalog";
 import { getDestination, modeForTripType, tripTypeInfo, type TripType } from "@/lib/demo-data";
 import { useHydrated } from "@/lib/live/use-live";
+import { useMinWidth } from "@/lib/use-media";
+import { thumbAt } from "@/lib/live/open-data";
 import { destinationSummaryOptions, useDestinationSummary } from "@/lib/live/use-open-data";
 import { recommendDestinations, type Suggestion } from "@/lib/recommend";
 import { TRIP_COLOR } from "@/components/app/trip-colors";
@@ -75,7 +77,7 @@ export function Inspiration({
   onPick: (destinationId: string, tripType: TripType) => void;
 }) {
   const hydrated = useHydrated();
-  const candidates = inspirationIdeas(setup, from, 8);
+  const candidates = inspirationIdeas(setup, from, 6);
   const photos = useQueries({
     queries: candidates.map((idea) =>
       destinationSummaryOptions(getDestination(idea.s.id), setup.origin, hydrated),
@@ -84,7 +86,7 @@ export function Inspiration({
   // A place without a real photo is left out once we know (never a blank tile in the row).
   const ideas = candidates
     .filter((_, i) => photos[i]?.isPending || photos[i]?.data?.image)
-    .slice(0, 6);
+    .slice(0, 5);
   // A gallery, as on apple.com: one row you can drag, fling and page with the arrows.
   const rail = useDragScroll<HTMLUListElement>();
   const [edge, setEdge] = useState({ start: true, end: false });
@@ -125,7 +127,13 @@ export function Inspiration({
       >
         {ideas.map((idea, i) => (
           <li key={idea.s.id} className="w-[70%] shrink-0 snap-start sm:w-72">
-            <IdeaCard idea={idea} origin={setup.origin} style={stagger(i + 1)} onPick={onPick} />
+            <IdeaCard
+              idea={idea}
+              origin={setup.origin}
+              style={stagger(i + 1)}
+              first={i < 2}
+              onPick={onPick}
+            />
           </li>
         ))}
       </ul>
@@ -158,11 +166,14 @@ function IdeaCard({
   idea,
   origin,
   style,
+  first,
   onPick,
 }: {
   idea: Idea;
   origin: string;
   style?: CSSProperties;
+  /** One of the first cards on screen: fetched at once, not when scrolled to */
+  first?: boolean;
   onPick: (destinationId: string, tripType: TripType) => void;
 }) {
   const dest = getDestination(idea.s.id);
@@ -181,8 +192,9 @@ function IdeaCard({
       <span className="relative isolate block aspect-[4/3] overflow-hidden rounded-2xl bg-fill">
         {photo?.image ? (
           <Photo
-            src={photo.image}
+            src={thumbAt(photo.image, 500)}
             alt=""
+            priority={first ?? false}
             className="absolute inset-0 -z-10"
             imgClassName="transition-[opacity,scale] duration-300 ease-out group-hover:scale-[1.03]"
           />
@@ -227,10 +239,12 @@ export function HeroPhotos({
   origin: string;
   onPick: (destinationId: string, tripType: TripType) => void;
 }) {
+  const wide = useMinWidth(1280);
   const hydrated = useHydrated();
+  // Phones and tablets never show these photos, so they never fetch them.
   const results = useQueries({
     queries: ideas.map((idea) =>
-      destinationSummaryOptions(getDestination(idea.s.id), origin, hydrated),
+      destinationSummaryOptions(getDestination(idea.s.id), origin, hydrated && wide),
     ),
   });
   const withPhoto = ideas
@@ -250,7 +264,11 @@ export function HeroPhotos({
             style={{ "--d": i * 140 } as CSSProperties}
           >
             {hit ? (
-              <HeroTile idea={hit.idea} image={hit.image} onPick={onPick} />
+              <HeroTile
+                idea={hit.idea}
+                image={i === 0 ? hit.image : thumbAt(hit.image, 500)}
+                onPick={onPick}
+              />
             ) : (
               <span aria-hidden className="skeleton block size-full rounded-2xl" />
             )}
@@ -280,7 +298,7 @@ function HeroTile({
       <Photo
         src={image}
         alt=""
-        lazy={false}
+        priority
         className="absolute inset-0 -z-10"
         imgClassName="transition-[opacity,scale] duration-300 ease-out group-hover:scale-[1.03]"
       />

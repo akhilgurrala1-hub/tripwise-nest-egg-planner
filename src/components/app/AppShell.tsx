@@ -77,6 +77,10 @@ export function AppShell({ children }: { children: ReactNode }) {
   // account and legal pages), so More is the current tab there.
   const moreActive = !(TABS as string[]).includes(tabPath);
   usePreloadTabs();
+  useEffect(() => {
+    const id = window.setTimeout(() => document.documentElement.classList.add("settled"), 4000);
+    return () => window.clearTimeout(id);
+  }, []);
   // A new page closes the menu.
   useEffect(() => setMenuOpen(false), [pathname]);
   // iOS Safari only shows :active (our press feedback) once a touchstart listener exists.
@@ -120,7 +124,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             </div>
           </div>
         </header>
-        <main key={pathname} className="pb-tabbar vt-page flex-1">
+        <main key={pathname} className="pb-tabbar flex-1">
           {children}
         </main>
         <Footer />
@@ -167,7 +171,7 @@ function Sidebar({ items, pathname }: { items: typeof NAV; pathname: string }) {
   // One highlight that springs to whichever link is current.
   const { ref, thumbRef, ready } = useActiveIndicator<HTMLElement>([pathname]);
   return (
-    <header className="theme-deep sidebar-ink vt-sidebar sticky top-0 hidden h-dvh flex-col md:flex print:hidden">
+    <header className="theme-deep sidebar-ink sticky top-0 hidden h-dvh flex-col md:flex print:hidden">
       <div className="flex h-16 shrink-0 items-center justify-center px-4 lg:justify-start lg:px-6">
         <Link to="/" className="flex items-center rounded-md" aria-label="Waypoint home">
           <LogoMark className="size-8 lg:hidden" />
@@ -491,6 +495,11 @@ function Footer() {
 function usePreloadTabs() {
   const router = useRouter();
   useEffect(() => {
+    // Pre-fetching every tab costs data and bandwidth: skip it on saver mode and slow networks.
+    const c = (
+      navigator as Navigator & { connection?: { saveData?: boolean; effectiveType?: string } }
+    ).connection;
+    if (c?.saveData || /^(slow-2g|2g|3g)$/.test(c?.effectiveType ?? "")) return;
     const warm = () => {
       for (const { to } of NAV) void router.preloadRoute({ to }).catch(() => undefined);
       void router.preloadRoute({ to: "/spending" }).catch(() => undefined);

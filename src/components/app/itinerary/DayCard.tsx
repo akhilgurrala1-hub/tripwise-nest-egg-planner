@@ -183,7 +183,7 @@ function ItemRow({
         )}
       </div>
       <div className="flex shrink-0 items-start gap-1">
-        <span className="pt-2">
+        <span className="tabular min-w-16 pt-2 text-right">
           <CostChip item={item} />
         </span>
         <span className="print:hidden">

@@ -15,7 +15,6 @@ import { AppShell } from "@/components/app/AppShell";
 import { Button } from "@/components/ui/button";
 import { Toaster } from "@/components/ui/sonner";
 import { AuthProvider } from "@/lib/auth-context";
-import { INTRO_BOOT_SCRIPT, IntroOverlay } from "@/components/app/Intro";
 import { LogoMark } from "@/components/app/Logo";
 import { THEME_BOOT_SCRIPT } from "@/lib/theme";
 
@@ -128,6 +127,9 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { rel: "icon", href: "/favicon.svg", type: "image/svg+xml" },
       { rel: "apple-touch-icon", href: "/apple-touch-icon.png" },
       { rel: "manifest", href: "/site.webmanifest" },
+      // Photos and their lookups come from Wikipedia and Wikimedia: open those connections early.
+      { rel: "preconnect", href: "https://en.wikipedia.org", crossOrigin: "anonymous" },
+      { rel: "preconnect", href: "https://thumb.wikimedia.org" },
     ],
   }),
   shellComponent: RootShell,
@@ -140,11 +142,10 @@ function RootShell({ children }: { children: ReactNode }) {
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        <script dangerouslySetInnerHTML={{ __html: THEME_BOOT_SCRIPT + INTRO_BOOT_SCRIPT }} />
+        <script dangerouslySetInnerHTML={{ __html: THEME_BOOT_SCRIPT }} />
         <HeadContent />
       </head>
       <body suppressHydrationWarning>
-        <IntroOverlay />
         {children}
         <Scripts />
       </body>

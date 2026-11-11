@@ -41,7 +41,7 @@
   --text-display--line-height: 1.05;
   --text-display--letter-spacing: -0.015em;
   --text-display--font-weight: 600;
-  --text-large-title: clamp(2.25rem, 1.5rem + 2.4vw, 3.5rem);
+  --text-large-title: clamp(2rem, 1.5rem + 2vw, 3rem);
   --text-large-title--line-height: 1.08;
   --text-large-title--letter-spacing: -0.005em;
   --text-large-title--font-weight: 600;
@@ -996,72 +996,6 @@
   }
 }
 
-/* Opening animation, a tiny trip: the tile lands, the route draws from the origin ring,
-   the destination dot arrives with a ripple, the wordmark wipes in, then the overlay lifts.
-   Pure CSS so it never waits on JavaScript; shown once per session (see Intro.tsx). */
-.intro {
-  position: fixed;
-  inset: 0;
-  z-index: 100;
-  display: grid;
-  place-items: center;
-  background: var(--background);
-  clip-path: inset(0 0 0 0);
-  animation: intro-out 0.6s var(--ease-out-expo) 1s forwards;
-  pointer-events: none;
-}
-.intro .logo-tile {
-  animation: logo-land 0.5s var(--ease-out-quint) both;
-}
-.intro .logo-origin {
-  animation: logo-pop 0.32s var(--ease-out-quint) 0.18s both;
-}
-.intro .logo-route {
-  /* Gap longer than the path, so no round cap peeks out at the far end before the line arrives. */
-  stroke-dasharray: 100 120;
-  animation: logo-draw 0.62s cubic-bezier(0.65, 0, 0.35, 1) 0.28s both;
-}
-.intro .logo-dest {
-  animation: logo-pop 0.36s var(--ease-out-quint) 0.82s both;
-}
-.intro .logo-ripple {
-  /* "forwards", not "both": during the delay the ripple must stay at its hidden base style. */
-  animation: logo-ripple 0.75s var(--ease-out-quint) 0.92s forwards;
-}
-.intro .logo-word {
-  animation: logo-word 0.55s var(--ease-out-quint) 0.62s both;
-}
-.no-intro .intro {
-  display: none;
-}
-@keyframes logo-land {
-  from {
-    opacity: 0;
-    transform: scale(0.55) rotate(-8deg);
-  }
-  to {
-    opacity: 1;
-    transform: none;
-  }
-}
-@keyframes logo-pop {
-  from {
-    opacity: 0;
-    transform: scale(0.6);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
-}
-@keyframes logo-draw {
-  from {
-    stroke-dashoffset: 100;
-  }
-  to {
-    stroke-dashoffset: 0;
-  }
-}
 @keyframes logo-ripple {
   from {
     opacity: 0.9;
@@ -1070,29 +1004,6 @@
   to {
     opacity: 0;
     transform: scale(2.8);
-  }
-}
-@keyframes logo-word {
-  from {
-    opacity: 0;
-    clip-path: inset(0 100% 0 0);
-    transform: translateX(-6px);
-  }
-  to {
-    opacity: 1;
-    clip-path: inset(0 0 0 0);
-    transform: none;
-  }
-}
-@keyframes intro-out {
-  to {
-    clip-path: inset(0 0 100% 0);
-    visibility: hidden;
-  }
-}
-@media (prefers-reduced-motion: reduce) {
-  .intro {
-    display: none;
   }
 }
 
@@ -1119,8 +1030,7 @@
   .render-lazy {
     content-visibility: visible !important;
   }
-  [data-sonner-toaster],
-  .intro {
+  [data-sonner-toaster] {
     display: none !important;
   }
 }
@@ -1253,10 +1163,6 @@
 :root {
   --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
 }
-/* The first screen of a session waits for the opening wipe. */
-html:not(.no-intro) {
-  --intro: 900ms;
-}
 
 @keyframes rise {
   from {
@@ -1324,17 +1230,6 @@ html:not(.no-intro) {
     translate: 0 0;
   }
 }
-@keyframes page-in {
-  from {
-    opacity: 0;
-    translate: 0 10px;
-  }
-}
-@keyframes page-out {
-  to {
-    opacity: 0;
-  }
-}
 
 /* The headline: each word rises out of its own line box. */
 .hero-line {
@@ -1346,34 +1241,34 @@ html:not(.no-intro) {
 }
 .hero-word {
   display: inline-block;
-  animation: word-up 1100ms var(--ease-out-expo) both;
-  animation-delay: calc(var(--w, 0) * 90ms + 150ms + var(--intro, 0ms));
+  animation: word-up 450ms var(--ease-out-expo) both;
+  animation-delay: calc(var(--w, 0) * 45ms);
 }
 /* The rest of the hero follows the headline. */
 .enter-rise {
-  animation: rise 900ms var(--ease-out-expo) both;
-  animation-delay: calc(var(--d, 0) * 1ms + 450ms + var(--intro, 0ms));
+  animation: rise 500ms var(--ease-out-expo) both;
+  animation-delay: calc(var(--d, 0) * 1ms + 90ms);
 }
 /* Photos open like a curtain while the picture settles inside its frame. */
 .enter-curtain {
-  animation: curtain 1200ms var(--ease-out-expo) both;
-  animation-delay: calc(var(--d, 0) * 1ms + 350ms + var(--intro, 0ms));
+  animation: curtain 650ms var(--ease-out-expo) both;
+  animation-delay: calc(var(--d, 0) * 1ms);
 }
 .enter-curtain img {
-  animation: photo-settle 1600ms var(--ease-out-expo) both;
-  animation-delay: calc(var(--d, 0) * 1ms + 350ms + var(--intro, 0ms));
+  animation: photo-settle 900ms var(--ease-out-expo) both;
+  animation-delay: calc(var(--d, 0) * 1ms);
 }
 /* The journey line along the hero's bottom edge: draws, then the destination lands. */
 .route-line {
   stroke-dasharray: 1;
   stroke-dashoffset: 1;
-  animation: route-draw 2200ms var(--ease-out-expo) calc(700ms + var(--intro, 0ms)) forwards;
+  animation: route-draw 1600ms var(--ease-out-expo) 250ms forwards;
 }
 .route-dot {
-  animation: dot-land 700ms var(--ease-out-expo) calc(2500ms + var(--intro, 0ms)) both;
+  animation: dot-land 450ms var(--ease-out-expo) 1500ms both;
 }
 .route-origin {
-  animation: dot-land 600ms var(--ease-out-expo) calc(600ms + var(--intro, 0ms)) both;
+  animation: dot-land 350ms var(--ease-out-expo) 250ms both;
 }
 /* Budget bars grow from their start. */
 .grow-x {
@@ -1384,8 +1279,7 @@ html:not(.no-intro) {
 
 /* Cards arrive as they scroll into view (only where scroll-driven animation exists). */
 @supports (animation-timeline: view()) {
-  main .reveal,
-  main .surface-card {
+  main .reveal {
     animation: slide-up linear both;
     animation-timeline: view();
     animation-range: entry 0% entry 30%;
@@ -1414,20 +1308,20 @@ html:not(.no-intro) {
   }
 }
 
-/* Page changes: the new page rises in; the sidebar and bars stay put. */
-.vt-sidebar {
-  view-transition-name: sidebar;
+/* Entrance animations belong to the first moments of a visit. Once the page has settled
+   (AppShell adds .settled), opening a tab never replays them. */
+.settled .hero-word,
+.settled .enter-rise,
+.settled .enter-curtain,
+.settled .enter-curtain img,
+.settled .route-origin,
+.settled .route-dot,
+.settled .grow-x {
+  animation: none;
 }
-.vt-page {
-  view-transition-name: page;
-}
-:root:active-view-transition-type(route) {
-  &::view-transition-old(page) {
-    animation: page-out 140ms ease-in both;
-  }
-  &::view-transition-new(page) {
-    animation: page-in 380ms var(--ease-out-expo) both;
-  }
+.settled .route-line {
+  animation: none;
+  stroke-dashoffset: 0;
 }
 
 @media (prefers-reduced-motion: reduce), print {
@@ -1438,8 +1332,7 @@ html:not(.no-intro) {
   .route-dot,
   .route-origin,
   .grow-x,
-  main .reveal,
-  main .surface-card {
+  main .reveal {
     animation: none !important;
   }
   .route-line {
@@ -1507,4 +1400,22 @@ html:not(.no-intro) {
   line-height: 0.85;
   letter-spacing: -0.06em;
   color: color-mix(in oklab, var(--primary) 78%, var(--background));
+}
+
+/* A light surface set inside a deep field (the Plan hero's search bar): the light tokens, restated. */
+.theme-paper {
+  color-scheme: light;
+  --card: oklch(1 0 0);
+  --foreground: oklch(0.21 0.017 189);
+  --muted-foreground: oklch(0.461 0.019 187);
+  --primary: oklch(0.431 0.071 192);
+  --primary-deep: oklch(0.37 0.064 192);
+  --primary-foreground: oklch(0.99 0 0);
+  --border: oklch(0.218 0.012 185 / 0.12);
+  --input: oklch(0.218 0.012 185 / 0.28);
+  --fill: oklch(0.218 0.012 185 / 0.06);
+  --ink: oklch(0.21 0.017 189);
+  --ink-foreground: oklch(0.985 0 0);
+  --ring: oklch(0.431 0.071 192);
+  color: var(--foreground);
 }

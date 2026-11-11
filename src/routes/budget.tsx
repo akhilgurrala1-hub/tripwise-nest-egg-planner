@@ -104,14 +104,15 @@ function BudgetPage() {
                 )}
               </div>
               <dl className="grid grid-cols-2 gap-x-6 gap-y-4 border-t border-separator pt-6 text-sm sm:grid-cols-4">
-                <Stat label="Emergency fund" value={totals.emergencyFund} />
-                <Stat label="To spend" value={totals.spendable} />
-                <Stat label="Planned" value={totals.planned} />
                 <Stat
                   label={totals.overBudget ? "Over by" : "Left"}
                   value={Math.abs(totals.remaining)}
                   tone={totals.overBudget ? "danger" : "success"}
+                  lead
                 />
+                <Stat label="Planned" value={totals.planned} />
+                <Stat label="To spend" value={totals.spendable} />
+                <Stat label="Emergency fund" value={totals.emergencyFund} />
               </dl>
             </div>
             <div className="mt-6">
@@ -135,7 +136,7 @@ function BudgetPage() {
           </section>
 
           {/* Categories */}
-          <section className="" style={stagger(2)}>
+          <section className="pt-4" style={stagger(2)}>
             <div className="mb-2 flex min-h-8 items-center justify-between">
               <h2 className="title-display text-title-1">Where your money goes</h2>
               {hasOverrides && (
@@ -185,7 +186,7 @@ function BudgetPage() {
             <p className="mt-2 text-footnote leading-relaxed text-muted-foreground">
               For flat tires, urgent care or a surprise night's stay.
             </p>
-            <p className="money-display mt-6 text-large-title">
+            <p className="money-display mt-6 text-title-1">
               <AnimatedMoney value={totals.emergencyFund} />
             </p>
             <p className="mt-2 text-xs text-muted-foreground">
@@ -222,17 +223,21 @@ function Stat({
   label,
   value,
   tone,
+  lead,
 }: {
   label: string;
   value: number;
   tone?: "success" | "danger";
+  /** The number the page is about: set larger than the rest */
+  lead?: boolean;
 }) {
   return (
     <div className="min-w-0">
       <dt className="text-xs text-muted-foreground">{label}</dt>
       <dd
         className={cn(
-          "mt-1 text-headline font-medium",
+          "mt-1 font-medium",
+          lead ? "money-display text-title-1" : "text-headline",
           tone === "success" && "text-success",
           tone === "danger" && "text-destructive",
         )}

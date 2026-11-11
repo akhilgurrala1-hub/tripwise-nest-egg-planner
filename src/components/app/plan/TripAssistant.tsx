@@ -58,15 +58,15 @@ const TIMEOUT_MS = 60_000;
 /** Quick starts: a short label to tap, and the full message it sends. */
 const EXAMPLES: { label: string; message: string }[] = [
   {
-    label: "Plan a mountain weekend for 2",
+    label: "Mountain weekend for 2",
     message: "A long weekend in the mountains for 2 in March, under $1,500",
   },
   {
-    label: "Plan a beach week for 4",
+    label: "Beach week for 4",
     message: "Somewhere warm with a beach for a family of 4 this summer",
   },
   {
-    label: "Find a short cruise",
+    label: "Short cruise",
     message: "A 4-night cruise from the closest port, comfortable but not fancy",
   },
 ];
@@ -130,7 +130,13 @@ export function TripAssistant({
   const { user, loading: authLoading } = useAuth();
   const { currency } = useLocale();
   const airports = useAirports();
-  const towns = useTowns();
+  // The 280KB towns table is only needed once the traveler starts typing (or a while after load).
+  const [wantTowns, setWantTowns] = useState(false);
+  const towns = useTowns(wantTowns);
+  useEffect(() => {
+    const id = window.setTimeout(() => setWantTowns(true), 6000);
+    return () => window.clearTimeout(id);
+  }, []);
   const homeAirport = airports && from ? airportFor(airports, from) : null;
   const { place } = useHomePlace();
   const [state, setState] = useState<Saved>({ turns: [], draft: null, pending: "" });
@@ -147,6 +153,7 @@ export function TripAssistant({
   useEffect(() => {
     const saved = load();
     setState(saved);
+    if (saved.pending || saved.turns.length) setWantTowns(true);
     if (saved.pending) setText(saved.pending);
     loaded.current = true;
   }, []);
@@ -443,7 +450,7 @@ export function TripAssistant({
             "flex gap-2 rounded-2xl border transition-[border-color,box-shadow,background-color] focus-within:border-primary focus-within:ring-4 focus-within:ring-primary/10",
             search
               ? // The hero: one wide search-style bar, like a travel app's "Where to?"
-                "items-center border-border bg-card p-2 pl-6 shadow-lift"
+                "theme-paper items-center border-border bg-card p-2 pl-6 shadow-lift"
               : "flex-col border-input bg-background/70 p-2 pl-4 focus-within:bg-card sm:flex-row sm:items-end",
           )}
         >
@@ -466,8 +473,9 @@ export function TripAssistant({
                   : "e.g. A long weekend somewhere with hiking and good food, 2 of us, about $1,200"
             }
             aria-label="Describe your trip"
+            onFocus={() => setWantTowns(true)}
             className={cn(
-              "w-full flex-1 resize-none bg-transparent leading-relaxed outline-none placeholder:text-muted-foreground",
+              "w-full flex-1 resize-none bg-transparent leading-relaxed outline-none placeholder:font-normal placeholder:text-muted-foreground",
               search ? "min-h-0 py-2 text-body sm:text-headline" : "min-h-9 py-2 text-body",
             )}
           />
@@ -510,8 +518,10 @@ export function TripAssistant({
             <p className={cn("eyebrow px-1", search && "sr-only")}>Or start with</p>
             <ul
               className={cn(
-                "mt-2 flex flex-wrap gap-2",
-                search && "justify-center xl:justify-start",
+                "mt-2 flex gap-2",
+                search
+                  ? "-mx-4 overflow-x-auto px-4 [scrollbar-width:none] sm:mx-0 sm:flex-wrap sm:justify-center sm:overflow-visible sm:px-0 xl:justify-start [&::-webkit-scrollbar]:hidden"
+                  : "flex-wrap",
               )}
             >
               {EXAMPLES.map((ex) => (
