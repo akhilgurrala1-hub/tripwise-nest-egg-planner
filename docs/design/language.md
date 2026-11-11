@@ -61,4 +61,4 @@ Plain, specific, short. Headlines name the thing. Buttons are a verb and an obje
 
 ## Detector
 
-`npx impeccable detect http://localhost:PORT/<page>` is clean except three rules the owner's brand pins on purpose, ignored in `.impeccable/config.json`: `numbered-section-labels` (the numbered mono labels), `italic-serif-display` (the italic emerald word) and `marquee` (the facts ticker: it is on the owner's own site, pauses on hover and with a Pause button, and stands still under reduced motion).
+`npx impeccable detect http://localhost:PORT/<page>` is clean except one rule the owner's brand pins on purpose, ignored in `.impeccable/config.json`: `italic-serif-display` (the italic emerald word).
