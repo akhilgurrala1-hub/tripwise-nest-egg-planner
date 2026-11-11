@@ -79,7 +79,7 @@ function Dashboard() {
                   )}
                 >
                   {totals.overBudget ? "−" : ""}
-                  <AnimatedMoney value={Math.abs(totals.remaining)} />
+                  <AnimatedMoney value={Math.abs(totals.remaining)} intro />
                 </p>
                 <ApproxMoney
                   usd={Math.abs(totals.remaining)}
@@ -112,12 +112,13 @@ function Dashboard() {
             {/* One stacked bar: every category in proportion, with the spending limit marked. */}
             <div className="relative mt-8">
               <div className="flex h-2.5 gap-px overflow-hidden rounded-full bg-muted">
-                {breakdown.map((d) => (
+                {breakdown.map((d, i) => (
                   <span
                     key={d.cat}
                     title={`${CATEGORY_LABELS[d.cat]} ${formatMoney(d.value)}`}
-                    className="h-full transition-[width] spring-smooth first:rounded-l-full last:rounded-r-full"
+                    className="grow-x h-full transition-[width] spring-smooth first:rounded-l-full last:rounded-r-full"
                     style={{
+                      ...stagger(i),
                       width: `${(d.value / scale) * 100}%`,
                       backgroundColor: CATEGORY_COLOR_VAR[d.cat],
                     }}

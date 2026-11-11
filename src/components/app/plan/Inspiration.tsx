@@ -3,6 +3,7 @@ import { useQueries } from "@tanstack/react-query";
 import { useEffect, useState, type CSSProperties } from "react";
 
 import { Photo } from "@/components/app/Photo";
+import { cn } from "@/lib/utils";
 import { stagger, useDragScroll } from "@/components/app/motion";
 import { formatMoney } from "@/lib/budget";
 import type { GeoPoint } from "@/lib/catalog";
@@ -173,7 +174,7 @@ function IdeaCard({
       type="button"
       style={{ ...style, "--kind": color } as CSSProperties}
       onClick={() => onPick(idea.s.id, idea.tripType)}
-      className="group block w-full rounded-2xl text-left pressable focus-visible:ring-4 focus-visible:ring-primary/30 focus-visible:outline-none"
+      className="group lift block w-full rounded-2xl text-left pressable focus-visible:ring-4 focus-visible:ring-primary/30 focus-visible:outline-none"
     >
       {/* The place on top, the facts under it: a travel app's listing card. */}
       <span className="relative isolate block aspect-[4/3] overflow-hidden rounded-2xl bg-fill">
@@ -242,7 +243,11 @@ export function HeroPhotos({
       {[0, 1, 2].map((i) => {
         const hit = withPhoto[i];
         return (
-          <li key={hit?.idea.s.id ?? i} className={i === 0 ? "row-span-2" : undefined}>
+          <li
+            key={hit?.idea.s.id ?? i}
+            className={cn("enter-curtain", i === 0 && "row-span-2")}
+            style={{ "--d": i * 140 } as CSSProperties}
+          >
             {hit ? (
               <HeroTile idea={hit.idea} image={hit.image} onPick={onPick} />
             ) : (

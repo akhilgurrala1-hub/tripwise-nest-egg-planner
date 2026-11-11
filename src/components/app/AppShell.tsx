@@ -22,6 +22,7 @@ import {
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 
 import { Logo, LogoMark } from "./Logo";
+import { useActiveIndicator } from "./motion";
 import { useScrolled } from "./use-scrolled";
 import { formatDateRange } from "./TripHeader";
 import { cn } from "@/lib/utils";
@@ -118,7 +119,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             </div>
           </div>
         </header>
-        <main key={pathname} className="pb-tabbar flex-1">
+        <main key={pathname} className="pb-tabbar vt-page flex-1">
           {children}
         </main>
         <Footer />
@@ -161,8 +162,10 @@ function TripSummary({ onCard = false }: { onCard?: boolean }) {
 /** Tablets get an icon rail; laptops and desktops the full sidebar. Phones use the tab bar. */
 function Sidebar({ items, pathname }: { items: typeof NAV; pathname: string }) {
   const { user } = useAuth();
+  // One highlight that springs to whichever link is current.
+  const { ref, thumbRef, ready } = useActiveIndicator<HTMLElement>([pathname]);
   return (
-    <header className="theme-deep sidebar-ink sticky top-0 hidden h-dvh flex-col md:flex print:hidden">
+    <header className="theme-deep sidebar-ink vt-sidebar sticky top-0 hidden h-dvh flex-col md:flex print:hidden">
       <div className="flex h-16 shrink-0 items-center justify-center px-4 lg:justify-start lg:px-6">
         <Link to="/" className="flex items-center rounded-md" aria-label="Waypoint home">
           <LogoMark className="size-8 lg:hidden" />
@@ -176,7 +179,18 @@ function Sidebar({ items, pathname }: { items: typeof NAV; pathname: string }) {
       <div className="hidden px-4 lg:block">
         <TripSummary />
       </div>
-      <nav aria-label="Main" className="mt-4 min-h-0 flex-1 overflow-y-auto px-2 lg:px-4">
+      <nav
+        ref={ref}
+        aria-label="Main"
+        data-ready={ready}
+        className="group/nav relative mt-4 min-h-0 flex-1 overflow-y-auto px-2 lg:px-4"
+      >
+        <span
+          ref={thumbRef}
+          aria-hidden
+          className="pointer-events-none absolute top-0 left-0 rounded-lg bg-fill before:absolute before:inset-y-2 before:left-0 before:w-[3px] before:rounded-xs before:bg-primary"
+          style={{ opacity: ready ? 1 : 0 }}
+        />
         <ul className="space-y-1">
           {items.map((item) => (
             <li key={item.to}>
@@ -249,11 +263,12 @@ function SideLink({
     <Link
       to={to}
       aria-current={on ? "page" : undefined}
+      data-active={on}
       title={label}
       className={cn(
         "pressable relative flex flex-col items-center gap-1 rounded-lg px-1 py-2 text-micro transition-colors duration-150 lg:h-10 lg:flex-row lg:gap-4 lg:px-4 lg:py-0 lg:text-footnote",
         on
-          ? "bg-fill font-semibold text-foreground before:absolute before:inset-y-2 before:left-0 before:w-[3px] before:rounded-xs before:bg-primary"
+          ? "font-semibold text-foreground group-data-[ready=false]/nav:bg-fill"
           : "text-foreground/75 hover:bg-fill hover:text-foreground",
       )}
     >
