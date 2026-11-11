@@ -63,7 +63,12 @@ Nothing is pill-shaped. Buttons are 44px tall (`sm` 32, `lg` 48), filled, and sh
 
 ## Motion
 
-Springs (`src/lib/spring.ts`, `SPRINGS`) drive anything that moves; CSS uses the same curves. Content is simply there: no fade-ins on load or scroll, no parallax, no count-ups. Numbers spring only when the traveler changes them. UI transitions stay at 300ms or less. Presses answer on touch-down (`pressable`). Reduced motion keeps quick crossfades and stops movement.
+Informed by what Awwwards winners share: one signature moment per screen, restraint, real photography, consistency on inner pages, and care for performance and accessibility.
+
+- **Signature moment:** the Plan hero. The opening wipe hands off to the headline rising word by word, photos opening like curtains and a journey line drawing to the orange dot.
+- **Details:** cards slide into view on scroll (slide only, never a fade, so text contrast never changes), budget bars grow, the main number counts up once, the sidebar highlight springs between pages, pages change with a soft rise, arrows glide on hover, and photo cards show a round "Plan" label that follows a fine pointer.
+- **Easing:** exponential ease-out (`--ease-out-expo`) and the spring tokens; no bounce. Presses answer on touch-down (`pressable`).
+- **Safety:** everything is off for reduced motion, scroll-driven parts only run where supported, no scroll hijacking, nothing moves for longer than the opening sequence.
 
 ## Voice
 

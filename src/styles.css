@@ -41,7 +41,7 @@
   --text-display--line-height: 1.05;
   --text-display--letter-spacing: -0.015em;
   --text-display--font-weight: 600;
-  --text-large-title: clamp(2rem, 1.5rem + 2vw, 3rem);
+  --text-large-title: clamp(2.25rem, 1.5rem + 2.4vw, 3.5rem);
   --text-large-title--line-height: 1.08;
   --text-large-title--letter-spacing: -0.005em;
   --text-large-title--font-weight: 600;
@@ -1006,7 +1006,8 @@
   display: grid;
   place-items: center;
   background: var(--background);
-  animation: intro-out 0.42s var(--ease-out-quint) 1.3s forwards;
+  clip-path: inset(0 0 0 0);
+  animation: intro-out 0.6s var(--ease-out-expo) 1s forwards;
   pointer-events: none;
 }
 .intro .logo-tile {
@@ -1085,7 +1086,7 @@
 }
 @keyframes intro-out {
   to {
-    opacity: 0;
+    clip-path: inset(0 0 100% 0);
     visibility: hidden;
   }
 }
@@ -1252,6 +1253,10 @@
 :root {
   --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
 }
+/* The first screen of a session waits for the opening wipe. */
+html:not(.no-intro) {
+  --intro: 900ms;
+}
 
 @keyframes rise {
   from {
@@ -1342,33 +1347,33 @@
 .hero-word {
   display: inline-block;
   animation: word-up 1100ms var(--ease-out-expo) both;
-  animation-delay: calc(var(--w, 0) * 90ms + 150ms);
+  animation-delay: calc(var(--w, 0) * 90ms + 150ms + var(--intro, 0ms));
 }
 /* The rest of the hero follows the headline. */
 .enter-rise {
   animation: rise 900ms var(--ease-out-expo) both;
-  animation-delay: calc(var(--d, 0) * 1ms + 450ms);
+  animation-delay: calc(var(--d, 0) * 1ms + 450ms + var(--intro, 0ms));
 }
 /* Photos open like a curtain while the picture settles inside its frame. */
 .enter-curtain {
   animation: curtain 1200ms var(--ease-out-expo) both;
-  animation-delay: calc(var(--d, 0) * 1ms + 350ms);
+  animation-delay: calc(var(--d, 0) * 1ms + 350ms + var(--intro, 0ms));
 }
 .enter-curtain img {
   animation: photo-settle 1600ms var(--ease-out-expo) both;
-  animation-delay: calc(var(--d, 0) * 1ms + 350ms);
+  animation-delay: calc(var(--d, 0) * 1ms + 350ms + var(--intro, 0ms));
 }
 /* The journey line along the hero's bottom edge: draws, then the destination lands. */
 .route-line {
   stroke-dasharray: 1;
   stroke-dashoffset: 1;
-  animation: route-draw 2200ms var(--ease-out-expo) 700ms forwards;
+  animation: route-draw 2200ms var(--ease-out-expo) calc(700ms + var(--intro, 0ms)) forwards;
 }
 .route-dot {
-  animation: dot-land 700ms var(--ease-out-expo) 2500ms both;
+  animation: dot-land 700ms var(--ease-out-expo) calc(2500ms + var(--intro, 0ms)) both;
 }
 .route-origin {
-  animation: dot-land 600ms var(--ease-out-expo) 600ms both;
+  animation: dot-land 600ms var(--ease-out-expo) calc(600ms + var(--intro, 0ms)) both;
 }
 /* Budget bars grow from their start. */
 .grow-x {
@@ -1447,4 +1452,59 @@
   .lift:hover {
     translate: none;
   }
+}
+
+/* ---------- Signature details ---------- */
+/* The footer's oversized wordmark: the brand, set as large as the page allows. */
+.footer-mark {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 232px;
+  letter-spacing: -0.055em;
+  fill: color-mix(in oklab, var(--primary) 14%, var(--background));
+  user-select: none;
+}
+
+/* A label that follows the pointer over photo cards (fine pointers only). */
+.cursor-label {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 60;
+  display: grid;
+  place-items: center;
+  width: 4.5rem;
+  height: 4.5rem;
+  border-radius: 9999px;
+  background: var(--card);
+  color: var(--foreground);
+  font-size: 0.8125rem;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 200ms ease-out;
+  box-shadow: 0 6px 24px -6px oklch(0 0 0 / 0.35);
+}
+.cursor-label[data-on="true"] {
+  opacity: 1;
+}
+.has-cursor-label [data-cursor] {
+  cursor: none;
+}
+@media (prefers-reduced-motion: reduce), (hover: none) {
+  .cursor-label {
+    display: none;
+  }
+  .has-cursor-label [data-cursor] {
+    cursor: pointer;
+  }
+}
+.not-found-mark {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: clamp(7rem, 28vw, 20rem);
+  line-height: 0.85;
+  letter-spacing: -0.06em;
+  color: color-mix(in oklab, var(--primary) 78%, var(--background));
 }
