@@ -477,11 +477,7 @@ function ExpenseForm({ editing, onDone }: { editing: Expense | null; onDone: () 
                       : "border-border text-muted-foreground hover:text-foreground",
                   )}
                 >
-                  <Icon
-                    className="size-4 shrink-0"
-                    style={{ color: CATEGORY_COLOR_VAR[c] }}
-                    aria-hidden
-                  />
+                  <Icon className="size-4 shrink-0 text-muted-foreground" aria-hidden />
                   <span className="min-w-0 leading-tight">{SPEND_LABELS[c]}</span>
                 </button>
               );

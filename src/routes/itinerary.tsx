@@ -90,7 +90,7 @@ function ItineraryPage() {
             onClick={planner.planWithOpenData}
             loading={planner.job === "open"}
             disabled={planner.busy}
-            className="flex-1 sm:flex-none"
+            className="flex-1 sm:flex-none sm:bg-fill sm:text-foreground sm:hover:bg-secondary"
           >
             <MapPin />
             {planner.job === "open" ? "Finding places…" : "Use real places"}

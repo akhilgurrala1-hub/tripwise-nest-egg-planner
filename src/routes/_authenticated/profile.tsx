@@ -89,9 +89,7 @@ function ProfilePage() {
       <PageHeader title="Profile & preferences" showTrip={false} />
       <div className="mx-auto mt-6 max-w-3xl space-y-6 px-4">
         <section className="surface-card p-6">
-          <p className="text-xs font-semibold tracking-wider text-muted-foreground uppercase">
-            Signed in as
-          </p>
+          <p className="text-footnote text-muted-foreground">Signed in as</p>
           <p className="font-semibold">{email}</p>
           <div className="mt-4 flex flex-wrap gap-4 text-sm">
             <Link

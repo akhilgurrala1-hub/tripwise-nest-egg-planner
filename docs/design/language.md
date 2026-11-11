@@ -17,7 +17,7 @@ enforced rules and the audit history are in `hig.md` and `src/test/design-system
 | ------ | --------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Mark   | One route: hollow origin ring, a zigzag up, an orange destination dot, white on a deep teal tile (`Logo.tsx`; source of truth `public/favicon.svg`) |
 | Teal   | `#0B5C5A` (`--primary`), fixed in the mark                                                                                                          |
-| Orange | `#E0501A` in the mark; `--go` in the UI marks what moves the trip forward                                                                           |
+| Orange | `#E0501A`, only in the mark (the destination dot)                                                                                                   |
 | Name   | Waypoint. Owner and contact are in `src/lib/legal.ts`                                                                                               |
 
 ## Color
@@ -25,18 +25,12 @@ enforced rules and the audit history are in `hig.md` and `src/test/design-system
 - **Light:** cool mineral paper `oklch(0.971 0.003 170)`, white cards with a hairline edge, near-black teal ink. Never cream.
 - **Dark:** deep teal-black `oklch(0.186 0.014 187)` with lifted teal-black cards, never pure black.
 - **Deep teal fields:** the sidebar (darkest) and the Plan hero (brand teal) are `.theme-deep`. Text on them is white or a tinted near-white, never gray.
-- **Two roles.** Teal marks what you can press or what is selected. Orange (`go`) marks the action that moves the trip forward and "next" cues. Over budget uses `destructive` with a sign and a word, never color alone.
+- **One accent.** Teal marks what you can press or what is selected, and every primary action is the same teal (one per screen). Orange lives only in the logo mark. Over budget uses `destructive` with a sign and a word, never color alone.
 - Trip types keep a hue (`--trip-*`), used as a light tint. No gradients, glows or violet.
 
 ## Type
 
-| Role                  | Face                                                      | Use                              |
-| --------------------- | --------------------------------------------------------- | -------------------------------- |
-| Headlines and amounts | Bricolage Grotesque Variable, bold 700, tracking -0.035em | `title-display`, `money-display` |
-| Text and controls     | Figtree Variable                                          | everything else                  |
-| Codes people copy     | system mono                                               | only that                        |
-
-Both are self-hosted (OFL). No Inter, no Google Fonts request, no serif.
+One family. The system face (`-apple-system`, so SF Pro with its optical sizes on Apple devices), with self-hosted Hanken Grotesk (OFL) as the fallback on every other device. Headlines and amounts are weight 650 with tracking -0.028em; text is regular and medium. Mono only for codes people copy. No Inter, no Google Fonts request, no serif.
 
 The scale has nine levels, each with its own size, line height, tracking and weight:
 `text-display` (48 to 80px), `text-large-title` (32 to 48), `text-title-1` (26), `text-title-2` (22), `text-headline` (21), `text-body` (17), `text-footnote` (14), `text-caption` and `text-micro` (12). No one-off sizes. The smallest text is 12px. Page titles use `text-large-title`; only the Plan hero uses `text-display`.

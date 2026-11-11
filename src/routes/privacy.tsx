@@ -152,7 +152,7 @@ function PrivacyPage() {
           <li>Data in your browser stays until you clear it.</li>
           <li>
             Account data stays until you delete it or ask us to. Deleting a saved trip in{" "}
-            <Link to="/trips" className="text-primary underline-offset-2 hover:underline">
+            <Link to="/trips" className="text-primary underline underline-offset-2">
               Saved trips
             </Link>{" "}
             removes it from your account right away; write to us if you want it permanently erased

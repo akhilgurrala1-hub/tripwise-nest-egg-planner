@@ -322,7 +322,7 @@ function Welcome() {
   const approximate =
     !touched.current && home.place?.source === "approximate" && form.origin === home.place.label;
 
-  const heroIdeas = inspirationIdeas(effective, originPoint, 3);
+  const heroIdeas = inspirationIdeas(effective, originPoint, 8);
 
   const pickIdea = (destinationId: string, tripType: TripType) => {
     destPicked.current = true;

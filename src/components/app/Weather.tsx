@@ -131,7 +131,11 @@ export function WeatherCard({ className }: { className?: string }) {
 
       {w.status === "ready" && days.length > 0 && (
         <>
-          <ol className="-mx-1 mt-4 flex snap-x gap-2 overflow-x-auto px-1 pb-1">
+          <ol
+            tabIndex={0}
+            aria-label="Daily forecast"
+            className="-mx-1 mt-4 flex snap-x gap-2 overflow-x-auto px-1 pb-1"
+          >
             {days.map((d) => {
               const Icon = WEATHER_ICON[d.kind];
               return (
