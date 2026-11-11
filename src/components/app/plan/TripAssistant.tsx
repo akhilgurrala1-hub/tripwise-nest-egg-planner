@@ -322,7 +322,7 @@ export function TripAssistant({
             t.role === "user" ? (
               <p
                 key={i}
-                className="ml-auto w-fit max-w-[85%] rounded-2xl rounded-br-md bg-ink px-4 py-2 text-sm text-ink-foreground"
+                className="ml-auto w-fit max-w-[85%] rounded-2xl rounded-br-md bg-primary px-4 py-2 text-sm text-primary-foreground"
               >
                 {t.content}
               </p>

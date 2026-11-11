@@ -115,7 +115,7 @@ function CostLine({
         <div
           className={cn(
             "h-full rounded-full transition-[width] spring-smooth",
-            fit === "over" ? "bg-destructive" : "bg-foreground",
+            fit === "over" ? "bg-destructive" : "bg-primary",
           )}
           style={{ width: `${pct}%` }}
         />

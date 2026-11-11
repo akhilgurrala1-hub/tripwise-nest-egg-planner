@@ -123,7 +123,7 @@ describe("surfaces", () => {
     expect(fields).toContain("input");
     for (const f of fields) {
       const src = readFileSync(join(ui, `${f}.tsx`), "utf8");
-      expect(src, `${f}.tsx`).toMatch(/rounded-xl border border-input bg-fill/);
+      expect(src, `${f}.tsx`).toMatch(/rounded-xl border border-input bg-card/);
       expect(src, `${f}.tsx`).not.toMatch(/\bshadow-sm\b/);
     }
   });
@@ -200,11 +200,12 @@ describe("no template tells", () => {
     expect(find(/<img\b/g, (p) => p.endsWith("Photo.tsx"))).toEqual([]);
   });
 
-  it("sets headlines in Bricolage Grotesque and text in Figtree, both self-hosted (no magazine serif)", () => {
+  it("sets everything in the system face (SF on Apple devices) with self-hosted Hanken Grotesk as the fallback (no magazine serif)", () => {
     const css = readFileSync(join(SRC, "styles.css"), "utf8");
-    const face = (name: string) => css.match(new RegExp(`--font-${name}:\\s*"([^"]+)"`))?.[1];
-    expect(face("display")).toBe("Bricolage Grotesque Variable");
-    expect(face("sans")).toBe("Figtree Variable");
+    for (const name of ["display", "sans"]) {
+      const stack = css.match(new RegExp(`--font-${name}:([^;]+);`))?.[1] ?? "";
+      expect(stack).toMatch(/^\s*-apple-system,[^"]*"Hanken Grotesk Variable"/);
+    }
     expect(css).not.toMatch(/newsreader/i);
   });
 

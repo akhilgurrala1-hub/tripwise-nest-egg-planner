@@ -18,11 +18,11 @@ const buttonVariants = cva(
         secondary: "bg-fill text-secondary-foreground hover:bg-secondary",
         ghost: "text-foreground hover:bg-fill",
         link: "text-primary underline-offset-4 hover:underline [&]:h-auto [&]:px-0",
-        // Primary call to action: solid ink, inverts in dark mode.
-        hero: "bg-ink font-semibold text-ink-foreground hover:opacity-90",
+        // Primary call to action: the same teal as every primary action.
+        hero: "bg-primary font-semibold text-primary-foreground hover:bg-primary-deep",
         // "Go" actions that move the trip forward (Plan trip, Start planning).
         go: "bg-go font-semibold text-go-foreground hover:bg-go-deep",
-        ink: "bg-ink font-semibold text-ink-foreground hover:opacity-90",
+        ink: "bg-primary font-semibold text-primary-foreground hover:bg-primary-deep",
         shield: "bg-shield text-shield-foreground hover:opacity-90",
         success: "bg-fill text-foreground hover:text-success",
       },

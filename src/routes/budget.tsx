@@ -119,7 +119,7 @@ function BudgetPage() {
                 <div
                   className={cn(
                     "h-full rounded-full transition-[width] spring-smooth",
-                    totals.overBudget ? "bg-destructive" : "bg-foreground",
+                    totals.overBudget ? "bg-destructive" : "bg-primary",
                   )}
                   style={{
                     width: `${totals.percentUsed === null ? (totals.planned > 0 ? 100 : 0) : Math.min(100, totals.percentUsed)}%`,

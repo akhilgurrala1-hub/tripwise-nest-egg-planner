@@ -253,7 +253,7 @@ function SideLink({
       className={cn(
         "pressable relative flex flex-col items-center gap-1 rounded-lg px-1 py-2 text-micro transition-colors duration-150 lg:h-10 lg:flex-row lg:gap-4 lg:px-4 lg:py-0 lg:text-footnote",
         on
-          ? "bg-fill font-semibold text-foreground before:absolute before:inset-y-2 before:left-0 before:w-[3px] before:rounded-xs before:bg-go"
+          ? "bg-fill font-semibold text-foreground before:absolute before:inset-y-2 before:left-0 before:w-[3px] before:rounded-xs before:bg-primary"
           : "text-foreground/75 hover:bg-fill hover:text-foreground",
       )}
     >

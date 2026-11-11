@@ -78,12 +78,12 @@ const face = (family, name, file) =>
 const routeBig = inner.replace(/stroke-width="3.6"/, 'stroke-width="3"');
 await page.setViewportSize({ width: 1200, height: 630 });
 await page.setContent(`<html><head><style>
-  ${face("Bricolage", "bricolage-grotesque", "bricolage-grotesque-latin-wght-normal.woff2")}${face("Figtree", "figtree", "figtree-latin-wght-normal.woff2")}
-  body{margin:0;width:1200px;height:630px;background:#F4F6F5;font-family:Figtree,system-ui,sans-serif;color:#0F1B1A;overflow:hidden;position:relative}
+  ${face("Hanken", "hanken-grotesk", "hanken-grotesk-latin-wght-normal.woff2")}
+  body{margin:0;width:1200px;height:630px;background:#F4F6F5;font-family:Hanken,system-ui,sans-serif;color:#0F1B1A;overflow:hidden;position:relative}
   .wrap{position:absolute;left:88px;top:84px;right:520px}
   .lock{display:flex;align-items:center;gap:18px}
-  .word{font-family:Bricolage,sans-serif;font-size:44px;font-weight:700;letter-spacing:-0.03em}
-  h1{font-family:Bricolage,sans-serif;margin:88px 0 0;font-size:68px;line-height:1.02;font-weight:700;letter-spacing:-0.035em}
+  .word{font-family:Hanken,sans-serif;font-size:44px;font-weight:650;letter-spacing:-0.03em}
+  h1{font-family:Hanken,sans-serif;margin:88px 0 0;font-size:68px;line-height:1.04;font-weight:650;letter-spacing:-0.03em}
   p{margin:22px 0 0;font-size:26px;line-height:1.4;color:#4D5C5A;letter-spacing:-0.01em}
   .art{position:absolute;right:56px;top:118px;width:420px;height:350px}
   .rule{position:absolute;left:88px;right:88px;bottom:64px;height:1px;background:#D5DDDB}

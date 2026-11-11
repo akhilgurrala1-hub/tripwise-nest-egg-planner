@@ -1,4 +1,5 @@
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { useQueries } from "@tanstack/react-query";
 import { useEffect, useState, type CSSProperties } from "react";
 
 import { Photo } from "@/components/app/Photo";
@@ -6,7 +7,8 @@ import { stagger, useDragScroll } from "@/components/app/motion";
 import { formatMoney } from "@/lib/budget";
 import type { GeoPoint } from "@/lib/catalog";
 import { getDestination, modeForTripType, tripTypeInfo, type TripType } from "@/lib/demo-data";
-import { useDestinationSummary } from "@/lib/live/use-open-data";
+import { useHydrated } from "@/lib/live/use-live";
+import { destinationSummaryOptions, useDestinationSummary } from "@/lib/live/use-open-data";
 import { recommendDestinations, type Suggestion } from "@/lib/recommend";
 import { TRIP_COLOR } from "@/components/app/trip-colors";
 import { TRIP_ICONS } from "@/components/app/TripTypePicker";
@@ -71,7 +73,17 @@ export function Inspiration({
   nights: number;
   onPick: (destinationId: string, tripType: TripType) => void;
 }) {
-  const ideas = inspirationIdeas(setup, from);
+  const hydrated = useHydrated();
+  const candidates = inspirationIdeas(setup, from, 8);
+  const photos = useQueries({
+    queries: candidates.map((idea) =>
+      destinationSummaryOptions(getDestination(idea.s.id), setup.origin, hydrated),
+    ),
+  });
+  // A place without a real photo is left out once we know (never a blank tile in the row).
+  const ideas = candidates
+    .filter((_, i) => photos[i]?.isPending || photos[i]?.data?.image)
+    .slice(0, 6);
   // A gallery, as on apple.com: one row you can drag, fling and page with the arrows.
   const rail = useDragScroll<HTMLUListElement>();
   const [edge, setEdge] = useState({ start: true, end: false });
@@ -200,8 +212,9 @@ function IdeaCard({
 
 /**
  * The hero's picture: three real places from the traveler's start, one tall and two
- * short, each a tap away from becoming the destination. Large screens only; phones
- * go straight to the ideas row.
+ * short, each a tap away from becoming the destination. Only places with a real photo
+ * are shown (a frame waits while photos load), so there is never a blank tile. Large
+ * screens only; phones go straight to the ideas row.
  */
 export function HeroPhotos({
   ideas,
@@ -212,52 +225,58 @@ export function HeroPhotos({
   origin: string;
   onPick: (destinationId: string, tripType: TripType) => void;
 }) {
-  const shown = ideas.slice(0, 3);
-  if (shown.length < 3) return null;
+  const hydrated = useHydrated();
+  const results = useQueries({
+    queries: ideas.map((idea) =>
+      destinationSummaryOptions(getDestination(idea.s.id), origin, hydrated),
+    ),
+  });
+  const withPhoto = ideas
+    .map((idea, i) => ({ idea, image: results[i]?.data?.image ?? null }))
+    .filter((x): x is { idea: Idea; image: string } => !!x.image)
+    .slice(0, 3);
+  const pending = results.some((r) => r.isPending);
+  if (withPhoto.length < 3 && !pending) return null;
   return (
     <ul className="hidden h-[26rem] grid-cols-2 grid-rows-2 gap-4 xl:grid">
-      {shown.map((idea, i) => (
-        <li key={idea.s.id} className={i === 0 ? "row-span-2" : undefined}>
-          <HeroTile idea={idea} origin={origin} onPick={onPick} />
-        </li>
-      ))}
+      {[0, 1, 2].map((i) => {
+        const hit = withPhoto[i];
+        return (
+          <li key={hit?.idea.s.id ?? i} className={i === 0 ? "row-span-2" : undefined}>
+            {hit ? (
+              <HeroTile idea={hit.idea} image={hit.image} onPick={onPick} />
+            ) : (
+              <span aria-hidden className="skeleton block size-full rounded-2xl" />
+            )}
+          </li>
+        );
+      })}
     </ul>
   );
 }
 
 function HeroTile({
   idea,
-  origin,
+  image,
   onPick,
 }: {
   idea: Idea;
-  origin: string;
+  image: string;
   onPick: (destinationId: string, tripType: TripType) => void;
 }) {
-  const dest = getDestination(idea.s.id);
-  const photo = useDestinationSummary(dest, origin).data;
-  const Icon = TRIP_ICONS[idea.tripType];
   return (
     <button
       type="button"
       onClick={() => onPick(idea.s.id, idea.tripType)}
       className="group relative isolate block size-full overflow-hidden rounded-2xl bg-fill text-left pressable focus-visible:ring-4 focus-visible:ring-primary/30 focus-visible:outline-none"
     >
-      {photo?.image ? (
-        <Photo
-          src={photo.image}
-          alt=""
-          lazy={false}
-          className="absolute inset-0 -z-10"
-          imgClassName="transition-[opacity,scale] duration-300 ease-out group-hover:scale-[1.03]"
-        />
-      ) : (
-        <Icon
-          aria-hidden
-          className="absolute inset-0 m-auto size-10 text-muted-foreground"
-          strokeWidth={1.5}
-        />
-      )}
+      <Photo
+        src={image}
+        alt=""
+        lazy={false}
+        className="absolute inset-0 -z-10"
+        imgClassName="transition-[opacity,scale] duration-300 ease-out group-hover:scale-[1.03]"
+      />
       <span className="absolute bottom-4 left-4 max-w-[calc(100%-2rem)] rounded-md bg-card px-4 py-2">
         <span className="block truncate text-footnote font-semibold text-foreground">
           {idea.s.name}

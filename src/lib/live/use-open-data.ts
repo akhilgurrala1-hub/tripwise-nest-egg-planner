@@ -32,16 +32,19 @@ export function photoQueries(dest: DemoDestination, origin: string): string[] {
 }
 
 /** Photo and introduction for a destination (Wikipedia, free), checked to be about that place. */
-export function useDestinationSummary(dest: DemoDestination, origin: string) {
-  const hydrated = useHydrated();
+export function destinationSummaryOptions(
+  dest: DemoDestination,
+  origin: string,
+  hydrated: boolean,
+) {
   const queries = photoQueries(dest, origin);
   const near =
     dest.anchor && dest.id !== "custom" && dest.id !== "hometown"
       ? { lat: dest.anchor.lat, lon: dest.anchor.lon }
       : null;
-  return useQuery({
+  return {
     queryKey: ["live", "wiki-summary", queries.join("|").toLowerCase(), near?.lat, near?.lon],
-    queryFn: async ({ signal }) => {
+    queryFn: async ({ signal }: { signal: AbortSignal }) => {
       for (const q of queries) {
         const found = await fetchPlaceSummary(q, signal, near);
         if (found) return found;
@@ -51,7 +54,12 @@ export function useDestinationSummary(dest: DemoDestination, origin: string) {
     enabled: hydrated && queries.length > 0,
     staleTime: 7 * 24 * 60 * 60 * 1000,
     retry: 1,
-  });
+  };
+}
+
+export function useDestinationSummary(dest: DemoDestination, origin: string) {
+  const hydrated = useHydrated();
+  return useQuery(destinationSummaryOptions(dest, origin, hydrated));
 }
 
 /** The travel-guide lookup for a destination, shared by the Overview and the planner (cached). */
