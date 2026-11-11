@@ -40,7 +40,7 @@ const NEXT_STEP: Record<string, { label: string; to: "/book" | "/itinerary" | "/
  * page: trip type (switchable in place), destination, dates and travelers, with a
  * link back to the full setup.
  */
-/** The last word of a title set in italic emerald, the way the brand sets one word of every headline. */
+/** The last word of a title colored, the way the brand sets one word of every headline. */
 function accentTitle(title: string): ReactNode {
   const i = title.lastIndexOf(" ");
   if (i < 0) return title;

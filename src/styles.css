@@ -18,8 +18,8 @@
 /*
  * Waypoint design system: the ARG Core editorial language, with apple.com's craft.
  * - Type: Inter only. Bold headlines, regular body at 16px or more, sentence-case labels.
- * - Color: a near-black green ground (#08100d) with warm cream ink (#f5f1e8) and emerald;
- *   the light theme is the same system on cream paper. Hairline rules instead of boxes.
+ * - Color: 60% warm cream canvas, 30% deep midnight blue (text, bars, dark mode), 10% burnt coral
+ *   for the one primary action per screen; emerald only for success and confirmed states.
  * - Shape: sharp 4px surfaces, pill buttons, 8px fields.
  * - Motion: exponential ease-out, one authored moment per screen, springs for direct manipulation.
  * - Space: an 8px grid. All colors are oklch tokens; components use semantic classes only.
@@ -324,54 +324,54 @@
   --radius: 12px;
   color-scheme: light;
   /* apple.com: a light-gray page (#f5f5f7), white tiles, #1d1d1f text. */
-  --background: oklch(0.985 0.004 160);
-  --foreground: oklch(0.21 0.02 170);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.21 0.02 170);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.21 0.02 170);
+  --background: oklch(0.962 0.016 85);
+  --foreground: oklch(0.24 0.06 262);
+  --card: oklch(0.985 0.01 85);
+  --card-foreground: oklch(0.24 0.06 262);
+  --popover: oklch(0.99 0.008 85);
+  --popover-foreground: oklch(0.24 0.06 262);
   /* The one accent: interactive, selected, focused. */
   /* Brand blue (#2457E6), the logo's tile color, doubles as the interactive accent. */
-  --primary: oklch(0.401 0.072 168);
-  --primary-deep: oklch(0.324 0.057 168);
-  --primary-foreground: oklch(0.985 0.004 160);
+  --primary: oklch(0.42 0.13 262);
+  --primary-deep: oklch(0.34 0.11 262);
+  --primary-foreground: oklch(0.985 0.01 85);
   /* Fills (#e8e8ed) for secondary controls and tracks. */
-  --secondary: oklch(0.955 0.006 160);
-  --secondary-foreground: oklch(0.21 0.02 170);
-  --muted: oklch(0.955 0.006 160);
-  --muted-foreground: oklch(0.42 0.02 170);
-  --accent: oklch(0.924 0.017 125);
-  --accent-foreground: oklch(0.21 0.02 170);
-  --fill: oklch(0.163 0.014 170 / 0.05);
+  --secondary: oklch(0.93 0.018 85);
+  --secondary-foreground: oklch(0.24 0.06 262);
+  --muted: oklch(0.93 0.018 85);
+  --muted-foreground: oklch(0.43 0.04 262);
+  --accent: oklch(0.925 0.025 85);
+  --accent-foreground: oklch(0.24 0.06 262);
+  --fill: oklch(0.24 0.06 262 / 0.05);
   /* Legacy warm tokens now resolve to the accent / neutrals. */
   --sunset: var(--primary);
   --sunset-foreground: var(--primary-foreground);
-  --sunset-soft: oklch(0.924 0.017 125);
+  --sunset-soft: oklch(0.925 0.025 85);
   --gold: oklch(0.7 0.12 80);
-  --gold-soft: oklch(0.955 0.006 160);
-  --success: oklch(0.401 0.072 168);
-  --success-soft: oklch(0.92 0.017 151);
-  --shield: oklch(0.469 0.018 86);
-  --shield-soft: oklch(0.955 0.006 160);
-  --shield-foreground: oklch(0.985 0.004 160);
-  --demo: oklch(0.469 0.018 86);
-  --demo-soft: oklch(0.955 0.006 160);
+  --gold-soft: oklch(0.93 0.018 85);
+  --success: oklch(0.42 0.09 160);
+  --success-soft: oklch(0.93 0.035 155);
+  --shield: oklch(0.43 0.04 262);
+  --shield-soft: oklch(0.93 0.018 85);
+  --shield-foreground: oklch(0.985 0.01 85);
+  --demo: oklch(0.43 0.04 262);
+  --demo-soft: oklch(0.93 0.018 85);
   --destructive: oklch(0.495 0.154 25);
-  --destructive-foreground: oklch(0.985 0.004 160);
+  --destructive-foreground: oklch(0.985 0.01 85);
   --destructive-soft: oklch(0.91 0.025 37);
   /* Separators are hairlines: black at low alpha, so they sit right on any surface. */
-  --border: oklch(0.21 0.02 170 / 0.16);
-  --separator: oklch(0.21 0.02 170 / 0.12);
-  --input: oklch(0.21 0.02 170 / 0.38);
-  --ring: oklch(0.519 0.098 165);
+  --border: oklch(0.24 0.06 262 / 0.16);
+  --separator: oklch(0.24 0.06 262 / 0.12);
+  --input: oklch(0.24 0.06 262 / 0.38);
+  --ring: oklch(0.5 0.13 262);
   /* Brand coral (#FF6B4A): the logo's destination dot. Used sparingly for "you are here / next" cues. */
-  --brand-coral: oklch(0.519 0.098 165);
+  --brand-coral: oklch(0.54 0.16 38);
   /* Coral as small text (step numbers): darker so it reads at AA contrast on paper. */
-  --coral-text: oklch(0.401 0.072 168);
+  --coral-text: oklch(0.5 0.16 38);
   /* Solid emphasis surface (primary call to action, the balance card). */
-  --ink: oklch(0.21 0.02 170);
-  --ink-foreground: oklch(0.985 0.004 160);
-  --on-image: oklch(0.985 0.004 160);
+  --ink: oklch(0.24 0.06 262);
+  --ink-foreground: oklch(0.985 0.01 85);
+  --on-image: oklch(0.985 0.01 85);
 
   /* "Go" actions (Plan trip, See the days) use the brand blue: one action color. */
   --go: var(--brand);
@@ -419,7 +419,7 @@
   --shadow-glow-value: 0 1px 2px oklch(0 0 0 / 0.05);
 
   /* Materials: frosted glass for bars and menus (alpha of the base + blur). */
-  --material-base: oklch(0.985 0.004 160);
+  --material-base: oklch(0.962 0.016 85);
   --material-thick: 0.88;
   --material-regular: 0.74;
   --material-thin: 0.6;
@@ -435,53 +435,53 @@
   --sidebar-accent-foreground: var(--secondary-foreground);
   --sidebar-border: var(--border);
   --sidebar-ring: var(--ring);
-  --brand: oklch(0.519 0.098 165);
-  --brand-foreground: oklch(0.985 0.004 160);
-  --brand-deep: oklch(0.401 0.072 168);
+  --brand: oklch(0.54 0.16 38);
+  --brand-foreground: oklch(0.99 0.006 85);
+  --brand-deep: oklch(0.46 0.15 38);
 }
 .dark {
   color-scheme: dark;
   /* Near-black page, #1d1d1f tiles: Apple's dark pages, a shade off pure black. */
-  --background: oklch(0.21 0.008 170);
-  --foreground: oklch(0.97 0.004 160);
-  --card: oklch(0.255 0.009 170);
-  --card-foreground: oklch(0.959 0.013 87);
-  --popover: oklch(0.3 0.01 170);
-  --popover-foreground: oklch(0.959 0.013 87);
-  --primary: oklch(0.632 0.121 163);
-  --primary-deep: oklch(0.711 0.114 164);
-  --primary-foreground: oklch(0.163 0.014 170);
-  --secondary: oklch(0.3 0.01 170);
-  --secondary-foreground: oklch(0.959 0.013 87);
-  --muted: oklch(0.3 0.01 170);
-  --muted-foreground: oklch(0.76 0.012 170);
-  --accent: oklch(0.228 0.025 159);
-  --accent-foreground: oklch(0.959 0.013 87);
-  --fill: oklch(0.959 0.013 87 / 0.06);
+  --background: oklch(0.2 0.045 262);
+  --foreground: oklch(0.96 0.015 85);
+  --card: oklch(0.25 0.05 262);
+  --card-foreground: oklch(0.96 0.015 85);
+  --popover: oklch(0.28 0.05 262);
+  --popover-foreground: oklch(0.96 0.015 85);
+  --primary: oklch(0.78 0.1 262);
+  --primary-deep: oklch(0.84 0.08 262);
+  --primary-foreground: oklch(0.2 0.045 262);
+  --secondary: oklch(0.29 0.05 262);
+  --secondary-foreground: oklch(0.96 0.015 85);
+  --muted: oklch(0.29 0.05 262);
+  --muted-foreground: oklch(0.78 0.03 262);
+  --accent: oklch(0.3 0.05 262);
+  --accent-foreground: oklch(0.96 0.015 85);
+  --fill: oklch(0.96 0.015 85 / 0.07);
   --sunset: var(--primary);
   --sunset-foreground: var(--primary-foreground);
-  --sunset-soft: oklch(0.228 0.025 159);
+  --sunset-soft: oklch(0.3 0.05 262);
   --gold: oklch(0.78 0.11 80);
-  --gold-soft: oklch(0.3 0.01 170);
-  --success: oklch(0.632 0.121 163);
-  --success-soft: oklch(0.248 0.032 164);
-  --shield: oklch(0.848 0.029 92);
-  --shield-soft: oklch(0.3 0.01 170);
-  --shield-foreground: oklch(0.163 0.014 170);
-  --demo: oklch(0.618 0.019 88);
-  --demo-soft: oklch(0.3 0.01 170);
+  --gold-soft: oklch(0.29 0.05 262);
+  --success: oklch(0.74 0.12 160);
+  --success-soft: oklch(0.3 0.05 175);
+  --shield: oklch(0.86 0.025 262);
+  --shield-soft: oklch(0.29 0.05 262);
+  --shield-foreground: oklch(0.2 0.045 262);
+  --demo: oklch(0.72 0.03 262);
+  --demo-soft: oklch(0.29 0.05 262);
   --destructive: oklch(0.662 0.162 26);
-  --destructive-foreground: oklch(0.163 0.014 170);
+  --destructive-foreground: oklch(0.2 0.045 262);
   --destructive-soft: oklch(0.222 0.037 26);
-  --border: oklch(0.97 0.004 160 / 0.16);
-  --separator: oklch(0.97 0.004 160 / 0.11);
-  --input: oklch(0.959 0.013 87 / 0.3);
-  --ring: oklch(0.632 0.121 163);
-  --brand-coral: oklch(0.632 0.121 163);
-  --coral-text: oklch(0.632 0.121 163);
-  --ink: oklch(0.959 0.013 87);
-  --ink-foreground: oklch(0.163 0.014 170);
-  --on-image: oklch(0.959 0.013 87);
+  --border: oklch(0.96 0.015 85 / 0.16);
+  --separator: oklch(0.96 0.015 85 / 0.11);
+  --input: oklch(0.96 0.015 85 / 0.32);
+  --ring: oklch(0.78 0.1 262);
+  --brand-coral: oklch(0.7 0.15 40);
+  --coral-text: oklch(0.74 0.14 40);
+  --ink: oklch(0.96 0.015 85);
+  --ink-foreground: oklch(0.2 0.045 262);
+  --on-image: oklch(0.985 0.01 85);
 
   --go: var(--brand);
   --go-deep: var(--brand-deep);
@@ -516,15 +516,15 @@
   --shadow-lift-value: 0 22px 60px -20px oklch(0 0 0 / 0.7);
   --shadow-glow-value: none;
 
-  --material-base: oklch(0.163 0.014 170);
+  --material-base: oklch(0.2 0.045 262);
   --material-thick: 0.86;
   --material-regular: 0.72;
   --material-thin: 0.58;
   --specular: oklch(1 0 0 / 0);
-  --material-edge: oklch(0.97 0.004 160 / 0.11);
-  --brand: oklch(0.519 0.098 165);
+  --material-edge: oklch(0.96 0.015 85 / 0.11);
+  --brand: oklch(0.54 0.16 38);
   --brand-foreground: oklch(0.959 0.013 87);
-  --brand-deep: oklch(0.584 0.111 164);
+  --brand-deep: oklch(0.6 0.16 38);
 }
 
 @layer base {
