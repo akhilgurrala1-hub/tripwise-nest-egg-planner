@@ -30,7 +30,7 @@ Budget math is pure functions; UI never computes totals. Photos come from Wikipe
 
 ## Brand Commitments
 
-Owner is replacing the previous identity (blue and coral, Instrument Sans, "W" route tile) in full: new mark, favicon, palette and type. No violet, no gradients, no pill buttons, no em dashes in the UI, no fake metrics or reviews.
+Waypoint wears the language of the owner's own site, argcoresolutions.com: near-black emerald ground with cream ink (light theme on cream paper), Fraunces light display with one italic emerald word, Inter text, JetBrains Mono labels, numbered sections, hairlines, pill buttons and a ring emblem. The owner asked for this explicitly, replacing an earlier teal and orange identity and the rules that went with it (no pills, no serif). Still true: no violet, no gradients, no em dashes in the UI, no fake metrics, quotes or reviews.
 
 ## Evidence on Hand
 

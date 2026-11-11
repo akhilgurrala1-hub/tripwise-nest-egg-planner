@@ -1,3 +1,5 @@
+> **Superseded.** This is the audit of the earlier Apple-style system. The current language is in [language.md](language.md).
+
 # Waypoint design system (after Apple's Human Interface Guidelines)
 
 The tokens live in `src/styles.css`, the physics in `src/lib/spring.ts`, the motion

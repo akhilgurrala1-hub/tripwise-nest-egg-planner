@@ -268,7 +268,7 @@ export function TheMath({
               <p className="label-mono">{label}</p>
               <p
                 className={
-                  "money-display mt-4 text-large-title " +
+                  "money-display mt-4 text-stat " +
                   (i === 4 ? (over ? "text-destructive" : "text-primary") : "")
                 }
               >
