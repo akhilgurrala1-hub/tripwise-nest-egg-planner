@@ -22,6 +22,7 @@ import {
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 
 import { Logo, LogoMark } from "./Logo";
+import { CursorLabel } from "./CursorLabel";
 import { useActiveIndicator } from "./motion";
 import { useScrolled } from "./use-scrolled";
 import { formatDateRange } from "./TripHeader";
@@ -132,6 +133,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         onMenu={() => setMenuOpen((o) => !o)}
       />
       <MobileMenu open={menuOpen} items={nav} pathname={pathname} onClose={closeMenu} />
+      <CursorLabel />
     </div>
   );
 }
@@ -444,7 +446,16 @@ function MobileMenu({
 function Footer() {
   const year = new Date().getFullYear();
   return (
-    <footer className="text-caption text-muted-foreground print:hidden">
+    <footer className="overflow-hidden text-caption text-muted-foreground print:hidden">
+      <div aria-hidden className="page-container pt-16 sm:pt-24">
+        {/* The brand set as large as the page allows; drawn as a graphic, not text. */}
+        <svg viewBox="0 0 1000 164" className="footer-mark block h-auto w-full">
+          <text x="-8" y="142">
+            Waypoint
+            <tspan fill="#e0501a">.</tspan>
+          </text>
+        </svg>
+      </div>
       <div className="page-container border-t border-separator py-6">
         <p className="flex flex-wrap items-center gap-x-4 gap-y-2">
           <span>Estimates in US dollars. Waypoint never books or takes payment.</span>

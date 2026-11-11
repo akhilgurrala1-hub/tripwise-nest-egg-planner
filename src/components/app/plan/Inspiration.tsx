@@ -172,6 +172,7 @@ function IdeaCard({
   return (
     <button
       type="button"
+      data-cursor="Plan"
       style={{ ...style, "--kind": color } as CSSProperties}
       onClick={() => onPick(idea.s.id, idea.tripType)}
       className="group lift block w-full rounded-2xl text-left pressable focus-visible:ring-4 focus-visible:ring-primary/30 focus-visible:outline-none"
@@ -272,6 +273,7 @@ function HeroTile({
   return (
     <button
       type="button"
+      data-cursor="Plan"
       onClick={() => onPick(idea.s.id, idea.tripType)}
       className="group relative isolate block size-full overflow-hidden rounded-2xl bg-fill text-left pressable focus-visible:ring-4 focus-visible:ring-primary/30 focus-visible:outline-none"
     >

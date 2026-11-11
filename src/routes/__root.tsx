@@ -12,6 +12,7 @@ import type { ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import { AppShell } from "@/components/app/AppShell";
+import { Button } from "@/components/ui/button";
 import { Toaster } from "@/components/ui/sonner";
 import { AuthProvider } from "@/lib/auth-context";
 import { INTRO_BOOT_SCRIPT, IntroOverlay } from "@/components/app/Intro";
@@ -20,22 +21,39 @@ import { THEME_BOOT_SCRIPT } from "@/lib/theme";
 
 function NotFoundComponent() {
   return (
-    <div className="flex min-h-[80vh] items-center justify-center bg-background px-4 pb-24 md:pb-0">
-      <div className="max-w-md text-center">
-        <LogoMark className="mx-auto mb-6 size-12" />
-        <h1 className="title-display text-7xl text-foreground">404</h1>
-        <h2 className="mt-4 text-xl font-semibold text-foreground">Page not found</h2>
-        <p className="mt-2 text-sm text-muted-foreground">
-          The page you're looking for doesn't exist or has been moved.
-        </p>
-        <div className="mt-6">
-          <Link
-            to="/"
-            className="inline-flex h-10 items-center justify-center rounded-lg bg-ink px-4 text-sm font-medium text-ink-foreground transition-opacity hover:opacity-90"
-          >
-            Go home
-          </Link>
-        </div>
+    <div className="page-container flex min-h-[80vh] flex-col justify-center pb-24 md:pb-0">
+      <p className="not-found-mark">404</p>
+      {/* The route leaves the road and ends at a dot that is not on any map. */}
+      <svg aria-hidden viewBox="0 0 600 60" className="-mt-2 h-auto w-full max-w-2xl">
+        <path
+          className="route-line"
+          pathLength={1}
+          d="M 8 40 C 120 40, 150 12, 260 20 S 400 52, 470 28 S 540 10, 580 30"
+          fill="none"
+          stroke="var(--primary)"
+          strokeWidth="3"
+          strokeLinecap="round"
+          strokeDasharray="0.012 0.02"
+        />
+        <circle
+          cx="8"
+          cy="40"
+          r="6"
+          fill="none"
+          stroke="var(--primary)"
+          strokeWidth="3"
+          className="route-origin"
+        />
+        <circle cx="580" cy="30" r="8" fill="#E0501A" className="route-dot" />
+      </svg>
+      <h1 className="title-display mt-8 text-large-title">This stop isn't on the map.</h1>
+      <p className="mt-4 max-w-md text-body text-muted-foreground">
+        The page you wanted doesn't exist or has moved. Head back to the start and plan from there.
+      </p>
+      <div className="mt-8">
+        <Button asChild size="lg" variant="go">
+          <Link to="/">Back to the start</Link>
+        </Button>
       </div>
     </div>
   );
