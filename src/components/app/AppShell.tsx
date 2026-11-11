@@ -96,7 +96,13 @@ export function AppShell({ children }: { children: ReactNode }) {
    * - laptops and desktops (1024px+): a sticky translucent top nav with a scroll-progress line.
    */
   return (
-    <div className="min-h-dvh bg-background">
+    <div className="pb-tabbar min-h-dvh bg-background">
+      <a
+        href="#main"
+        className="sr-only focus-visible:not-sr-only focus-visible:fixed focus-visible:top-2 focus-visible:left-2 focus-visible:z-[100] focus-visible:rounded-lg focus-visible:bg-card focus-visible:px-4 focus-visible:py-2 focus-visible:text-footnote focus-visible:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
+      >
+        Skip to content
+      </a>
       <TopNav items={nav} pathname={pathname} />
       <header
         data-scrolled={scrolled && !menuOpen}
@@ -120,7 +126,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           </div>
         </div>
       </header>
-      <main key={pathname} className="pb-tabbar min-h-[70dvh]">
+      <main id="main" key={pathname} className="min-h-[70dvh]">
         {children}
       </main>
       <Footer />
@@ -168,12 +174,12 @@ function TopNav({ items, pathname }: { items: typeof NAV; pathname: string }) {
   return (
     <header className="scroll-edge material-thick sticky top-0 z-50 hidden border-b border-separator lg:block print:hidden">
       <div aria-hidden className="nav-progress" />
-      <div className="page-container flex h-16 items-center justify-between gap-8">
+      <div className="page-container flex h-16 items-center justify-between gap-6 xl:gap-8">
         <Link to="/" className="flex items-center rounded-md" aria-label="Waypoint home">
-          <Logo markClassName="size-8" wordClassName="text-title-2" tag="Trip budgets" />
+          <Logo markClassName="size-8" wordClassName="text-title-2" />
         </Link>
         <nav aria-label="Main">
-          <ul className="flex items-center gap-8">
+          <ul className="flex items-center gap-4 xl:gap-8">
             {links.map((l) => {
               const on = l.to === pathname || (l.to === "/budget" && pathname === "/spending");
               return (
@@ -385,20 +391,27 @@ function Footer() {
       </div>
       <div className="page-container flex flex-wrap items-center justify-between gap-x-8 gap-y-4 border-t border-separator py-6 label-mono">
         <span>Estimates in US dollars. Never books or takes payment.</span>
-        <span className="flex flex-wrap gap-x-6 gap-y-2">
+        <span className="flex flex-wrap items-center gap-x-6">
           <span>
             © {year} {LEGAL.owner}
           </span>
-          <Link to="/privacy" className="hover:text-foreground">
+          <Link to="/privacy" className="inline-flex min-h-12 items-center hover:text-foreground">
             Privacy
           </Link>
-          <Link to="/terms" className="hover:text-foreground">
+          <Link to="/terms" className="inline-flex min-h-12 items-center hover:text-foreground">
             Terms
           </Link>
-          <Link to="/terms" hash="credits" className="hover:text-foreground">
+          <Link
+            to="/terms"
+            hash="credits"
+            className="inline-flex min-h-12 items-center hover:text-foreground"
+          >
             Credits
           </Link>
-          <a href={`mailto:${LEGAL.contactEmail}`} className="hover:text-foreground">
+          <a
+            href={`mailto:${LEGAL.contactEmail}`}
+            className="inline-flex min-h-12 items-center hover:text-foreground"
+          >
             Contact
           </a>
         </span>

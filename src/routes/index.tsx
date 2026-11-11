@@ -11,15 +11,7 @@ import { CoveragePicker } from "@/components/app/plan/CoveragePicker";
 import { OriginField } from "@/components/app/plan/OriginField";
 import { StylePicker } from "@/components/app/plan/StylePicker";
 import { Inspiration } from "@/components/app/plan/Inspiration";
-import {
-  ClosingCta,
-  Faq,
-  HowItWorks,
-  Marquee,
-  TheMath,
-  Tools,
-  TripTypes,
-} from "@/components/app/landing";
+import { ClosingCta, Faq, HowItWorks, TheMath, Tools, TripTypes } from "@/components/app/landing";
 import { StopsPicker } from "@/components/app/plan/StopsPicker";
 import { formatDateRange } from "@/components/app/TripHeader";
 import { TripAssistant } from "@/components/app/plan/TripAssistant";
@@ -368,23 +360,23 @@ function Welcome() {
       {/* The hero: one question, one bar to answer it in plain words, a fact sheet beside it. */}
       <section className="relative overflow-hidden">
         <div className="page-container pt-12 pb-16 sm:pt-20 sm:pb-24">
-          <p className="eyebrow enter-rise">Trip planner · Priced to the dollar</p>
-          <div className="mt-8 grid gap-16 xl:grid-cols-[1.3fr_1fr] xl:items-end">
+          <div className="grid gap-16 xl:grid-cols-[1.3fr_1fr] xl:items-end">
             <div>
-              <h1 aria-label="Where to next?" className="title-display text-display">
-                {["Where", "to", "next?"].map((word, i) => (
+              <h1 aria-label="Plan a trip, to the dollar." className="title-display text-display">
+                {["Plan", "a", "trip,", "to", "the", "dollar."].map((word, i) => (
                   <span key={word} aria-hidden>
                     {i > 0 && " "}
                     <span className="hero-line">
                       <span className="hero-word" style={{ "--w": i } as CSSProperties}>
-                        {i === 2 ? <em>{word}</em> : word}
+                        {i >= 3 ? <em>{word}</em> : word}
                       </span>
                     </span>
                   </span>
                 ))}
               </h1>
-              <p className="enter-rise mt-8 max-w-xl text-body text-muted-foreground">
-                Prices the whole trip to the dollar, plans each day and lists what to book.
+              <p className="enter-rise mt-8 max-w-xl text-body text-foreground/80">
+                Say where and when in your own words. Waypoint prices the whole trip, plans each day
+                and lists what to book.
               </p>
               <div className="enter-rise mt-10 max-w-2xl" style={{ "--d": 120 } as CSSProperties}>
                 <TripAssistant
@@ -429,7 +421,6 @@ function Welcome() {
             </aside>
           </div>
         </div>
-        <Marquee />
       </section>
       <HowItWorks />
       <section className="border-t border-separator py-20 sm:py-28">
@@ -448,8 +439,7 @@ function Welcome() {
       <div className="page-container border-t border-separator py-20 sm:py-28">
         <div className="layout-main-aside lg:gap-y-8">
           <div className="min-w-0">
-            <p className="eyebrow">03 / Plan it yourself</p>
-            <h2 id="plan-steps" className="title-display mt-6 scroll-mt-32 text-large-title">
+            <h2 id="plan-steps" className="title-display scroll-mt-32 text-large-title">
               Set it up, <em>step by step.</em>
             </h2>
 

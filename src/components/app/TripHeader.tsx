@@ -40,16 +40,6 @@ const NEXT_STEP: Record<string, { label: string; to: "/book" | "/itinerary" | "/
  * page: trip type (switchable in place), destination, dates and travelers, with a
  * link back to the full setup.
  */
-/** The page's step in the flow, for its label: "02 / Overview". */
-const STEP: Record<string, string> = {
-  "/dashboard": "02 / Overview",
-  "/budget": "03 / Budget",
-  "/spending": "03 / Spending",
-  "/itinerary": "04 / Itinerary",
-  "/road-trip": "05 / Road trip",
-  "/book": "06 / Book",
-};
-
 /** The last word of a title set in italic emerald, the way the brand sets one word of every headline. */
 function accentTitle(title: string): ReactNode {
   const i = title.lastIndexOf(" ");
@@ -76,7 +66,6 @@ export function PageHeader({
   const pathname = useRouterState({ select: (r) => r.location.pathname });
   const next = showTrip ? NEXT_STEP[pathname] : undefined;
   const sample = showTrip && trip.isSample;
-  const step = STEP[pathname];
   return (
     // An editorial page header: a mono label, the title, the trip it's about and the page's actions.
     <div className="border-b border-separator pb-8 sm:pb-12">
@@ -90,7 +79,6 @@ export function PageHeader({
             </Link>
           </p>
         )}
-        {step && <p className="eyebrow mb-6">{step}</p>}
         <div className="flex flex-wrap items-end justify-between gap-6">
           <div className="min-w-0">
             <h1 className="title-display text-large-title">{accentTitle(title)}</h1>

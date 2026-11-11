@@ -1,73 +1,19 @@
 import * as AccordionPrimitive from "@radix-ui/react-accordion";
 import { Link } from "@tanstack/react-router";
 import { ArrowRight, Plus } from "lucide-react";
-import { useState, type ReactNode } from "react";
+import type { ReactNode } from "react";
 
 import { Button } from "@/components/ui/button";
 import { CATEGORIES, CATEGORY_LABELS, categoriesFor, formatMoney } from "@/lib/budget";
 import { TRIP_TYPES } from "@/lib/demo-data";
 
-/** The facts the marquee repeats: each one is something the app really does. */
-const FACTS = [
-  "Priced to the dollar",
-  "Every day planned",
-  "Road-trip stops on the route",
-  "A booking checklist with dates",
-  "Works without an account",
-  "Free, open data",
-  "Never takes payment",
-];
-
-/** A slow ticker of facts between the hero and the story. Still under reduced motion. */
-export function Marquee() {
-  const [paused, setPaused] = useState(false);
-  const row = (hidden: boolean) => (
-    <ul className="marquee-row" aria-hidden={hidden || undefined}>
-      {FACTS.map((f) => (
-        <li key={f} className="flex items-center gap-8">
-          <span className="font-display text-title-2 text-muted-foreground italic">{f}</span>
-          <span aria-hidden className="size-1 rounded-full bg-primary" />
-        </li>
-      ))}
-    </ul>
-  );
+/** A section head: a headline with one italic word, and a lede beneath it. */
+export function SectionHead({ title, lede }: { title: ReactNode; lede?: ReactNode }) {
   return (
-    <div className="marquee relative border-t border-separator" data-paused={paused}>
-      <div className="marquee-track">
-        {row(false)}
-        {row(true)}
-      </div>
-      {/* Moving text that runs on its own can be stopped. */}
-      <button
-        type="button"
-        onClick={() => setPaused((p) => !p)}
-        aria-pressed={paused}
-        className="marquee-pause label-mono absolute top-1/2 right-4 -translate-y-1/2 rounded-full border border-border bg-background px-4 py-2 hover:text-foreground"
-      >
-        {paused ? "Play" : "Pause"}
-      </button>
-    </div>
-  );
-}
-
-/** A numbered section: a mono label with a rule, a headline with one italic word, and a lede. */
-export function SectionHead({
-  label,
-  title,
-  lede,
-}: {
-  label: string;
-  title: ReactNode;
-  lede?: ReactNode;
-}) {
-  return (
-    <div className="grid items-end gap-8 lg:grid-cols-[1.15fr_1fr] lg:gap-16">
-      <div>
-        <p className="eyebrow">{label}</p>
-        <h2 className="title-display mt-6 text-large-title">{title}</h2>
-      </div>
+    <div>
+      <h2 className="title-display max-w-4xl text-large-title">{title}</h2>
       {lede && (
-        <p className="max-w-xl font-display text-title-2 leading-snug font-light text-muted-foreground italic lg:justify-self-end">
+        <p className="mt-6 max-w-xl font-display text-title-2 leading-snug font-light text-foreground/80 italic">
           {lede}
         </p>
       )}
@@ -78,17 +24,17 @@ export function SectionHead({
 const STEPS = [
   {
     n: "01",
-    title: "Say where, when and who.",
+    title: "Your trip, in your own words.",
     body: "Type a trip in your own words, or pick a place. Waypoint reads dates, group size, cities and what you already have covered, and asks only for what is missing.",
   },
   {
     n: "02",
-    title: "See the whole price.",
+    title: "The whole price, up front.",
     body: "A budget built from real distances, fares and local costs, with an emergency fund set aside first. Every number says whether it is an estimate, a live price or not listed.",
   },
   {
     n: "03",
-    title: "Plan the days, then book.",
+    title: "The days, then the bookings.",
     body: "Real places from Wikivoyage, Wikipedia and OpenStreetMap fill each day. A booking list says what to book by when, with searches pre-filled. You book on the provider's own site.",
   },
 ];
@@ -98,7 +44,6 @@ export function HowItWorks() {
     <section className="border-t border-separator py-20 sm:py-28" aria-labelledby="how-title">
       <div className="page-container">
         <SectionHead
-          label="01 / How it works"
           title={
             <span id="how-title">
               Three steps, <em>no spreadsheet.</em>
@@ -110,13 +55,15 @@ export function HowItWorks() {
           {STEPS.map((s) => (
             <li
               key={s.n}
-              className="reveal grid gap-4 border-b border-separator py-10 lg:grid-cols-[6rem_1fr_1.2fr] lg:gap-12"
+              className="grid gap-4 border-b border-separator py-10 lg:grid-cols-[5fr_7fr] lg:gap-16"
             >
-              <span className="font-display text-title-1 font-light text-muted-foreground">
-                {s.n}
-              </span>
-              <h3 className="title-display text-title-1">{s.title}</h3>
-              <p className="max-w-xl text-body text-muted-foreground">{s.body}</p>
+              <div className="flex items-baseline gap-6">
+                <span className="font-display text-title-1 font-light text-muted-foreground">
+                  {s.n}
+                </span>
+                <h3 className="title-display text-title-1">{s.title}</h3>
+              </div>
+              <p className="max-w-xl text-body text-foreground/80">{s.body}</p>
             </li>
           ))}
         </ol>
@@ -125,10 +72,22 @@ export function HowItWorks() {
   );
 }
 
-const TOOLS = [
+const TOOLS: {
+  n: string;
+  title: string;
+  to?: "/budget" | "/itinerary" | "/road-trip" | "/book" | "/spending";
+  cta?: string;
+  accent: string;
+  tag: string;
+  lead: string;
+  body: string;
+  includes: string[];
+}[] = [
   {
     n: "I",
     title: "Budget",
+    to: "/budget" as const,
+    cta: "Open the sample budget",
     accent: "& emergency fund.",
     tag: "Priced to the dollar",
     lead: "Every cost in one place, with a cushion that overspending never touches.",
@@ -138,6 +97,8 @@ const TOOLS = [
   {
     n: "II",
     title: "Itinerary",
+    to: "/itinerary" as const,
+    cta: "See a sample itinerary",
     accent: "day by day.",
     tag: "Every day planned",
     lead: "Real places, in a sensible order, for the days you have.",
@@ -147,6 +108,8 @@ const TOOLS = [
   {
     n: "III",
     title: "Road trip",
+    to: "/road-trip" as const,
+    cta: "Find stops on the route",
     accent: "stops.",
     tag: "On the route",
     lead: "Stops worth the detour, priced against what is left.",
@@ -156,6 +119,8 @@ const TOOLS = [
   {
     n: "IV",
     title: "Booking",
+    to: "/book" as const,
+    cta: "See the booking checklist",
     accent: "checklist.",
     tag: "Book by dates",
     lead: "What to book, by when, with the search already filled in.",
@@ -165,9 +130,11 @@ const TOOLS = [
   {
     n: "V",
     title: "Spending",
+    to: "/spending" as const,
+    cta: "Log a cost",
     accent: "as you go.",
     tag: "During the trip",
-    lead: "What you actually spent, against what you planned.",
+    lead: "What you spent, against what you planned.",
     body: "Log a cost in seconds, in the local currency if you like. In a group, Waypoint splits each cost to the cent and lists the fewest payments to even up.",
     includes: ["Log costs", "Group splits", "Settle up", "Spreadsheet"],
   },
@@ -187,7 +154,6 @@ export function Tools() {
     <section className="border-t border-separator py-20 sm:py-28" aria-labelledby="tools-title">
       <div className="page-container">
         <SectionHead
-          label="04 / What is inside"
           title={
             <span id="tools-title">
               Six tools, <em>one trip.</em>
@@ -199,12 +165,11 @@ export function Tools() {
           {TOOLS.map((t) => (
             <article
               key={t.n}
-              className="reveal grid gap-8 border-t border-separator py-14 lg:grid-cols-[1fr_1.4fr] lg:gap-20"
+              className="grid gap-8 border-t border-separator py-14 lg:grid-cols-[5fr_7fr] lg:gap-16"
             >
               <header>
-                <p className="label-mono">Tool {t.n}</p>
-                <h3 className="title-display mt-4 text-large-title">
-                  {t.title} <em className="text-title-1">{t.accent}</em>
+                <h3 className="title-display text-title-1">
+                  {t.title} <em>{t.accent}</em>
                 </h3>
                 <p className="mt-6 inline-block rounded-sm border border-border px-2 py-1 label-mono">
                   {t.tag}
@@ -214,7 +179,7 @@ export function Tools() {
                 <p className="font-display text-title-2 leading-snug font-light text-foreground italic">
                   {t.lead}
                 </p>
-                <p className="mt-6 max-w-xl text-body text-muted-foreground">{t.body}</p>
+                <p className="mt-6 max-w-xl text-body text-foreground/80">{t.body}</p>
                 <dl className="mt-8 grid grid-cols-2 gap-x-8 gap-y-6 border-t border-separator pt-6">
                   {t.includes.map((i) => (
                     <div key={i}>
@@ -223,6 +188,11 @@ export function Tools() {
                     </div>
                   ))}
                 </dl>
+                {t.to && (
+                  <Link to={t.to} className="link-chevron mt-8 inline-block text-footnote">
+                    {t.cta}
+                  </Link>
+                )}
               </div>
             </article>
           ))}
@@ -254,7 +224,6 @@ export function TheMath({
     <section className="border-t border-separator py-20 sm:py-28" aria-labelledby="math-title">
       <div className="page-container">
         <SectionHead
-          label="05 / The arithmetic"
           title={
             <span id="math-title">
               The cushion comes <em>first.</em>
@@ -264,7 +233,7 @@ export function TheMath({
         />
         <ol className="mt-16 grid gap-px border-y border-separator bg-[var(--separator)] sm:grid-cols-5">
           {steps.map(([label, value], i) => (
-            <li key={label} className="reveal bg-background px-1 py-8 sm:px-6">
+            <li key={label} className="bg-background px-1 py-8 sm:px-6">
               <p className="label-mono">{label}</p>
               <p
                 className={
@@ -300,7 +269,6 @@ export function TripTypes() {
     <section className="border-t border-separator py-20 sm:py-28" aria-labelledby="types-title">
       <div className="page-container">
         <SectionHead
-          label="06 / Trip types"
           title={
             <span id="types-title">
               Five kinds of trip, <em>priced differently.</em>
@@ -350,9 +318,7 @@ export function TripTypes() {
                         </>
                       ) : (
                         <>
-                          <span aria-hidden className="text-muted-foreground">
-                            —
-                          </span>
+                          <span aria-hidden className="inline-block h-px w-4 bg-muted-foreground" />
                           <span className="sr-only">Not included</span>
                         </>
                       )}
@@ -363,7 +329,7 @@ export function TripTypes() {
             </tbody>
           </table>
         </div>
-        <p className="mt-8 max-w-3xl text-body text-muted-foreground">
+        <p className="mt-8 max-w-3xl text-body text-foreground/80">
           <span className="label-mono mr-4">Every trip also has</span>
           {shared.map((c) => CATEGORY_LABELS[c]).join(", ")}.
         </p>
@@ -404,7 +370,6 @@ export function Faq() {
     <section className="border-t border-separator py-20 sm:py-28" aria-labelledby="faq-title">
       <div className="page-container">
         <SectionHead
-          label="07 / Questions"
           title={
             <span id="faq-title">
               Questions <em>asked.</em>
@@ -416,13 +381,10 @@ export function Faq() {
           collapsible
           className="mt-16 border-t border-separator"
         >
-          {QUESTIONS.map((x, i) => (
+          {QUESTIONS.map((x) => (
             <AccordionPrimitive.Item key={x.q} value={x.q} className="border-b border-separator">
               <AccordionPrimitive.Header>
                 <AccordionPrimitive.Trigger className="faq-trigger group flex w-full items-center gap-6 py-6 text-left">
-                  <span className="label-mono w-12 shrink-0">
-                    Q.{String(i + 1).padStart(2, "0")}
-                  </span>
                   <span className="flex-1 font-display text-title-2 font-normal">{x.q}</span>
                   <Plus
                     aria-hidden
@@ -431,7 +393,7 @@ export function Faq() {
                 </AccordionPrimitive.Trigger>
               </AccordionPrimitive.Header>
               <AccordionPrimitive.Content className="faq-content overflow-hidden">
-                <p className="max-w-2xl pb-8 pl-18 text-body text-muted-foreground">{x.a}</p>
+                <p className="max-w-2xl pb-8 text-body text-foreground/80">{x.a}</p>
               </AccordionPrimitive.Content>
             </AccordionPrimitive.Item>
           ))}
@@ -446,10 +408,10 @@ export function ClosingCta({ onStart }: { onStart: () => void }) {
   return (
     <section className="border-t border-separator py-24 text-center sm:py-36">
       <div className="page-container flex flex-col items-center">
-        <h2 className="title-display text-display">
+        <h2 className="title-display text-large-title">
           Plan your next <em>trip.</em>
         </h2>
-        <p className="mt-6 max-w-md text-body text-muted-foreground">
+        <p className="mt-6 max-w-md text-body text-foreground/80">
           Say where you want to go. You will have a price before you have a plan.
         </p>
         <div className="mt-10 flex flex-wrap justify-center gap-4">

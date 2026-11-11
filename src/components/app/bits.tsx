@@ -171,19 +171,10 @@ export function NumberField({
   );
 }
 
-export function SectionTitle({
-  eyebrow,
-  title,
-  action,
-}: {
-  eyebrow?: string;
-  title: string;
-  action?: ReactNode;
-}) {
+export function SectionTitle({ title, action }: { title: string; action?: ReactNode }) {
   return (
     <div className="mb-4 flex items-end justify-between gap-4">
       <div>
-        {eyebrow && <p className="eyebrow">{eyebrow}</p>}
         <h2 className="text-lg font-semibold text-foreground">{title}</h2>
       </div>
       {action}

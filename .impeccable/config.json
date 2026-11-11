@@ -1,9 +1,7 @@
 {
   "detector": {
     "ignoreRules": [
-      "numbered-section-labels",
-      "italic-serif-display",
-      "marquee"
+      "italic-serif-display"
     ],
     "ignoreFiles": [],
     "ignoreValues": []

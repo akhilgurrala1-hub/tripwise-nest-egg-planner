@@ -114,9 +114,8 @@ export function Inspiration({
     <section aria-labelledby="ideas-title">
       <div className="grid items-end gap-8 lg:grid-cols-[1.15fr_1fr] lg:gap-16">
         <div>
-          <p className="eyebrow">02 / Trip ideas</p>
-          <h2 id="ideas-title" className="title-display mt-6 text-large-title">
-            Trip ideas from <em>{fromLabel}</em>
+          <h2 id="ideas-title" className="title-display text-large-title">
+            Trip ideas from <em>{fromLabel}.</em>
           </h2>
         </div>
         <p className="max-w-xl font-display text-title-2 leading-snug font-light text-muted-foreground italic lg:justify-self-end">
@@ -220,8 +219,8 @@ function IdeaCard({
         </span>
       </span>
       <span className="mt-4 block px-1">
-        <span className="title-display block truncate text-title-2 font-normal">{idea.s.name}</span>
-        <span className="mt-1 block truncate label-mono">
+        <span className="title-display block text-title-2 font-normal">{idea.s.name}</span>
+        <span className="mt-1 block label-mono">
           {idea.s.region}
           {idea.s.distanceLabel ? ` · ${idea.s.distanceLabel}` : ""}
         </span>

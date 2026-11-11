@@ -32,7 +32,7 @@ Emerald is the only accent. No gradients, no glows. Data colors (`--trip-*`, `--
 
 - **Fraunces** (display): light 300, optical size on. `<em>` inside a title is the one italic emerald word. Amounts use it too (`money-display`).
 - **Inter** (text and controls), 400 and 500.
-- **JetBrains Mono** (labels): small uppercase, tracked. `eyebrow` has a leading rule ("01 / How it works"); `label-mono` has none.
+- **JetBrains Mono** (labels): small uppercase, tracked. `label-mono` has none.
 - Scale: display 52 to 128px, page title 40 to 76, title 30 and 24, headline 19, body 17, footnote 14, caption 12 (the smallest).
 - Fonts are self-hosted, the four above-the-fold files are preloaded, and metric-matched fallbacks stop the swap shifting layout.
 
@@ -45,14 +45,14 @@ Emerald is the only accent. No gradients, no glows. Data colors (`--trip-*`, `--
 ## Frame
 
 - From 1024px: a sticky translucent top nav (logo with the mono tagline, sections, Spending, theme, account, "Plan a trip"), a scroll-progress line and underlines that draw in. Below: a slim top bar and a bottom tab bar.
-- Pages open with a numbered mono label ("03 / Budget"), the title with its last word italic emerald, the trip bar and the page's actions.
+- Pages open with the title with its last word italic emerald, the trip bar and the page's actions.
 - The footer is the brand as a huge light wordmark over a mono legal row.
 
 ## Motion
 
 - One authored moment per screen. The hero's words rise in once; everything that holds content back is under a second.
 - Entrance animations play only in the first seconds of a visit, then never replay when you open a tab.
-- Scroll reveals only slide (never fade), so text contrast is constant. Bars grow, the main number counts up once, the FAQ opens with a height animation, the marquee drifts slowly and has a Pause button.
+- Nothing moves because the page scrolled (the taste skill bans scroll-linked reveals); only the nav progress line follows scroll. Bars grow, the main number counts up once, the FAQ opens with a height animation, the marquee drifts slowly and has a Pause button.
 - Exponential ease-out or the spring tokens. No bounce, no cursor effects, no scroll hijacking. Everything is off for reduced motion.
 
 ## Voice

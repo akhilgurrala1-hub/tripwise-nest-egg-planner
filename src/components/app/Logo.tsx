@@ -69,24 +69,21 @@ export function LogoMark({
   );
 }
 
-/** Mark + wordmark lockup: the name in Fraunces, with an optional mono tagline beneath. */
+/** Mark + wordmark lockup: the name in Fraunces. */
 export function Logo({
   className,
   markClassName,
   wordClassName,
-  tag,
 }: {
   className?: string;
   markClassName?: string;
   wordClassName?: string;
-  tag?: string;
 }) {
   return (
     <span className={cn("logo inline-flex items-center gap-4 text-foreground", className)}>
       <LogoMark className={cn("size-7", markClassName)} />
       <span className="flex flex-col leading-none">
         <span className={cn("logo-word font-display font-normal", wordClassName)}>Waypoint</span>
-        {tag && <span className="mt-1 label-mono">{tag}</span>}
       </span>
     </span>
   );

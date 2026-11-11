@@ -240,22 +240,25 @@ describe("product-team basics", () => {
     expect(auth).toContain('to="/privacy"');
   });
 
-  it("no gradient text or glowing orbs; page titles carry the numbered mono label", () => {
+  it("no gradient text or glowing orbs; no kicker label stacked above a headline", () => {
     expect(find(/\bbg-clip-text\b|\bblur-3xl\b|radial-gradient\(/g)).toEqual([]);
-    expect(read("components", "app", "TripHeader.tsx")).toMatch(/eyebrow/);
+    // Impeccable's craft floor bans the eyebrow above a heading; mono labels stay for data and group names.
+    expect(find(/\beyebrow\b/g)).toEqual([]);
+    expect(read("components", "app", "TripHeader.tsx")).not.toMatch(/label-mono/);
   });
 
-  it("motion is authored and safe: guarded, progressive, and off for reduced motion", () => {
+  it("motion is authored and safe: nothing moves because the page scrolled, and all of it is off for reduced motion", () => {
     const css = read("styles.css");
-    // Scroll-driven reveals only run where the browser supports them.
-    expect(css).toMatch(/@supports \(animation-timeline: view\(\)\)/);
+    // The taste skill bans scroll-linked reveals: the one scroll-driven thing is the nav's progress line.
+    expect(css).not.toMatch(/animation-timeline:\s*view\(/);
+    expect(find(/\bparallax\b|useScrollReveal|\breveal\b/g, (p) => p.endsWith(".test.ts"))).toEqual(
+      [],
+    );
     // Every entrance animation is switched off for reduced motion.
     const rm = css.slice(css.lastIndexOf("@media (prefers-reduced-motion: reduce), print"));
     for (const cls of [".hero-word", ".enter-rise", ".grow-x", ".route-dot"]) {
       expect(rm, cls).toContain(cls);
     }
-    // No parallax, and the count-up is opt-in per number.
-    expect(find(/\bparallax\b|useScrollReveal/g)).toEqual([]);
   });
 
   it("copy says what the product does, not buzzwords", () => {

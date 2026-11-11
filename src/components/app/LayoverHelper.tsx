@@ -65,7 +65,7 @@ export function LayoverHelper({ homeCountry }: { homeCountry: string }) {
 
       {live.length > 0 && airports && visas && (
         <div className="mt-6 space-y-4">
-          <p className="eyebrow">In your cheapest flight</p>
+          <p className="label-mono">In your cheapest flight</p>
           {live.map((l) => (
             <AdviceFor
               key={l.code}

@@ -307,7 +307,7 @@ export function TripAssistant({
       ) : (
         <header className="flex items-start gap-4 px-6 pt-6 sm:px-6 sm:pt-6">
           <div className="min-w-0 flex-1">
-            <p className="eyebrow flex items-center gap-2">Describe it</p>
+            <p className="label-mono">Describe it</p>
             <h2 className="mt-2 text-headline leading-snug font-semibold">
               Tell us the trip in your own words
             </h2>
@@ -342,7 +342,7 @@ export function TripAssistant({
                 {t === lastAssistant && !busy && (
                   <>
                     {ready && t.questions.length > 0 && (
-                      <p className="eyebrow px-1 pt-1">Optional, for a better plan</p>
+                      <p className="label-mono px-1 pt-1">Optional, for a better plan</p>
                     )}
                     {t.questions.map((q, qi) => (
                       <div key={qi} style={stagger(qi + 1)} className="">
@@ -515,7 +515,7 @@ export function TripAssistant({
         )}
         {state.turns.length === 0 && (
           <div className="mt-4">
-            <p className={cn("eyebrow px-1", search && "sr-only")}>Or start with</p>
+            <p className={cn("label-mono px-1", search && "sr-only")}>Or start with</p>
             <ul
               className={cn(
                 "mt-2 flex gap-2",

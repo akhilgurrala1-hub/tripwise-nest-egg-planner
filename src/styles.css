@@ -661,27 +661,6 @@
   background-color: var(--color-card);
 }
 
-/* The small label above a section: mono, uppercase, tracked, with a short rule before it. */
-@utility eyebrow {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.875rem;
-  font-family: var(--font-mono);
-  font-size: var(--text-caption);
-  line-height: 1.2;
-  font-weight: 500;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: var(--color-primary);
-  &::before {
-    content: "";
-    width: 2.5rem;
-    height: 1px;
-    background: currentColor;
-    opacity: 0.7;
-  }
-}
-
 /* Mono micro label with no rule (table heads, key-value keys). */
 @utility label-mono {
   font-family: var(--font-mono);
@@ -1183,11 +1162,9 @@
 
 @keyframes rise {
   from {
-    opacity: 0;
     translate: 0 20px;
   }
   to {
-    opacity: 1;
     translate: 0 0;
   }
 }
@@ -1220,15 +1197,6 @@
   }
   to {
     scale: 1 1;
-  }
-}
-/* Scroll reveals only slide: text never fades, so contrast is the same at every scroll position. */
-@keyframes slide-up {
-  from {
-    translate: 0 28px;
-  }
-  to {
-    translate: 0 0;
   }
 }
 
@@ -1273,15 +1241,6 @@
   animation-delay: calc(var(--i, 0) * 60ms + 150ms);
 }
 
-/* Cards arrive as they scroll into view (only where scroll-driven animation exists). */
-@supports (animation-timeline: view()) {
-  main .reveal {
-    animation: slide-up linear backwards;
-    animation-timeline: view();
-    animation-range: entry 0% entry 30%;
-  }
-}
-
 /* Arrows in buttons and links glide forward on hover. */
 .pressable svg.lucide-arrow-right,
 .pressable svg.lucide-chevron-right {
@@ -1324,9 +1283,6 @@
   .route-dot,
   .route-origin,
   .grow-x,
-  main .reveal {
-    animation: none !important;
-  }
   .route-line {
     animation: none;
     stroke-dashoffset: 0;
@@ -1403,44 +1359,7 @@
   scale: 1 1;
 }
 
-/* ---------- Marquee, FAQ ---------- */
-.marquee {
-  overflow: hidden;
-  padding-block: 1.5rem;
-}
-.marquee-track {
-  display: flex;
-  width: max-content;
-  animation: marquee 70s linear infinite;
-}
-.marquee:hover .marquee-track,
-.marquee[data-paused="true"] .marquee-track {
-  animation-play-state: paused;
-}
-.marquee-row {
-  display: flex;
-  flex-shrink: 0;
-  align-items: center;
-  gap: 2rem;
-  padding-right: 2rem;
-  list-style: none;
-}
-@keyframes marquee {
-  to {
-    transform: translateX(-50%);
-  }
-}
-@media (prefers-reduced-motion: reduce) {
-  .marquee-track {
-    animation: none;
-  }
-  .marquee {
-    overflow-x: auto;
-  }
-  .marquee-pause {
-    display: none;
-  }
-}
+/* ---------- FAQ ---------- */
 .faq-content[data-state="open"] {
   animation: faq-down 420ms var(--ease-out-expo);
 }
