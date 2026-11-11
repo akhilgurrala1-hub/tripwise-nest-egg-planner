@@ -1,0 +1,9 @@
+{
+  "detector": {
+    "ignoreRules": [
+      "italic-serif-display"
+    ],
+    "ignoreFiles": [],
+    "ignoreValues": []
+  }
+}

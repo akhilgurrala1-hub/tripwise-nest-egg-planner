@@ -172,7 +172,7 @@ function BookPage() {
           </div>
           {groups.map((g) => (
             <section key={g.key} aria-labelledby={`book-${g.key}`} className="space-y-4">
-              <h2 id={`book-${g.key}`} className="eyebrow">
+              <h2 id={`book-${g.key}`} className="label-mono">
                 {g.label}
               </h2>
               {g.items.map(({ item, when }, i) => (

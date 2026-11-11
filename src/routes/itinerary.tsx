@@ -240,7 +240,7 @@ function DriveStops() {
     <section className="surface-card overflow-hidden">
       <header className="flex items-center justify-between gap-4 border-b border-border px-6 py-4">
         <div>
-          <p className="eyebrow">On the drive</p>
+          <p className="label-mono">On the drive</p>
           <h2 className="title-display text-title-1">Road-trip stops</h2>
         </div>
         <Link

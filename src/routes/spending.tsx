@@ -686,7 +686,7 @@ function SplitCard() {
 
       {people.length > 1 && paidCosts && (
         <div className="mt-6 border-t border-border pt-4">
-          <h3 className="eyebrow">To settle up</h3>
+          <h3 className="label-mono">To settle up</h3>
           {payments.length === 0 ? (
             <p className="mt-2 text-sm text-muted-foreground">Everyone's even.</p>
           ) : (

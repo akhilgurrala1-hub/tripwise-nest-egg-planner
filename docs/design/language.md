@@ -1,79 +1,64 @@
 # Waypoint design language
 
-One page on how Waypoint looks, moves and sounds. The tokens live in `src/styles.css`; the
-enforced rules and the audit history are in `hig.md` and `src/test/design-system.test.ts`.
+Waypoint wears the language of the owner's own site, [argcoresolutions.com](https://argcoresolutions.com),
+with the craft of apple.com: sharp type, hairlines, restraint, and motion that earns its place.
+Tokens live in `src/styles.css`; `src/test/design-system.test.ts` enforces the rules below.
+(`hig.md` is the history of the earlier Apple-style system this one replaced.)
 
 ## Principles
 
-1. **The trip is the product.** Every screen answers "what will this cost and what do I do next?" Real photos, real prices, real places beat decoration.
-2. **Say it once.** A fact, a label or a note appears in one place. If the page already says it, cut it.
-3. **Honest numbers.** Estimates are labeled "Estimated", live prices "Live price", unpublished prices "not listed". Nothing is called free unless the source says so. No fake urgency, reviews or social proof.
-4. **Works signed out, on any screen.** Every page works without an account, from a 320px phone to a wide desktop.
-5. **Quiet, then precise.** One accent, one type system, flat surfaces. Detail goes into spacing and wording, not effects.
-
-## Brand
-
-| Part   | Value                                                                                                                                               |
-| ------ | --------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Mark   | One route: hollow origin ring, a zigzag up, an orange destination dot, white on a deep teal tile (`Logo.tsx`; source of truth `public/favicon.svg`) |
-| Teal   | `#0B5C5A` (`--primary`), fixed in the mark                                                                                                          |
-| Orange | `#E0501A`, only in the mark (the destination dot)                                                                                                   |
-| Name   | Waypoint. Owner and contact are in `src/lib/legal.ts`                                                                                               |
+1. **The trip is the product.** Every screen answers what it costs and what to do next.
+2. **Say it once.** A fact, label or note appears in one place.
+3. **Honest copy.** Only what the app really does: no invented metrics, quotes, customers or testimonials. Estimates are labeled, unpublished prices say "not listed".
+4. **Works signed out, on any screen,** from a 320px phone to a wide desktop, in dark and light.
+5. **Editorial restraint.** One accent, one signature moment per screen, hairlines instead of boxes.
 
 ## Color
 
-- **Light:** cool mineral paper `oklch(0.971 0.003 170)`, white cards with a hairline edge, near-black teal ink. Never cream.
-- **Dark:** deep teal-black `oklch(0.186 0.014 187)` with lifted teal-black cards, never pure black.
-- **Deep teal fields:** the sidebar (darkest) and the Plan hero (brand teal) are `.theme-deep`. Text on them is white or a tinted near-white, never gray.
-- **One accent.** Teal marks what you can press or what is selected, and every primary action is the same teal (one per screen). Orange lives only in the logo mark. Over budget uses `destructive` with a sign and a word, never color alone.
-- Trip types keep a hue (`--trip-*`), used as a light tint. No gradients, glows or violet.
+| Role                      | Dark (default)           | Light                 |
+| ------------------------- | ------------------------ | --------------------- |
+| Ground                    | `#08100d`                | `#f5f1e8` cream paper |
+| Card                      | `#0c1411`                | `#fbf8f1`             |
+| Raised                    | `#101816`                | `#ece6d8`             |
+| Ink                       | `#f5f1e8`                | `#0c1411`             |
+| Muted text                | `#958f82` (AA on raised) | `#5f5a4f`             |
+| Hairline                  | cream at 8 to 12%        | ink at 10 to 14%      |
+| Button fill               | emerald `#1f7a5a`        | emerald `#1f7a5a`     |
+| Accent text, links, focus | `#2fa074`                | `#155440`             |
+
+Emerald is the only accent. No gradients, no glows. Data colors (`--trip-*`, `--cat-*`) stay for charts and chips.
 
 ## Type
 
-One family. The system face (`-apple-system`, so SF Pro with its optical sizes on Apple devices), with self-hosted Hanken Grotesk (OFL) as the fallback on every other device. Headlines and amounts are weight 650 with tracking -0.028em; text is regular and medium. Mono only for codes people copy. No Inter, no Google Fonts request, no serif.
+- **Fraunces** (display): light 300, optical size on. `<em>` inside a title is the one italic emerald word. Amounts use it too (`money-display`).
+- **Inter** (text and controls), 400 and 500.
+- **JetBrains Mono** (labels): small uppercase, tracked. `label-mono` has none.
+- Scale: display 52 to 128px, page title 40 to 76, title 30 and 24, headline 19, body 17, footnote 14, caption 12 (the smallest).
+- Fonts are self-hosted, the four above-the-fold files are preloaded, and metric-matched fallbacks stop the swap shifting layout.
 
-The scale has nine levels, each with its own size, line height, tracking and weight:
-`text-display` (48 to 80px), `text-large-title` (32 to 48), `text-title-1` (26), `text-title-2` (22), `text-headline` (21), `text-body` (17), `text-footnote` (14), `text-caption` and `text-micro` (12). No one-off sizes. The smallest text is 12px. Page titles use `text-large-title`; only the Plan hero uses `text-display`.
+## Shape and space
 
-## Space and layout
+- Buttons are **pills**: one emerald primary per screen, outlined hairline pills for the rest.
+- Fields are 8px; surfaces and photos are 4px. Radii come from the token scale.
+- 8px spacing grid. Content is up to 1328px with 24, 32 and 48px side padding.
 
-- **8px grid.** Multiples of 8 for padding, gaps and margins; 4px only inside a control.
-- **Pages** sit in `page-container` (up to 1216px, 16/24/40px side padding) and split on the 12-column grid: `layout-main-aside` (8 + 4) or `layout-5-7`.
-- **One app frame per screen size:** phones get a 48px top bar and a bottom tab bar (Plan, Overview, Budget, Days, More); tablets a left icon rail; laptops a 256px sidebar with the current trip.
-- **Plan hero:** a deep teal field: the question, promise and assistant bar on the left, three real destination photos on the right from 1280px; one centered column below that.
-- Whitespace separates groups before a border does. Panels inside cards use a divider, never a box in a box.
+## Frame
 
-## Shape
-
-| Radius | Use                                        |
-| ------ | ------------------------------------------ |
-| 3px    | bars, swatches                             |
-| 6px    | items inside a surface (tags, menu items)  |
-| 12px   | controls: buttons, fields, chips, menus    |
-| 18px   | surfaces: cards, photos, dialogs, sheets   |
-| round  | only icon buttons, avatars, dots, switches |
-
-Nothing is pill-shaped. Buttons are 44px tall (`sm` 32, `lg` 48), filled, and show `loading` on every slow action. Fields share one shape: 44px, 12px corners, filled, blue focus ring.
-
-## Imagery
-
-- Real photos only, through `Photo` (placeholder, fade-in, fallback). Better no photo than the wrong one: maps, flags and logos are never used as a place's picture.
-- Text on photos uses `on-image`; labels on photos sit on a solid card chip, not a gradient.
-- Decoration is line art in the brand's motif (`Illustrations.tsx`), no cartoon art, no sparkle or magic-wand icons.
+- From 1024px: a sticky translucent top nav (logo with the mono tagline, sections, Spending, theme, account, "Plan a trip"), a scroll-progress line and underlines that draw in. Below: a slim top bar and a bottom tab bar.
+- Pages open with the title with its last word italic emerald, the trip bar and the page's actions.
+- The footer is the brand as a huge light wordmark over a mono legal row.
 
 ## Motion
 
-Informed by what Awwwards winners share: one signature moment per screen, restraint, real photography, consistency on inner pages, and care for performance and accessibility.
-
-- **Signature moment:** the Plan hero. The opening wipe hands off to the headline rising word by word, photos opening like curtains and a journey line drawing to the orange dot.
-- **Details:** cards slide into view on scroll (slide only, never a fade, so text contrast never changes), budget bars grow, the main number counts up once, the sidebar highlight springs between pages, pages change with a soft rise, arrows glide on hover, and photo cards show a round "Plan" label that follows a fine pointer.
-- **Easing:** exponential ease-out (`--ease-out-expo`) and the spring tokens; no bounce. Presses answer on touch-down (`pressable`).
-- **Safety:** everything is off for reduced motion, scroll-driven parts only run where supported, no scroll hijacking, nothing moves for longer than the opening sequence.
+- One authored moment per screen. The hero's words rise in once; everything that holds content back is under a second.
+- Entrance animations play only in the first seconds of a visit, then never replay when you open a tab.
+- Nothing moves because the page scrolled (the taste skill bans scroll-linked reveals); only the nav progress line follows scroll. Bars grow, the main number counts up once, the FAQ opens with a height animation, the marquee drifts slowly and has a Pause button.
+- Exponential ease-out or the spring tokens. No bounce, no cursor effects, no scroll hijacking. Everything is off for reduced motion.
 
 ## Voice
 
-Plain, specific, short. Headlines name the thing; buttons are a verb and an object ("Plan trip", "Find real stops"). No em dashes anywhere in the UI, no machine-sounding filler, no "demo" in the UI. AI output is always labeled as unverified estimates.
+Plain, specific, short. Headlines name the thing. Buttons are a verb and an object. No em dashes in the UI, no buzzwords, no fake urgency.
 
-## Checks
+## Detector
 
-Run before shipping UI changes: `bun run check`, `npx impeccable detect http://127.0.0.1:PORT/<page>` (0 anti-patterns), and the axe-core audit in light, dark, mobile and with menus and dialogs open.
+`npx impeccable detect http://localhost:PORT/<page>` is clean except one rule the owner's brand pins on purpose, ignored in `.impeccable/config.json`: `italic-serif-display` (the italic emerald word).

@@ -7,6 +7,7 @@ export const TYPE_LEVELS = [
   "large-title",
   "title-1",
   "title-2",
+  "stat",
   "headline",
   "body",
   "footnote",

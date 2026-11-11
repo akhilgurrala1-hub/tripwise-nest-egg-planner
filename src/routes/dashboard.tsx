@@ -245,7 +245,7 @@ function SpendingGlance() {
       className="surface-card flex flex-col p-6 lg:w-[300px]"
       style={stagger(1)}
     >
-      <h2 id="glance-spent" className="eyebrow">
+      <h2 id="glance-spent" className="label-mono">
         {s.phase === "during"
           ? `Today, ${formatCalendarDate(today, { month: "short", day: "numeric" })}`
           : "Spent so far"}

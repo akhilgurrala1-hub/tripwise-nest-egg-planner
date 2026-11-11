@@ -490,7 +490,7 @@ function StopCard({
         <Icon className="size-4" strokeWidth={1.8} />
       </span>
       <div className="min-w-0 flex-1">
-        <p className="eyebrow truncate">
+        <p className="label-mono truncate">
           {label} · {segment}
         </p>
         <h2 className="mt-1 text-sm leading-snug font-medium">{stop.name}</h2>

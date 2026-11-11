@@ -1,5 +1,6 @@
 import { Link, useNavigate, useRouter, useRouterState } from "@tanstack/react-router";
 import {
+  ArrowRight,
   Bookmark,
   Menu,
   CalendarCheck,
@@ -22,8 +23,6 @@ import {
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 
 import { Logo, LogoMark } from "./Logo";
-import { CursorLabel } from "./CursorLabel";
-import { useActiveIndicator } from "./motion";
 import { useScrolled } from "./use-scrolled";
 import { formatDateRange } from "./TripHeader";
 import { cn } from "@/lib/utils";
@@ -93,42 +92,44 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   /*
    * One app frame that adapts to the screen:
-   * - phones: a slim top bar and a bottom tab bar within thumb reach;
-   * - tablets (768px+): an icon rail on the left;
-   * - laptops and desktops (1024px+): a sidebar with the trip and every section.
-   * Content scrolls on its own; navigation never moves.
+   * - phones and tablets: a slim top bar and a bottom tab bar within thumb reach;
+   * - laptops and desktops (1024px+): a sticky translucent top nav with a scroll-progress line.
    */
   return (
-    <div className="min-h-dvh bg-background md:grid md:grid-cols-[5rem_minmax(0,1fr)] lg:grid-cols-[16rem_minmax(0,1fr)]">
-      <Sidebar items={nav} pathname={pathname} />
-      <div className="flex min-h-dvh min-w-0 flex-col">
-        <header
-          data-scrolled={scrolled && !menuOpen}
-          className={cn(
-            "scroll-edge sticky top-0 z-50 md:hidden print:hidden",
-            menuOpen ? "bg-background" : "material-thick",
-          )}
-        >
-          <div className="flex h-12 items-center justify-between gap-2 px-4">
-            <Link
-              to="/"
-              className="flex items-center rounded-md"
-              aria-label="Waypoint home"
-              onClick={() => setMenuOpen(false)}
-            >
-              <Logo markClassName="size-6" wordClassName="text-sm font-semibold" />
-            </Link>
-            <div className="flex items-center gap-1">
-              <ThemeToggle />
-              <AccountButton />
-            </div>
+    <div className="pb-tabbar min-h-dvh bg-background">
+      <a
+        href="#main"
+        className="sr-only focus-visible:not-sr-only focus-visible:fixed focus-visible:top-2 focus-visible:left-2 focus-visible:z-[100] focus-visible:rounded-lg focus-visible:bg-card focus-visible:px-4 focus-visible:py-2 focus-visible:text-footnote focus-visible:text-foreground focus-visible:ring-2 focus-visible:ring-ring"
+      >
+        Skip to content
+      </a>
+      <TopNav items={nav} pathname={pathname} />
+      <header
+        data-scrolled={scrolled && !menuOpen}
+        className={cn(
+          "scroll-edge sticky top-0 z-50 lg:hidden print:hidden",
+          menuOpen ? "bg-background" : "material-thick",
+        )}
+      >
+        <div className="flex h-12 items-center justify-between gap-2 px-4">
+          <Link
+            to="/"
+            className="flex items-center rounded-md"
+            aria-label="Waypoint home"
+            onClick={() => setMenuOpen(false)}
+          >
+            <Logo markClassName="size-6" wordClassName="text-title-2" />
+          </Link>
+          <div className="flex items-center gap-1">
+            <ThemeToggle />
+            <AccountButton />
           </div>
-        </header>
-        <main key={pathname} className="pb-tabbar flex-1">
-          {children}
-        </main>
-        <Footer />
-      </div>
+        </div>
+      </header>
+      <main id="main" key={pathname} className="min-h-[70dvh]">
+        {children}
+      </main>
+      <Footer />
       <TabBar
         items={nav}
         active={active}
@@ -137,7 +138,6 @@ export function AppShell({ children }: { children: ReactNode }) {
         onMenu={() => setMenuOpen((o) => !o)}
       />
       <MobileMenu open={menuOpen} items={nav} pathname={pathname} onClose={closeMenu} />
-      <CursorLabel />
     </div>
   );
 }
@@ -165,122 +165,51 @@ function TripSummary({ onCard = false }: { onCard?: boolean }) {
   );
 }
 
-/** Tablets get an icon rail; laptops and desktops the full sidebar. Phones use the tab bar. */
-function Sidebar({ items, pathname }: { items: typeof NAV; pathname: string }) {
-  const { user } = useAuth();
-  // One highlight that springs to whichever link is current.
-  const { ref, thumbRef, ready } = useActiveIndicator<HTMLElement>([pathname]);
+/** Laptops and desktops: logo, sections, account and one call to action, with a scroll-progress line. */
+function TopNav({ items, pathname }: { items: typeof NAV; pathname: string }) {
+  const links = [
+    ...items.filter((i) => i.to !== "/"),
+    { to: "/spending" as const, label: "Spending" },
+  ];
   return (
-    <header className="theme-deep sidebar-ink sticky top-0 hidden h-dvh flex-col md:flex print:hidden">
-      <div className="flex h-16 shrink-0 items-center justify-center px-4 lg:justify-start lg:px-6">
+    <header className="scroll-edge material-thick sticky top-0 z-50 hidden border-b border-separator lg:block print:hidden">
+      <div aria-hidden className="nav-progress" />
+      <div className="page-container flex h-16 items-center justify-between gap-6 xl:gap-8">
         <Link to="/" className="flex items-center rounded-md" aria-label="Waypoint home">
-          <LogoMark className="size-8 lg:hidden" />
-          <Logo
-            className="hidden lg:flex"
-            markClassName="size-7"
-            wordClassName="text-headline font-semibold"
-          />
+          <Logo markClassName="size-8" wordClassName="text-title-2" />
         </Link>
-      </div>
-      <div className="hidden px-4 lg:block">
-        <TripSummary />
-      </div>
-      <nav
-        ref={ref}
-        aria-label="Main"
-        data-ready={ready}
-        className="group/nav relative mt-4 min-h-0 flex-1 overflow-y-auto px-2 lg:px-4"
-      >
-        <span
-          ref={thumbRef}
-          aria-hidden
-          className="pointer-events-none absolute top-0 left-0 rounded-lg bg-fill before:absolute before:inset-y-2 before:left-0 before:w-[3px] before:rounded-xs before:bg-primary"
-          style={{ opacity: ready ? 1 : 0 }}
-        />
-        <ul className="space-y-1">
-          {items.map((item) => (
-            <li key={item.to}>
-              <SideLink
-                to={item.to}
-                icon={item.icon}
-                label={item.label}
-                on={item.to === pathname}
-              />
-            </li>
-          ))}
-        </ul>
-        <p className="mt-6 hidden px-4 text-caption font-semibold text-muted-foreground lg:block">
-          {user ? "Account" : "More"}
-        </p>
-        <ul className="mt-2 space-y-1 border-t border-separator pt-2 lg:border-0 lg:pt-0">
-          <li>
-            <SideLink to="/spending" icon={Coins} label="Spending" on={pathname === "/spending"} />
-          </li>
-          {user && (
-            <>
-              <li>
-                <SideLink
-                  to="/trips"
-                  icon={Bookmark}
-                  label="Saved trips"
-                  on={pathname === "/trips"}
-                />
-              </li>
-              <li>
-                <SideLink
-                  to="/bookings"
-                  icon={Ticket}
-                  label="Bookings"
-                  on={pathname === "/bookings"}
-                />
-              </li>
-              <li>
-                <SideLink
-                  to="/profile"
-                  icon={Settings2}
-                  label="Profile"
-                  on={pathname === "/profile"}
-                />
-              </li>
-            </>
-          )}
-        </ul>
-      </nav>
-      <div className="flex shrink-0 flex-col items-center gap-2 border-t border-separator p-4 lg:flex-row lg:justify-between">
-        <AccountButton />
-        <ThemeToggle />
+        <nav aria-label="Main">
+          <ul className="flex items-center gap-4 xl:gap-8">
+            {links.map((l) => {
+              const on = l.to === pathname || (l.to === "/budget" && pathname === "/spending");
+              return (
+                <li key={l.to}>
+                  <Link
+                    to={l.to}
+                    aria-current={on ? "page" : undefined}
+                    className={cn(
+                      "nav-link text-footnote transition-colors duration-300",
+                      on ? "text-foreground" : "text-muted-foreground hover:text-foreground",
+                    )}
+                  >
+                    {l.label}
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+        </nav>
+        <div className="flex items-center gap-2">
+          <ThemeToggle />
+          <AccountButton />
+          <Button asChild size="sm" variant="outline">
+            <Link to="/">
+              Plan a trip <ArrowRight />
+            </Link>
+          </Button>
+        </div>
       </div>
     </header>
-  );
-}
-
-function SideLink({
-  to,
-  icon: Icon,
-  label,
-  on,
-}: {
-  to: (typeof NAV)[number]["to"] | "/spending" | "/trips" | "/bookings" | "/profile";
-  icon: LucideIcon;
-  label: string;
-  on: boolean;
-}) {
-  return (
-    <Link
-      to={to}
-      aria-current={on ? "page" : undefined}
-      data-active={on}
-      title={label}
-      className={cn(
-        "pressable relative flex flex-col items-center gap-1 rounded-lg px-1 py-2 text-micro transition-colors duration-150 lg:h-10 lg:flex-row lg:gap-4 lg:px-4 lg:py-0 lg:text-footnote",
-        on
-          ? "font-semibold text-foreground group-data-[ready=false]/nav:bg-fill"
-          : "text-foreground/75 hover:bg-fill hover:text-foreground",
-      )}
-    >
-      <Icon className="size-5 shrink-0 lg:size-[18px]" strokeWidth={on ? 2.2 : 1.8} />
-      <span className="max-w-full truncate">{label}</span>
-    </Link>
   );
 }
 
@@ -304,7 +233,7 @@ function TabBar({
   return (
     <nav
       aria-label="Tabs"
-      className="material-thick fixed inset-x-0 bottom-0 z-50 border-t border-separator pb-safe md:hidden print:hidden"
+      className="material-thick fixed inset-x-0 bottom-0 z-50 border-t border-separator pb-safe lg:hidden print:hidden"
     >
       <ul className="grid h-14 grid-cols-5">
         {tabs.map((item) => {
@@ -404,7 +333,7 @@ function MobileMenu({
       aria-label="More"
       data-open={open}
       inert={!open}
-      className="mobile-menu fixed inset-x-0 top-12 bottom-[var(--tabbar)] z-[45] overflow-y-auto bg-background px-4 pt-4 pb-8 md:hidden"
+      className="mobile-menu fixed inset-x-0 top-12 bottom-[var(--tabbar)] z-[45] overflow-y-auto bg-background px-4 pt-4 pb-8 lg:hidden"
     >
       <div className="menu-item" style={{ ["--i" as string]: 0 } as React.CSSProperties}>
         <TripSummary onCard />
@@ -446,42 +375,46 @@ function MobileMenu({
   );
 }
 
-/** One quiet line at the end of every page: what the numbers are and the legal links (photo sources are under Credits). */
+/** The end of every page: the brand set large, then what the numbers are and the legal links. */
 function Footer() {
   const year = new Date().getFullYear();
   return (
-    <footer className="overflow-hidden text-caption text-muted-foreground print:hidden">
+    <footer className="overflow-hidden border-t border-separator print:hidden">
       <div aria-hidden className="page-container pt-16 sm:pt-24">
         {/* The brand set as large as the page allows; drawn as a graphic, not text. */}
-        <svg viewBox="0 0 1000 164" className="footer-mark block h-auto w-full">
-          <text x="-8" y="142">
+        <svg viewBox="0 0 1000 236" className="footer-mark block h-auto w-full">
+          <text x="-10" y="204">
             Waypoint
-            <tspan fill="#e0501a">.</tspan>
+            <tspan className="footer-dot">.</tspan>
           </text>
         </svg>
       </div>
-      <div className="page-container border-t border-separator py-6">
-        <p className="flex flex-wrap items-center gap-x-4 gap-y-2">
-          <span>Estimates in US dollars. Waypoint never books or takes payment.</span>
+      <div className="page-container flex flex-wrap items-center justify-between gap-x-8 gap-y-4 border-t border-separator py-6 label-mono">
+        <span>Estimates in US dollars. Never books or takes payment.</span>
+        <span className="flex flex-wrap items-center gap-x-6">
           <span>
             © {year} {LEGAL.owner}
           </span>
-          <Link to="/privacy" className="hover:text-foreground hover:underline">
-            Privacy Policy
+          <Link to="/privacy" className="inline-flex min-h-12 items-center hover:text-foreground">
+            Privacy
           </Link>
-          <Link to="/terms" className="hover:text-foreground hover:underline">
-            Terms of Service
+          <Link to="/terms" className="inline-flex min-h-12 items-center hover:text-foreground">
+            Terms
           </Link>
-          <Link to="/terms" hash="credits" className="hover:text-foreground hover:underline">
-            Credits and licenses
+          <Link
+            to="/terms"
+            hash="credits"
+            className="inline-flex min-h-12 items-center hover:text-foreground"
+          >
+            Credits
           </Link>
           <a
             href={`mailto:${LEGAL.contactEmail}`}
-            className="hover:text-foreground hover:underline"
+            className="inline-flex min-h-12 items-center hover:text-foreground"
           >
             Contact
           </a>
-        </p>
+        </span>
       </div>
     </footer>
   );

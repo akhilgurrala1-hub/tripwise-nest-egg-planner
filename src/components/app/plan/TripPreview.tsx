@@ -116,7 +116,7 @@ export function TripPreview({
           <Icon className="size-4" style={{ color }} strokeWidth={2} />
         </span>
         {tripTypeInfo(form.tripType).label}
-        <span className="eyebrow ml-auto">Preview</span>
+        <span className="label-mono ml-auto">Preview</span>
       </div>
       <div className="p-6 pt-4">
         <DestinationPhoto

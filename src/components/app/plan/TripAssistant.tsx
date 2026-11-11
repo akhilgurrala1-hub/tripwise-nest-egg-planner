@@ -307,7 +307,7 @@ export function TripAssistant({
       ) : (
         <header className="flex items-start gap-4 px-6 pt-6 sm:px-6 sm:pt-6">
           <div className="min-w-0 flex-1">
-            <p className="eyebrow flex items-center gap-2">Describe it</p>
+            <p className="label-mono">Describe it</p>
             <h2 className="mt-2 text-headline leading-snug font-semibold">
               Tell us the trip in your own words
             </h2>
@@ -342,7 +342,7 @@ export function TripAssistant({
                 {t === lastAssistant && !busy && (
                   <>
                     {ready && t.questions.length > 0 && (
-                      <p className="eyebrow px-1 pt-1">Optional, for a better plan</p>
+                      <p className="label-mono px-1 pt-1">Optional, for a better plan</p>
                     )}
                     {t.questions.map((q, qi) => (
                       <div key={qi} style={stagger(qi + 1)} className="">
@@ -450,7 +450,7 @@ export function TripAssistant({
             "flex gap-2 rounded-2xl border transition-[border-color,box-shadow,background-color] focus-within:border-primary focus-within:ring-4 focus-within:ring-primary/10",
             search
               ? // The hero: one wide search-style bar, like a travel app's "Where to?"
-                "theme-paper items-center border-border bg-card p-2 pl-6 shadow-lift"
+                "items-center rounded-full border-input bg-card p-2 pl-8"
               : "flex-col border-input bg-background/70 p-2 pl-4 focus-within:bg-card sm:flex-row sm:items-end",
           )}
         >
@@ -515,7 +515,7 @@ export function TripAssistant({
         )}
         {state.turns.length === 0 && (
           <div className="mt-4">
-            <p className={cn("eyebrow px-1", search && "sr-only")}>Or start with</p>
+            <p className={cn("label-mono px-1", search && "sr-only")}>Or start with</p>
             <ul
               className={cn(
                 "mt-2 flex gap-2",
@@ -531,8 +531,8 @@ export function TripAssistant({
                     onClick={() => void send(ex.message)}
                     title={ex.message}
                     className={cn(
-                      "group flex items-center gap-2 rounded-lg border border-border bg-card transition-[border-color,transform] duration-150 hover:border-primary active:scale-[0.97]",
-                      search ? "h-9 px-4 text-footnote" : "h-10 px-4 text-body",
+                      "group flex items-center gap-2 rounded-full border border-border bg-transparent transition-[border-color,transform] duration-150 hover:border-primary active:scale-[0.97]",
+                      search ? "h-10 px-4 text-footnote" : "h-10 px-4 text-body",
                     )}
                   >
                     <CornerDownRight className="size-3.5 shrink-0 text-muted-foreground" />
