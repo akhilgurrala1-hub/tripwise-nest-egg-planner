@@ -1365,7 +1365,7 @@
   animation: route-draw 2200ms var(--ease-out-expo) 700ms forwards;
 }
 .route-dot {
-  animation: dot-land 700ms var(--ease-spring-bouncy) 2500ms both;
+  animation: dot-land 700ms var(--ease-out-expo) 2500ms both;
 }
 .route-origin {
   animation: dot-land 600ms var(--ease-spring-smooth) 600ms both;
