@@ -1368,7 +1368,7 @@
   animation: dot-land 700ms var(--ease-out-expo) 2500ms both;
 }
 .route-origin {
-  animation: dot-land 600ms var(--ease-spring-smooth) 600ms both;
+  animation: dot-land 600ms var(--ease-out-expo) 600ms both;
 }
 /* Budget bars grow from their start. */
 .grow-x {
