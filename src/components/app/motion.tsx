@@ -387,9 +387,15 @@ export function Segmented<V extends string>({
  * A number that springs to its new value, so budget changes read as movement.
  * A change mid-flight keeps the current velocity (no stall, no jump).
  */
-export function useTweened(target: number, config: SpringConfig = SPRINGS.smooth): number {
-  const [shown, setShown] = useState(target);
-  const st = useRef({ from: target, v0: 0, to: target, t0: 0, x: target, v: 0 });
+export function useTweened(
+  target: number,
+  config: SpringConfig = SPRINGS.smooth,
+  /** Count up from zero the first time it shows (one number per page earns this). */
+  fromZero = false,
+): number {
+  const start = fromZero ? 0 : target;
+  const [shown, setShown] = useState(start);
+  const st = useRef({ from: start, v0: 0, to: start, t0: 0, x: start, v: 0 });
   const frame = useRef<number | null>(null);
   useEffect(() => {
     const s = st.current;
@@ -398,7 +404,8 @@ export function useTweened(target: number, config: SpringConfig = SPRINGS.smooth
       setShown(target);
       return;
     }
-    if (target === s.to) return;
+    // Already at rest on the target (an effect re-run must still restart a cancelled tween).
+    if (s.x === target && s.v === 0) return;
     Object.assign(s, { from: s.x, v0: s.v, to: target, t0: performance.now() });
     const tick = (now: number) => {
       const r = springAt(s.from, s.to, s.v0, (now - s.t0) / 1000, config);
@@ -426,15 +433,18 @@ export function AnimatedMoney({
   value,
   cents,
   className,
+  intro,
 }: {
   value: number;
   cents?: boolean;
   className?: string;
+  /** Count up from $0 on arrival. */
+  intro?: boolean;
 }) {
   // Shown as-is on arrival; a change the traveler makes (an edit, a cut) springs
   // from the old amount to the new one, so they can see what moved.
   const target = value;
-  const v = useTweened(target, SPRINGS.smooth);
+  const v = useTweened(target, SPRINGS.smooth, intro);
   // Settle on the exact value so the last frame never shows a rounding artifact.
   const display = Math.abs(v - target) < 0.005 ? target : v;
   return (

@@ -118,7 +118,7 @@ function BudgetPage() {
               <div className="h-1.5 overflow-hidden rounded-full bg-muted">
                 <div
                   className={cn(
-                    "h-full rounded-full transition-[width] spring-smooth",
+                    "grow-x h-full rounded-full transition-[width] spring-smooth",
                     totals.overBudget ? "bg-destructive" : "bg-primary",
                   )}
                   style={{

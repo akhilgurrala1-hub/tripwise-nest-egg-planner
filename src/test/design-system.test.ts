@@ -249,13 +249,17 @@ describe("product-team basics", () => {
     expect(read("components", "app", "TripHeader.tsx")).not.toMatch(/eyebrow/);
   });
 
-  it("content is simply there: no fade-in on every card, section or page", () => {
+  it("motion is authored and safe: guarded, progressive, and off for reduced motion", () => {
     const css = read("styles.css");
-    expect(css).not.toMatch(/@utility (animate-rise|animate-pop|animate-page|reveal|parallax) /);
-    expect(css).not.toMatch(/\.hero-in \{/);
-    expect(
-      find(/\banimate-(?:rise|pop|page)\b|useScrollReveal|countUp|\bhero-in\b|\bparallax\b/g),
-    ).toEqual([]);
+    // Scroll-driven reveals only run where the browser supports them.
+    expect(css).toMatch(/@supports \(animation-timeline: view\(\)\)/);
+    // Every entrance animation is switched off for reduced motion.
+    const rm = css.slice(css.lastIndexOf("@media (prefers-reduced-motion: reduce), print"));
+    for (const cls of [".hero-word", ".enter-rise", ".enter-curtain", ".grow-x", ".route-dot"]) {
+      expect(rm, cls).toContain(cls);
+    }
+    // No parallax, and the count-up is opt-in per number.
+    expect(find(/\bparallax\b|useScrollReveal/g)).toEqual([]);
   });
 
   it("copy says what the product does, not buzzwords", () => {

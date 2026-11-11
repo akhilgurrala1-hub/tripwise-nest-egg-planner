@@ -408,7 +408,6 @@
   --chart-4: var(--cat-activities);
   --chart-5: var(--cat-water);
 
-
   /* Depth is quiet: cards barely lift off the page; menus and sheets lift more. */
   /* Tiles are flat, as on apple.com; only things that float (menus, sheets) cast a shadow. */
   --shadow-soft-value: none;
@@ -506,7 +505,6 @@
   --cat-snacks: oklch(0.74 0.12 20);
   --cat-stops: oklch(0.74 0.1 135);
   --cat-cruise: oklch(0.72 0.1 205);
-
 
   --shadow-soft-value: none;
   --shadow-lift-value: 0 16px 48px -12px oklch(0 0 0 / 0.8);
@@ -1244,4 +1242,209 @@
 .theme-deep .logo-tile {
   stroke: oklch(1 0 0 / 0.3);
   stroke-width: 1;
+}
+
+/* ---------- Motion language ----------
+   One authored sequence on the Plan hero, quiet reveals as cards scroll in, bars that grow,
+   a highlight that slides, and a soft page change. Everything is visible without motion:
+   each animation starts from the rest state's neighbour and ends on it, and the scroll-driven
+   ones only run where the browser supports them. Reduced motion turns all of it off. */
+:root {
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    translate: 0 20px;
+  }
+  to {
+    opacity: 1;
+    translate: 0 0;
+  }
+}
+@keyframes word-up {
+  from {
+    translate: 0 108%;
+  }
+  to {
+    translate: 0 0;
+  }
+}
+@keyframes curtain {
+  from {
+    clip-path: inset(0 0 100% 0 round 18px);
+  }
+  to {
+    clip-path: inset(0 0 0 0 round 18px);
+  }
+}
+@keyframes photo-settle {
+  from {
+    scale: 1.14;
+  }
+  to {
+    scale: 1;
+  }
+}
+@keyframes route-draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+@keyframes dot-land {
+  from {
+    opacity: 0;
+    scale: 0.4;
+  }
+  to {
+    opacity: 1;
+    scale: 1;
+  }
+}
+@keyframes grow-x {
+  from {
+    scale: 0 1;
+  }
+  to {
+    scale: 1 1;
+  }
+}
+/* Scroll reveals only slide: text never fades, so contrast is the same at every scroll position. */
+@keyframes slide-up {
+  from {
+    translate: 0 28px;
+  }
+  to {
+    translate: 0 0;
+  }
+}
+@keyframes page-in {
+  from {
+    opacity: 0;
+    translate: 0 10px;
+  }
+}
+@keyframes page-out {
+  to {
+    opacity: 0;
+  }
+}
+
+/* The headline: each word rises out of its own line box. */
+.hero-line {
+  display: inline-block;
+  overflow: hidden;
+  padding-bottom: 0.12em;
+  margin-bottom: -0.12em;
+  vertical-align: top;
+}
+.hero-word {
+  display: inline-block;
+  animation: word-up 1100ms var(--ease-out-expo) both;
+  animation-delay: calc(var(--w, 0) * 90ms + 150ms);
+}
+/* The rest of the hero follows the headline. */
+.enter-rise {
+  animation: rise 900ms var(--ease-out-expo) both;
+  animation-delay: calc(var(--d, 0) * 1ms + 450ms);
+}
+/* Photos open like a curtain while the picture settles inside its frame. */
+.enter-curtain {
+  animation: curtain 1200ms var(--ease-out-expo) both;
+  animation-delay: calc(var(--d, 0) * 1ms + 350ms);
+}
+.enter-curtain img {
+  animation: photo-settle 1600ms var(--ease-out-expo) both;
+  animation-delay: calc(var(--d, 0) * 1ms + 350ms);
+}
+/* The journey line along the hero's bottom edge: draws, then the destination lands. */
+.route-line {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: route-draw 2200ms var(--ease-out-expo) 700ms forwards;
+}
+.route-dot {
+  animation: dot-land 700ms var(--ease-spring-bouncy) 2500ms both;
+}
+.route-origin {
+  animation: dot-land 600ms var(--ease-spring-smooth) 600ms both;
+}
+/* Budget bars grow from their start. */
+.grow-x {
+  transform-origin: left center;
+  animation: grow-x 1100ms var(--ease-out-expo) both;
+  animation-delay: calc(var(--i, 0) * 60ms + 150ms);
+}
+
+/* Cards arrive as they scroll into view (only where scroll-driven animation exists). */
+@supports (animation-timeline: view()) {
+  main .reveal,
+  main .surface-card {
+    animation: slide-up linear both;
+    animation-timeline: view();
+    animation-range: entry 0% entry 30%;
+  }
+}
+
+/* Arrows in buttons and links glide forward on hover. */
+.pressable svg.lucide-arrow-right,
+.pressable svg.lucide-chevron-right {
+  transition: translate 320ms var(--ease-out-expo);
+}
+@media (hover: hover) {
+  .pressable:hover svg.lucide-arrow-right,
+  .pressable:hover svg.lucide-chevron-right {
+    translate: 4px 0;
+  }
+}
+
+/* Linked photo cards lift a little on pointer devices. */
+@media (hover: hover) {
+  .lift {
+    transition: translate 300ms var(--ease-out-expo);
+  }
+  .lift:hover {
+    translate: 0 -4px;
+  }
+}
+
+/* Page changes: the new page rises in; the sidebar and bars stay put. */
+.vt-sidebar {
+  view-transition-name: sidebar;
+}
+.vt-page {
+  view-transition-name: page;
+}
+:root:active-view-transition-type(route) {
+  &::view-transition-old(page) {
+    animation: page-out 140ms ease-in both;
+  }
+  &::view-transition-new(page) {
+    animation: page-in 380ms var(--ease-out-expo) both;
+  }
+}
+
+@media (prefers-reduced-motion: reduce), print {
+  .hero-word,
+  .enter-rise,
+  .enter-curtain,
+  .enter-curtain img,
+  .route-dot,
+  .route-origin,
+  .grow-x,
+  main .reveal,
+  main .surface-card {
+    animation: none !important;
+  }
+  .route-line {
+    animation: none;
+    stroke-dashoffset: 0;
+  }
+  .lift {
+    transition: none;
+  }
+  .lift:hover {
+    translate: none;
+  }
 }

@@ -1,7 +1,7 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { ArrowRight, ChevronDown, Minus, Plus } from "lucide-react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { toast } from "sonner";
 
 import { InterestChips, NumberField, FieldError } from "@/components/app/bits";
@@ -363,17 +363,64 @@ function Welcome() {
         search-style bar to answer it in plain words, quick starts under it.
         Photos come right after, in the trip ideas.
       */}
-      <section className="theme-deep">
-        <div className="page-container pt-8 pb-8 sm:pt-16 sm:pb-16">
+      <section className="theme-deep relative overflow-hidden">
+        {/* The journey line along the bottom edge: a ring at the start, an orange dot at the end. */}
+        <svg
+          aria-hidden
+          className="pointer-events-none absolute inset-x-0 bottom-0 hidden h-auto w-full sm:block"
+          viewBox="0 0 1440 64"
+          preserveAspectRatio="xMidYMax meet"
+        >
+          <path
+            className="route-line"
+            pathLength={1}
+            d="M 56 44 C 260 44, 340 12, 560 24 S 900 58, 1100 32 S 1300 12, 1384 20"
+            fill="none"
+            stroke="oklch(1 0 0 / 0.3)"
+            strokeWidth="2"
+            strokeLinecap="round"
+          />
+          <circle
+            className="route-origin"
+            cx="56"
+            cy="44"
+            r="7"
+            fill="none"
+            stroke="oklch(1 0 0 / 0.7)"
+            strokeWidth="2.5"
+            style={{ transformBox: "fill-box", transformOrigin: "center" }}
+          />
+          <circle
+            className="route-dot"
+            cx="1384"
+            cy="20"
+            r="8"
+            fill="#E0501A"
+            style={{ transformBox: "fill-box", transformOrigin: "center" }}
+          />
+        </svg>
+        <div className="page-container relative pt-8 pb-8 sm:pt-16 sm:pb-20">
           <div className="grid items-center gap-12 xl:grid-cols-2">
             <div className="max-w-xl xl:max-w-none">
-              <h1 className="title-display text-center text-display xl:text-left">
-                Where to next?
+              <h1
+                aria-label="Where to next?"
+                className="title-display text-center text-display xl:text-left"
+              >
+                {["Where", "to", "next?"].map((word, i) => (
+                  <span key={word} aria-hidden>
+                    {i > 0 && " "}
+                    <span className="hero-line">
+                      <span className="hero-word" style={{ "--w": i } as CSSProperties}>
+                        {word}
+                      </span>
+                    </span>
+                  </span>
+                ))}
               </h1>
-              <p className="mx-auto mt-4 max-w-xl text-center text-body text-muted-foreground xl:mx-0 xl:text-left">
+              <p className="enter-rise mx-auto mt-4 max-w-xl text-center text-body text-muted-foreground xl:mx-0 xl:text-left">
                 Prices the whole trip to the dollar, plans each day and lists what to book.
               </p>
-              <div className="mt-8">
+              <div className="enter-rise mt-8" style={{ "--d": 150 } as CSSProperties}>
                 <TripAssistant
                   variant="hero"
                   homeCity={form.origin}
