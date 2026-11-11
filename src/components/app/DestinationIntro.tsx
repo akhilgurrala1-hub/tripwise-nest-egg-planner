@@ -243,7 +243,7 @@ export function HolidayList({
 }
 
 /** Widths to try for a full-width photo, sharpest first; 0 is the original thumbnail. */
-const HERO_SIZES = [1920, 1280, 0];
+const HERO_SIZES = [1280, 0];
 
 /** Asks Wikimedia for a sharper copy of a thumbnail (it makes standard sizes on demand). */
 function sharper(url: string, width: number) {

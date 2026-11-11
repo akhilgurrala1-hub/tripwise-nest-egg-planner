@@ -60,9 +60,9 @@ function Dashboard() {
       <DestinationHero
         dest={dest}
         origin={trip.setup.origin}
-        className="aspect-[4/3] w-full rounded-none sm:aspect-[21/9] sm:max-h-[560px]"
+        className="h-44 w-full rounded-none sm:h-[clamp(200px,30vh,300px)]"
       />
-      <div className="page-container mt-8 space-y-4">
+      <div className="page-container mt-6 space-y-4">
         <TripReady />
         <div className="flex flex-col gap-4 lg:flex-row">
           {/* Balance */}

@@ -64,6 +64,14 @@ const NOT_A_PLACE =
 const NOT_A_PHOTO =
   /\.(png|svg|gif)(\.\w+)?(\?|$)|[/_ -](map|maps|locator|location|flag|seal|coat_of_arms|logo|diagram)[_. -]/i;
 
+/**
+ * Wikimedia makes standard thumbnail sizes on demand. Ask for the width a card needs
+ * (500px is about 50KB) instead of the 960px default (about 220KB).
+ */
+export function thumbAt(url: string, width: number): string {
+  return url.replace(/\/\d+px-(?=[^/]+$)/, `/${width}px-`);
+}
+
 /** How far an article's coordinates may be from the destination and still describe it. */
 const MAX_KM = 350;
 

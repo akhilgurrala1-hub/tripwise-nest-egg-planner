@@ -393,7 +393,12 @@ export function useTweened(
   /** Count up from zero the first time it shows (one number per page earns this). */
   fromZero = false,
 ): number {
-  const start = fromZero ? 0 : target;
+  // Counting up is for the first moments of a visit (before AppShell marks the page settled).
+  const start =
+    fromZero &&
+    !(typeof document !== "undefined" && document.documentElement.classList.contains("settled"))
+      ? 0
+      : target;
   const [shown, setShown] = useState(start);
   const st = useRef({ from: start, v0: 0, to: start, t0: 0, x: start, v: 0 });
   const frame = useRef<number | null>(null);

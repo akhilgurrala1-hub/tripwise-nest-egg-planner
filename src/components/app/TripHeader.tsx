@@ -56,11 +56,11 @@ export function PageHeader({
   const sample = showTrip && trip.isSample;
   return (
     // An app's page header: title, the trip it's about, and the page's actions; no banner.
-    <div className="pb-6 sm:pb-8">
-      <div className="page-container pt-6 sm:pt-10">
+    <div className="pb-4 sm:pb-8">
+      <div className="page-container pt-4 sm:pt-10">
         {sample && (
           // The sidebar already says so on large screens.
-          <p className="mb-6 flex flex-wrap items-center gap-x-2 gap-y-1 text-footnote text-muted-foreground lg:hidden print:hidden">
+          <p className="mb-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-footnote text-muted-foreground lg:hidden print:hidden">
             <Info className="size-3.5 shrink-0" />
             You're looking at a sample trip.
             <Link to="/" className="link-chevron font-semibold">
@@ -99,21 +99,25 @@ function TripBar({ title }: { title: string }) {
   const { trip, place, shape } = useTrip();
   // Plain facts separated by dots: the words say what they are, no icon needed.
   const facts = [
-    title !== place ? place : null, // not twice: the Overview's title already is the place
     formatDateRange(trip.setup.startDate, trip.setup.endDate),
     shape.days === 1 ? "day trip" : `${shape.days} days`,
     `${shape.travelers} traveler${shape.travelers > 1 ? "s" : ""}`,
   ].filter(Boolean);
   return (
-    <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 text-footnote">
+    <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-footnote sm:mt-4 sm:gap-y-2">
       <TripTypeChip />
-      <p className="tabular min-w-0 text-muted-foreground">{facts.join(" · ")}</p>
-      <Link
-        to="/"
-        className="inline-flex h-8 items-center rounded-md px-1 font-medium text-primary hover:underline hover:underline-offset-4 print:hidden"
-      >
-        Edit trip
-      </Link>
+      <p className="tabular min-w-0 text-muted-foreground">
+        {/* The place is in the sidebar and the sample note on phones; not twice on the Overview. */}
+        {title !== place && <span className="hidden sm:inline">{place} · </span>}
+        {facts.join(" · ")}
+        <span aria-hidden> · </span>
+        <Link
+          to="/"
+          className="font-medium text-primary hover:underline hover:underline-offset-4 print:hidden"
+        >
+          Edit trip
+        </Link>
+      </p>
     </div>
   );
 }
