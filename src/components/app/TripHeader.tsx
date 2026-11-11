@@ -40,6 +40,28 @@ const NEXT_STEP: Record<string, { label: string; to: "/book" | "/itinerary" | "/
  * page: trip type (switchable in place), destination, dates and travelers, with a
  * link back to the full setup.
  */
+/** The page's step in the flow, for its label: "02 / Overview". */
+const STEP: Record<string, string> = {
+  "/dashboard": "02 / Overview",
+  "/budget": "03 / Budget",
+  "/spending": "03 / Spending",
+  "/itinerary": "04 / Itinerary",
+  "/road-trip": "05 / Road trip",
+  "/book": "06 / Book",
+};
+
+/** The last word of a title set in italic emerald, the way the brand sets one word of every headline. */
+function accentTitle(title: string): ReactNode {
+  const i = title.lastIndexOf(" ");
+  if (i < 0) return title;
+  return (
+    <>
+      {title.slice(0, i + 1)}
+      <em>{title.slice(i + 1)}</em>
+    </>
+  );
+}
+
 export function PageHeader({
   title,
   children,
@@ -54,23 +76,24 @@ export function PageHeader({
   const pathname = useRouterState({ select: (r) => r.location.pathname });
   const next = showTrip ? NEXT_STEP[pathname] : undefined;
   const sample = showTrip && trip.isSample;
+  const step = STEP[pathname];
   return (
-    // An app's page header: title, the trip it's about, and the page's actions; no banner.
-    <div className="pb-4 sm:pb-8">
-      <div className="page-container pt-4 sm:pt-10">
+    // An editorial page header: a mono label, the title, the trip it's about and the page's actions.
+    <div className="border-b border-separator pb-8 sm:pb-12">
+      <div className="page-container pt-8 sm:pt-14">
         {sample && (
-          // The sidebar already says so on large screens.
-          <p className="mb-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-footnote text-muted-foreground lg:hidden print:hidden">
+          <p className="mb-6 flex flex-wrap items-center gap-x-2 gap-y-1 text-footnote text-muted-foreground print:hidden">
             <Info className="size-3.5 shrink-0" />
             You're looking at a sample trip.
-            <Link to="/" className="link-chevron font-semibold">
+            <Link to="/" className="link-chevron font-medium">
               Plan your own
             </Link>
           </p>
         )}
-        <div className="flex flex-wrap items-end justify-between gap-4">
+        {step && <p className="eyebrow mb-6">{step}</p>}
+        <div className="flex flex-wrap items-end justify-between gap-6">
           <div className="min-w-0">
-            <h1 className="title-display text-large-title">{title}</h1>
+            <h1 className="title-display text-large-title">{accentTitle(title)}</h1>
             {showTrip && <TripBar title={title} />}
           </div>
           <div

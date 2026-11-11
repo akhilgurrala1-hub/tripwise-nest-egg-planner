@@ -12,13 +12,13 @@ const { chromium } = require("playwright");
 const pub = new URL("../public/", import.meta.url).pathname;
 const svg = readFileSync(join(pub, "favicon.svg"), "utf8");
 const inner = svg.replace(/^[\s\S]*?<rect[^>]*\/>/, "").replace(/<\/svg>\s*$/, "");
-const TEAL = "#0B5C5A";
+const GROUND = "#08100D";
 
 /** Variants of the mark: rounded tile (default), full-bleed square, or full-bleed with a safe-zone inset. */
 function mark({ bleed = false, inset = 1 } = {}) {
   const scale =
     inset === 1 ? "" : ` transform="translate(16 16) scale(${inset}) translate(-16 -16)"`;
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><rect width="32" height="32" ${bleed ? "" : 'rx="7"'} fill="${TEAL}"/><g${scale}>${inner}</g></svg>`;
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><rect width="32" height="32" ${bleed ? "" : 'rx="7"'} fill="${GROUND}"/><g${scale}>${inner}</g></svg>`;
 }
 const dataUri = (s) => `data:image/svg+xml;base64,${Buffer.from(s).toString("base64")}`;
 
@@ -30,6 +30,7 @@ async function png(svgText, size) {
   await page.setContent(
     `<html><body style="margin:0;background:transparent"><img src="${dataUri(svgText)}" width="${size}" height="${size}" style="display:block"></body></html>`,
   );
+  await page.waitForTimeout(120);
   return page.screenshot({ omitBackground: true, clip: { x: 0, y: 0, width: size, height: size } });
 }
 
@@ -70,35 +71,37 @@ writeFileSync(
   await png(mark({ bleed: true, inset: 0.72 }), 512),
 );
 
-// Social share image (1200×630).
+// Social share image (1200×630): the brand's editorial language on its near-black ground.
 const fontDir = (name) =>
   new URL(`../node_modules/@fontsource-variable/${name}/files/`, import.meta.url).pathname;
-const face = (family, name, file) =>
-  `@font-face{font-family:${family};font-weight:200 900;src:url(data:font/woff2;base64,${readFileSync(join(fontDir(name), file)).toString("base64")}) format("woff2")}`;
-const routeBig = inner.replace(/stroke-width="3.6"/, 'stroke-width="3"');
+const face = (family, name, file, style = "normal") =>
+  `@font-face{font-family:${family};font-style:${style};font-weight:100 900;src:url(data:font/woff2;base64,${readFileSync(join(fontDir(name), file)).toString("base64")}) format("woff2")}`;
 await page.setViewportSize({ width: 1200, height: 630 });
 await page.setContent(`<html><head><style>
-  ${face("Hanken", "hanken-grotesk", "hanken-grotesk-latin-wght-normal.woff2")}
-  body{margin:0;width:1200px;height:630px;background:#F4F6F5;font-family:Hanken,system-ui,sans-serif;color:#0F1B1A;overflow:hidden;position:relative}
-  .wrap{position:absolute;left:88px;top:84px;right:520px}
-  .lock{display:flex;align-items:center;gap:18px}
-  .word{font-family:Hanken,sans-serif;font-size:44px;font-weight:650;letter-spacing:-0.03em}
-  h1{font-family:Hanken,sans-serif;margin:88px 0 0;font-size:68px;line-height:1.04;font-weight:650;letter-spacing:-0.03em}
-  p{margin:22px 0 0;font-size:26px;line-height:1.4;color:#4D5C5A;letter-spacing:-0.01em}
-  .art{position:absolute;right:56px;top:118px;width:420px;height:350px}
-  .rule{position:absolute;left:88px;right:88px;bottom:64px;height:1px;background:#D5DDDB}
-  .foot{position:absolute;left:88px;bottom:28px;font-size:18px;color:#4D5C5A;letter-spacing:0.08em;text-transform:uppercase;font-weight:500}
+  ${face("Fraunces", "fraunces", "fraunces-latin-opsz-normal.woff2")}
+  ${face("Fraunces", "fraunces", "fraunces-latin-opsz-italic.woff2", "italic")}
+  ${face("Inter", "inter", "inter-latin-wght-normal.woff2")}
+  ${face("Mono", "jetbrains-mono", "jetbrains-mono-latin-wght-normal.woff2")}
+  body{margin:0;width:1200px;height:630px;background:#08100D;color:#F5F1E8;font-family:Inter,system-ui,sans-serif;overflow:hidden;position:relative}
+  .wrap{position:absolute;left:88px;top:72px;right:480px}
+  .lock{display:flex;align-items:center;gap:20px}
+  .word{font-family:Fraunces,serif;font-size:42px;font-weight:400;letter-spacing:-0.01em}
+  .label{display:flex;align-items:center;gap:18px;margin-top:84px;font-family:Mono,monospace;font-size:15px;font-weight:500;letter-spacing:0.18em;text-transform:uppercase;color:#2FA074}
+  .label::before{content:"";width:44px;height:1px;background:#2FA074}
+  h1{font-family:Fraunces,serif;font-weight:300;font-optical-sizing:auto;margin:28px 0 0;font-size:100px;line-height:0.98;letter-spacing:-0.028em}
+  h1 em{font-style:italic;color:#2FA074}
+  p{margin:30px 0 0;font-size:24px;line-height:1.5;color:#B8B2A2;max-width:560px}
+  .art{position:absolute;right:72px;top:120px;width:380px;height:380px}
+  .rule{position:absolute;left:88px;right:88px;bottom:72px;height:1px;background:rgba(245,241,232,0.16)}
+  .foot{position:absolute;left:88px;bottom:30px;font-family:Mono,monospace;font-size:14px;color:#8A8579;letter-spacing:0.16em;text-transform:uppercase}
 </style></head><body>
   <div class="wrap">
-    <div class="lock"><img src="${dataUri(mark())}" width="72" height="72"><span class="word">Waypoint</span></div>
-    <h1>Plan a trip,<br>to the dollar.</h1>
-    <p>Budgets, live weather and day-by-day plans for road trips, flights, cruises and staycations.</p>
+    <div class="lock"><img src="${dataUri(mark())}" width="64" height="64"><span class="word">Waypoint</span></div>
+    <div class="label">Trip planner · Priced to the dollar</div>
+    <h1>Plan a trip,<br><em>to the dollar.</em></h1>
+    <p>Budgets, day-by-day plans and a booking checklist for any kind of trip.</p>
   </div>
-  <svg class="art" viewBox="3 5 28 20"><g>${routeBig
-    // Swap the tile color for the page color first, then turn the white route brand teal.
-    .replace(/fill="#0B5C5A"/g, 'fill="#F4F6F5"')
-    .replace(/stroke="#0B5C5A"/g, 'stroke="#F4F6F5"')
-    .replace(/stroke="#fff"/g, `stroke="${TEAL}"`)}</g></svg>
+  <svg class="art" viewBox="2.4 2.4 27.2 27.2"><g>${inner}</g></svg>
   <div class="rule"></div><div class="foot">Road trips · Fly-aways · Cruises · Train &amp; bus · Staycations</div>
 </body></html>`);
 await page.waitForTimeout(150);

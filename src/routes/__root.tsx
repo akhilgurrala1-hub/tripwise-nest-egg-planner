@@ -11,6 +11,10 @@ import {
 import type { ReactNode } from "react";
 
 import appCss from "../styles.css?url";
+import fraunces from "@fontsource-variable/fraunces/files/fraunces-latin-opsz-normal.woff2?url";
+import frauncesItalic from "@fontsource-variable/fraunces/files/fraunces-latin-opsz-italic.woff2?url";
+import inter from "@fontsource-variable/inter/files/inter-latin-wght-normal.woff2?url";
+import jetbrainsMono from "@fontsource-variable/jetbrains-mono/files/jetbrains-mono-latin-wght-normal.woff2?url";
 import { AppShell } from "@/components/app/AppShell";
 import { Button } from "@/components/ui/button";
 import { Toaster } from "@/components/ui/sonner";
@@ -127,6 +131,14 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { rel: "icon", href: "/favicon.svg", type: "image/svg+xml" },
       { rel: "apple-touch-icon", href: "/apple-touch-icon.png" },
       { rel: "manifest", href: "/site.webmanifest" },
+      // The four faces used above the fold, fetched at once so the big headline never swaps late.
+      ...[fraunces, frauncesItalic, inter, jetbrainsMono].map((href) => ({
+        rel: "preload",
+        href,
+        as: "font",
+        type: "font/woff2",
+        crossOrigin: "anonymous" as const,
+      })),
       // Photos and their lookups come from Wikipedia and Wikimedia: open those connections early.
       { rel: "preconnect", href: "https://en.wikipedia.org", crossOrigin: "anonymous" },
       { rel: "preconnect", href: "https://thumb.wikimedia.org" },

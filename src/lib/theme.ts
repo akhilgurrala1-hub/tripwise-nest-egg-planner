@@ -3,11 +3,10 @@ import { useEffect, useState } from "react";
 export type ThemePref = "light" | "dark" | "system";
 const KEY = "waypoint.theme";
 
-/** Runs before first paint (inlined in the document head) so the right theme shows immediately. */
-/** Browser-chrome color per theme: the page background, so the toolbar blends in. */
-export const THEME_COLORS = { light: "#F4F6F5", dark: "#0C1514" } as const;
+/** Browser-chrome color per theme: the page background, so the toolbar blends in. Dark is the default. */
+export const THEME_COLORS = { light: "#F5F1E8", dark: "#08100D" } as const;
 
-export const THEME_BOOT_SCRIPT = `(function(){var d=false;try{var p=localStorage.getItem("${KEY}")||"system";d=p==="dark"||(p==="system"&&window.matchMedia("(prefers-color-scheme: dark)").matches);document.documentElement.classList.toggle("dark",d);}catch(e){}var m=document.createElement("meta");m.name="theme-color";m.content=d?"${THEME_COLORS.dark}":"${THEME_COLORS.light}";document.head.appendChild(m);})();`;
+export const THEME_BOOT_SCRIPT = `(function(){var d=false;try{var p=localStorage.getItem("${KEY}")||"dark";d=p==="dark"||(p==="system"&&window.matchMedia("(prefers-color-scheme: dark)").matches);document.documentElement.classList.toggle("dark",d);}catch(e){}var m=document.createElement("meta");m.name="theme-color";m.content=d?"${THEME_COLORS.dark}":"${THEME_COLORS.light}";document.head.appendChild(m);})();`;
 
 function setThemeColor(dark: boolean) {
   document
@@ -31,10 +30,10 @@ function apply(pref: ThemePref) {
 }
 
 export function useTheme() {
-  const [pref, setPref] = useState<ThemePref>("system");
+  const [pref, setPref] = useState<ThemePref>("dark");
 
   useEffect(() => {
-    const stored = (localStorage.getItem(KEY) as ThemePref | null) ?? "system";
+    const stored = (localStorage.getItem(KEY) as ThemePref | null) ?? "dark";
     setPref(stored);
   }, []);
 

@@ -450,7 +450,7 @@ export function TripAssistant({
             "flex gap-2 rounded-2xl border transition-[border-color,box-shadow,background-color] focus-within:border-primary focus-within:ring-4 focus-within:ring-primary/10",
             search
               ? // The hero: one wide search-style bar, like a travel app's "Where to?"
-                "theme-paper items-center border-border bg-card p-2 pl-6 shadow-lift"
+                "items-center rounded-full border-input bg-card p-2 pl-8"
               : "flex-col border-input bg-background/70 p-2 pl-4 focus-within:bg-card sm:flex-row sm:items-end",
           )}
         >
@@ -531,8 +531,8 @@ export function TripAssistant({
                     onClick={() => void send(ex.message)}
                     title={ex.message}
                     className={cn(
-                      "group flex items-center gap-2 rounded-lg border border-border bg-card transition-[border-color,transform] duration-150 hover:border-primary active:scale-[0.97]",
-                      search ? "h-9 px-4 text-footnote" : "h-10 px-4 text-body",
+                      "group flex items-center gap-2 rounded-full border border-border bg-transparent transition-[border-color,transform] duration-150 hover:border-primary active:scale-[0.97]",
+                      search ? "h-10 px-4 text-footnote" : "h-10 px-4 text-body",
                     )}
                   >
                     <CornerDownRight className="size-3.5 shrink-0 text-muted-foreground" />

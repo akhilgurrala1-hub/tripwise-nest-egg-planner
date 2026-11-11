@@ -9,7 +9,6 @@ import { formatMoney } from "@/lib/budget";
 import type { GeoPoint } from "@/lib/catalog";
 import { getDestination, modeForTripType, tripTypeInfo, type TripType } from "@/lib/demo-data";
 import { useHydrated } from "@/lib/live/use-live";
-import { useMinWidth } from "@/lib/use-media";
 import { thumbAt } from "@/lib/live/open-data";
 import { destinationSummaryOptions, useDestinationSummary } from "@/lib/live/use-open-data";
 import { recommendDestinations, type Suggestion } from "@/lib/recommend";
@@ -25,7 +24,7 @@ export interface Idea {
 }
 
 /** A drive and a flight, alternating, so the row shows both kinds of trip from home. */
-export function inspirationIdeas(setup: TripSetup, from: GeoPoint | null, limit = 4): Idea[] {
+function inspirationIdeas(setup: TripSetup, from: GeoPoint | null, limit = 4): Idea[] {
   const kinds: TripType[] =
     setup.tripType === "cruise" || setup.tripType === "staycation"
       ? ["road-trip", "flight"]
@@ -113,19 +112,22 @@ export function Inspiration({
   if (settled && !ideas.length) return null;
   return (
     <section aria-labelledby="ideas-title">
-      <div className="flex items-baseline justify-between gap-4">
-        <h2 id="ideas-title" className="title-display text-title-1">
-          Trip ideas from {fromLabel}
-        </h2>
+      <div className="grid items-end gap-8 lg:grid-cols-[1.15fr_1fr] lg:gap-16">
+        <div>
+          <p className="eyebrow">02 / Trip ideas</p>
+          <h2 id="ideas-title" className="title-display mt-6 text-large-title">
+            Trip ideas from <em>{fromLabel}</em>
+          </h2>
+        </div>
+        <p className="max-w-xl font-display text-title-2 leading-snug font-light text-muted-foreground italic lg:justify-self-end">
+          Estimated for {setup.travelers} {setup.travelers === 1 ? "traveler" : "travelers"},{" "}
+          {nights} night{nights === 1 ? "" : "s"}, from your door.
+        </p>
       </div>
-      <p className="mt-2 text-body text-muted-foreground">
-        Estimated for {setup.travelers} {setup.travelers === 1 ? "traveler" : "travelers"}, {nights}{" "}
-        night{nights === 1 ? "" : "s"}, from your door.
-      </p>
       <ul
         ref={rail}
         onScroll={onScroll}
-        className="-mx-4 mt-6 flex snap-x snap-mandatory scroll-px-4 gap-4 overflow-x-auto px-4 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        className="-mx-6 mt-14 flex snap-x snap-mandatory scroll-px-6 gap-6 overflow-x-auto px-6 pb-2 [scrollbar-width:none] sm:-mx-8 sm:scroll-px-8 sm:px-8 lg:-mx-12 lg:scroll-px-12 lg:px-12 [&::-webkit-scrollbar]:hidden"
       >
         {!settled &&
           [0, 1, 2].map((i) => (
@@ -192,7 +194,6 @@ function IdeaCard({
   return (
     <button
       type="button"
-      data-cursor="Plan"
       style={{ ...style, "--kind": color } as CSSProperties}
       onClick={() => onPick(idea.s.id, idea.tripType)}
       className="group lift block w-full rounded-2xl text-left pressable focus-visible:ring-4 focus-visible:ring-primary/30 focus-visible:outline-none"
@@ -214,109 +215,19 @@ function IdeaCard({
             strokeWidth={1.5}
           />
         )}
-        <span className="absolute top-3 left-3 rounded-sm bg-card px-2 py-1 text-micro font-semibold text-foreground">
+        <span className="absolute top-3 left-3 rounded-sm bg-background/85 px-2 py-1 label-mono text-foreground backdrop-blur">
           {tripTypeInfo(idea.tripType).label}
         </span>
       </span>
       <span className="mt-4 block px-1">
-        <span className="block truncate text-headline font-semibold">{idea.s.name}</span>
-        <span className="mt-1 block truncate text-footnote text-muted-foreground">
+        <span className="title-display block truncate text-title-2 font-normal">{idea.s.name}</span>
+        <span className="mt-1 block truncate label-mono">
           {idea.s.region}
           {idea.s.distanceLabel ? ` · ${idea.s.distanceLabel}` : ""}
         </span>
-        <span className="mt-2 flex items-baseline gap-1 text-footnote whitespace-nowrap">
-          <span className="money-display text-body">{formatMoney(idea.cost)}</span>
-          <span className="text-muted-foreground">estimated</span>
-        </span>
-      </span>
-    </button>
-  );
-}
-
-/**
- * The hero's picture: three real places from the traveler's start, one tall and two
- * short, each a tap away from becoming the destination. Only places with a real photo
- * are shown (a frame waits while photos load), so there is never a blank tile. Large
- * screens only; phones go straight to the ideas row.
- */
-export function HeroPhotos({
-  ideas,
-  origin,
-  onPick,
-}: {
-  ideas: Idea[];
-  origin: string;
-  onPick: (destinationId: string, tripType: TripType) => void;
-}) {
-  const wide = useMinWidth(1280);
-  const hydrated = useHydrated();
-  // Phones and tablets never show these photos, so they never fetch them.
-  const results = useQueries({
-    queries: ideas.map((idea) =>
-      destinationSummaryOptions(getDestination(idea.s.id), origin, hydrated && wide),
-    ),
-  });
-  const withPhoto = ideas
-    .map((idea, i) => ({ idea, image: results[i]?.data?.image ?? null }))
-    .filter((x): x is { idea: Idea; image: string } => !!x.image)
-    .slice(0, 3);
-  const pending = results.some((r) => r.isPending);
-  if (withPhoto.length < 3 && !pending) return null;
-  return (
-    <ul className="hidden h-[26rem] grid-cols-2 grid-rows-2 gap-4 xl:grid">
-      {[0, 1, 2].map((i) => {
-        const hit = withPhoto[i];
-        return (
-          <li
-            key={hit?.idea.s.id ?? i}
-            className={cn("enter-curtain", i === 0 && "row-span-2")}
-            style={{ "--d": i * 140 } as CSSProperties}
-          >
-            {hit ? (
-              <HeroTile
-                idea={hit.idea}
-                image={i === 0 ? hit.image : thumbAt(hit.image, 500)}
-                onPick={onPick}
-              />
-            ) : (
-              <span aria-hidden className="skeleton block size-full rounded-2xl" />
-            )}
-          </li>
-        );
-      })}
-    </ul>
-  );
-}
-
-function HeroTile({
-  idea,
-  image,
-  onPick,
-}: {
-  idea: Idea;
-  image: string;
-  onPick: (destinationId: string, tripType: TripType) => void;
-}) {
-  return (
-    <button
-      type="button"
-      data-cursor="Plan"
-      onClick={() => onPick(idea.s.id, idea.tripType)}
-      className="group relative isolate block size-full overflow-hidden rounded-2xl bg-fill text-left pressable focus-visible:ring-4 focus-visible:ring-primary/30 focus-visible:outline-none"
-    >
-      <Photo
-        src={image}
-        alt=""
-        priority
-        className="absolute inset-0 -z-10"
-        imgClassName="transition-[opacity,scale] duration-300 ease-out group-hover:scale-[1.03]"
-      />
-      <span className="absolute bottom-4 left-4 max-w-[calc(100%-2rem)] rounded-md bg-card px-4 py-2">
-        <span className="block truncate text-footnote font-semibold text-foreground">
-          {idea.s.name}
-        </span>
-        <span className="block truncate text-caption text-muted-foreground">
-          {formatMoney(idea.cost)} estimated
+        <span className="mt-4 flex items-baseline gap-2 whitespace-nowrap">
+          <span className="money-display text-title-2">{formatMoney(idea.cost)}</span>
+          <span className="label-mono">est.</span>
         </span>
       </span>
     </button>

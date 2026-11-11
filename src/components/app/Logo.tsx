@@ -1,13 +1,13 @@
 import { cn } from "@/lib/utils";
 
 /**
- * The Waypoint mark: one route, a hollow origin ring, a single zigzag up and an
- * orange destination dot, on a deep teal tile. Geometry lives on a 32-unit grid
- * and matches public/favicon.svg exactly; keep the two in step. Brand colors are
- * fixed (not theme tokens) so the mark looks the same everywhere.
+ * The Waypoint mark: a ring holding one route, from a hollow origin to an emerald
+ * destination dot. Geometry lives on a 32-unit grid and matches public/favicon.svg
+ * (which sets it on a dark tile); keep the two in step. The ring and route follow the
+ * text color, the dot is the brand emerald, so it reads on dark and on cream paper.
  */
-export const BRAND = { teal: "#0B5C5A", orange: "#E0501A", white: "#FFFFFF" } as const;
-export const ROUTE_PATH = "M7.4 22.4 L15 12.4 L20 20 L25.6 10.2";
+export const BRAND = { emerald: "#2FA074", ink: "#F5F1E8", ground: "#08100D" } as const;
+export const ROUTE_PATH = "M9.4 20.2 L14.1 12.9 L17.6 17.9 L22.6 10.7";
 
 export function LogoMark({
   className,
@@ -27,63 +27,66 @@ export function LogoMark({
       aria-hidden={title ? undefined : true}
       aria-label={title}
     >
-      <rect className="logo-tile" width="32" height="32" rx="7" fill={BRAND.teal} />
+      <circle
+        className="logo-tile"
+        cx="16"
+        cy="16"
+        r="14.6"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.2"
+      />
       <path
         className="logo-route"
         d={ROUTE_PATH}
         fill="none"
-        stroke={BRAND.white}
-        strokeWidth="3.6"
+        stroke="currentColor"
+        strokeWidth="1.9"
         strokeLinecap="round"
         strokeLinejoin="round"
         pathLength={100}
       />
       <circle
         className="logo-origin"
-        cx="7.4"
-        cy="22.4"
-        r="2.5"
-        fill={BRAND.teal}
-        stroke={BRAND.white}
-        strokeWidth="1.8"
+        cx="9.4"
+        cy="20.2"
+        r="1.9"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.3"
       />
       <circle
         className="logo-ripple"
-        cx="25.6"
-        cy="10.2"
-        r="3.6"
+        cx="22.6"
+        cy="10.7"
+        r="2.4"
         fill="none"
-        stroke={BRAND.orange}
-        strokeWidth="1.2"
+        stroke={BRAND.emerald}
+        strokeWidth="1"
       />
-      <circle
-        className="logo-dest"
-        cx="25.6"
-        cy="10.2"
-        r="3.6"
-        fill={BRAND.orange}
-        stroke={BRAND.teal}
-        strokeWidth="1.2"
-      />
+      <circle className="logo-dest" cx="22.6" cy="10.7" r="2.4" fill={BRAND.emerald} />
     </svg>
   );
 }
 
-/** Mark + wordmark lockup. The wordmark is set in the app face, semibold. */
+/** Mark + wordmark lockup: the name in Fraunces, with an optional mono tagline beneath. */
 export function Logo({
   className,
   markClassName,
   wordClassName,
+  tag,
 }: {
   className?: string;
   markClassName?: string;
   wordClassName?: string;
+  tag?: string;
 }) {
   return (
-    <span className={cn("logo inline-flex items-center gap-2", className)}>
+    <span className={cn("logo inline-flex items-center gap-4 text-foreground", className)}>
       <LogoMark className={cn("size-7", markClassName)} />
-      <span className={cn("logo-word text-headline font-semibold text-foreground", wordClassName)}>
-        Waypoint
+      <span className="flex flex-col leading-none">
+        <span className={cn("logo-word font-display font-normal", wordClassName)}>Waypoint</span>
+        {tag && <span className="mt-1 label-mono">{tag}</span>}
       </span>
     </span>
   );

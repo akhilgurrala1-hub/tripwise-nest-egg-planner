@@ -97,18 +97,12 @@ describe("surfaces", () => {
     expect(find(/\bbg-gradient-to-\w+|\bbg-linear-to-\w+|linear-gradient\(/g)).toEqual([]);
   });
 
-  it("has no pill-shaped chips: controls are rounded rectangles", () => {
-    const pills: string[] = [];
-    for (const f of SOURCES)
-      for (const m of f.text.matchAll(/"[^"\n]*\brounded-full\b[^"\n]*"/g))
-        if (/\bpx-\d/.test(m[0]) && /\b(text-|font-)/.test(m[0])) pills.push(`${f.path}: ${m[0]}`);
-    expect(pills).toEqual([]);
-  });
-
-  it("draws buttons as rounded rectangles, never pills", () => {
+  it("draws buttons as pills, the brand's shape (fields and surfaces stay rectangular)", () => {
     const button = SOURCES.find((f) => f.path.endsWith("components/ui/button.tsx"));
     expect(button).toBeDefined();
-    expect(button!.text).not.toMatch(/\brounded-full\b/);
+    expect(button!.text).toMatch(/\brounded-full\b/);
+    const input = SOURCES.find((f) => f.path.endsWith("components/ui/input.tsx"));
+    expect(input!.text).not.toMatch(/\brounded-full\b/);
   });
 
   it("rounds corners from the four-radius scale only, never by hand", () => {
@@ -123,7 +117,7 @@ describe("surfaces", () => {
     expect(fields).toContain("input");
     for (const f of fields) {
       const src = readFileSync(join(ui, `${f}.tsx`), "utf8");
-      expect(src, `${f}.tsx`).toMatch(/rounded-xl border border-input bg-card/);
+      expect(src, `${f}.tsx`).toMatch(/rounded-lg border border-input bg-card/);
       expect(src, `${f}.tsx`).not.toMatch(/\bshadow-sm\b/);
     }
   });
@@ -171,8 +165,11 @@ describe("class merging", () => {
 });
 
 describe("no template tells", () => {
-  it("headlines are one color: no accent word in the brand color", () => {
-    expect(find(/<em className="text-primary">/g)).toEqual([]);
+  it("headlines set one word in the brand's italic through <em>, never by hand", () => {
+    // The italic emerald comes from `title-display em`; a class on the <em> would fork it.
+    expect(find(/<em className="[^"]*\btext-primary\b[^"]*">/g)).toEqual([]);
+    const css = readFileSync(join(SRC, "styles.css"), "utf8");
+    expect(css).toMatch(/title-display[\s\S]{0,400}em\s*\{[^}]*font-style:\s*italic/);
   });
 
   it("blue marks only what you can press or what's selected: no decorative or status blue", () => {
@@ -200,20 +197,19 @@ describe("no template tells", () => {
     expect(find(/<img\b/g, (p) => p.endsWith("Photo.tsx"))).toEqual([]);
   });
 
-  it("sets everything in the system face (SF on Apple devices) with self-hosted Hanken Grotesk as the fallback (no magazine serif)", () => {
+  it("sets display in Fraunces, text in Inter and labels in JetBrains Mono, all self-hosted", () => {
     const css = readFileSync(join(SRC, "styles.css"), "utf8");
-    for (const name of ["display", "sans"]) {
-      const stack = css.match(new RegExp(`--font-${name}:([^;]+);`))?.[1] ?? "";
-      expect(stack).toMatch(/^\s*-apple-system,[^"]*"Hanken Grotesk Variable"/);
-    }
-    expect(css).not.toMatch(/newsreader/i);
+    const stack = (name: string) => css.match(new RegExp(`--font-${name}:([^;]+);`))?.[1] ?? "";
+    expect(stack("display")).toMatch(/^\s*"Fraunces Variable"/);
+    expect(stack("sans")).toMatch(/^\s*"Inter Variable"/);
+    expect(stack("mono")).toMatch(/^\s*"JetBrains Mono Variable"/);
+    for (const pkg of ["fraunces", "inter", "jetbrains-mono"])
+      expect(css).toContain(`@fontsource-variable/${pkg}`);
   });
 
-  it("uses its own type pairing, self-hosted: no Inter, no Google Fonts", () => {
-    const css = readFileSync(join(SRC, "styles.css"), "utf8");
-    expect(css).not.toMatch(/"Inter"/);
+  it("loads fonts from the app itself: no Google Fonts request", () => {
     const root = readFileSync(join(SRC, "routes", "__root.tsx"), "utf8");
-    expect(root).not.toMatch(/fonts\.googleapis\.com/);
+    expect(root).not.toMatch(/fonts\.googleapis\.com|fonts\.gstatic\.com/);
   });
 });
 
@@ -244,9 +240,9 @@ describe("product-team basics", () => {
     expect(auth).toContain('to="/privacy"');
   });
 
-  it("no gradient text, glowing orbs or labels stacked above page titles", () => {
+  it("no gradient text or glowing orbs; page titles carry the numbered mono label", () => {
     expect(find(/\bbg-clip-text\b|\bblur-3xl\b|radial-gradient\(/g)).toEqual([]);
-    expect(read("components", "app", "TripHeader.tsx")).not.toMatch(/eyebrow/);
+    expect(read("components", "app", "TripHeader.tsx")).toMatch(/eyebrow/);
   });
 
   it("motion is authored and safe: guarded, progressive, and off for reduced motion", () => {
@@ -255,7 +251,7 @@ describe("product-team basics", () => {
     expect(css).toMatch(/@supports \(animation-timeline: view\(\)\)/);
     // Every entrance animation is switched off for reduced motion.
     const rm = css.slice(css.lastIndexOf("@media (prefers-reduced-motion: reduce), print"));
-    for (const cls of [".hero-word", ".enter-rise", ".enter-curtain", ".grow-x", ".route-dot"]) {
+    for (const cls of [".hero-word", ".enter-rise", ".grow-x", ".route-dot"]) {
       expect(rm, cls).toContain(cls);
     }
     // No parallax, and the count-up is opt-in per number.

@@ -10,7 +10,16 @@ import { DestinationPicker } from "@/components/app/plan/DestinationPicker";
 import { CoveragePicker } from "@/components/app/plan/CoveragePicker";
 import { OriginField } from "@/components/app/plan/OriginField";
 import { StylePicker } from "@/components/app/plan/StylePicker";
-import { HeroPhotos, Inspiration, inspirationIdeas } from "@/components/app/plan/Inspiration";
+import { Inspiration } from "@/components/app/plan/Inspiration";
+import {
+  ClosingCta,
+  Faq,
+  HowItWorks,
+  Marquee,
+  TheMath,
+  Tools,
+  TripTypes,
+} from "@/components/app/landing";
 import { StopsPicker } from "@/components/app/plan/StopsPicker";
 import { formatDateRange } from "@/components/app/TripHeader";
 import { TripAssistant } from "@/components/app/plan/TripAssistant";
@@ -87,7 +96,7 @@ function Welcome() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const hydrated = useHydrated();
-  const { trip, place: tripPlace } = useTrip();
+  const { trip, place: tripPlace, totals } = useTrip();
   const home = useHomePlace();
   const { units } = useLocale();
   const [form, setForm] = useState<TripSetup>(trip.setup);
@@ -322,8 +331,6 @@ function Welcome() {
   const approximate =
     !touched.current && home.place?.source === "approximate" && form.origin === home.place.label;
 
-  const heroIdeas = inspirationIdeas(effective, originPoint, 8);
-
   const pickIdea = (destinationId: string, tripType: TripType) => {
     destPicked.current = true;
     touched.current = true;
@@ -358,69 +365,28 @@ function Welcome() {
           </Link>
         </div>
       )}
-      {/*
-        The hero, like a travel app's home screen: one question and one
-        search-style bar to answer it in plain words, quick starts under it.
-        Photos come right after, in the trip ideas.
-      */}
-      <section className="theme-deep relative overflow-hidden">
-        {/* The journey line along the bottom edge: a ring at the start, an orange dot at the end. */}
-        <svg
-          aria-hidden
-          className="pointer-events-none absolute inset-x-0 bottom-0 hidden h-auto w-full sm:block"
-          viewBox="0 0 1440 64"
-          preserveAspectRatio="xMidYMax meet"
-        >
-          <path
-            className="route-line"
-            pathLength={1}
-            d="M 56 44 C 260 44, 340 12, 560 24 S 900 58, 1100 32 S 1300 12, 1384 20"
-            fill="none"
-            stroke="oklch(1 0 0 / 0.3)"
-            strokeWidth="2"
-            strokeLinecap="round"
-          />
-          <circle
-            className="route-origin"
-            cx="56"
-            cy="44"
-            r="7"
-            fill="none"
-            stroke="oklch(1 0 0 / 0.7)"
-            strokeWidth="2.5"
-            style={{ transformBox: "fill-box", transformOrigin: "center" }}
-          />
-          <circle
-            className="route-dot"
-            cx="1384"
-            cy="20"
-            r="8"
-            fill="#E0501A"
-            style={{ transformBox: "fill-box", transformOrigin: "center" }}
-          />
-        </svg>
-        <div className="page-container relative pt-8 pb-8 sm:pt-16 sm:pb-20">
-          <div className="grid items-center gap-12 xl:grid-cols-2">
-            <div className="max-w-xl xl:max-w-none">
-              <h1
-                aria-label="Where to next?"
-                className="title-display text-center text-display xl:text-left"
-              >
+      {/* The hero: one question, one bar to answer it in plain words, a fact sheet beside it. */}
+      <section className="relative overflow-hidden">
+        <div className="page-container pt-12 pb-16 sm:pt-20 sm:pb-24">
+          <p className="eyebrow enter-rise">Trip planner · Priced to the dollar</p>
+          <div className="mt-8 grid gap-16 xl:grid-cols-[1.3fr_1fr] xl:items-end">
+            <div>
+              <h1 aria-label="Where to next?" className="title-display text-display">
                 {["Where", "to", "next?"].map((word, i) => (
                   <span key={word} aria-hidden>
                     {i > 0 && " "}
                     <span className="hero-line">
                       <span className="hero-word" style={{ "--w": i } as CSSProperties}>
-                        {word}
+                        {i === 2 ? <em>{word}</em> : word}
                       </span>
                     </span>
                   </span>
                 ))}
               </h1>
-              <p className="enter-rise mx-auto mt-4 max-w-xl text-center text-body text-muted-foreground xl:mx-0 xl:text-left">
+              <p className="enter-rise mt-8 max-w-xl text-body text-muted-foreground">
                 Prices the whole trip to the dollar, plans each day and lists what to book.
               </p>
-              <div className="enter-rise mt-8" style={{ "--d": 150 } as CSSProperties}>
+              <div className="enter-rise mt-10 max-w-2xl" style={{ "--d": 120 } as CSSProperties}>
                 <TripAssistant
                   variant="hero"
                   homeCity={form.origin}
@@ -439,24 +405,52 @@ function Welcome() {
                 />
               </div>
             </div>
-            <HeroPhotos ideas={heroIdeas} origin={form.origin} onPick={pickIdea} />
+            <aside className="enter-rise hidden xl:block" style={{ "--d": 220 } as CSSProperties}>
+              <p className="label-mono">At a glance</p>
+              <p className="mt-6 font-display text-title-2 leading-snug font-light text-muted-foreground italic">
+                A trip should have a price before it has a plan.
+              </p>
+              <dl className="mt-8 border-t border-separator">
+                {[
+                  ["Covers", "Road · Fly · Cruise · Rail · Home"],
+                  ["Data", "Wikipedia · OpenStreetMap · Open-Meteo"],
+                  ["Account", "Not required"],
+                  ["Payments", "Never taken"],
+                ].map(([k, v]) => (
+                  <div
+                    key={k}
+                    className="flex items-baseline justify-between gap-6 border-b border-separator py-4"
+                  >
+                    <dt className="label-mono">{k}</dt>
+                    <dd className="label-mono text-foreground">{v}</dd>
+                  </div>
+                ))}
+              </dl>
+            </aside>
           </div>
         </div>
+        <Marquee />
       </section>
-      <div className="page-container pt-10 pb-10 sm:pt-14">
-        {/* Ideas get the full width, like a travel app's rail; the form and its live preview follow. */}
-        <Inspiration
-          setup={effective}
-          from={originPoint}
-          fromLabel={fromLabel === "home" ? "home" : fromLabel}
-          nights={shape.nights}
-          onPick={pickIdea}
-        />
+      <HowItWorks />
+      <section className="border-t border-separator py-20 sm:py-28">
+        <div className="page-container">
+          {/* Ideas get the full width, like a travel app's rail; the form and its live preview follow. */}
+          <Inspiration
+            setup={effective}
+            from={originPoint}
+            fromLabel={fromLabel === "home" ? "home" : fromLabel}
+            nights={shape.nights}
+            onPick={pickIdea}
+          />
+        </div>
+      </section>
 
-        <div className="mt-14 layout-main-aside lg:gap-y-8">
+      <div className="page-container border-t border-separator py-20 sm:py-28">
+        <div className="layout-main-aside lg:gap-y-8">
           <div className="min-w-0">
-            <h2 id="plan-steps" className="title-display scroll-mt-32 text-title-1">
-              Or plan it yourself
+            <p className="eyebrow">03 / Plan it yourself</p>
+            <h2 id="plan-steps" className="title-display mt-6 scroll-mt-32 text-large-title">
+              Set it up, <em>step by step.</em>
             </h2>
 
             <form
@@ -742,6 +736,32 @@ function Welcome() {
           </div>
         </div>
       </div>
+      <Tools />
+      <TheMath
+        sample={trip.isSample}
+        place={tripPlace}
+        totals={{
+          total: totals.totalBudget,
+          emergency: totals.emergencyFund,
+          spendable: totals.spendable,
+          planned: totals.planned,
+          left: totals.remaining,
+        }}
+      />
+      <TripTypes />
+      <Faq />
+      <ClosingCta
+        onStart={() => {
+          window.scrollTo({ top: 0, behavior: "smooth" });
+          window.setTimeout(
+            () =>
+              document
+                .querySelector<HTMLTextAreaElement>('textarea[aria-label="Describe your trip"]')
+                ?.focus(),
+            450,
+          );
+        }}
+      />
     </div>
   );
 }

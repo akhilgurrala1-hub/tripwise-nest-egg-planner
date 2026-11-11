@@ -1,0 +1,10 @@
+{
+  "detector": {
+    "ignoreRules": [
+      "numbered-section-labels",
+      "italic-serif-display"
+    ],
+    "ignoreFiles": [],
+    "ignoreValues": []
+  }
+}
