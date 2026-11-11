@@ -399,7 +399,6 @@ function BookingCard({
         skipped && "opacity-60",
       )}
     >
-      {isNext && <span className="absolute inset-y-0 left-0 w-0.5 bg-primary" aria-hidden />}
       <div className="flex gap-4">
         <span
           className={cn(
@@ -415,7 +414,7 @@ function BookingCard({
           <div className="flex flex-wrap items-center gap-2">
             <h2 className="text-headline leading-snug font-semibold">{item.title}</h2>
             {isNext && (
-              <span className="rounded-md bg-[color-mix(in_oklab,var(--primary)_14%,var(--card))] px-2 py-1 text-micro font-semibold tracking-wide text-[color-mix(in_oklab,var(--primary)_55%,var(--foreground))] uppercase">
+              <span className="rounded-md bg-[color-mix(in_oklab,var(--primary)_14%,var(--card))] px-2 py-1 text-micro font-semibold text-[color-mix(in_oklab,var(--primary)_55%,var(--foreground))]">
                 Next
               </span>
             )}

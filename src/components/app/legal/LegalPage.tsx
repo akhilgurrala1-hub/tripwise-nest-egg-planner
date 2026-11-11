@@ -56,7 +56,7 @@ export function ContactEmail() {
   return (
     <a
       href={`mailto:${LEGAL.contactEmail}`}
-      className="font-medium text-primary underline-offset-2 hover:underline"
+      className="font-medium text-primary underline underline-offset-2"
     >
       {LEGAL.contactEmail}
     </a>

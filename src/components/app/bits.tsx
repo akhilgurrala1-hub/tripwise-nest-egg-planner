@@ -124,7 +124,7 @@ export function NumberField({
   return (
     <div
       className={cn(
-        "flex h-11 items-center gap-2 rounded-lg border border-input bg-fill px-4 transition-[border-color,box-shadow] duration-150 hover:border-muted-foreground/40 focus-within:border-primary focus-within:ring-3 focus-within:ring-primary/15",
+        "flex h-11 items-center gap-2 rounded-lg border border-input bg-card px-4 transition-[border-color,box-shadow] duration-150 hover:border-muted-foreground/40 focus-within:border-primary focus-within:ring-3 focus-within:ring-primary/15",
         invalid &&
           "border-destructive bg-destructive-soft focus-within:border-destructive focus-within:ring-destructive/20",
         className,

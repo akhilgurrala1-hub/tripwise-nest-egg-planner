@@ -37,7 +37,7 @@ function TermsPage() {
           These terms are an agreement between you and {LEGAL.owner}, an individual based in{" "}
           {LEGAL.location} who owns and solely runs Waypoint (&ldquo;Waypoint&rdquo;,
           &ldquo;we&rdquo;, &ldquo;us&rdquo;). By using Waypoint you agree to them and to our{" "}
-          <Link to="/privacy" className="text-primary underline-offset-2 hover:underline">
+          <Link to="/privacy" className="text-primary underline underline-offset-2">
             Privacy Policy
           </Link>
           . If you don&rsquo;t agree, please don&rsquo;t use Waypoint.

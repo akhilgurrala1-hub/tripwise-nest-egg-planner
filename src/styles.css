@@ -408,11 +408,6 @@
   --chart-4: var(--cat-activities);
   --chart-5: var(--cat-water);
 
-  /* Former gradients are flat now; the utilities stay so markup keeps working. */
-  --gradient-sunset: linear-gradient(var(--primary), var(--primary));
-  --gradient-ink: linear-gradient(var(--ink), var(--ink));
-  --gradient-sand: linear-gradient(var(--card), var(--card));
-  --gradient-hero-fade: linear-gradient(180deg, oklch(0 0 0 / 0) 35%, oklch(0 0 0 / 0.65) 100%);
 
   /* Depth is quiet: cards barely lift off the page; menus and sheets lift more. */
   /* Tiles are flat, as on apple.com; only things that float (menus, sheets) cast a shadow. */
@@ -512,9 +507,6 @@
   --cat-stops: oklch(0.74 0.1 135);
   --cat-cruise: oklch(0.72 0.1 205);
 
-  --gradient-sunset: linear-gradient(var(--primary), var(--primary));
-  --gradient-ink: linear-gradient(var(--ink), var(--ink));
-  --gradient-sand: linear-gradient(var(--card), var(--card));
 
   --shadow-soft-value: none;
   --shadow-lift-value: 0 16px 48px -12px oklch(0 0 0 / 0.8);
@@ -628,22 +620,6 @@
 
 @utility font-display {
   font-family: var(--font-display);
-}
-
-@utility bg-gradient-sunset {
-  background-image: var(--gradient-sunset);
-}
-
-@utility bg-gradient-ink {
-  background-image: var(--gradient-ink);
-}
-
-@utility bg-gradient-sand {
-  background-image: var(--gradient-sand);
-}
-
-@utility bg-hero-fade {
-  background-image: var(--gradient-hero-fade);
 }
 
 /* A tile, as on apple.com: flat white on the gray page (elevated gray in dark mode), 18px corners. */
