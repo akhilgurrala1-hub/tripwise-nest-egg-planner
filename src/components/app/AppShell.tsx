@@ -378,43 +378,51 @@ function MobileMenu({
 /** The end of every page: the brand set large, then what the numbers are and the legal links. */
 function Footer() {
   const year = new Date().getFullYear();
+  const link =
+    "inline-flex min-h-11 items-center text-foreground/80 hover:text-foreground hover:underline underline-offset-4";
   return (
-    <footer className="overflow-hidden border-t border-separator print:hidden">
-      <div aria-hidden className="page-container pt-16 sm:pt-24">
-        {/* The brand set as large as the page allows; drawn as a graphic, not text. */}
-        <svg viewBox="0 0 1000 236" className="footer-mark block h-auto w-full">
-          <text x="-10" y="204">
-            Waypoint
-            <tspan className="footer-dot">.</tspan>
-          </text>
-        </svg>
+    <footer className="border-t border-separator bg-card print:hidden">
+      <div className="page-container grid gap-10 py-12 sm:grid-cols-[1.4fr_1fr_1fr] sm:py-16">
+        <div>
+          <Logo markClassName="size-8" wordClassName="text-title-2" />
+          <p className="mt-4 max-w-xs text-footnote text-muted-foreground">
+            Plan a trip, price it to the dollar and see what to book. Estimates in US dollars.
+            Waypoint never books or takes payment.
+          </p>
+        </div>
+        <div className="grid grid-cols-2 gap-8 sm:contents">
+          <nav aria-label="Trip tools" className="flex flex-col">
+            <p className="mb-2 text-footnote font-semibold">Trip tools</p>
+            {[
+              ...NAV.filter((n) => n.to !== "/road-trip"),
+              { to: "/spending" as const, label: "Spending" },
+            ].map((n) => (
+              <Link key={n.to} to={n.to} className={link}>
+                {n.label}
+              </Link>
+            ))}
+          </nav>
+          <nav aria-label="About" className="flex flex-col">
+            <p className="mb-2 text-footnote font-semibold">About</p>
+            <Link to="/privacy" className={link}>
+              Privacy
+            </Link>
+            <Link to="/terms" className={link}>
+              Terms
+            </Link>
+            <Link to="/terms" hash="credits" className={link}>
+              Credits
+            </Link>
+            <a href={`mailto:${LEGAL.contactEmail}`} className={link}>
+              Contact
+            </a>
+          </nav>
+        </div>
       </div>
-      <div className="page-container flex flex-wrap items-center justify-between gap-x-8 gap-y-4 border-t border-separator py-6 label-mono">
-        <span>Estimates in US dollars. Never books or takes payment.</span>
-        <span className="flex flex-wrap items-center gap-x-6">
-          <span>
-            © {year} {LEGAL.owner}
-          </span>
-          <Link to="/privacy" className="inline-flex min-h-12 items-center hover:text-foreground">
-            Privacy
-          </Link>
-          <Link to="/terms" className="inline-flex min-h-12 items-center hover:text-foreground">
-            Terms
-          </Link>
-          <Link
-            to="/terms"
-            hash="credits"
-            className="inline-flex min-h-12 items-center hover:text-foreground"
-          >
-            Credits
-          </Link>
-          <a
-            href={`mailto:${LEGAL.contactEmail}`}
-            className="inline-flex min-h-12 items-center hover:text-foreground"
-          >
-            Contact
-          </a>
-        </span>
+      <div className="border-t border-separator">
+        <p className="page-container py-4 text-footnote text-muted-foreground">
+          © {year} {LEGAL.owner}
+        </p>
       </div>
     </footer>
   );

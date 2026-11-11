@@ -9,7 +9,7 @@ import type { LatLng, RealRoute, RouteStop } from "@/lib/routing/types";
  */
 
 const BLUE = "#0B5C5A";
-const CORAL = "#E0501A";
+const CORAL = "#2FA074";
 const STYLE = {
   light: "https://tiles.openfreemap.org/styles/positron",
   dark: "https://tiles.openfreemap.org/styles/dark",

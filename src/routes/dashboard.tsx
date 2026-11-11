@@ -7,7 +7,7 @@ import { ApproxMoney, CATEGORY_COLOR_VAR } from "@/components/app/bits";
 import { AnimatedMoney, stagger } from "@/components/app/motion";
 import { ShareTripButton } from "@/components/app/ShareTrip";
 import { PageHeader } from "@/components/app/TripHeader";
-import { DestinationCard, DestinationHero } from "@/components/app/DestinationIntro";
+import { DestinationCard } from "@/components/app/DestinationIntro";
 import { TripReady } from "@/components/app/TripReady";
 import { WeatherCard } from "@/components/app/Weather";
 import { Button } from "@/components/ui/button";
@@ -57,11 +57,6 @@ function Dashboard() {
       <PageHeader title={place}>{!trip.isSample && <ShareTripButton />}</PageHeader>
 
       <div className="page-container mt-6 space-y-4">
-        <DestinationHero
-          dest={dest}
-          origin={trip.setup.origin}
-          className="h-24 w-40 sm:h-28 sm:w-48"
-        />
         <TripReady />
         <div className="flex flex-col gap-4 lg:flex-row">
           {/* Balance */}
@@ -215,8 +210,8 @@ function Dashboard() {
           )}
         </section>
 
-        <div className="layout-5-7">
-          <DestinationCard dest={dest} origin={trip.setup.origin} photo={false} />
+        <div className="layout-5-7 items-start">
+          <DestinationCard dest={dest} origin={trip.setup.origin} />
           <WeatherCard />
         </div>
       </div>
