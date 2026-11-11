@@ -525,13 +525,13 @@ export function TripAssistant({
               )}
             >
               {EXAMPLES.map((ex) => (
-                <li key={ex.label}>
+                <li key={ex.label} className="shrink-0">
                   <button
                     type="button"
                     onClick={() => void send(ex.message)}
                     title={ex.message}
                     className={cn(
-                      "group flex items-center gap-2 rounded-full border border-border bg-transparent transition-[border-color,transform] duration-150 hover:border-primary active:scale-[0.97]",
+                      "group flex shrink-0 items-center gap-2 rounded-full border border-border whitespace-nowrap bg-transparent transition-[border-color,transform] duration-150 hover:border-primary active:scale-[0.97]",
                       search ? "h-10 px-4 text-footnote" : "h-10 px-4 text-body",
                     )}
                   >

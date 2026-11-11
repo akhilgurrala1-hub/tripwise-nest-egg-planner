@@ -165,11 +165,11 @@ describe("class merging", () => {
 });
 
 describe("no template tells", () => {
-  it("headlines set one word in the brand's italic through <em>, never by hand", () => {
-    // The italic emerald comes from `title-display em`; a class on the <em> would fork it.
+  it("headlines color one word through <em>, never by hand", () => {
+    // The accent word comes from `title-display em`; a class on the <em> would fork it.
     expect(find(/<em className="[^"]*\btext-primary\b[^"]*">/g)).toEqual([]);
     const css = readFileSync(join(SRC, "styles.css"), "utf8");
-    expect(css).toMatch(/title-display[\s\S]{0,400}em\s*\{[^}]*font-style:\s*italic/);
+    expect(css).toMatch(/title-display[\s\S]{0,400}em\s*\{[^}]*color:\s*var\(--color-primary\)/);
   });
 
   it("blue marks only what you can press or what's selected: no decorative or status blue", () => {
@@ -197,14 +197,15 @@ describe("no template tells", () => {
     expect(find(/<img\b/g, (p) => p.endsWith("Photo.tsx"))).toEqual([]);
   });
 
-  it("sets display in Fraunces, text in Inter and labels in JetBrains Mono, all self-hosted", () => {
+  it("sets everything in Inter, self-hosted, with no serif or mono labels", () => {
     const css = readFileSync(join(SRC, "styles.css"), "utf8");
     const stack = (name: string) => css.match(new RegExp(`--font-${name}:([^;]+);`))?.[1] ?? "";
-    expect(stack("display")).toMatch(/^\s*"Fraunces Variable"/);
     expect(stack("sans")).toMatch(/^\s*"Inter Variable"/);
-    expect(stack("mono")).toMatch(/^\s*"JetBrains Mono Variable"/);
-    for (const pkg of ["fraunces", "inter", "jetbrains-mono"])
-      expect(css).toContain(`@fontsource-variable/${pkg}`);
+    expect(stack("display")).toContain("var(--font-sans)");
+    expect(css).toContain("@fontsource-variable/inter");
+    expect(css).not.toMatch(/fraunces|jetbrains/i);
+    // Small labels are plain sentence case: no uppercase, tracked-out caps.
+    expect(css.match(/@utility label-mono \{[^}]*\}/)?.[0] ?? "").not.toMatch(/uppercase/);
   });
 
   it("loads fonts from the app itself: no Google Fonts request", () => {
