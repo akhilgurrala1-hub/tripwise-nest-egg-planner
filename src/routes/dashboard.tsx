@@ -56,13 +56,12 @@ function Dashboard() {
     <div>
       <PageHeader title={place}>{!trip.isSample && <ShareTripButton />}</PageHeader>
 
-      {/* The place first, edge to edge like a magazine spread: then the money. */}
-      <DestinationHero
-        dest={dest}
-        origin={trip.setup.origin}
-        className="h-44 w-full rounded-none sm:h-[clamp(200px,30vh,300px)]"
-      />
       <div className="page-container mt-6 space-y-4">
+        <DestinationHero
+          dest={dest}
+          origin={trip.setup.origin}
+          className="h-24 w-40 sm:h-28 sm:w-48"
+        />
         <TripReady />
         <div className="flex flex-col gap-4 lg:flex-row">
           {/* Balance */}
@@ -74,7 +73,7 @@ function Dashboard() {
                 </p>
                 <p
                   className={cn(
-                    "money-display mt-2 text-display",
+                    "money-display mt-2 text-large-title",
                     totals.overBudget && "text-destructive",
                   )}
                 >

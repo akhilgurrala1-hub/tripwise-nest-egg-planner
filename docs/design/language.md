@@ -1,3 +1,5 @@
+> **Superseded in part (2026-11-11):** the owner asked for a more readable look. Waypoint now uses Inter only, light by default, bold headlines, sentence-case labels, 12px corners and small photo thumbnails. The notes below describe the earlier editorial system.
+
 # Waypoint design language
 
 Waypoint wears the language of the owner's own site, [argcoresolutions.com](https://argcoresolutions.com),

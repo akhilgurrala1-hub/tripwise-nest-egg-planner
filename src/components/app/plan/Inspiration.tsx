@@ -130,13 +130,13 @@ export function Inspiration({
       >
         {!settled &&
           [0, 1, 2].map((i) => (
-            <li key={i} aria-hidden className="w-[70%] shrink-0 snap-start sm:w-72">
-              <span className="skeleton block aspect-[4/3] rounded-2xl" />
+            <li key={i} aria-hidden className="w-[70%] shrink-0 snap-start sm:w-64">
+              <span className="skeleton block aspect-[16/9] rounded-2xl" />
               <span className="mt-4 block h-[6.25rem]" />
             </li>
           ))}
         {ideas.map((idea, i) => (
-          <li key={idea.s.id} className="w-[70%] shrink-0 snap-start sm:w-72">
+          <li key={idea.s.id} className="w-[70%] shrink-0 snap-start sm:w-64">
             <IdeaCard
               idea={idea}
               origin={setup.origin}
@@ -198,10 +198,10 @@ function IdeaCard({
       className="group lift block w-full rounded-2xl text-left pressable focus-visible:ring-4 focus-visible:ring-primary/30 focus-visible:outline-none"
     >
       {/* The place on top, the facts under it: a travel app's listing card. */}
-      <span className="relative isolate block aspect-[4/3] overflow-hidden rounded-2xl bg-fill">
+      <span className="relative isolate block aspect-[16/9] overflow-hidden rounded-2xl bg-fill">
         {photo?.image ? (
           <Photo
-            src={thumbAt(photo.image, 500)}
+            src={thumbAt(photo.image, 400)}
             alt=""
             priority={first ?? false}
             className="absolute inset-0 -z-10"

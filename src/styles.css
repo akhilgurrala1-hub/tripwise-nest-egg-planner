@@ -1,27 +1,10 @@
 @import "tailwindcss" source(none);
 @source "../src";
 @import "tw-animate-css";
-/* Three self-hosted faces (OFL): Fraunces for display, Inter for text, JetBrains Mono for labels. */
-@import "@fontsource-variable/fraunces/opsz.css";
-@import "@fontsource-variable/fraunces/opsz-italic.css";
+/* One self-hosted face (OFL): Inter for everything. */
 @import "@fontsource-variable/inter";
-@import "@fontsource-variable/jetbrains-mono";
 
 /* Fallbacks sized to the web fonts' measured widths, so the swap never reflows the headline. */
-@font-face {
-  font-family: "Fraunces Fallback";
-  font-style: normal;
-  font-weight: 100 900;
-  src: local("Georgia");
-  size-adjust: 81.6%;
-}
-@font-face {
-  font-family: "Fraunces Fallback";
-  font-style: italic;
-  font-weight: 100 900;
-  src: local("Georgia Italic"), local("Georgia-Italic");
-  size-adjust: 75%;
-}
 @font-face {
   font-family: "Inter Fallback";
   font-style: normal;
@@ -34,8 +17,7 @@
 
 /*
  * Waypoint design system: the ARG Core editorial language, with apple.com's craft.
- * - Type: Fraunces (light, optical size) for display with one italic emerald word, Inter for
- *   text, JetBrains Mono for small uppercase labels. Weight carries hierarchy, not bold.
+ * - Type: Inter only. Bold headlines, regular body at 16px or more, sentence-case labels.
  * - Color: a near-black green ground (#08100d) with warm cream ink (#f5f1e8) and emerald;
  *   the light theme is the same system on cream paper. Hairline rules instead of boxes.
  * - Shape: sharp 4px surfaces, pill buttons, 8px fields.
@@ -45,49 +27,47 @@
 
 @theme inline {
   --font-sans: "Inter Variable", "Inter", "Inter Fallback", ui-sans-serif, system-ui, sans-serif;
-  --font-display:
-    "Fraunces Variable", "Fraunces", "Fraunces Fallback", Georgia, "Times New Roman", serif;
-  --font-mono:
-    "JetBrains Mono Variable", "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  --font-display: var(--font-sans);
+  --font-mono: ui-monospace, "SF Mono", Menlo, monospace;
 
   /*
    * The 9-level type scale, after apple.com: headlines semibold (600) and only a
    * little tight, sizes stepping 80 / 48 / 40 / 28 / 21 / 17, body 17px.
    */
-  --text-stat: clamp(1.875rem, 0.9rem + 2.4vw, 3.25rem);
+  --text-stat: clamp(1.75rem, 1rem + 2vw, 2.75rem);
   --text-stat--line-height: 1.05;
   --text-stat--letter-spacing: -0.03em;
-  --text-stat--font-weight: 300;
-  --text-display: clamp(3.25rem, 1.4rem + 8vw, 8rem);
-  --text-display--line-height: 0.96;
-  --text-display--letter-spacing: -0.028em;
-  --text-display--font-weight: 300;
-  --text-large-title: clamp(2.5rem, 1.7rem + 3.6vw, 4.75rem);
-  --text-large-title--line-height: 1.02;
+  --text-stat--font-weight: 650;
+  --text-display: clamp(2.5rem, 1.5rem + 4.2vw, 4.5rem);
+  --text-display--line-height: 1.04;
+  --text-display--letter-spacing: -0.03em;
+  --text-display--font-weight: 700;
+  --text-large-title: clamp(1.875rem, 1.3rem + 2.2vw, 2.75rem);
+  --text-large-title--line-height: 1.1;
   --text-large-title--letter-spacing: -0.024em;
-  --text-large-title--font-weight: 300;
-  --text-title-1: 1.875rem;
+  --text-large-title--font-weight: 700;
+  --text-title-1: 1.75rem;
   --text-title-1--line-height: 1.12;
   --text-title-1--letter-spacing: -0.016em;
-  --text-title-1--font-weight: 350;
-  --text-title-2: 1.5rem;
+  --text-title-1--font-weight: 650;
+  --text-title-2: 1.25rem;
   --text-title-2--line-height: 1.18;
   --text-title-2--letter-spacing: -0.012em;
-  --text-title-2--font-weight: 350;
-  --text-headline: 1.1875rem;
+  --text-title-2--font-weight: 650;
+  --text-headline: 1.0625rem;
   --text-headline--line-height: 1.3;
   --text-headline--letter-spacing: -0.012em;
-  --text-headline--font-weight: 500;
+  --text-headline--font-weight: 600;
   --text-body: 1.0625rem;
   --text-body--line-height: 1.55;
-  --text-body--letter-spacing: -0.011em;
-  --text-footnote: 0.875rem;
+  --text-body--letter-spacing: 0em;
+  --text-footnote: 0.9375rem;
   --text-footnote--line-height: 1.43;
   --text-footnote--letter-spacing: -0.006em;
-  --text-caption: 0.75rem;
+  --text-caption: 0.8125rem;
   --text-caption--line-height: 1.33;
   --text-caption--letter-spacing: 0em;
-  --text-micro: 0.75rem;
+  --text-micro: 0.8125rem;
   --text-micro--line-height: 1.34;
   --text-micro--letter-spacing: 0.006em;
   /* Tailwind's own names resolve onto the scale; text-sm is the 15px control size. */
@@ -119,9 +99,9 @@
   --radius-md: 6px;
   --radius-lg: 8px;
   --radius-xl: 10px;
-  --radius-2xl: 4px;
-  --radius-3xl: 4px;
-  --radius-4xl: 4px;
+  --radius-2xl: 12px;
+  --radius-3xl: 12px;
+  --radius-4xl: 16px;
 
   /* Springs as CSS easings (generated from src/lib/spring.ts SPRINGS). */
   --ease-spring-snappy: linear(
@@ -341,57 +321,57 @@
 }
 
 :root {
-  --radius: 4px;
+  --radius: 12px;
   color-scheme: light;
   /* apple.com: a light-gray page (#f5f5f7), white tiles, #1d1d1f text. */
-  --background: oklch(0.959 0.013 87);
-  --foreground: oklch(0.182 0.014 170);
-  --card: oklch(0.98 0.01 87);
-  --card-foreground: oklch(0.182 0.014 170);
-  --popover: oklch(0.994 0.007 89);
-  --popover-foreground: oklch(0.182 0.014 170);
+  --background: oklch(0.985 0.004 160);
+  --foreground: oklch(0.21 0.02 170);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.21 0.02 170);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.21 0.02 170);
   /* The one accent: interactive, selected, focused. */
   /* Brand blue (#2457E6), the logo's tile color, doubles as the interactive accent. */
   --primary: oklch(0.401 0.072 168);
   --primary-deep: oklch(0.324 0.057 168);
-  --primary-foreground: oklch(0.959 0.013 87);
+  --primary-foreground: oklch(0.985 0.004 160);
   /* Fills (#e8e8ed) for secondary controls and tracks. */
-  --secondary: oklch(0.926 0.02 88);
-  --secondary-foreground: oklch(0.182 0.014 170);
-  --muted: oklch(0.926 0.02 88);
-  --muted-foreground: oklch(0.469 0.018 86);
+  --secondary: oklch(0.955 0.006 160);
+  --secondary-foreground: oklch(0.21 0.02 170);
+  --muted: oklch(0.955 0.006 160);
+  --muted-foreground: oklch(0.42 0.02 170);
   --accent: oklch(0.924 0.017 125);
-  --accent-foreground: oklch(0.182 0.014 170);
+  --accent-foreground: oklch(0.21 0.02 170);
   --fill: oklch(0.163 0.014 170 / 0.05);
   /* Legacy warm tokens now resolve to the accent / neutrals. */
   --sunset: var(--primary);
   --sunset-foreground: var(--primary-foreground);
   --sunset-soft: oklch(0.924 0.017 125);
   --gold: oklch(0.7 0.12 80);
-  --gold-soft: oklch(0.926 0.02 88);
+  --gold-soft: oklch(0.955 0.006 160);
   --success: oklch(0.401 0.072 168);
   --success-soft: oklch(0.92 0.017 151);
   --shield: oklch(0.469 0.018 86);
-  --shield-soft: oklch(0.926 0.02 88);
-  --shield-foreground: oklch(0.959 0.013 87);
+  --shield-soft: oklch(0.955 0.006 160);
+  --shield-foreground: oklch(0.985 0.004 160);
   --demo: oklch(0.469 0.018 86);
-  --demo-soft: oklch(0.926 0.02 88);
+  --demo-soft: oklch(0.955 0.006 160);
   --destructive: oklch(0.495 0.154 25);
-  --destructive-foreground: oklch(0.959 0.013 87);
+  --destructive-foreground: oklch(0.985 0.004 160);
   --destructive-soft: oklch(0.91 0.025 37);
   /* Separators are hairlines: black at low alpha, so they sit right on any surface. */
-  --border: oklch(0.163 0.014 170 / 0.14);
-  --separator: oklch(0.163 0.014 170 / 0.1);
-  --input: oklch(0.163 0.014 170 / 0.32);
+  --border: oklch(0.21 0.02 170 / 0.16);
+  --separator: oklch(0.21 0.02 170 / 0.12);
+  --input: oklch(0.21 0.02 170 / 0.38);
   --ring: oklch(0.519 0.098 165);
   /* Brand coral (#FF6B4A): the logo's destination dot. Used sparingly for "you are here / next" cues. */
   --brand-coral: oklch(0.519 0.098 165);
   /* Coral as small text (step numbers): darker so it reads at AA contrast on paper. */
   --coral-text: oklch(0.401 0.072 168);
   /* Solid emphasis surface (primary call to action, the balance card). */
-  --ink: oklch(0.182 0.014 170);
-  --ink-foreground: oklch(0.959 0.013 87);
-  --on-image: oklch(0.959 0.013 87);
+  --ink: oklch(0.21 0.02 170);
+  --ink-foreground: oklch(0.985 0.004 160);
+  --on-image: oklch(0.985 0.004 160);
 
   /* "Go" actions (Plan trip, See the days) use the brand blue: one action color. */
   --go: var(--brand);
@@ -439,13 +419,13 @@
   --shadow-glow-value: 0 1px 2px oklch(0 0 0 / 0.05);
 
   /* Materials: frosted glass for bars and menus (alpha of the base + blur). */
-  --material-base: oklch(0.959 0.013 87);
+  --material-base: oklch(0.985 0.004 160);
   --material-thick: 0.88;
   --material-regular: 0.74;
   --material-thin: 0.6;
   /* The lit top edge of glass, and the hairline under it. */
   --specular: oklch(1 0 0 / 0);
-  --material-edge: oklch(0.163 0.014 170 / 0.1);
+  --material-edge: oklch(0.21 0.02 170 / 0.12);
 
   --sidebar: var(--background);
   --sidebar-foreground: var(--foreground);
@@ -456,25 +436,25 @@
   --sidebar-border: var(--border);
   --sidebar-ring: var(--ring);
   --brand: oklch(0.519 0.098 165);
-  --brand-foreground: oklch(0.959 0.013 87);
+  --brand-foreground: oklch(0.985 0.004 160);
   --brand-deep: oklch(0.401 0.072 168);
 }
 .dark {
   color-scheme: dark;
   /* Near-black page, #1d1d1f tiles: Apple's dark pages, a shade off pure black. */
-  --background: oklch(0.163 0.014 170);
-  --foreground: oklch(0.959 0.013 87);
-  --card: oklch(0.182 0.014 170);
+  --background: oklch(0.21 0.008 170);
+  --foreground: oklch(0.97 0.004 160);
+  --card: oklch(0.255 0.009 170);
   --card-foreground: oklch(0.959 0.013 87);
-  --popover: oklch(0.2 0.013 178);
+  --popover: oklch(0.3 0.01 170);
   --popover-foreground: oklch(0.959 0.013 87);
   --primary: oklch(0.632 0.121 163);
   --primary-deep: oklch(0.711 0.114 164);
   --primary-foreground: oklch(0.163 0.014 170);
-  --secondary: oklch(0.2 0.013 178);
+  --secondary: oklch(0.3 0.01 170);
   --secondary-foreground: oklch(0.959 0.013 87);
-  --muted: oklch(0.2 0.013 178);
-  --muted-foreground: oklch(0.651 0.02 86);
+  --muted: oklch(0.3 0.01 170);
+  --muted-foreground: oklch(0.76 0.012 170);
   --accent: oklch(0.228 0.025 159);
   --accent-foreground: oklch(0.959 0.013 87);
   --fill: oklch(0.959 0.013 87 / 0.06);
@@ -482,19 +462,19 @@
   --sunset-foreground: var(--primary-foreground);
   --sunset-soft: oklch(0.228 0.025 159);
   --gold: oklch(0.78 0.11 80);
-  --gold-soft: oklch(0.2 0.013 178);
+  --gold-soft: oklch(0.3 0.01 170);
   --success: oklch(0.632 0.121 163);
   --success-soft: oklch(0.248 0.032 164);
   --shield: oklch(0.848 0.029 92);
-  --shield-soft: oklch(0.2 0.013 178);
+  --shield-soft: oklch(0.3 0.01 170);
   --shield-foreground: oklch(0.163 0.014 170);
   --demo: oklch(0.618 0.019 88);
-  --demo-soft: oklch(0.2 0.013 178);
+  --demo-soft: oklch(0.3 0.01 170);
   --destructive: oklch(0.662 0.162 26);
   --destructive-foreground: oklch(0.163 0.014 170);
   --destructive-soft: oklch(0.222 0.037 26);
-  --border: oklch(0.959 0.013 87 / 0.12);
-  --separator: oklch(0.959 0.013 87 / 0.08);
+  --border: oklch(0.97 0.004 160 / 0.16);
+  --separator: oklch(0.97 0.004 160 / 0.11);
   --input: oklch(0.959 0.013 87 / 0.3);
   --ring: oklch(0.632 0.121 163);
   --brand-coral: oklch(0.632 0.121 163);
@@ -541,7 +521,7 @@
   --material-regular: 0.72;
   --material-thin: 0.58;
   --specular: oklch(1 0 0 / 0);
-  --material-edge: oklch(0.959 0.013 87 / 0.08);
+  --material-edge: oklch(0.97 0.004 160 / 0.11);
   --brand: oklch(0.519 0.098 165);
   --brand-foreground: oklch(0.959 0.013 87);
   --brand-deep: oklch(0.584 0.111 164);
@@ -663,12 +643,10 @@
 
 /* Mono micro label with no rule (table heads, key-value keys). */
 @utility label-mono {
-  font-family: var(--font-mono);
   font-size: var(--text-caption);
-  line-height: 1.2;
+  line-height: 1.3;
   font-weight: 500;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
+  letter-spacing: 0.01em;
   color: var(--color-muted-foreground);
 }
 
@@ -690,28 +668,26 @@
   }
 }
 
-/* Titles: Fraunces light, tightened as it grows; <em> is the italic emerald accent word. */
+/* Titles: bold Inter, tightened as it grows; <em> is the accent-colored word. */
 @utility title-display {
-  font-family: var(--font-display);
-  font-optical-sizing: auto;
-  --tw-font-weight: 300;
-  font-weight: 300;
+  font-family: var(--font-sans);
+  --tw-font-weight: 700;
+  font-weight: 700;
   letter-spacing: -0.024em;
   text-wrap: balance;
   & em {
-    font-style: italic;
+    font-style: normal;
     color: var(--color-primary);
   }
 }
 
-/* Amounts that matter: Fraunces light with lining figures. Columns of numbers use `tabular`. */
+/* Amounts that matter: bold Inter with tabular figures. */
 @utility money-display {
-  font-family: var(--font-display);
-  font-optical-sizing: auto;
-  font-weight: 300;
-  letter-spacing: -0.03em;
+  font-family: var(--font-sans);
+  font-weight: 700;
+  letter-spacing: -0.025em;
   line-height: 1;
-  font-variant-numeric: lining-nums proportional-nums;
+  font-variant-numeric: tabular-nums;
 }
 
 /*
