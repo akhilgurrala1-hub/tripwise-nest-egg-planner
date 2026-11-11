@@ -86,10 +86,10 @@ await page.setContent(`<html><head><style>
   .wrap{position:absolute;left:88px;top:72px;right:480px}
   .lock{display:flex;align-items:center;gap:20px}
   .word{font-family:Inter,sans-serif;font-size:42px;font-weight:700;letter-spacing:-0.01em}
-  .label{display:flex;align-items:center;gap:18px;margin-top:84px;font-family:Inter,sans-serif;font-size:22px;font-weight:600;color:#E0602F}
-  .label::before{content:"";width:44px;height:1px;background:#E0602F}
+  .label{display:flex;align-items:center;gap:18px;margin-top:84px;font-family:Inter,sans-serif;font-size:22px;font-weight:600;color:#2FA074}
+  .label::before{content:"";width:44px;height:1px;background:#2FA074}
   h1{font-family:Inter,sans-serif;font-weight:700;margin:28px 0 0;font-size:100px;line-height:0.98;letter-spacing:-0.028em}
-  h1 em{font-style:normal;color:#E0602F}
+  h1 em{font-style:normal;color:#2FA074}
   p{margin:30px 0 0;font-size:24px;line-height:1.5;color:#C7CCDB;max-width:560px}
   .art{position:absolute;right:72px;top:120px;width:380px;height:380px}
   .rule{position:absolute;left:88px;right:88px;bottom:72px;height:1px;background:rgba(246,241,231,0.16)}

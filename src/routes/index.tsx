@@ -361,7 +361,7 @@ function Welcome() {
       <section className="relative overflow-hidden">
         <div className="page-container pt-12 pb-16 sm:pt-20 sm:pb-24">
           <div className="grid gap-16 xl:grid-cols-[1.3fr_1fr] xl:items-end">
-            <div>
+            <div className="min-w-0">
               <h1 aria-label="Plan a trip, to the dollar." className="title-display text-display">
                 {["Plan", "a", "trip,", "to", "the", "dollar."].map((word, i) => (
                   <span key={word} aria-hidden>

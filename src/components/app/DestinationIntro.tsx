@@ -52,7 +52,7 @@ export function DestinationPhoto({
           target="_blank"
           rel="noopener noreferrer"
           title="Photo from Wikipedia"
-          className="relative block overflow-hidden rounded-lg"
+          className="relative block w-56 max-w-full overflow-hidden rounded-lg"
         >
           <Photo src={s.image} alt={s.title} className="aspect-[16/9] w-full" />
         </a>
