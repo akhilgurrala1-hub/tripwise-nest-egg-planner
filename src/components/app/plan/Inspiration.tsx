@@ -83,10 +83,12 @@ export function Inspiration({
       destinationSummaryOptions(getDestination(idea.s.id), setup.origin, hydrated),
     ),
   });
-  // A place without a real photo is left out once we know (never a blank tile in the row).
-  const ideas = candidates
-    .filter((_, i) => photos[i]?.isPending || photos[i]?.data?.image)
-    .slice(0, 5);
+  // Once every lookup is in, a place without a real photo is left out (never a blank tile),
+  // unless too few have one (offline, or Wikipedia is down): then they all show with an icon.
+  // Until then the row holds same-size placeholders, so nothing jumps when the cards arrive.
+  const settled = photos.every((p) => !p.isPending);
+  const withPhotos = candidates.filter((_, i) => photos[i]?.data?.image);
+  const ideas = settled ? (withPhotos.length >= 2 ? withPhotos : candidates).slice(0, 5) : [];
   // A gallery, as on apple.com: one row you can drag, fling and page with the arrows.
   const rail = useDragScroll<HTMLUListElement>();
   const [edge, setEdge] = useState({ start: true, end: false });
@@ -108,7 +110,7 @@ export function Inspiration({
   }, [order, rail]);
   const page = (dir: 1 | -1) =>
     rail.current?.scrollBy({ left: dir * rail.current.clientWidth * 0.8, behavior: "smooth" });
-  if (!ideas.length) return null;
+  if (settled && !ideas.length) return null;
   return (
     <section aria-labelledby="ideas-title">
       <div className="flex items-baseline justify-between gap-4">
@@ -125,6 +127,13 @@ export function Inspiration({
         onScroll={onScroll}
         className="-mx-4 mt-6 flex snap-x snap-mandatory scroll-px-4 gap-4 overflow-x-auto px-4 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
       >
+        {!settled &&
+          [0, 1, 2].map((i) => (
+            <li key={i} aria-hidden className="w-[70%] shrink-0 snap-start sm:w-72">
+              <span className="skeleton block aspect-[4/3] rounded-2xl" />
+              <span className="mt-4 block h-[6.25rem]" />
+            </li>
+          ))}
         {ideas.map((idea, i) => (
           <li key={idea.s.id} className="w-[70%] shrink-0 snap-start sm:w-72">
             <IdeaCard

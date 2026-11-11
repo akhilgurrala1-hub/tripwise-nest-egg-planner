@@ -1182,14 +1182,6 @@
     translate: 0 0;
   }
 }
-@keyframes curtain {
-  from {
-    clip-path: inset(0 0 100% 0 round 18px);
-  }
-  to {
-    clip-path: inset(0 0 0 0 round 18px);
-  }
-}
 @keyframes photo-settle {
   from {
     scale: 1.14;
@@ -1241,21 +1233,17 @@
 }
 .hero-word {
   display: inline-block;
-  animation: word-up 450ms var(--ease-out-expo) both;
+  animation: word-up 450ms var(--ease-out-expo) backwards;
   animation-delay: calc(var(--w, 0) * 45ms);
 }
 /* The rest of the hero follows the headline. */
 .enter-rise {
-  animation: rise 500ms var(--ease-out-expo) both;
+  animation: rise 500ms var(--ease-out-expo) backwards;
   animation-delay: calc(var(--d, 0) * 1ms + 90ms);
 }
-/* Photos open like a curtain while the picture settles inside its frame. */
-.enter-curtain {
-  animation: curtain 650ms var(--ease-out-expo) both;
-  animation-delay: calc(var(--d, 0) * 1ms);
-}
+/* Photos settle into their frames (a slow zoom out); no clip, so they count as painted at once. */
 .enter-curtain img {
-  animation: photo-settle 900ms var(--ease-out-expo) both;
+  animation: photo-settle 900ms var(--ease-out-expo) backwards;
   animation-delay: calc(var(--d, 0) * 1ms);
 }
 /* The journey line along the hero's bottom edge: draws, then the destination lands. */
@@ -1265,22 +1253,22 @@
   animation: route-draw 1600ms var(--ease-out-expo) 250ms forwards;
 }
 .route-dot {
-  animation: dot-land 450ms var(--ease-out-expo) 1500ms both;
+  animation: dot-land 450ms var(--ease-out-expo) 1500ms backwards;
 }
 .route-origin {
-  animation: dot-land 350ms var(--ease-out-expo) 250ms both;
+  animation: dot-land 350ms var(--ease-out-expo) 250ms backwards;
 }
 /* Budget bars grow from their start. */
 .grow-x {
   transform-origin: left center;
-  animation: grow-x 1100ms var(--ease-out-expo) both;
+  animation: grow-x 1100ms var(--ease-out-expo) backwards;
   animation-delay: calc(var(--i, 0) * 60ms + 150ms);
 }
 
 /* Cards arrive as they scroll into view (only where scroll-driven animation exists). */
 @supports (animation-timeline: view()) {
   main .reveal {
-    animation: slide-up linear both;
+    animation: slide-up linear backwards;
     animation-timeline: view();
     animation-range: entry 0% entry 30%;
   }
