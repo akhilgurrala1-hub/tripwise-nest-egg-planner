@@ -517,28 +517,45 @@ function Welcome() {
               <Section title="When & who" style={stagger(3)}>
                 <div className="flex flex-wrap items-start gap-x-4 gap-y-4">
                   <div className="min-w-0 flex-1 basis-64">
-                    <p className="mb-2 text-footnote text-muted-foreground">Dates</p>
                     <div className="grid grid-cols-2 gap-2">
-                      <Input
-                        type="date"
-                        aria-label="Start date"
-                        aria-invalid={!!dateError || undefined}
-                        aria-describedby={dateError ? "date-error" : undefined}
-                        value={form.startDate}
-                        min={todayIso()}
-                        onChange={(e) => setStartDate(e.target.value)}
-                        className="h-11"
-                      />
-                      <Input
-                        type="date"
-                        aria-label="End date"
-                        aria-invalid={!!dateError || undefined}
-                        aria-describedby={dateError ? "date-error" : undefined}
-                        value={form.endDate}
-                        min={form.startDate}
-                        onChange={(e) => update({ endDate: e.target.value })}
-                        className="h-11"
-                      />
+                      <div className="grid gap-2">
+                        <Label
+                          htmlFor="start-date"
+                          className="text-footnote font-normal text-muted-foreground"
+                        >
+                          Start date
+                        </Label>
+                        <Input
+                          id="start-date"
+                          type="date"
+                          aria-label="Start date"
+                          aria-invalid={!!dateError || undefined}
+                          aria-describedby={dateError ? "date-error" : undefined}
+                          value={form.startDate}
+                          min={todayIso()}
+                          onChange={(e) => setStartDate(e.target.value)}
+                          className="h-11"
+                        />
+                      </div>
+                      <div className="grid gap-2">
+                        <Label
+                          htmlFor="end-date"
+                          className="text-footnote font-normal text-muted-foreground"
+                        >
+                          End date
+                        </Label>
+                        <Input
+                          id="end-date"
+                          type="date"
+                          aria-label="End date"
+                          aria-invalid={!!dateError || undefined}
+                          aria-describedby={dateError ? "date-error" : undefined}
+                          value={form.endDate}
+                          min={form.startDate}
+                          onChange={(e) => update({ endDate: e.target.value })}
+                          className="h-11"
+                        />
+                      </div>
                     </div>
                     {dateError ? (
                       <FieldError id="date-error">{dateError}</FieldError>
@@ -593,10 +610,14 @@ function Welcome() {
               <Section title="Budget" style={stagger(5)}>
                 <div className="sm:max-w-xs">
                   <div>
-                    <Label className="text-footnote font-normal text-muted-foreground">
+                    <Label
+                      htmlFor="total-budget"
+                      className="text-footnote font-normal text-muted-foreground"
+                    >
                       Total budget
                     </Label>
                     <NumberField
+                      id="total-budget"
                       aria-label="Total budget"
                       prefix="$"
                       value={totalBudget}
@@ -660,6 +681,7 @@ function Welcome() {
                 <Section title="Emergency fund">
                   <div className="sm:max-w-xs">
                     <NumberField
+                      id="emergency-fund"
                       aria-label="Emergency fund"
                       invalid={!!reserveError}
                       describedBy={reserveError ? "reserve-error" : undefined}

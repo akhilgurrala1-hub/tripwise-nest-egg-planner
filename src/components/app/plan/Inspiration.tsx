@@ -115,7 +115,7 @@ export function Inspiration({
       <div className="grid items-end gap-8 lg:grid-cols-[1.15fr_1fr] lg:gap-16">
         <div>
           <h2 id="ideas-title" className="title-display text-large-title">
-            Trip ideas from <em>{fromLabel}.</em>
+            Trips worth taking. <em>From {fromLabel}.</em>
           </h2>
         </div>
         <p className="max-w-xl font-display text-title-2 leading-snug font-light text-muted-foreground italic lg:justify-self-end">
