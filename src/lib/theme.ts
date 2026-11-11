@@ -4,7 +4,7 @@ export type ThemePref = "light" | "dark" | "system";
 const KEY = "waypoint.theme";
 
 /** Browser-chrome color per theme: the page background, so the toolbar blends in. Dark is the default. */
-export const THEME_COLORS = { light: "#F8FAF9", dark: "#1D2321" } as const;
+export const THEME_COLORS = { light: "#F6F1E7", dark: "#0F1A33" } as const;
 
 export const THEME_BOOT_SCRIPT = `(function(){var d=false;try{var p=localStorage.getItem("${KEY}")||"light";d=p==="dark"||(p==="system"&&window.matchMedia("(prefers-color-scheme: dark)").matches);document.documentElement.classList.toggle("dark",d);}catch(e){}var m=document.createElement("meta");m.name="theme-color";m.content=d?"${THEME_COLORS.dark}":"${THEME_COLORS.light}";document.head.appendChild(m);})();`;
 

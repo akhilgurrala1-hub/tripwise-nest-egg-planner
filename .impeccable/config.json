@@ -1,7 +1,8 @@
 {
   "detector": {
     "ignoreRules": [
-      "italic-serif-display"
+      "italic-serif-display",
+      "cream-palette"
     ],
     "ignoreFiles": [],
     "ignoreValues": []

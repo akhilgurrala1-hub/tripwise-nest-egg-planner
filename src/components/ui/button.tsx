@@ -11,7 +11,7 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        // One primary per screen: emerald fill, cream text.
+        // One primary per screen: burnt coral fill, cream text.
         default: "bg-brand text-brand-foreground hover:bg-brand-deep",
         destructive: "bg-destructive text-destructive-foreground hover:bg-destructive/90",
         // Secondary: a transparent pill with a hairline.

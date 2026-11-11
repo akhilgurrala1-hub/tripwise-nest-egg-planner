@@ -12,7 +12,7 @@ const { chromium } = require("playwright");
 const pub = new URL("../public/", import.meta.url).pathname;
 const svg = readFileSync(join(pub, "favicon.svg"), "utf8");
 const inner = svg.replace(/^[\s\S]*?<rect[^>]*\/>/, "").replace(/<\/svg>\s*$/, "");
-const GROUND = "#08100D";
+const GROUND = "#0F1A33";
 
 /** Variants of the mark: rounded tile (default), full-bleed square, or full-bleed with a safe-zone inset. */
 function mark({ bleed = false, inset = 1 } = {}) {
@@ -82,18 +82,18 @@ await page.setContent(`<html><head><style>
   ${face("Fraunces", "fraunces", "fraunces-latin-opsz-italic.woff2", "italic")}
   ${face("Inter", "inter", "inter-latin-wght-normal.woff2")}
   ${face("Mono", "jetbrains-mono", "jetbrains-mono-latin-wght-normal.woff2")}
-  body{margin:0;width:1200px;height:630px;background:#08100D;color:#F5F1E8;font-family:Inter,system-ui,sans-serif;overflow:hidden;position:relative}
+  body{margin:0;width:1200px;height:630px;background:#0F1A33;color:#F6F1E7;font-family:Inter,system-ui,sans-serif;overflow:hidden;position:relative}
   .wrap{position:absolute;left:88px;top:72px;right:480px}
   .lock{display:flex;align-items:center;gap:20px}
-  .word{font-family:Fraunces,serif;font-size:42px;font-weight:400;letter-spacing:-0.01em}
-  .label{display:flex;align-items:center;gap:18px;margin-top:84px;font-family:Mono,monospace;font-size:15px;font-weight:500;letter-spacing:0.18em;text-transform:uppercase;color:#2FA074}
-  .label::before{content:"";width:44px;height:1px;background:#2FA074}
-  h1{font-family:Fraunces,serif;font-weight:300;font-optical-sizing:auto;margin:28px 0 0;font-size:100px;line-height:0.98;letter-spacing:-0.028em}
-  h1 em{font-style:italic;color:#2FA074}
-  p{margin:30px 0 0;font-size:24px;line-height:1.5;color:#B8B2A2;max-width:560px}
+  .word{font-family:Inter,sans-serif;font-size:42px;font-weight:700;letter-spacing:-0.01em}
+  .label{display:flex;align-items:center;gap:18px;margin-top:84px;font-family:Inter,sans-serif;font-size:22px;font-weight:600;color:#E0602F}
+  .label::before{content:"";width:44px;height:1px;background:#E0602F}
+  h1{font-family:Inter,sans-serif;font-weight:700;margin:28px 0 0;font-size:100px;line-height:0.98;letter-spacing:-0.028em}
+  h1 em{font-style:normal;color:#E0602F}
+  p{margin:30px 0 0;font-size:24px;line-height:1.5;color:#C7CCDB;max-width:560px}
   .art{position:absolute;right:72px;top:120px;width:380px;height:380px}
-  .rule{position:absolute;left:88px;right:88px;bottom:72px;height:1px;background:rgba(245,241,232,0.16)}
-  .foot{position:absolute;left:88px;bottom:30px;font-family:Mono,monospace;font-size:14px;color:#8A8579;letter-spacing:0.16em;text-transform:uppercase}
+  .rule{position:absolute;left:88px;right:88px;bottom:72px;height:1px;background:rgba(246,241,231,0.16)}
+  .foot{position:absolute;left:88px;bottom:30px;font-family:Inter,sans-serif;font-size:18px;color:#A9B0C4}
 </style></head><body>
   <div class="wrap">
     <div class="lock"><img src="${dataUri(mark())}" width="64" height="64"><span class="word">Waypoint</span></div>
