@@ -1,16 +1,20 @@
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { useQueries } from "@tanstack/react-query";
-import { useEffect, useState, type CSSProperties } from "react";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
 
 import { Photo } from "@/components/app/Photo";
 import { cn } from "@/lib/utils";
-import { stagger, useDragScroll } from "@/components/app/motion";
+import { useDragScroll } from "@/components/app/motion";
 import { formatMoney } from "@/lib/budget";
 import type { GeoPoint } from "@/lib/catalog";
-import { getDestination, modeForTripType, tripTypeInfo, type TripType } from "@/lib/demo-data";
-import { useHydrated } from "@/lib/live/use-live";
+import {
+  getDestination,
+  modeForTripType,
+  tripTypeInfo,
+  type Interest,
+  type TripType,
+} from "@/lib/demo-data";
 import { thumbAt } from "@/lib/live/open-data";
-import { destinationSummaryOptions, useDestinationSummary } from "@/lib/live/use-open-data";
+import { useDestinationSummary } from "@/lib/live/use-open-data";
 import { recommendDestinations, type Suggestion } from "@/lib/recommend";
 import { TRIP_COLOR } from "@/components/app/trip-colors";
 import { TRIP_ICONS } from "@/components/app/TripTypePicker";
@@ -23,44 +27,50 @@ export interface Idea {
   cost: number;
 }
 
-/** A drive and a flight, alternating, so the row shows both kinds of trip from home. */
-function inspirationIdeas(setup: TripSetup, from: GeoPoint | null, limit = 4): Idea[] {
-  const kinds: TripType[] =
-    setup.tripType === "cruise" || setup.tripType === "staycation"
-      ? ["road-trip", "flight"]
-      : setup.tripType === "flight"
-        ? ["flight", "road-trip"]
-        : ["road-trip", "flight"];
-  const lists = kinds.map((tripType) =>
-    recommendDestinations({ from, tripType, interests: setup.interests, limit }).map((s) => ({
-      s,
-      tripType,
-    })),
-  );
-  const out: Idea[] = [];
-  const seen = new Set<string>();
-  for (let i = 0; out.length < limit && i < limit * 2; i++) {
-    const pick = lists[i % lists.length]![Math.floor(i / lists.length)];
-    if (!pick || seen.has(pick.s.id)) continue;
-    seen.add(pick.s.id);
+/** Rows of ideas: the first is the traveler's own interests, the others one theme each. */
+const THEMES: { id: string; title: string; interests: Interest[] | null }[] = [
+  { id: "top", title: "Top picks for you", interests: null },
+  { id: "nature", title: "Nature and parks", interests: ["nature"] },
+  { id: "food", title: "Food, history and art", interests: ["food", "history", "arts"] },
+  { id: "water", title: "Beaches and water", interests: ["beaches"] },
+];
+
+const CATEGORY_TYPES: TripType[] = ["road-trip", "flight", "cruise", "rail"];
+
+const ROW_SIZE = 10;
+
+function ideasFor(
+  setup: TripSetup,
+  from: GeoPoint | null,
+  tripType: TripType,
+  interests: Interest[],
+  themed: boolean,
+  seen: Set<string>,
+): Idea[] {
+  const list = recommendDestinations({ from, tripType, interests, limit: 40 })
+    .filter((s) => !seen.has(s.id) && (!themed || s.matches.length > 0))
+    .slice(0, ROW_SIZE);
+  return list.map((s) => ({
+    s,
+    tripType,
     // What this trip would cost with their dates and group (the same estimate the plan uses).
-    const cost = estimatedSpend({
+    cost: estimatedSpend({
       ...setup,
-      destinationId: pick.s.id,
+      destinationId: s.id,
       customDestination: "",
       destinationPoint: null,
       cities: [],
-      tripType: pick.tripType,
-      transportMode: modeForTripType(pick.tripType, setup.transportMode),
-    });
-    out.push({ ...pick, cost });
-  }
-  return out;
+      tripType,
+      transportMode: modeForTripType(tripType, setup.transportMode),
+    }),
+  }));
 }
 
 /**
- * Places to go from where they start, with a photo, how far it is and what it would
- * cost: the real estimate for their dates and group, labeled as one.
+ * Places to go from where they start, after airbnb.com: a bar of trip kinds, then rows of
+ * photo cards (top picks, nature, food and history, beaches), each with how far it is and what
+ * it would cost: the real estimate for their dates and group, labeled as one. Rows below the
+ * first load their photos only when they come into view.
  */
 export function Inspiration({
   setup,
@@ -75,41 +85,25 @@ export function Inspiration({
   nights: number;
   onPick: (destinationId: string, tripType: TripType) => void;
 }) {
-  const hydrated = useHydrated();
-  const candidates = inspirationIdeas(setup, from, 6);
-  const photos = useQueries({
-    queries: candidates.map((idea) =>
-      destinationSummaryOptions(getDestination(idea.s.id), setup.origin, hydrated),
-    ),
-  });
-  // Once every lookup is in, a place without a real photo is left out (never a blank tile),
-  // unless too few have one (offline, or Wikipedia is down): then they all show with an icon.
-  // Until then the row holds same-size placeholders, so nothing jumps when the cards arrive.
-  const settled = photos.every((p) => !p.isPending);
-  const withPhotos = candidates.filter((_, i) => photos[i]?.data?.image);
-  const ideas = settled ? (withPhotos.length >= 2 ? withPhotos : candidates).slice(0, 5) : [];
-  // A gallery, as on apple.com: one row you can drag, fling and page with the arrows.
-  const rail = useDragScroll<HTMLUListElement>();
-  const [edge, setEdge] = useState({ start: true, end: false });
-  const onScroll = () => {
-    const el = rail.current;
-    if (!el) return;
-    setEdge({
-      start: el.scrollLeft <= 2,
-      end: el.scrollLeft + el.clientWidth >= el.scrollWidth - 2,
-    });
-  };
-  // When the ideas change (the start city is found after load), begin at the first one again:
-  // scroll snapping would otherwise follow the card it was on to its new place.
-  const order = ideas.map((idea) => idea.s.id).join();
-  useEffect(() => {
-    const el = rail.current;
-    if (el) el.scrollLeft = 0;
-    setEdge({ start: true, end: false });
-  }, [order, rail]);
-  const page = (dir: 1 | -1) =>
-    rail.current?.scrollBy({ left: dir * rail.current.clientWidth * 0.8, behavior: "smooth" });
-  if (settled && !ideas.length) return null;
+  const [type, setType] = useState<TripType>(
+    CATEGORY_TYPES.includes(setup.tripType) ? setup.tripType : "road-trip",
+  );
+  const rows = (() => {
+    const seen = new Set<string>();
+    return THEMES.map((t) => {
+      const ideas = ideasFor(
+        setup,
+        from,
+        type,
+        t.interests ?? setup.interests,
+        t.interests !== null,
+        seen,
+      );
+      ideas.forEach((i) => seen.add(i.s.id));
+      return { ...t, ideas };
+    }).filter((r) => r.ideas.length >= 3);
+  })();
+  const CategoryIcon = (t: TripType) => TRIP_ICONS[t];
   return (
     <section aria-labelledby="ideas-title">
       <div className="text-center">
@@ -121,52 +115,140 @@ export function Inspiration({
           {nights} night{nights === 1 ? "" : "s"}, starting from you.
         </p>
       </div>
+      <div
+        role="tablist"
+        aria-label="Kind of trip"
+        className="mt-8 flex justify-center gap-2 overflow-x-auto pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+      >
+        {CATEGORY_TYPES.map((t) => {
+          const Icon = CategoryIcon(t);
+          const on = t === type;
+          return (
+            <button
+              key={t}
+              type="button"
+              role="tab"
+              aria-selected={on}
+              onClick={() => setType(t)}
+              className={cn(
+                "pressable flex min-h-11 shrink-0 items-center gap-2 rounded-full border px-4 text-footnote font-semibold",
+                on
+                  ? "border-foreground bg-foreground text-background"
+                  : "border-border bg-card text-foreground hover:border-foreground/40",
+              )}
+            >
+              <Icon className="size-4" aria-hidden /> {tripTypeInfo(t).label}
+            </button>
+          );
+        })}
+      </div>
+      {rows.length === 0 && (
+        <p className="mt-8 text-center text-muted-foreground">
+          No ideas for this kind of trip from here yet.
+        </p>
+      )}
+      <div className="mt-8 space-y-12">
+        {rows.map((r, i) => (
+          <IdeaRow
+            key={`${type}-${r.id}`}
+            title={r.title}
+            ideas={r.ideas}
+            origin={setup.origin}
+            eager={i === 0}
+            onPick={onPick}
+          />
+        ))}
+      </div>
+    </section>
+  );
+}
+
+/** One scrolling row of cards; its photo lookups start when it nears the screen (the first at once). */
+function IdeaRow({
+  title,
+  ideas,
+  origin,
+  eager,
+  onPick,
+}: {
+  title: string;
+  ideas: Idea[];
+  origin: string;
+  eager: boolean;
+  onPick: (destinationId: string, tripType: TripType) => void;
+}) {
+  const rail = useDragScroll<HTMLUListElement>();
+  const holder = useRef<HTMLDivElement>(null);
+  const [near, setNear] = useState(eager);
+  useEffect(() => {
+    if (near || !holder.current || typeof IntersectionObserver === "undefined") {
+      if (!near) setNear(true);
+      return;
+    }
+    const io = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((e) => e.isIntersecting)) {
+          setNear(true);
+          io.disconnect();
+        }
+      },
+      { rootMargin: "600px 0px" },
+    );
+    io.observe(holder.current);
+    return () => io.disconnect();
+  }, [near]);
+  const [edge, setEdge] = useState({ start: true, end: false });
+  const onScroll = () => {
+    const el = rail.current;
+    if (!el) return;
+    setEdge({
+      start: el.scrollLeft <= 2,
+      end: el.scrollLeft + el.clientWidth >= el.scrollWidth - 2,
+    });
+  };
+  const page = (dir: 1 | -1) =>
+    rail.current?.scrollBy({ left: dir * rail.current.clientWidth * 0.8, behavior: "smooth" });
+  return (
+    <div ref={holder}>
+      <div className="flex items-end justify-between gap-4">
+        <h3 className="title-display text-title-1">{title}</h3>
+        <div className="flex gap-2">
+          <button
+            type="button"
+            onClick={() => page(-1)}
+            disabled={edge.start}
+            aria-label={`Previous: ${title}`}
+            className="pressable grid size-9 place-items-center rounded-full bg-card text-foreground shadow-sm disabled:opacity-35"
+          >
+            <ChevronLeft className="size-5" />
+          </button>
+          <button
+            type="button"
+            onClick={() => page(1)}
+            disabled={edge.end}
+            aria-label={`More: ${title}`}
+            className="pressable grid size-9 place-items-center rounded-full bg-card text-foreground shadow-sm disabled:opacity-35"
+          >
+            <ChevronRight className="size-5" />
+          </button>
+        </div>
+      </div>
       <ul
         ref={rail}
         onScroll={onScroll}
-        className="-mx-6 mt-8 flex snap-x snap-mandatory scroll-px-6 gap-6 overflow-x-auto px-6 pb-2 [scrollbar-width:none] sm:-mx-8 sm:scroll-px-8 sm:px-8 lg:-mx-12 lg:scroll-px-12 lg:px-12 [&::-webkit-scrollbar]:hidden"
+        className="-mx-6 mt-4 flex snap-x scroll-px-6 gap-4 overflow-x-auto px-6 pb-2 [scrollbar-width:none] sm:-mx-8 sm:scroll-px-8 sm:px-8 lg:-mx-12 lg:scroll-px-12 lg:px-12 [&::-webkit-scrollbar]:hidden"
       >
-        {!settled &&
-          [0, 1, 2].map((i) => (
-            <li key={i} aria-hidden className="w-[78%] shrink-0 snap-start sm:w-80">
-              <span className="skeleton block aspect-[4/5] rounded-2xl" />
-              <span className="mt-4 block h-[6.25rem]" />
-            </li>
-          ))}
         {ideas.map((idea, i) => (
-          <li key={idea.s.id} className="w-[78%] shrink-0 snap-start sm:w-80">
-            <IdeaCard
-              idea={idea}
-              origin={setup.origin}
-              style={stagger(i + 1)}
-              first={i < 2}
-              onPick={onPick}
-            />
+          <li key={idea.s.id} className="w-[58%] shrink-0 snap-start sm:w-56">
+            {near ? (
+              <IdeaCard idea={idea} origin={origin} first={eager && i < 4} onPick={onPick} />
+            ) : (
+              <span aria-hidden className="skeleton block aspect-[4/5] rounded-2xl" />
+            )}
           </li>
         ))}
       </ul>
-      {/* apple.com's gallery paddles. */}
-      <div className="mt-4 flex justify-end gap-2">
-        <button
-          type="button"
-          onClick={() => page(-1)}
-          disabled={edge.start}
-          aria-label="Previous ideas"
-          className="pressable grid size-9 place-items-center rounded-full bg-fill text-foreground disabled:opacity-35"
-        >
-          <ChevronLeft className="size-5" />
-        </button>
-        <button
-          type="button"
-          onClick={() => page(1)}
-          disabled={edge.end}
-          aria-label="More ideas"
-          className="pressable grid size-9 place-items-center rounded-full bg-fill text-foreground disabled:opacity-35"
-        >
-          <ChevronRight className="size-5" />
-        </button>
-      </div>
-    </section>
+    </div>
   );
 }
 
