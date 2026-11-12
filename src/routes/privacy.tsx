@@ -76,8 +76,9 @@ function PrivacyPage() {
           </li>
           <li>
             <strong>Travel preferences you choose to save</strong> on your profile: home city, home
-            airport, travel style, usual group size, how you like to travel, interests and loyalty
-            memberships.
+            airport, travel style, usual group size, how you like to travel, interests, loyalty
+            memberships and, only if you choose them, food needs (such as vegetarian or a nut
+            allergy) and access needs (such as step-free access).
           </li>
           <li>
             <strong>Bookings you record</strong>: provider, price, status, confirmation code and
@@ -113,11 +114,12 @@ function PrivacyPage() {
           <li>
             <strong>Only for signed-in travelers, when you press the button:</strong> the AI planner
             and trip assistant send your trip details and messages to Google&rsquo;s Gemini API to
-            write an answer. Waypoint uses Gemini&rsquo;s free tier, under which Google may use what
-            it receives to improve its products and people at Google may review it, so please
-            don&rsquo;t put anything private in a message. Live prices send places and dates to
-            SerpApi (Google Flights and Google Hotels prices) and the U.S. Energy Information
-            Administration (gas prices).
+            write an answer. If you saved food or access needs, the planner sends them too, so it
+            can favor places that suit you. Waypoint uses Gemini&rsquo;s free tier, under which
+            Google may use what it receives to improve its products and people at Google may review
+            it, so please don&rsquo;t put anything private in a message. Live prices send places and
+            dates to SerpApi (Google Flights and Google Hotels prices) and the U.S. Energy
+            Information Administration (gas prices).
           </li>
           <li>
             <strong>Hosting:</strong> Waypoint runs on Vercel, and accounts and saved trips are

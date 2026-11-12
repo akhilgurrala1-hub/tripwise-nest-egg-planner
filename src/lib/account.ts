@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import type { Json, Tables } from "@/integrations/supabase/types";
 import { useAuth } from "./auth-context";
 import type { Interest, TransportMode, TravelStyle } from "./demo-data";
+import { ACCESSIBILITY, DIETARY, cleanNeeds, type AccessNeed, type DietaryNeed } from "./needs";
 import { currentTrip, tripActions, tripForSaving } from "./trip-store";
 
 export type SavedTripRow = Pick<
@@ -21,6 +22,8 @@ export interface Preferences {
   transport_mode: TransportMode;
   interests: Interest[];
   memberships: string[];
+  dietary: DietaryNeed[];
+  accessibility: AccessNeed[];
 }
 
 export const DEFAULT_PREFERENCES: Preferences = {
@@ -31,6 +34,8 @@ export const DEFAULT_PREFERENCES: Preferences = {
   transport_mode: "car",
   interests: [],
   memberships: [],
+  dietary: [],
+  accessibility: [],
 };
 
 export const MEMBERSHIPS = [
@@ -173,6 +178,8 @@ export const preferencesQuery = (userId: string) =>
         transport_mode: data.transport_mode as TransportMode,
         interests: data.interests as Interest[],
         memberships: data.memberships,
+        dietary: cleanNeeds(data.dietary, DIETARY),
+        accessibility: cleanNeeds(data.accessibility, ACCESSIBILITY),
       };
     },
     staleTime: 5 * 60 * 1000,
