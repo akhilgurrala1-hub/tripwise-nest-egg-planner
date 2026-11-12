@@ -14,10 +14,12 @@ import {
   Sun,
   Sunrise,
   UtensilsCrossed,
+  Pencil,
   type LucideIcon,
 } from "lucide-react";
-import type { CSSProperties } from "react";
+import { useState, type CSSProperties } from "react";
 
+import { Button } from "@/components/ui/button";
 import { AddItemButton, ItemActions } from "@/components/app/ItineraryEditor";
 import { WeatherChip } from "@/components/app/Weather";
 import { safeExternalUrl } from "@/lib/booking";
@@ -53,6 +55,8 @@ export function DayCard({
   holiday,
   selectedId,
   onSelect,
+  onEditDay,
+  busy,
   style,
 }: {
   day: ItineraryDay;
@@ -64,6 +68,9 @@ export function DayCard({
   /** The stop highlighted on the map, if any */
   selectedId: string | null;
   onSelect: (id: string) => void;
+  /** Ask the AI to change just this day (signed-in travelers); absent when it can't */
+  onEditDay?: ((text: string) => void) | undefined;
+  busy?: boolean;
   style?: CSSProperties;
 }) {
   return (
@@ -109,6 +116,7 @@ export function DayCard({
           <li className="py-4 text-sm text-muted-foreground">Free day. Wander as you like.</li>
         )}
       </ol>
+      {onEditDay && <EditDay day={day.day} busy={busy ?? false} onEdit={onEditDay} />}
       <p className="px-6 pb-2 text-caption text-muted-foreground">
         Times are a suggested pace. Travel is estimated from the straight-line distance between
         places that have a published location.
@@ -312,5 +320,87 @@ function CostChip({ item }: { item: ItineraryItem }) {
       {approx}
       {formatMoney(item.costPerPerson)}/pp
     </span>
+  );
+}
+
+const DAY_IDEAS = ["Make it cheaper", "More outdoor time", "A slower morning", "Closer together"];
+
+/** Change just this day in plain words. The AI sees the whole plan but only this day is replaced. */
+function EditDay({
+  day,
+  busy,
+  onEdit,
+}: {
+  day: number;
+  busy: boolean;
+  onEdit: (text: string) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const [text, setText] = useState("");
+  const submit = (value: string) => {
+    const v = value.trim();
+    if (!v || busy) return;
+    onEdit(v);
+    setText("");
+    setOpen(false);
+  };
+  return (
+    <div className="px-6 pb-2 print:hidden">
+      {!open ? (
+        <Button size="sm" variant="ghost" onClick={() => setOpen(true)} disabled={busy}>
+          <Pencil /> Change day {day} in plain words
+        </Button>
+      ) : (
+        <div className="space-y-2">
+          <div className="flex items-center gap-2 rounded-lg border border-input bg-fill p-1 pl-4 focus-within:border-primary focus-within:ring-3 focus-within:ring-primary/15">
+            <input
+              autoFocus
+              value={text}
+              onChange={(e) => setText(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") submit(text);
+                if (e.key === "Escape") setOpen(false);
+              }}
+              maxLength={220}
+              placeholder={`What should change on day ${day}?`}
+              aria-label={`What should change on day ${day}?`}
+              className="h-9 min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
+            />
+            <Button
+              size="sm"
+              variant="ink"
+              disabled={!text.trim() || busy}
+              onClick={() => submit(text)}
+            >
+              Change
+            </Button>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            {DAY_IDEAS.map((idea) => (
+              <button
+                key={idea}
+                type="button"
+                disabled={busy}
+                onClick={() => submit(idea)}
+                className="h-8 rounded-lg bg-muted px-2 text-xs text-muted-foreground transition-colors hover:bg-accent hover:text-foreground disabled:opacity-50"
+              >
+                {idea}
+              </button>
+            ))}
+            <button
+              type="button"
+              onClick={() => setOpen(false)}
+              className="h-8 px-2 text-xs text-muted-foreground hover:text-foreground"
+            >
+              Cancel
+            </button>
+          </div>
+          <p className="text-caption text-muted-foreground">
+            Only day {day} changes, and the stops you added stay. New suggestions are not verified:
+            check hours and prices before you go.
+          </p>
+        </div>
+      )}
+    </div>
   );
 }

@@ -28,7 +28,8 @@ import {
   planLines,
   rankSights,
 } from "@/lib/ai-quality";
-import { coveredLabels } from "@/lib/budget";
+import { coveredLabels, formatMoney } from "@/lib/budget";
+import { dayCostPerPerson } from "@/lib/itinerary-edit";
 import { inclusiveDays } from "@/lib/dates";
 import { addDays, buildRealItinerary, stitchCityPlans, type Itinerary } from "@/lib/itinerary";
 import { destinationQuery } from "@/lib/live/place";
@@ -256,7 +257,17 @@ export function usePlanner() {
    * It's grounded in real nearby places, the weather and public holidays, and its
    * answer is checked and cleaned before it's shown.
    */
-  const planWithAi = async (instructions = "") => {
+  const planWithAi = async (rawInstructions = "", scope?: { dayIndex: number }) => {
+    if (scope && shape.days > SINGLE_REQUEST_DAYS) {
+      toast.message(`Day edits work on trips of up to ${SINGLE_REQUEST_DAYS} days`, {
+        description: "For a longer trip, use Refine this plan above the days.",
+      });
+      return;
+    }
+    // A one-day edit asks for the whole plan with one day to change; only that day is used.
+    const instructions = scope
+      ? `Change only Day ${scope.dayIndex + 1}: ${rawInstructions.trim().slice(0, 220)}. Keep every other day exactly as in the current plan.`
+      : rawInstructions;
     const key = planKey(currentTrip());
     // Long trips are planned in parts (a few at a time), each part in one city.
     const long = shape.days > SINGLE_REQUEST_DAYS;
@@ -410,12 +421,12 @@ export function usePlanner() {
             .slice(i, i + PARALLEL_PARTS)
             .map((c) => createAiItinerary({ signal: ctrl.signal, data: requestFor(c) })),
         );
-        if (ctrl.signal.aborted) return failed(ctrl, "", () => planWithAi(instructions));
+        if (ctrl.signal.aborted) return failed(ctrl, "", () => planWithAi(rawInstructions, scope));
         const bad = batch.find((r) => !r.ok);
         if (bad && !bad.ok) {
           toast.error(bad.error, {
             ...(bad.detail ? { description: `Details: ${bad.detail}` } : {}),
-            action: { label: "Try again", onClick: () => planWithAi(instructions) },
+            action: { label: "Try again", onClick: () => planWithAi(rawInstructions, scope) },
           });
           return;
         }
@@ -434,7 +445,39 @@ export function usePlanner() {
         : plans[0]!;
       if (plan.days.every((d) => d.items.length === 0)) {
         toast.error("The AI planner sent back an empty plan. Your current plan is unchanged.", {
-          action: { label: "Try again", onClick: () => planWithAi(instructions) },
+          action: { label: "Try again", onClick: () => planWithAi(rawInstructions, scope) },
+        });
+        return;
+      }
+      if (scope) {
+        const day = plan.days[scope.dayIndex];
+        if (!day || day.items.length === 0) {
+          toast.error("The AI planner sent back an empty day. Your plan is unchanged.", {
+            action: { label: "Try again", onClick: () => planWithAi(rawInstructions, scope) },
+          });
+          return;
+        }
+        const was = currentTrip().itinerary?.days[scope.dayIndex];
+        const result = tripActions.setDayFor(key, scope.dayIndex, {
+          title: day.title,
+          items: day.items,
+        });
+        if (!result) {
+          toast("Your trip changed while we were planning", {
+            description:
+              "That edit was for different dates or a different place, so we didn't use it.",
+          });
+          return;
+        }
+        const after = currentTrip().itinerary?.days[scope.dayIndex];
+        const cost = (d: typeof was) => (d ? dayCostPerPerson(d) : 0);
+        toast.success(`Day ${scope.dayIndex + 1} updated. Double-check details before you go`, {
+          description: `About ${formatMoney(cost(after))} per person (was ${formatMoney(cost(was))}). Other days were not changed.${result.kept > 0 ? ` Kept ${result.kept} stop${result.kept === 1 ? "" : "s"} you added.` : ""}`,
+          action: {
+            label: "Undo",
+            onClick: () => tripActions.restoreDay(scope.dayIndex, result.before),
+          },
+          duration: 12000,
         });
         return;
       }
@@ -449,7 +492,7 @@ export function usePlanner() {
       );
     } catch {
       failed(ctrl, "Couldn't reach the AI planner. Your current plan is unchanged.", () =>
-        planWithAi(instructions),
+        planWithAi(rawInstructions, scope),
       );
     } finally {
       done();
