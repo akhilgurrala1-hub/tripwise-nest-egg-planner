@@ -102,6 +102,7 @@ function Welcome() {
   const [showBar, setShowBar] = useState(false);
   // Style, interests, coverage and the emergency fund wait under "More options".
   const [moreOptions, setMoreOptions] = useState(false);
+  const [heroMode, setHeroMode] = useState<"search" | "describe">("search");
   useEffect(() => {
     const el = document.getElementById("plan-steps");
     if (!el || typeof IntersectionObserver === "undefined") {
@@ -367,91 +368,31 @@ function Welcome() {
           <p className="mx-auto mt-6 max-w-xl text-headline font-normal text-foreground/80">
             Say where and when. Waypoint estimates the cost, plans the days and lists what to book.
           </p>
-          <div className="mx-auto mt-10 max-w-2xl text-left">
-            <TripAssistant
-              variant="hero"
-              homeCity={form.origin}
-              from={originPoint}
-              onBuild={(draft) => void start(fromDraft(draft))}
-              onFill={(draft) => {
-                const next = fromDraft(draft);
-                touched.current = true;
-                destPicked.current = true;
-                reserveTouched.current = false;
-                setBudgetOwn(!next.budgetAuto);
-                setForm(next);
-                toast("Filled in below. Adjust anything, then plan the trip.");
-                document.getElementById("plan-steps")?.scrollIntoView({ behavior: "smooth" });
-              }}
-            />
+          <div className="mx-auto mt-8 flex max-w-xs justify-center gap-1 rounded-full bg-card p-1 text-footnote font-semibold shadow-sm">
+            {(["search", "describe"] as const).map((m) => (
+              <button
+                key={m}
+                type="button"
+                aria-pressed={heroMode === m}
+                onClick={() => setHeroMode(m)}
+                className={cn(
+                  "min-h-9 flex-1 rounded-full px-4",
+                  heroMode === m ? "bg-foreground text-background" : "text-muted-foreground",
+                )}
+              >
+                {m === "search" ? "Search" : "Describe it"}
+              </button>
+            ))}
           </div>
-        </div>
-      </section>
-      <section className="bg-card py-16 sm:py-24">
-        <div className="page-container">
-          {/* Ideas get the full width, like a travel app's rail; the form and its live preview follow. */}
-          <Inspiration
-            setup={effective}
-            from={originPoint}
-            fromLabel={fromLabel === "home" ? "home" : fromLabel}
-            nights={shape.nights}
-            onPick={pickIdea}
-          />
-        </div>
-      </section>
-
-      <ProductTiles />
-
-      <div className="page-container py-16 sm:py-24">
-        <div className="layout-main-aside lg:gap-y-8">
-          <div className="min-w-0">
-            <h2 id="plan-steps" className="title-display scroll-mt-32 text-title-1">
-              Plan your trip
-            </h2>
-
+          {heroMode === "search" ? (
             <form
-              id="plan-form"
               onSubmit={submit}
               noValidate
-              className="mt-2 divide-y divide-border"
+              aria-label="Plan a trip"
+              className="mx-auto mt-6 max-w-6xl rounded-3xl bg-card p-2 text-left shadow-lg"
             >
-              <Section title="Trip" style={stagger(2)}>
-                <TripTypePicker
-                  tripType={form.tripType}
-                  mode={form.transportMode}
-                  onTripType={setTripType}
-                  onMode={(m) => update({ transportMode: m })}
-                />
-                {form.transportMode === "flight" && (
-                  <>
-                    <CabinPicker value={form.cabin} onChange={(cabin) => update({ cabin })} />
-                    <StopsPicker
-                      value={form.flightStops}
-                      onChange={(flightStops) => update({ flightStops })}
-                    />
-                  </>
-                )}
-              </Section>
-
-              <Section
-                title={
-                  form.tripType === "cruise"
-                    ? "Cruise"
-                    : form.tripType === "staycation"
-                      ? "Home base"
-                      : "Destination"
-                }
-                style={stagger(3)}
-              >
-                <OriginField
-                  id="origin"
-                  value={form.origin}
-                  approximate={approximate}
-                  found={typedMatch}
-                  label={form.tripType === "staycation" ? "Your home city" : "Starting from"}
-                  onChange={(origin, point) => update({ origin, originPoint: point })}
-                />
-                <div className="mt-6">
+              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-[1.3fr_2fr_auto_1.5fr_auto] xl:items-stretch xl:gap-0 xl:divide-x xl:divide-separator">
+                <div className="min-w-0 rounded-2xl p-4 sm:col-span-2 xl:col-span-1 xl:rounded-none xl:px-6 xl:py-4">
                   <DestinationPicker
                     tripType={form.tripType}
                     destinationId={form.destinationId}
@@ -470,70 +411,50 @@ function Welcome() {
                     }}
                   />
                 </div>
-                {form.tripType !== "cruise" && form.tripType !== "staycation" && (
-                  <CitiesEditor
-                    mainName={destLabel}
-                    totalNights={shape.nights}
-                    cities={form.cities ?? []}
-                    onChange={(cities) => update({ cities })}
-                  />
-                )}
-              </Section>
-
-              <Section title="When & who" style={stagger(3)}>
-                <div className="flex flex-wrap items-start gap-x-4 gap-y-4">
-                  <div className="min-w-0 flex-1 basis-64">
-                    <div className="grid grid-cols-2 gap-2">
-                      <div className="grid gap-2">
-                        <Label
-                          htmlFor="start-date"
-                          className="text-footnote font-normal text-muted-foreground"
-                        >
-                          Start date
-                        </Label>
-                        <Input
-                          id="start-date"
-                          type="date"
-                          aria-label="Start date"
-                          aria-invalid={!!dateError || undefined}
-                          aria-describedby={dateError ? "date-error" : undefined}
-                          value={form.startDate}
-                          min={todayIso()}
-                          onChange={(e) => setStartDate(e.target.value)}
-                          className="h-11"
-                        />
-                      </div>
-                      <div className="grid gap-2">
-                        <Label
-                          htmlFor="end-date"
-                          className="text-footnote font-normal text-muted-foreground"
-                        >
-                          End date
-                        </Label>
-                        <Input
-                          id="end-date"
-                          type="date"
-                          aria-label="End date"
-                          aria-invalid={!!dateError || undefined}
-                          aria-describedby={dateError ? "date-error" : undefined}
-                          value={form.endDate}
-                          min={form.startDate}
-                          onChange={(e) => update({ endDate: e.target.value })}
-                          className="h-11"
-                        />
-                      </div>
+                <div className="min-w-0 rounded-2xl p-4 sm:col-span-2 xl:col-span-1 xl:rounded-none xl:px-6 xl:py-4">
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="grid gap-2">
+                      <Label
+                        htmlFor="start-date"
+                        className="text-footnote font-normal text-muted-foreground"
+                      >
+                        Start date
+                      </Label>
+                      <Input
+                        id="start-date"
+                        type="date"
+                        aria-label="Start date"
+                        aria-invalid={!!dateError || undefined}
+                        aria-describedby={dateError ? "date-error" : undefined}
+                        value={form.startDate}
+                        min={todayIso()}
+                        onChange={(e) => setStartDate(e.target.value)}
+                        className="h-11 min-w-0 px-2"
+                      />
                     </div>
-                    {dateError ? (
-                      <FieldError id="date-error">{dateError}</FieldError>
-                    ) : (
-                      <p className="mt-2 text-xs text-muted-foreground">
-                        {shape.days === 1
-                          ? "Day trip, no overnight stay"
-                          : `${shape.days} days, ${shape.nights} night${shape.nights === 1 ? "" : "s"}`}
-                      </p>
-                    )}
+                    <div className="grid gap-2">
+                      <Label
+                        htmlFor="end-date"
+                        className="text-footnote font-normal text-muted-foreground"
+                      >
+                        End date
+                      </Label>
+                      <Input
+                        id="end-date"
+                        type="date"
+                        aria-label="End date"
+                        aria-invalid={!!dateError || undefined}
+                        aria-describedby={dateError ? "date-error" : undefined}
+                        value={form.endDate}
+                        min={form.startDate}
+                        onChange={(e) => update({ endDate: e.target.value })}
+                        className="h-11 min-w-0 px-2"
+                      />
+                    </div>
                   </div>
-                  <div className="flex w-full items-center justify-between gap-4 sm:block sm:w-auto">
+                </div>
+                <div className="min-w-0 rounded-2xl p-4 xl:rounded-none xl:px-6 xl:py-4">
+                  <div className="flex items-center justify-between gap-4 xl:block">
                     <p className="text-footnote text-muted-foreground sm:mb-2">Travelers</p>
                     <div className="flex h-11 items-center rounded-lg border border-input bg-fill">
                       <Button
@@ -571,10 +492,7 @@ function Welcome() {
                     </div>
                   </div>
                 </div>
-              </Section>
-
-              <Section title="Budget" style={stagger(5)}>
-                <div className="sm:max-w-xs">
+                <div className="min-w-0 rounded-2xl p-4 xl:rounded-none xl:px-6 xl:py-4">
                   <div>
                     <Label
                       htmlFor="total-budget"
@@ -592,38 +510,140 @@ function Welcome() {
                       className="mt-2 h-12"
                       inputClassName="text-xl"
                     />
-                    {!budgetOwn ? (
-                      <p className="mt-2 text-xs text-muted-foreground">
-                        Set from this trip's costs, about {formatMoney(estimate.planned)}, plus an
-                        emergency fund. It follows the trip as you change it. Type your own anytime.
-                      </p>
-                    ) : estimate.planned + emergencyFund > totalBudget ? (
-                      <p className="mt-2 text-xs text-destructive">
-                        Less than this trip is likely to cost (about {formatMoney(estimate.planned)}
-                        ). Your budget stays as you set it, and Waypoint will show where to save.{" "}
-                        <button
-                          type="button"
-                          onClick={() => setBudgetOwn(false)}
-                          className="font-medium text-primary underline-offset-2 hover:underline"
-                        >
-                          Let Waypoint suggest {formatMoney(suggested)}
-                        </button>
-                      </p>
-                    ) : (
-                      <p className="mt-2 text-xs text-muted-foreground">
-                        Your budget. This trip is likely to cost about{" "}
-                        {formatMoney(estimate.planned)}.{" "}
-                        <button
-                          type="button"
-                          onClick={() => setBudgetOwn(false)}
-                          className="font-medium text-primary underline-offset-2 hover:underline"
-                        >
-                          Use the suggested {formatMoney(suggested)}
-                        </button>
-                      </p>
-                    )}
                   </div>
                 </div>
+                <div className="flex items-center p-1 sm:col-span-2 xl:col-span-1 xl:pl-2">
+                  <Button type="submit" size="lg" loading={planning} className="w-full xl:w-auto">
+                    {planning ? "Planning…" : "Plan trip"}
+                  </Button>
+                </div>
+              </div>
+              <div className="space-y-1 px-4 pt-2 pb-2 text-xs text-muted-foreground xl:px-6">
+                {dateError ? (
+                  <FieldError id="date-error">{dateError}</FieldError>
+                ) : (
+                  <p className="mt-2 text-xs text-muted-foreground">
+                    {shape.days === 1
+                      ? "Day trip, no overnight stay"
+                      : `${shape.days} days, ${shape.nights} night${shape.nights === 1 ? "" : "s"}`}
+                  </p>
+                )}
+                {!budgetOwn ? (
+                  <p className="mt-2 text-xs text-muted-foreground">
+                    Set from this trip's costs, about {formatMoney(estimate.planned)}, plus an
+                    emergency fund. It follows the trip as you change it. Type your own anytime.
+                  </p>
+                ) : estimate.planned + emergencyFund > totalBudget ? (
+                  <p className="mt-2 text-xs text-destructive">
+                    Less than this trip is likely to cost (about {formatMoney(estimate.planned)}
+                    ). Your budget stays as you set it, and Waypoint will show where to save.{" "}
+                    <button
+                      type="button"
+                      onClick={() => setBudgetOwn(false)}
+                      className="font-medium text-primary underline-offset-2 hover:underline"
+                    >
+                      Let Waypoint suggest {formatMoney(suggested)}
+                    </button>
+                  </p>
+                ) : (
+                  <p className="mt-2 text-xs text-muted-foreground">
+                    Your budget. This trip is likely to cost about {formatMoney(estimate.planned)}.{" "}
+                    <button
+                      type="button"
+                      onClick={() => setBudgetOwn(false)}
+                      className="font-medium text-primary underline-offset-2 hover:underline"
+                    >
+                      Use the suggested {formatMoney(suggested)}
+                    </button>
+                  </p>
+                )}
+              </div>
+            </form>
+          ) : (
+            <div className="mx-auto mt-6 max-w-2xl text-left">
+              <TripAssistant
+                variant="hero"
+                homeCity={form.origin}
+                from={originPoint}
+                onBuild={(draft) => void start(fromDraft(draft))}
+                onFill={(draft) => {
+                  const next = fromDraft(draft);
+                  touched.current = true;
+                  destPicked.current = true;
+                  reserveTouched.current = false;
+                  setBudgetOwn(!next.budgetAuto);
+                  setForm(next);
+                  setHeroMode("search");
+                  toast("Filled in. Adjust anything, then plan the trip.");
+                }}
+              />
+            </div>
+          )}
+        </div>
+      </section>
+      <section className="bg-card py-16 sm:py-24">
+        <div className="page-container">
+          {/* Ideas get the full width, like a travel app's rail; the form and its live preview follow. */}
+          <Inspiration
+            setup={effective}
+            from={originPoint}
+            fromLabel={fromLabel === "home" ? "home" : fromLabel}
+            nights={shape.nights}
+            onPick={pickIdea}
+          />
+        </div>
+      </section>
+
+      <ProductTiles />
+
+      <div className="page-container py-16 sm:py-24">
+        <div className="layout-main-aside lg:gap-y-8">
+          <div className="min-w-0">
+            <h2 id="plan-steps" className="title-display scroll-mt-32 text-title-1">
+              Trip details
+            </h2>
+
+            <form
+              id="plan-form"
+              onSubmit={submit}
+              noValidate
+              className="mt-2 divide-y divide-border"
+            >
+              <Section title="Trip" style={stagger(2)}>
+                <TripTypePicker
+                  tripType={form.tripType}
+                  mode={form.transportMode}
+                  onTripType={setTripType}
+                  onMode={(m) => update({ transportMode: m })}
+                />
+                {form.transportMode === "flight" && (
+                  <>
+                    <CabinPicker value={form.cabin} onChange={(cabin) => update({ cabin })} />
+                    <StopsPicker
+                      value={form.flightStops}
+                      onChange={(flightStops) => update({ flightStops })}
+                    />
+                  </>
+                )}
+              </Section>
+
+              <Section title={form.tripType === "cruise" ? "Cruise" : "Route"} style={stagger(3)}>
+                <OriginField
+                  id="origin"
+                  value={form.origin}
+                  approximate={approximate}
+                  found={typedMatch}
+                  label={form.tripType === "staycation" ? "Your home city" : "Starting from"}
+                  onChange={(origin, point) => update({ origin, originPoint: point })}
+                />
+                {form.tripType !== "cruise" && form.tripType !== "staycation" && (
+                  <CitiesEditor
+                    mainName={destLabel}
+                    totalNights={shape.nights}
+                    cities={form.cities ?? []}
+                    onChange={(cities) => update({ cities })}
+                  />
+                )}
               </Section>
 
               <MoreOptions
