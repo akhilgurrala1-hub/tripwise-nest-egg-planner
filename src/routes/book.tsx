@@ -52,8 +52,20 @@ import { countryName, countryOfPlace } from "@/lib/understand/gazetteer";
 import { LayoverHelper } from "@/components/app/LayoverHelper";
 import { durationLabel } from "@/lib/layovers";
 import { useVisas } from "@/lib/live/use-visas";
+import { affiliateDisclosure, outboundLink } from "@/lib/partners/config";
 import { entryRule, entryText } from "@/lib/visas";
 import { cn } from "@/lib/utils";
+
+/** Props for an outbound link: validated, and tagged only when a real partner is configured. */
+function linkProps(url: string) {
+  const o = outboundLink(url);
+  return {
+    href: o.href,
+    target: "_blank",
+    rel: o.rel,
+    title: o.affiliate ? "Affiliate link" : undefined,
+  } as const;
+}
 
 export const Route = createFileRoute("/book")({
   head: () => ({
@@ -153,9 +165,8 @@ function BookPage() {
       <PageHeader title="Booking checklist" />
       <p className="page-container mt-4 text-footnote text-muted-foreground">
         Each search opens on the provider's own site with your dates and group filled in. You book
-        and pay there; Waypoint never takes payment. These are plain search links: Waypoint earns
-        nothing from them today. A status here is what you tell us, and Waypoint can't check it with
-        the provider.
+        and pay there; Waypoint never takes payment. {affiliateDisclosure()} A status here is what
+        you tell us, and Waypoint can't check it with the provider.
       </p>
 
       <div className="page-container mt-6 layout-main-aside">
@@ -298,9 +309,7 @@ function PrepList({ items }: { items: PrepItem[] }) {
                     {p.links.map((l) => (
                       <a
                         key={l.label}
-                        href={safeExternalUrl(l.url)}
-                        target="_blank"
-                        rel="noopener noreferrer"
+                        {...linkProps(l.url)}
                         className="text-xs font-medium text-primary hover:underline"
                       >
                         {l.label}
@@ -494,9 +503,7 @@ function BookingCard({
                         <span className="tabular font-medium">{o.price}</span>
                         {safeExternalUrl(o.url) && (
                           <a
-                            href={safeExternalUrl(o.url)}
-                            target="_blank"
-                            rel="noopener noreferrer"
+                            {...linkProps(o.url)}
                             className="font-medium text-primary hover:underline"
                           >
                             Reserve
@@ -509,7 +516,7 @@ function BookingCard({
                 <div className="mt-4 flex flex-wrap gap-2">
                   {item.links.map((l, li) => (
                     <Button key={l.label} asChild size="sm" variant={li === 0 ? "ink" : "outline"}>
-                      <a href={safeExternalUrl(l.url)} target="_blank" rel="noopener noreferrer">
+                      <a {...linkProps(l.url)}>
                         {l.label} <ExternalLink />
                       </a>
                     </Button>
