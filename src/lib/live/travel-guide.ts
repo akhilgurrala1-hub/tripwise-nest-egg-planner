@@ -260,6 +260,7 @@ export function listingToPlace(l: GuideListing, near: string, country = "US"): R
     priceText: l.price || null,
     ...(l.type === "drink" ? { evening: true } : {}),
     source: "wikivoyage",
+    ...(l.lat !== null && l.lon !== null ? { lat: l.lat, lon: l.lon } : {}),
   };
 }
 
