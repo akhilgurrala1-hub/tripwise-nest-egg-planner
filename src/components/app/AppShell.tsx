@@ -386,7 +386,7 @@ function Footer() {
         <div>
           <Logo markClassName="size-8" wordClassName="text-title-2" />
           <p className="mt-4 max-w-xs text-footnote text-muted-foreground">
-            Plan a trip, price it to the dollar and see what to book. Estimates in US dollars.
+            Plan a trip around your budget and see what to book. Costs are estimates in US dollars.
             Waypoint never books or takes payment.
           </p>
         </div>

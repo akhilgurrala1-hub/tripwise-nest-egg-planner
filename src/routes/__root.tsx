@@ -108,13 +108,13 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { property: "og:image", content: `${SITE_URL}/og-image.png` },
       { property: "og:image:width", content: "1200" },
       { property: "og:image:height", content: "630" },
-      { property: "og:image:alt", content: "Waypoint: plan a trip, to the dollar." },
+      { property: "og:image:alt", content: "Waypoint: plan a trip around your budget." },
       { name: "twitter:image", content: `${SITE_URL}/og-image.png` },
-      { title: "Waypoint | Trip planning, to the dollar" },
+      { title: "Waypoint | Trip planning around your budget" },
       {
         name: "description",
         content:
-          "Describe a trip in a sentence. Waypoint estimates the cost to the dollar, plans each day and lists what to book.",
+          "Describe a trip in a sentence. Waypoint estimates the cost, plans each day and lists what to book.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },

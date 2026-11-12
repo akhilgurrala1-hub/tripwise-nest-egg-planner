@@ -291,6 +291,19 @@ describe("booking checklist", () => {
     for (const i of items) for (const l of i.links) expect(l.url.startsWith("https://")).toBe(true);
   });
 
+  it("only a booking the traveler marked booked counts: started, cancelled and refunded do not", () => {
+    const { items } = planFor({ tripType: "road-trip", transportMode: "car" });
+    const hotel = items.find((i) => i.key === "hotel")!;
+    for (const status of ["in-progress", "cancelled", "refunded"] as const) {
+      const p = bookingProgress(items, {
+        hotel: { status, confirmation: "X1", price: hotel.budget },
+      });
+      expect(p.booked, status).toBe(0);
+      expect(p.spent, status).toBe(0);
+      expect(p.total, status).toBe(items.length);
+    }
+  });
+
   it("tracks progress and spending against the budget", () => {
     const { items } = planFor({ tripType: "road-trip", transportMode: "car" });
     const hotel = items.find((i) => i.key === "hotel")!;

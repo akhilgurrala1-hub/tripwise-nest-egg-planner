@@ -304,6 +304,10 @@ export const tripActions = {
       };
     });
   },
+  /** Back to flexible: Waypoint chooses a budget that covers the trip and keeps following it. */
+  letWaypointSetBudget() {
+    setState((s) => rebudget({ ...s, setup: { ...s.setup, budgetAuto: true } }, "set"));
+  },
   setEmergencyFund(amount: number) {
     setState((s) => {
       if (s.setup.budgetAuto) {

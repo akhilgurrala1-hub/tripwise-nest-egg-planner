@@ -4,6 +4,8 @@ import { Loader2, Save } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
+import { deleteMyAccount } from "@/lib/account-data.functions";
+
 import { PageHeader } from "@/components/app/TripHeader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -21,6 +23,93 @@ import { INTERESTS, TRANSPORT_MODES, TRAVEL_STYLES } from "@/lib/demo-data";
 import { useAirports } from "@/lib/live/use-airports";
 import { geocodeQuery, useDebouncedValue } from "@/lib/live/use-live";
 import { cn } from "@/lib/utils";
+
+/** Everything saved under the account, as one JSON file. Reads go through row-level security. */
+async function exportMyData(email: string) {
+  const [trips, bookings, prefs] = await Promise.all([
+    supabase.from("trips").select("*"),
+    supabase.from("bookings").select("*"),
+    supabase.from("traveler_preferences").select("*"),
+  ]);
+  if (trips.error || bookings.error || prefs.error) throw new Error("Couldn't read your data.");
+  const file = JSON.stringify(
+    {
+      exportedAt: new Date().toISOString(),
+      email,
+      trips: trips.data,
+      bookings: bookings.data,
+      preferences: prefs.data,
+    },
+    null,
+    2,
+  );
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([file], { type: "application/json" }));
+  a.download = "waypoint-my-data.json";
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+function YourData({ email }: { email: string }) {
+  const [confirm, setConfirm] = useState("");
+  const [busy, setBusy] = useState(false);
+  const del = async () => {
+    setBusy(true);
+    try {
+      const res = await deleteMyAccount({ data: { confirmEmail: confirm } });
+      if (!res.ok) return void toast.error(res.error);
+      await supabase.auth.signOut();
+      window.localStorage.clear();
+      window.location.assign("/");
+    } catch {
+      toast.error("Couldn't delete the account. Try again, or contact us.");
+    } finally {
+      setBusy(false);
+    }
+  };
+  return (
+    <section className="surface-card space-y-4 p-6">
+      <div>
+        <h2 className="title-display text-title-1">Your data</h2>
+        <p className="text-sm text-muted-foreground">
+          Download what Waypoint has saved for you, or delete your account. Trips saved only in this
+          browser stay here until you clear them.
+        </p>
+      </div>
+      <Button
+        variant="outline"
+        onClick={() =>
+          exportMyData(email).catch(() => toast.error("Couldn't export your data. Try again."))
+        }
+      >
+        Download my data
+      </Button>
+      <div className="border-t border-separator pt-4">
+        <p className="text-sm font-semibold">Delete my account</p>
+        <p className="mt-1 text-sm text-muted-foreground">
+          This permanently deletes your sign-in, saved trips, bookings and preferences. It can't be
+          undone. Type your email address to confirm.
+        </p>
+        <div className="mt-4 flex flex-wrap gap-2">
+          <Input
+            aria-label="Type your email to confirm"
+            value={confirm}
+            onChange={(e) => setConfirm(e.target.value)}
+            placeholder={email}
+            className="max-w-xs"
+          />
+          <Button
+            variant="outline"
+            disabled={busy || confirm.trim().toLowerCase() !== email.toLowerCase()}
+            onClick={del}
+          >
+            {busy ? "Deleting…" : "Delete account"}
+          </Button>
+        </div>
+      </div>
+    </section>
+  );
+}
 
 export const Route = createFileRoute("/_authenticated/profile")({
   head: () => ({
@@ -112,6 +201,8 @@ function ProfilePage() {
             </Link>
           </div>
         </section>
+
+        <YourData email={email} />
 
         <section className="surface-card space-y-6 p-6">
           <div>

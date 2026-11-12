@@ -69,7 +69,7 @@ export const Route = createFileRoute("/")({
       {
         name: "description",
         content:
-          "Describe a trip in a sentence. Waypoint estimates the cost to the dollar, plans each day and lists what to book, for road trips, flights, cruises, trains and staycations.",
+          "Describe a trip in a sentence. Waypoint estimates the cost, plans each day and lists what to book, for road trips, flights, cruises, trains and staycations.",
       },
       { property: "og:title", content: "Waypoint | Plan your next trip on any budget" },
       {
@@ -269,7 +269,7 @@ function Welcome() {
       const note = tripActions.startTrip(await locateAll(setup));
       markJustPlanned(currentTrip().id);
       if (note)
-        toast.message("Budget set to cover your trip", { description: note, duration: 9000 });
+        toast.message("This trip is over your budget", { description: note, duration: 12000 });
       navigate({ to: "/dashboard" });
     } finally {
       setPlanning(false);
@@ -362,8 +362,11 @@ function Welcome() {
         <div className="page-container pt-12 pb-16 sm:pt-20 sm:pb-24">
           <div className="grid gap-16 xl:grid-cols-[1.3fr_1fr] xl:items-end">
             <div className="min-w-0">
-              <h1 aria-label="Plan a trip, to the dollar." className="title-display text-display">
-                {["Plan", "a", "trip,", "to", "the", "dollar."].map((word, i) => (
+              <h1
+                aria-label="Plan a trip around your budget."
+                className="title-display text-display"
+              >
+                {["Plan", "a", "trip", "around", "your", "budget."].map((word, i) => (
                   <span key={word} aria-hidden>
                     {i > 0 && " "}
                     <span className="hero-line">
@@ -634,13 +637,13 @@ function Welcome() {
                     ) : estimate.planned + emergencyFund > totalBudget ? (
                       <p className="mt-2 text-xs text-destructive">
                         Less than this trip is likely to cost (about {formatMoney(estimate.planned)}
-                        ). It'll be raised to cover the trip.{" "}
+                        ). Your budget stays as you set it, and Waypoint will show where to save.{" "}
                         <button
                           type="button"
                           onClick={() => setBudgetOwn(false)}
                           className="font-medium text-primary underline-offset-2 hover:underline"
                         >
-                          Use {formatMoney(suggested)}
+                          Let Waypoint suggest {formatMoney(suggested)}
                         </button>
                       </p>
                     ) : (

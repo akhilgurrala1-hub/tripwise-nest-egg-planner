@@ -37,7 +37,7 @@ import {
 import { TRANSPORT_MODES, isDrivingMode } from "@/lib/demo-data";
 import { itineraryActivityCost } from "@/lib/itinerary";
 import { categorySource } from "@/lib/live/sources";
-import { tripActions, useTrip } from "@/lib/trip-store";
+import { tidy, tripActions, useTrip } from "@/lib/trip-store";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/budget")({
@@ -60,6 +60,51 @@ export const Route = createFileRoute("/budget")({
   }),
   component: BudgetPage,
 });
+
+/**
+ * A typed budget is a hard ceiling. When the trip costs more, the traveler can raise it,
+ * but only on purpose: two taps, and the emergency fund stays as it is.
+ */
+function RaiseBudget({ needed, current }: { needed: number; current: number }) {
+  const [asking, setAsking] = useState(false);
+  return (
+    <div className="mt-6 border-t border-separator pt-6 text-footnote">
+      <p className="font-semibold">Your budget is a hard limit</p>
+      <p className="mt-1 text-muted-foreground">
+        Waypoint won't change it for you. Use Ways to spend less above, or raise it from{" "}
+        {formatMoney(current)} to {formatMoney(needed)} to cover the trip as planned. Your emergency
+        fund stays set aside either way.
+      </p>
+      <div className="mt-4 flex flex-wrap gap-2">
+        {asking ? (
+          <>
+            <Button
+              size="sm"
+              onClick={() => {
+                tripActions.setTotalBudget(needed);
+                setAsking(false);
+              }}
+            >
+              Yes, raise it to {formatMoney(needed)}
+            </Button>
+            <Button size="sm" variant="outline" onClick={() => setAsking(false)}>
+              Keep {formatMoney(current)}
+            </Button>
+          </>
+        ) : (
+          <>
+            <Button size="sm" variant="outline" onClick={() => setAsking(true)}>
+              Raise my budget…
+            </Button>
+            <Button size="sm" variant="ghost" onClick={tripActions.letWaypointSetBudget}>
+              Let Waypoint suggest a budget
+            </Button>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
 
 function BudgetPage() {
   const { trip, totals, shape } = useTrip();
@@ -133,6 +178,12 @@ function BudgetPage() {
               </p>
             </div>
             {totals.overBudget && <CutPlan />}
+            {totals.overBudget && !trip.setup.budgetAuto && (
+              <RaiseBudget
+                needed={tidy(totals.planned + totals.emergencyFund)}
+                current={trip.setup.totalBudget}
+              />
+            )}
           </section>
 
           {/* Categories */}
