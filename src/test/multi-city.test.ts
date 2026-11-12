@@ -13,7 +13,7 @@ vi.mock("ai", async (orig) => ({
 import { cleanChatAnswer } from "@/lib/ai-quality";
 import { generateAiItinerary } from "@/lib/ai/itinerary-ai.server";
 import { setupFromDraft, type TripDraft } from "@/lib/assistant";
-import { calculateBudget, tripShape } from "@/lib/budget";
+import { calculateBudget, defaultEmergencyFund, tripShape } from "@/lib/budget";
 import { bookingPlan } from "@/lib/booking";
 import { addDays, todayIso } from "@/lib/dates";
 import { destinationFor } from "@/lib/demo-data";
@@ -81,7 +81,7 @@ const ITALY = {
   "Venice, Italy": { lat: 45.44, lon: 12.32 },
 };
 
-describe("a trip never starts over budget", () => {
+describe("a Waypoint-chosen budget never starts over budget; a typed one is never raised", () => {
   it("fits the budget after the destination is found (the Reykjavik case)", () => {
     const { totals, setup, note } = plan(draft({ destination: "Reykjavik, Iceland", nights: 6 }), {
       "Reykjavik, Iceland": { lat: 64.15, lon: -21.94 },
@@ -101,13 +101,36 @@ describe("a trip never starts over budget", () => {
     expect(totals.remaining).toBeGreaterThan(0);
   });
 
-  it("raises a budget that's too small, and says so", () => {
+  it("never raises a budget the traveler typed: it stays a hard ceiling and the note says by how much", () => {
     const { setup, note, totals } = plan(
       draft({ destination: "Lisbon, Portugal", nights: 6, totalBudget: 400 }),
     );
-    expect(totals.remaining).toBeGreaterThanOrEqual(0);
-    expect(setup.totalBudget).toBeGreaterThan(400);
-    expect(note).toMatch(/\$400 doesn't cover this trip/);
+    expect(setup.totalBudget).toBe(400);
+    expect(setup.budgetAuto).toBe(false);
+    expect(totals.overBudget).toBe(true);
+    expect(note).toMatch(/more than your \$400 budget/);
+    expect(note).toMatch(/Your budget was not changed/);
+  });
+
+  it("leaves the emergency fund alone when a typed budget is too small", () => {
+    const { setup } = plan(draft({ destination: "Lisbon, Portugal", nights: 6, totalBudget: 600 }));
+    expect(setup.totalBudget).toBe(600);
+    expect(currentTrip().emergencyFund).toBe(defaultEmergencyFund(600));
+  });
+
+  it("changing the trip never raises a typed budget; only the traveler can, or hand it back to Waypoint", () => {
+    plan(draft({ destination: "Lisbon, Portugal", nights: 6, totalBudget: 400 }));
+    tripActions.setCabin("business");
+    tripActions.setTransportMode("flight");
+    expect(currentTrip().setup.totalBudget).toBe(400);
+    tripActions.letWaypointSetBudget();
+    const t = currentTrip();
+    expect(t.setup.budgetAuto).toBe(true);
+    expect(t.setup.totalBudget).toBeGreaterThan(400);
+    const shape = tripShape(t.setup.startDate, t.setup.endDate, t.setup.travelers);
+    expect(
+      calculateBudget(t.inputs, shape, t.setup.totalBudget, t.emergencyFund).remaining,
+    ).toBeGreaterThanOrEqual(0);
   });
 
   it("follows the trip when the budget was Waypoint's: switching travel re-fits it", () => {

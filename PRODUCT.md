@@ -14,7 +14,7 @@ Ordinary travelers, roughly 20 to 45, planning road trips, flights, cruises, tra
 
 ## Product Purpose
 
-Waypoint prices a whole trip to the dollar, plans each day, and lists what to book. A traveler states a trip in plain words or picks a place; the app builds the budget, the itinerary with real places, the road route and the booking list, and tracks spending during the trip. It never books or takes payment.
+Waypoint estimates the cost of a whole trip, plans each day, and lists what to book. A traveler states a trip in plain words or picks a place; the app builds the budget, the itinerary with real places, the road route and the booking list, and tracks spending during the trip. It never books or takes payment.
 
 ## Positioning
 

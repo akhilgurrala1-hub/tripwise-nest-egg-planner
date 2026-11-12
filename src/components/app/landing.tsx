@@ -89,7 +89,7 @@ const TOOLS: {
     to: "/budget" as const,
     cta: "Open the sample budget",
     accent: "& emergency fund.",
-    tag: "Priced to the dollar",
+    tag: "Estimated, then checked",
     lead: "Every cost in one place, with a cushion that overspending never touches.",
     body: "Gas, tolls, flights, hotels, meals, activities and a price buffer, each with its formula one tap away. If the plan runs over, Waypoint suggests cuts and checks them by recomputing the budget.",
     includes: ["Line by line costs", "Emergency fund", "Cut suggestions", "Display currency"],

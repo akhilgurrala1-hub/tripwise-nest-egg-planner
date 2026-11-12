@@ -58,13 +58,13 @@ import { cn } from "@/lib/utils";
 export const Route = createFileRoute("/book")({
   head: () => ({
     meta: [
-      { title: "Book your trip | Waypoint" },
+      { title: "Booking checklist | Waypoint" },
       {
         name: "description",
         content:
-          "Everything your trip needs booked, in order, with searches pre-filled for your dates and group.",
+          "A checklist of what your trip needs booked, with provider searches pre-filled for your dates and group. Waypoint does not book or take payment.",
       },
-      { property: "og:title", content: "Book your trip | Waypoint" },
+      { property: "og:title", content: "Booking checklist | Waypoint" },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],
@@ -150,10 +150,12 @@ function BookPage() {
 
   return (
     <div>
-      <PageHeader title="Book your trip" />
+      <PageHeader title="Booking checklist" />
       <p className="page-container mt-4 text-footnote text-muted-foreground">
         Each search opens on the provider's own site with your dates and group filled in. You book
-        and pay there; Waypoint never takes payment.
+        and pay there; Waypoint never takes payment. These are plain search links: Waypoint earns
+        nothing from them today. A status here is what you tell us, and Waypoint can't check it with
+        the provider.
       </p>
 
       <div className="page-container mt-6 layout-main-aside">
@@ -357,6 +359,9 @@ function BookingCard({
   const [price, setPrice] = useState<number>(record.price ?? item.budget);
   const booked = record.status === "booked";
   const skipped = record.status === "skipped";
+  const inProgress = record.status === "in-progress";
+  const cancelled = record.status === "cancelled";
+  const refunded = record.status === "refunded";
 
   const save = () => {
     tripActions.setBooking(item.key, {
@@ -450,9 +455,17 @@ function BookingCard({
             </ul>
           )}
 
+          {(inProgress || cancelled || refunded) && (
+            <p className="mt-2 text-sm font-medium">
+              {inProgress && "In progress: you started booking this"}
+              {cancelled && "Cancelled: you said this booking was cancelled"}
+              {refunded && "Refunded: you said this booking was refunded"}
+            </p>
+          )}
           {booked && !editing ? (
             <p className="mt-2 text-sm">
               <span className="font-medium text-success">Booked</span>
+              <span className="text-muted-foreground"> (you reported this)</span>
               {record.confirmation && (
                 <span className="text-muted-foreground">
                   {" "}
@@ -561,6 +574,42 @@ function BookingCard({
               <Button
                 size="sm"
                 variant="ghost"
+                onClick={() => tripActions.setBooking(item.key, { status: "cancelled" })}
+              >
+                Cancelled
+              </Button>
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => tripActions.setBooking(item.key, { status: "refunded" })}
+              >
+                Refunded
+              </Button>
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => tripActions.setBooking(item.key, { status: "todo" })}
+              >
+                <Undo2 /> Not booked
+              </Button>
+            </>
+          ) : cancelled || refunded ? (
+            <>
+              {cancelled && (
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => tripActions.setBooking(item.key, { status: "refunded" })}
+                >
+                  Refunded
+                </Button>
+              )}
+              <Button size="sm" variant="outline" onClick={() => setEditing(true)}>
+                <Check /> Booked again
+              </Button>
+              <Button
+                size="sm"
+                variant="ghost"
                 onClick={() => tripActions.setBooking(item.key, { status: "todo" })}
               >
                 <Undo2 /> Not booked
@@ -579,6 +628,24 @@ function BookingCard({
               <Button size="sm" variant="outline" onClick={() => setEditing(true)}>
                 <Check /> I booked this
               </Button>
+              {!inProgress && (
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => tripActions.setBooking(item.key, { status: "in-progress" })}
+                >
+                  I started booking
+                </Button>
+              )}
+              {inProgress && (
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => tripActions.setBooking(item.key, { status: "todo" })}
+                >
+                  <Undo2 /> Not started
+                </Button>
+              )}
               {item.optional && (
                 <Button
                   size="sm"

@@ -1,6 +1,10 @@
 /**
- * Budgets that fit the trip: a new trip never starts over budget, and a budget
- * Waypoint chose keeps following the trip's costs until the traveler sets their own.
+ * Two budget modes, told apart by `setup.budgetAuto`:
+ * - Flexible (`budgetAuto: true`): Waypoint picks a budget that covers the trip and keeps it
+ *   covering the trip as costs change.
+ * - Strict (`budgetAuto` false: the traveler typed a number): the number is a hard ceiling.
+ *   Waypoint never raises it on its own; a trip that costs more starts over budget and the
+ *   app shows where to save. Only the traveler can raise it (see tripActions.setTotalBudget).
  */
 import {
   applyCoverage,
@@ -53,9 +57,9 @@ export function rebudget(s: TripState, mode: "set" | "raise"): TripState {
 
 /**
  * The budget a new trip starts with. Waypoint picks it from the trip's estimated
- * costs plus an emergency fund, unless the traveler gave one that covers the trip.
- * A trip never starts over budget: a budget that's too small is raised to what the
- * trip needs, and `note` says so in plain words.
+ * costs plus an emergency fund when the traveler gave none. A budget the traveler gave
+ * is never changed: if the trip is likely to cost more, `note` says by how much and
+ * where to go from there, and the trip starts over budget on purpose.
  */
 export function fitBudget(setup: TripSetup): { setup: TripSetup; note: string | null } {
   const chosenReserve =
@@ -72,10 +76,10 @@ export function fitBudget(setup: TripSetup): { setup: TripSetup; note: string | 
   if (setup.budgetAuto || !(setup.totalBudget > 0)) return { setup: auto(need), note: null };
   const planned = estimatedSpend(setup);
   if (planned + setup.emergencyFund <= setup.totalBudget) return { setup, note: null };
-  const fixed = auto(Math.max(need, tidy(planned + (chosenReserve ?? 0))));
+  const over = Math.ceil(planned + setup.emergencyFund - setup.totalBudget);
   return {
-    setup: fixed,
-    note: `${formatMoney(setup.totalBudget)} doesn't cover this trip, so the budget is set to ${formatMoney(fixed.totalBudget)}: about what it costs, plus an emergency fund. You can change it on the Budget page, and Ways to spend less shows where to save.`,
+    setup,
+    note: `This trip is likely to cost about ${formatMoney(planned)}, which is ${formatMoney(over)} more than your ${formatMoney(setup.totalBudget)} budget (with your emergency fund set aside). Your budget was not changed. Ways to spend less shows where to save, or you can raise it yourself on the Budget page.`,
   };
 }
 

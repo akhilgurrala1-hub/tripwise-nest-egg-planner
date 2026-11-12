@@ -32,7 +32,12 @@ export interface BookingItem {
   stops?: string[];
 }
 
-export type BookingStatus = "todo" | "booked" | "skipped";
+/**
+ * What the traveler told us about a booking. Waypoint never books anything and cannot see the
+ * provider's records, so "booked" means "the traveler says so"; nothing here is verified.
+ */
+export type BookingStatus =
+  "todo" | "in-progress" | "booked" | "cancelled" | "refunded" | "skipped";
 
 export interface BookingRecord {
   status: BookingStatus;
