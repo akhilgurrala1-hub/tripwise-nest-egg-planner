@@ -12,7 +12,7 @@ const { chromium } = require("playwright");
 const pub = new URL("../public/", import.meta.url).pathname;
 const svg = readFileSync(join(pub, "favicon.svg"), "utf8");
 const inner = svg.replace(/^[\s\S]*?<rect[^>]*\/>/, "").replace(/<\/svg>\s*$/, "");
-const GROUND = "#0F1A33";
+const GROUND = "#142B3B";
 
 /** Variants of the mark: rounded tile (default), full-bleed square, or full-bleed with a safe-zone inset. */
 function mark({ bleed = false, inset = 1 } = {}) {
@@ -82,14 +82,14 @@ await page.setContent(`<html><head><style>
   ${face("Fraunces", "fraunces", "fraunces-latin-opsz-italic.woff2", "italic")}
   ${face("Inter", "inter", "inter-latin-wght-normal.woff2")}
   ${face("Mono", "jetbrains-mono", "jetbrains-mono-latin-wght-normal.woff2")}
-  body{margin:0;width:1200px;height:630px;background:#0F1A33;color:#F6F1E7;font-family:Inter,system-ui,sans-serif;overflow:hidden;position:relative}
+  body{margin:0;width:1200px;height:630px;background:#142B3B;color:#F7F7F5;font-family:Inter,system-ui,sans-serif;overflow:hidden;position:relative}
   .wrap{position:absolute;left:88px;top:72px;right:480px}
   .lock{display:flex;align-items:center;gap:20px}
   .word{font-family:Inter,sans-serif;font-size:42px;font-weight:700;letter-spacing:-0.01em}
-  .label{display:flex;align-items:center;gap:18px;margin-top:84px;font-family:Inter,sans-serif;font-size:22px;font-weight:600;color:#2FA074}
-  .label::before{content:"";width:44px;height:1px;background:#2FA074}
+  .label{display:flex;align-items:center;gap:18px;margin-top:84px;font-family:Inter,sans-serif;font-size:22px;font-weight:600;color:#2BB3A5}
+  .label::before{content:"";width:44px;height:1px;background:#2BB3A5}
   h1{font-family:Inter,sans-serif;font-weight:700;margin:28px 0 0;font-size:100px;line-height:0.98;letter-spacing:-0.028em}
-  h1 em{font-style:normal;color:#2FA074}
+  h1 em{font-style:normal;color:#2BB3A5}
   p{margin:30px 0 0;font-size:24px;line-height:1.5;color:#C7CCDB;max-width:560px}
   .art{position:absolute;right:72px;top:120px;width:380px;height:380px}
   .rule{position:absolute;left:88px;right:88px;bottom:72px;height:1px;background:rgba(246,241,231,0.16)}

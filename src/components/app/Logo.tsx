@@ -1,12 +1,12 @@
 import { cn } from "@/lib/utils";
 
 /**
- * The Waypoint mark: a ring holding one route, from a hollow origin to an emerald
+ * The Waypoint mark: a ring holding one route, from a hollow origin to a teal
  * destination dot. Geometry lives on a 32-unit grid and matches public/favicon.svg
  * (which sets it on a dark tile); keep the two in step. The ring and route follow the
- * text color, the dot is the brand emerald, so it reads on dark and on cream paper.
+ * text color, the dot is the brand teal, so it reads on dark and on cream paper.
  */
-export const BRAND = { emerald: "#2FA074", ink: "#F6F1E7", ground: "#0F1A33" } as const;
+export const BRAND = { teal: "#2BB3A5", ink: "#F7F7F5", ground: "#142B3B" } as const;
 export const ROUTE_PATH = "M9.4 20.2 L14.1 12.9 L17.6 17.9 L22.6 10.7";
 
 export function LogoMark({
@@ -61,10 +61,10 @@ export function LogoMark({
         cy="10.7"
         r="2.4"
         fill="none"
-        stroke={BRAND.emerald}
+        stroke={BRAND.teal}
         strokeWidth="1"
       />
-      <circle className="logo-dest" cx="22.6" cy="10.7" r="2.4" fill={BRAND.emerald} />
+      <circle className="logo-dest" cx="22.6" cy="10.7" r="2.4" fill={BRAND.teal} />
     </svg>
   );
 }
