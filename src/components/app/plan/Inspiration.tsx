@@ -118,7 +118,7 @@ export function Inspiration({
       <div
         role="tablist"
         aria-label="Kind of trip"
-        className="mt-8 flex justify-center gap-2 overflow-x-auto pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        className="mt-8 flex gap-2 overflow-x-auto pb-2 sm:justify-center [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
       >
         {CATEGORY_TYPES.map((t) => {
           const Icon = CategoryIcon(t);
