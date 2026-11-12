@@ -301,7 +301,7 @@ function IdeaCard({
       </span>
       <span className="mt-4 block px-1">
         <span className="title-display block text-title-2">{idea.s.name}</span>
-        <span className="mt-1 block label-mono">
+        <span className="mt-1 line-clamp-2 min-h-8 label-mono">
           {idea.s.region}
           {idea.s.distanceLabel ? ` · ${idea.s.distanceLabel}` : ""}
         </span>
