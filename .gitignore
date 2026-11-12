@@ -34,3 +34,6 @@ dist-ssr
 # Vercel
 .vercel
 .env.local
+
+# Local environment files (public values live in Vercel and GitHub variables; see .env.example)
+.env
