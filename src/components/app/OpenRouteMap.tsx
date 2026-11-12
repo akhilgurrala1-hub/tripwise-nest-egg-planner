@@ -8,18 +8,18 @@ import type { LatLng, RealRoute, RouteStop } from "@/lib/routing/types";
  * page, after a route is found.
  */
 
-const BLUE = "#0B5C5A";
+export const BLUE = "#0B5C5A";
 const CORAL = "#2FA074";
-const STYLE = {
+export const STYLE = {
   light: "https://tiles.openfreemap.org/styles/positron",
   dark: "https://tiles.openfreemap.org/styles/dark",
 };
 
-type MapLib = typeof import("maplibre-gl");
+export type MapLib = typeof import("maplibre-gl");
 type MapInstance = import("maplibre-gl").Map;
 
 let lib: Promise<MapLib> | null = null;
-function loadMapLibre(): Promise<MapLib> {
+export function loadMapLibre(): Promise<MapLib> {
   lib ??= Promise.all([
     import("maplibre-gl"),
     // Vite builds MapLibre's worker (with what it imports) and gives its address.

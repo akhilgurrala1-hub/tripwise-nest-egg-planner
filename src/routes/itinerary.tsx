@@ -20,12 +20,14 @@ import { LogoMark } from "@/components/app/Logo";
 import { stagger } from "@/components/app/motion";
 import { ShareTripButton } from "@/components/app/ShareTrip";
 import { PageHeader } from "@/components/app/TripHeader";
+import { DayMap } from "@/components/app/itinerary/DayMap";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth-context";
 import { formatMoney, stopCost } from "@/lib/budget";
 import { useTripWeather } from "@/lib/live/use-live";
 import { isWetDay, type DayWeather } from "@/lib/live/weather";
 import { formatCalendarDate } from "@/lib/dates";
+import type { ItineraryItem } from "@/lib/itinerary";
 import { useTripHolidays } from "@/lib/live/use-open-data";
 import { tripActions, useTrip } from "@/lib/trip-store";
 
@@ -79,6 +81,24 @@ function ItineraryPage() {
   const holidays = useTripHolidays();
   const itin = trip.itinerary;
   const shown = useProgressiveCount(itin?.days.length ?? 0);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const located = (itin?.days ?? []).map((d) =>
+    d.items.filter(
+      (i): i is ItineraryItem & { lat: number; lon: number } =>
+        i.lat !== undefined && i.lon !== undefined,
+    ),
+  );
+  const selectedDay = Math.max(
+    0,
+    located.findIndex((d) => d.some((i) => i.id === selectedId)),
+  );
+  const [mapDay, setMapDay] = useState(0);
+  const shownMapDay =
+    selectedId && located.some((d) => d.some((i) => i.id === selectedId)) ? selectedDay : mapDay;
+  const pick = (id: string) => {
+    setSelectedId(id);
+    document.getElementById(`stop-${id}`)?.scrollIntoView({ block: "center", behavior: "smooth" });
+  };
 
   return (
     <div>
@@ -190,6 +210,8 @@ function ItineraryPage() {
                   itinerary={itin}
                   weather={weather.byDate.get(day.date)}
                   holiday={holidays.find((h) => h.date === day.date)?.name}
+                  selectedId={selectedId}
+                  onSelect={setSelectedId}
                   style={stagger(di)}
                 />
               ))
@@ -202,6 +224,34 @@ function ItineraryPage() {
         </div>
 
         <aside className="space-y-4 lg:sticky lg:top-8 lg:self-start">
+          {located.some((d) => d.length > 0) && (
+            <section className="surface-card space-y-4 p-6 print:hidden">
+              <h2 className="title-display text-title-2">Map</h2>
+              <div className="flex flex-wrap gap-2">
+                {located.map((d, i) =>
+                  d.length > 0 ? (
+                    <button
+                      key={i}
+                      type="button"
+                      aria-pressed={shownMapDay === i}
+                      onClick={() => {
+                        setMapDay(i);
+                        setSelectedId(null);
+                      }}
+                      className={`min-h-9 rounded-full border px-4 text-footnote ${shownMapDay === i ? "border-primary bg-primary text-primary-foreground" : "border-border"}`}
+                    >
+                      Day {i + 1}
+                    </button>
+                  ) : null,
+                )}
+              </div>
+              <DayMap stops={located[shownMapDay] ?? []} selectedId={selectedId} onSelect={pick} />
+              <p className="text-caption text-muted-foreground">
+                Pins are numbered in visit order and only show places with a published location. No
+                route is drawn; travel times in the list are straight-line estimates.
+              </p>
+            </section>
+          )}
           <PlanCosts />
           {itin && itin.tips.length > 0 && (
             <section className="surface-card p-6">

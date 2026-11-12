@@ -8,6 +8,7 @@ import {
   Coffee,
   ExternalLink,
   Landmark,
+  MapPin,
   Moon,
   Star,
   Sun,
@@ -50,6 +51,8 @@ export function DayCard({
   itinerary,
   weather,
   holiday,
+  selectedId,
+  onSelect,
   style,
 }: {
   day: ItineraryDay;
@@ -58,6 +61,9 @@ export function DayCard({
   weather: DayWeather | undefined;
   /** A public holiday on this day, if any */
   holiday?: string | undefined;
+  /** The stop highlighted on the map, if any */
+  selectedId: string | null;
+  onSelect: (id: string) => void;
   style?: CSSProperties;
 }) {
   return (
@@ -92,6 +98,8 @@ export function DayCard({
           <ItemRow
             key={stop.item.id}
             stop={stop}
+            selected={stop.item.id === selectedId}
+            onSelect={onSelect}
             last={idx === day.items.length - 1}
             itinerary={itinerary}
             dayIndex={dayIndex}
@@ -114,11 +122,15 @@ export function DayCard({
 
 function ItemRow({
   stop,
+  selected,
+  onSelect,
   last,
   itinerary,
   dayIndex,
 }: {
   stop: TimedStop;
+  selected: boolean;
+  onSelect: (id: string) => void;
   last: boolean;
   itinerary: Itinerary;
   dayIndex: number;
@@ -127,7 +139,10 @@ function ItemRow({
   const Icon = KIND_ICON[item.kind] ?? Landmark;
   const TimeIcon = TIME_ICONS[item.time] ?? Sun;
   return (
-    <li className="group relative flex gap-4 py-4">
+    <li
+      id={`stop-${item.id}`}
+      className={`group relative flex gap-4 py-4 ${selected ? "rounded-lg bg-fill" : ""}`}
+    >
       {!last && (
         <span className="absolute top-11 bottom-0 left-[15px] w-px bg-border" aria-hidden />
       )}
@@ -153,6 +168,17 @@ function ItemRow({
         <p className="mt-1 text-sm leading-snug font-medium">
           {item.name}
           <SourceTag item={item} />
+          {item.lat !== undefined && item.lon !== undefined && (
+            <button
+              type="button"
+              onClick={() => onSelect(item.id)}
+              aria-pressed={selected}
+              aria-label={`Show ${item.name} on the map`}
+              className="ml-2 inline-flex min-h-6 items-center gap-1 rounded-md px-1 text-caption font-normal text-primary print:hidden"
+            >
+              <MapPin className="size-3" aria-hidden /> Map
+            </button>
+          )}
         </p>
         <p className="text-xs text-muted-foreground">
           {item.area}
