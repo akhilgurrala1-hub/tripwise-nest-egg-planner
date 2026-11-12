@@ -81,6 +81,14 @@ function PrivacyPage() {
             allergy) and access needs (such as step-free access).
           </li>
           <li>
+            <strong>People you share a saved trip with:</strong> if you make an invite link, we
+            store a one-way fingerprint of the link (never the link itself), when it expires, and
+            who joined, with the name they chose. People who join can see the plan only: never your
+            budget, prices, bookings, spending, passport, start point, email address or saved
+            preferences. You can remove anyone or cancel a link at any time, and anyone you invited
+            can leave. Deleting a trip or an account ends all access.
+          </li>
+          <li>
             <strong>Bookings you record</strong>: provider, price, status, confirmation code and
             notes. Waypoint never books anything or takes payment, so we never see card details.
           </li>
