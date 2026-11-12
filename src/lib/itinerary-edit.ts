@@ -164,3 +164,65 @@ export function keepCustomItems(
   });
   return { itinerary: out, kept };
 }
+
+/**
+ * The day number a request is about ("make day 2 cheaper"). Null when it names no day, a day
+ * that isn't on the trip, or several days: those go to the whole plan, never to one day.
+ */
+export function parseDayNumber(text: string, dayCount: number): number | null {
+  const days = new Set([...text.matchAll(/\bdays?\s*(\d{1,2})\b/gi)].map((m) => Number(m[1])));
+  if (days.size !== 1) return null;
+  const n = [...days][0]!;
+  return n >= 1 && n <= dayCount ? n : null;
+}
+
+/** What one person spends on a day's stops and meals, from the prices on its items. */
+export function dayCostPerPerson(day: { items: ItineraryItem[] }): number {
+  const sum = day.items.reduce(
+    (s, i) => s + (Number.isFinite(i.costPerPerson) ? i.costPerPerson : 0),
+    0,
+  );
+  return Math.round(sum * 100) / 100;
+}
+
+/**
+ * Put a new version of one day into the plan. Every other day is returned exactly as it was
+ * (same objects), and the stops the traveler added or edited on this day are kept.
+ */
+export function replaceDay(
+  previous: Itinerary,
+  dayIndex: number,
+  newDay: { title: string; items: ItineraryItem[] },
+): { itinerary: Itinerary; kept: number } {
+  const old = previous.days[dayIndex];
+  if (!old) return { itinerary: previous, kept: 0 };
+  let out: Itinerary = {
+    ...previous,
+    days: previous.days.map((d, i) =>
+      i === dayIndex ? { ...d, title: newDay.title || d.title, items: newDay.items } : d,
+    ),
+  };
+  let kept = 0;
+  for (const item of old.items.filter((i) => i.custom)) {
+    const items = [...out.days[dayIndex]!.items];
+    items.splice(insertionIndex(items, item.time), 0, { ...item, id: newItemId(out) });
+    out = withDayItems(out, dayIndex, items);
+    kept++;
+  }
+  return { itinerary: out, kept };
+}
+
+/** Put a day back exactly as it was (undo for replaceDay). */
+export function restoreDay(
+  itin: Itinerary,
+  dayIndex: number,
+  day: { title: string; items: ItineraryItem[] },
+): Itinerary {
+  if (!itin.days[dayIndex]) return itin;
+  return {
+    ...itin,
+    days: itin.days.map((d, i) =>
+      i === dayIndex ? { ...d, title: day.title, items: day.items } : d,
+    ),
+  };
+}

@@ -31,6 +31,7 @@ import {
   fitToCoverage,
   generateTripItinerary,
   type Itinerary,
+  type ItineraryDay,
   type ItineraryItem,
 } from "./itinerary";
 import {
@@ -39,6 +40,8 @@ import {
   moveItem,
   moveItemToDay,
   removeItem,
+  replaceDay,
+  restoreDay as restoreDayInPlan,
   restoreItem,
   updateItem,
   type ItemPatch,
@@ -437,6 +440,29 @@ export const tripActions = {
   setItineraryFor(key: string, itinerary: Itinerary): number | null {
     if (planKey(getSnapshot()) !== key) return null;
     return tripActions.setItinerary(itinerary);
+  },
+  /**
+   * Replace one day of the plan with a new version requested for `key` (see `planKey`).
+   * Other days are untouched and the traveler's own stops on that day are kept. Returns the
+   * day as it was (for Undo) and how many stops were kept, or null if the trip changed.
+   */
+  setDayFor(
+    key: string,
+    dayIndex: number,
+    day: { title: string; items: ItineraryItem[] },
+  ): { before: ItineraryDay; kept: number } | null {
+    const cur = getSnapshot();
+    if (planKey(cur) !== key || !cur.itinerary?.days[dayIndex]) return null;
+    const before = cur.itinerary.days[dayIndex]!;
+    const { itinerary, kept } = replaceDay(cur.itinerary, dayIndex, day);
+    setState((s) => ({ ...s, itinerary }));
+    return { before, kept };
+  },
+  /** Undo for setDayFor: the day exactly as it was. */
+  restoreDay(dayIndex: number, day: ItineraryDay) {
+    setState((s) =>
+      s.itinerary ? { ...s, itinerary: restoreDayInPlan(s.itinerary, dayIndex, day) } : s,
+    );
   },
   regenerateDemoItinerary() {
     setState((s) => {

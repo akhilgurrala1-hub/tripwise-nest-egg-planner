@@ -28,6 +28,7 @@ import { useTripWeather } from "@/lib/live/use-live";
 import { isWetDay, type DayWeather } from "@/lib/live/weather";
 import { formatCalendarDate } from "@/lib/dates";
 import type { ItineraryItem } from "@/lib/itinerary";
+import { parseDayNumber } from "@/lib/itinerary-edit";
 import { useTripHolidays } from "@/lib/live/use-open-data";
 import { tripActions, useTrip } from "@/lib/trip-store";
 
@@ -165,7 +166,14 @@ function ItineraryPage() {
         <div className="min-w-0 space-y-4">
           <PlanSourceBadge source={itin?.source ?? "demo"} />
           {user && itin && itin.days.length > 0 && (
-            <RefinePlan busy={planner.busy} onRefine={(text) => planner.planWithAi(text)} />
+            <RefinePlan
+              busy={planner.busy}
+              onRefine={(text) => {
+                // "Make day 2 cheaper" changes only day 2; anything else goes to the whole plan.
+                const day = parseDayNumber(text, itin.days.length);
+                return planner.planWithAi(text, day ? { dayIndex: day - 1 } : undefined);
+              }}
+            />
           )}
 
           {planner.busy && (
@@ -212,6 +220,10 @@ function ItineraryPage() {
                   holiday={holidays.find((h) => h.date === day.date)?.name}
                   selectedId={selectedId}
                   onSelect={setSelectedId}
+                  onEditDay={
+                    user ? (text) => planner.planWithAi(text, { dayIndex: di }) : undefined
+                  }
+                  busy={planner.busy}
                   style={stagger(di)}
                 />
               ))
