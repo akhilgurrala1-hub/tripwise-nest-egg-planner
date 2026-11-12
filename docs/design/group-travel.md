@@ -120,3 +120,25 @@ still never moves money.
 
 Real-time co-editing, chat, payments or money transfers, public trip pages, and any selling or
 sharing of identifiable member data.
+
+## Phase 2 addendum: how editing works (tested, not applied)
+
+Migration 0005 lets an invited **editor** change a trip's itinerary through one database function,
+`update_shared_trip(trip_id, expected_revision, itinerary)`. What it guarantees, checked by
+`drizzle/tests/0005_editor_updates.test.sql` (27 checks, all passing on a scratch project):
+
+- Only an editor of a live trip can call it. Viewers, strangers, signed-out visitors, removed
+  editors and the owner (who uses the normal save) are refused.
+- A save based on an old revision is refused (`revision_conflict`), including after the owner changed
+  the trip. Nothing is merged silently.
+- The itinerary is rebuilt on the server: same number of days, same dates, same tips and source;
+  only whitelisted item fields survive, with length limits and known values; links must be http(s)
+  and coordinates in range; oversized or duplicate-id payloads are refused.
+- **Prices are not editable.** Editors never saw prices, so an item that already existed keeps its
+  stored prices, and a new item starts with no price ($0, source unknown). The owner's budget data,
+  bookings, spending and setup are untouched (compared byte for byte in the test).
+- The owner chooses the role when making a link (`viewer` or `editor`); anything else is refused.
+
+Still to build once this is approved for production: the editor screen (reorder, add, remove,
+rename stops using the same editing rules as the owner's itinerary), the role choice on the People
+panel, an "edited by someone else" notice for the owner, and Privacy page wording.
