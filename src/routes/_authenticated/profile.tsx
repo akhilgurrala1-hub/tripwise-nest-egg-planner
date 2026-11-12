@@ -208,7 +208,9 @@ function ProfilePage() {
           <div>
             <h2 className="title-display text-title-1">How you like to travel</h2>
             <p className="text-sm text-muted-foreground">
-              New trips start with these choices, and flight prices search from your home airport.
+              Your home city and airport, travel style, usual group size and interests shape new
+              trips and what Waypoint suggests. Flight prices search from your home airport. The
+              usual way to get there is saved but not used yet.
             </p>
           </div>
 
@@ -263,7 +265,7 @@ function ProfilePage() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="transport">Usual way to get there</Label>
+              <Label htmlFor="transport">Usual way to get there (saved, not used yet)</Label>
               <select
                 id="transport"
                 value={form.transport_mode}

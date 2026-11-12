@@ -217,6 +217,36 @@ describe("the sample trip starts where the traveler is", () => {
     expect(t.setup.destinationId).not.toBe("blue-ridge");
   });
 
+  it("applies the traveler's saved style, group size and interests, and updates when they change", async () => {
+    const store = await freshStore();
+    store.tripActions.personalizeSample(CHICAGO, {
+      style: "luxury",
+      travelers: 4,
+      interests: ["food"],
+    });
+    let t = store.currentTrip();
+    expect(t.setup.style).toBe("luxury");
+    expect(t.setup.travelers).toBe(4);
+    expect(t.setup.interests).toEqual(["food"]);
+    // Changing the saved choices later updates the untouched sample; the same choices do nothing.
+    store.tripActions.personalizeSample(CHICAGO, { style: "budget", travelers: 2, interests: [] });
+    t = store.currentTrip();
+    expect([t.setup.style, t.setup.travelers]).toEqual(["budget", 2]);
+    const id = t.id;
+    store.tripActions.personalizeSample(CHICAGO, { style: "budget", travelers: 2, interests: [] });
+    expect(store.currentTrip().id).toBe(id);
+  });
+
+  it("keeps a saved group size inside what the app supports", async () => {
+    const store = await freshStore();
+    store.tripActions.personalizeSample(CHICAGO, {
+      style: "comfort",
+      travelers: 99,
+      interests: [],
+    });
+    expect(store.currentTrip().setup.travelers).toBe(20);
+  });
+
   it("leaves a sample the traveler changed, and real trips, alone", async () => {
     const store = await freshStore();
     store.tripActions.setOverride("food", 99);

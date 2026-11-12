@@ -9,6 +9,7 @@ import { useSyncExternalStore } from "react";
 import {
   applyCoverage,
   applySaving,
+  MAX_TRAVELERS,
   modeDefaults,
   SAVING_CATEGORY,
   tripShape,
@@ -23,7 +24,9 @@ import {
   tripTypeInfo,
   type Cabin,
   type FlightStops,
+  type Interest,
   type TransportMode,
+  type TravelStyle,
   type TripType,
 } from "./demo-data";
 import { recommendDestinations } from "./recommend";
@@ -207,7 +210,10 @@ export const tripActions = {
    * Start the untouched sample trip from where the traveler is, headed somewhere
    * that suits them nearby. Does nothing once they've changed the sample.
    */
-  personalizeSample(home: { label: string; lat: number; lon: number }) {
+  personalizeSample(
+    home: { label: string; lat: number; lon: number },
+    prefs?: { style: TravelStyle; travelers: number; interests: Interest[] } | null,
+  ) {
     const s = getSnapshot();
     const pristine =
       s.isSample &&
@@ -217,12 +223,24 @@ export const tripActions = {
       s.spending.expenses.length === 0 &&
       !s.itinerary?.days.some((d) => d.items.some((i) => i.custom));
     const from = { lat: home.lat, lon: home.lon };
+    // The saved style, group size and interests shape the sample too (a traveler's own saved choices).
+    const saved = prefs
+      ? {
+          style: prefs.style,
+          travelers: Math.min(MAX_TRAVELERS, Math.max(1, Math.round(prefs.travelers))),
+          interests: prefs.interests,
+        }
+      : {};
     const same =
       s.setup.origin === home.label &&
       s.setup.originPoint?.lat === from.lat &&
-      s.setup.originPoint?.lon === from.lon;
+      s.setup.originPoint?.lon === from.lon &&
+      (!prefs ||
+        (s.setup.style === saved.style &&
+          s.setup.travelers === saved.travelers &&
+          s.setup.interests.join() === prefs.interests.join()));
     if (!pristine || same) return;
-    const setup: TripSetup = { ...sampleSetup(), origin: home.label, originPoint: from };
+    const setup: TripSetup = { ...sampleSetup(), ...saved, origin: home.label, originPoint: from };
     const pick = recommendDestinations({
       from,
       tripType: "road-trip",

@@ -77,7 +77,16 @@ export function useHomePlace() {
 /** Once we know where the traveler is, the untouched sample trip starts from there, to a place nearby. */
 export function usePersonalizedSample() {
   const { place } = useHomePlace();
+  const prefs = usePreferences();
   useEffect(() => {
-    if (place && currentTrip().isSample) tripActions.personalizeSample(place);
-  }, [place]);
+    if (place && currentTrip().isSample)
+      tripActions.personalizeSample(
+        place,
+        prefs
+          ? { style: prefs.travel_style, travelers: prefs.travelers, interests: prefs.interests }
+          : null,
+      );
+    // Re-run when the saved choices load or change, not on every object identity.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [place, prefs?.travel_style, prefs?.travelers, prefs?.interests.join()]);
 }
