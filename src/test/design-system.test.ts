@@ -165,11 +165,10 @@ describe("class merging", () => {
 });
 
 describe("no template tells", () => {
-  it("headlines color one word through <em>, never by hand", () => {
-    // The accent word comes from `title-display em`; a class on the <em> would fork it.
+  it("headlines are one plain color: no accent-colored last word", () => {
     expect(find(/<em className="[^"]*\btext-primary\b[^"]*">/g)).toEqual([]);
     const css = readFileSync(join(SRC, "styles.css"), "utf8");
-    expect(css).toMatch(/title-display[\s\S]{0,400}em\s*\{[^}]*color:\s*var\(--color-primary\)/);
+    expect(css).toMatch(/title-display[\s\S]{0,400}em\s*\{[^}]*color:\s*inherit/);
   });
 
   it("blue marks only what you can press or what's selected: no decorative or status blue", () => {
@@ -197,13 +196,14 @@ describe("no template tells", () => {
     expect(find(/<img\b/g, (p) => p.endsWith("Photo.tsx"))).toEqual([]);
   });
 
-  it("sets everything in Inter, self-hosted, with no serif or mono labels", () => {
+  it("sets headlines in Bricolage Grotesque and text in Figtree, self-hosted, with no serif or mono labels", () => {
     const css = readFileSync(join(SRC, "styles.css"), "utf8");
     const stack = (name: string) => css.match(new RegExp(`--font-${name}:([^;]+);`))?.[1] ?? "";
-    expect(stack("sans")).toMatch(/^\s*"Inter Variable"/);
-    expect(stack("display")).toContain("var(--font-sans)");
-    expect(css).toContain("@fontsource-variable/inter");
-    expect(css).not.toMatch(/fraunces|jetbrains/i);
+    expect(stack("sans")).toMatch(/^\s*"Figtree Variable"/);
+    expect(stack("display")).toMatch(/^\s*"Bricolage Grotesque Variable"/);
+    expect(css).toContain("@fontsource-variable/figtree");
+    expect(css).toContain("@fontsource-variable/bricolage-grotesque");
+    expect(css).not.toMatch(/fraunces|jetbrains|inter variable/i);
     // Small labels are plain sentence case: no uppercase, tracked-out caps.
     expect(css.match(/@utility label-mono \{[^}]*\}/)?.[0] ?? "").not.toMatch(/uppercase/);
   });

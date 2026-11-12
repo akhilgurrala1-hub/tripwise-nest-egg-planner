@@ -1,23 +1,31 @@
 @import "tailwindcss" source(none);
 @source "../src";
 @import "tw-animate-css";
-/* One self-hosted face (OFL): Inter for everything. */
-@import "@fontsource-variable/inter";
+/* Two self-hosted faces (OFL): Figtree for text, Bricolage Grotesque for headlines. */
+@import "@fontsource-variable/figtree";
+@import "@fontsource-variable/bricolage-grotesque";
 
 /* Fallbacks sized to the web fonts' measured widths, so the swap never reflows the headline. */
 @font-face {
-  font-family: "Inter Fallback";
+  font-family: "Figtree Fallback";
   font-style: normal;
   font-weight: 100 900;
   src: local("Arial");
-  size-adjust: 106.5%;
+  size-adjust: 104%;
+}
+@font-face {
+  font-family: "Bricolage Fallback";
+  font-style: normal;
+  font-weight: 100 900;
+  src: local("Arial");
+  size-adjust: 100%;
 }
 
 @custom-variant dark (&:where(.dark, .dark *));
 
 /*
  * Waypoint design system: the ARG Core editorial language, with apple.com's craft.
- * - Type: Inter only. Bold headlines, regular body at 16px or more, sentence-case labels.
+ * - Type: Bricolage Grotesque for headlines, Figtree for everything else. Regular body at 16px or more, sentence-case labels.
  * - Color: deep navy #142B3B (text, dark surfaces), ocean teal #0F766E (primary actions, links), warm
  *   ivory #F7F7F5 canvas with white surfaces, soft mint #EEF4F2 support fills, coral #E87952 only in
  *   route art; sage for success and confirmed states.
@@ -27,8 +35,11 @@
  */
 
 @theme inline {
-  --font-sans: "Inter Variable", "Inter", "Inter Fallback", ui-sans-serif, system-ui, sans-serif;
-  --font-display: var(--font-sans);
+  --font-sans:
+    "Figtree Variable", "Figtree", "Figtree Fallback", ui-sans-serif, system-ui, sans-serif;
+  --font-display:
+    "Bricolage Grotesque Variable", "Bricolage Grotesque", "Bricolage Fallback", ui-sans-serif,
+    system-ui, sans-serif;
   --font-mono: ui-monospace, "SF Mono", Menlo, monospace;
 
   /*
@@ -669,20 +680,20 @@
   }
 }
 
-/* Titles: bold Inter, tightened as it grows; <em> is the accent-colored word. */
+/* Titles: Bricolage Grotesque, tightened as it grows. <em> is plain: no colored last word. */
 @utility title-display {
-  font-family: var(--font-sans);
+  font-family: var(--font-display);
   --tw-font-weight: 700;
   font-weight: 700;
-  letter-spacing: -0.024em;
+  letter-spacing: -0.02em;
   text-wrap: balance;
   & em {
     font-style: normal;
-    color: var(--color-primary);
+    color: inherit;
   }
 }
 
-/* Amounts that matter: bold Inter with tabular figures. */
+/* Amounts that matter: bold Figtree with tabular figures. */
 @utility money-display {
   font-family: var(--font-sans);
   font-weight: 700;

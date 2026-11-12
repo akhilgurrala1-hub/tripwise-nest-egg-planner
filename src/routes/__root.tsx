@@ -11,7 +11,8 @@ import {
 import type { ReactNode } from "react";
 
 import appCss from "../styles.css?url";
-import inter from "@fontsource-variable/inter/files/inter-latin-wght-normal.woff2?url";
+import figtree from "@fontsource-variable/figtree/files/figtree-latin-wght-normal.woff2?url";
+import bricolage from "@fontsource-variable/bricolage-grotesque/files/bricolage-grotesque-latin-wght-normal.woff2?url";
 import { AppShell } from "@/components/app/AppShell";
 import { Button } from "@/components/ui/button";
 import { Toaster } from "@/components/ui/sonner";
@@ -129,7 +130,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { rel: "apple-touch-icon", href: "/apple-touch-icon.png" },
       { rel: "manifest", href: "/site.webmanifest" },
       // The one face, fetched early so the headline never swaps late.
-      ...[inter].map((href) => ({
+      ...[figtree, bricolage].map((href) => ({
         rel: "preload",
         href,
         as: "font",
