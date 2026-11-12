@@ -389,9 +389,9 @@ function Welcome() {
               onSubmit={submit}
               noValidate
               aria-label="Plan a trip"
-              className="mx-auto mt-6 max-w-6xl rounded-3xl bg-card p-2 text-left shadow-lg"
+              className="mx-auto mt-6 max-w-7xl rounded-3xl bg-card p-2 text-left shadow-lg"
             >
-              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-[1.3fr_2fr_auto_1.5fr_auto] xl:items-stretch xl:gap-0 xl:divide-x xl:divide-separator">
+              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-[minmax(0,1fr)_22rem_9rem_12rem_8rem] xl:items-stretch xl:gap-0 xl:divide-x xl:divide-separator">
                 <div className="min-w-0 rounded-2xl p-4 sm:col-span-2 xl:col-span-1 xl:rounded-none xl:px-6 xl:py-4">
                   <DestinationPicker
                     tripType={form.tripType}

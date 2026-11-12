@@ -38,7 +38,7 @@ export function ProductTiles() {
           {/* The budget: the dark tile. */}
           <Link
             to="/budget"
-            className="group pressable rounded-3xl bg-ink p-8 text-ink-foreground md:col-span-3"
+            className="group pressable flex flex-col rounded-3xl bg-ink p-8 text-ink-foreground md:col-span-3"
           >
             <p className="text-footnote opacity-80">Budget</p>
             <p className="title-display mt-6 text-display">
@@ -74,7 +74,7 @@ export function ProductTiles() {
                 </li>
               ))}
             </ul>
-            <span className="link-chevron mt-8 inline-block text-footnote !text-ink-foreground">
+            <span className="link-chevron mt-auto inline-block pt-8 text-footnote !text-ink-foreground">
               Open the budget
             </span>
           </Link>
@@ -82,10 +82,10 @@ export function ProductTiles() {
           {/* A day of the plan, with the route drawn behind it. */}
           <Link
             to="/itinerary"
-            className="group pressable relative overflow-hidden rounded-3xl bg-card p-8 md:col-span-2"
+            className="group pressable relative flex flex-col overflow-hidden rounded-3xl bg-card p-8 md:col-span-2"
           >
             <RouteMap className="pointer-events-none absolute top-0 right-0 w-72 opacity-80" />
-            <div className="relative mt-44">
+            <div className="relative mt-44 flex flex-1 flex-col">
               <p className="text-footnote text-muted-foreground">Itinerary</p>
               <p className="title-display mt-2 text-title-1">
                 {day ? `Day 1: ${day.title}` : "Day by day"}
@@ -100,7 +100,7 @@ export function ProductTiles() {
                   </li>
                 ))}
               </ol>
-              <span className="link-chevron mt-4 inline-block text-footnote">
+              <span className="link-chevron mt-auto inline-block pt-4 text-footnote">
                 Open the itinerary
               </span>
             </div>
