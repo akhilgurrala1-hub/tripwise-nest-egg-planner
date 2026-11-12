@@ -7,7 +7,7 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
  * Permanently deletes the signed-in traveler's account and everything saved under it.
  * Only ever acts on the account in the request's own token, and the traveler must type
  * their email address to confirm. The tables have no foreign key to auth.users, so the
- * rows are removed first and the sign-in last.
+ * rows are removed first and the sign-in last. Memberships in other people's trips go too.
  */
 export const deleteMyAccount = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -18,6 +18,19 @@ export const deleteMyAccount = createServerFn({ method: "POST" })
       return { ok: false as const, error: "Type your email address exactly to confirm." };
     }
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    // Trips others shared with them: they simply leave. Invites they accepted lose their name.
+    const left = await supabaseAdmin.from("trip_members").delete().eq("user_id", context.userId);
+    const anon = await supabaseAdmin
+      .from("trip_invites")
+      .update({ accepted_by: null })
+      .eq("accepted_by", context.userId);
+    if (left.error || anon.error) {
+      return {
+        ok: false as const,
+        error: "Couldn't delete your saved data. Nothing was removed from your sign-in; try again.",
+      };
+    }
+    // Deleting their own trips also removes everyone's membership and the invites (cascade).
     for (const table of ["bookings", "trips", "traveler_preferences"] as const) {
       const { error } = await supabaseAdmin.from(table).delete().eq("user_id", context.userId);
       if (error) {

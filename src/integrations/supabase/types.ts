@@ -62,6 +62,69 @@ export type Database = {
         };
         Relationships: [];
       };
+      trip_invites: {
+        Row: {
+          accepted_at: string | null;
+          accepted_by: string | null;
+          created_at: string;
+          created_by: string;
+          expires_at: string;
+          id: string;
+          revoked_at: string | null;
+          role: string;
+          token_hash: string;
+          trip_id: string;
+        };
+        Insert: {
+          accepted_at?: string | null;
+          accepted_by?: string | null;
+          created_at?: string;
+          created_by: string;
+          expires_at: string;
+          id?: string;
+          revoked_at?: string | null;
+          role: string;
+          token_hash: string;
+          trip_id: string;
+        };
+        Update: {
+          accepted_at?: string | null;
+          accepted_by?: string | null;
+          created_at?: string;
+          created_by?: string;
+          expires_at?: string;
+          id?: string;
+          revoked_at?: string | null;
+          role?: string;
+          token_hash?: string;
+          trip_id?: string;
+        };
+        Relationships: [];
+      };
+      trip_members: {
+        Row: {
+          created_at: string;
+          nickname: string;
+          role: string;
+          trip_id: string;
+          user_id: string;
+        };
+        Insert: {
+          created_at?: string;
+          nickname?: string;
+          role: string;
+          trip_id: string;
+          user_id: string;
+        };
+        Update: {
+          created_at?: string;
+          nickname?: string;
+          role?: string;
+          trip_id?: string;
+          user_id?: string;
+        };
+        Relationships: [];
+      };
       traveler_preferences: {
         Row: {
           accessibility: string[];
@@ -148,7 +211,14 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
-      [_ in never]: never;
+      accept_trip_invite: { Args: { p_token: string; p_nickname?: string }; Returns: string };
+      create_trip_invite: { Args: { p_trip_id: string; p_role?: string }; Returns: string };
+      get_shared_trip: { Args: { p_trip_id: string }; Returns: Json };
+      list_my_shared_trips: {
+        Args: Record<PropertyKey, never>;
+        Returns: { trip_id: string; name: string; role: string; updated_at: string }[];
+      };
+      revoke_trip_invite: { Args: { p_invite_id: string }; Returns: undefined };
     };
     Enums: {
       [_ in never]: never;

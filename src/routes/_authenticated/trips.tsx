@@ -1,5 +1,5 @@
 import { EmptyState } from "@/components/app/Photo";
-import { useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient, useSuspenseQuery } from "@tanstack/react-query";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import {
   Check,
@@ -12,11 +12,14 @@ import {
   Trash2,
   X,
   Luggage,
+  Users,
 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
 import { PageHeader } from "@/components/app/TripHeader";
+import { TripPeople } from "@/components/app/TripPeople";
+import { sharedTripsQuery } from "@/lib/members";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -217,6 +220,8 @@ function TripsPage() {
           ))}
         </section>
 
+        <SharedWithMe />
+
         {deleted.length > 0 && (
           <section className="space-y-4">
             <h2 className="text-headline font-semibold text-muted-foreground">Recently deleted</h2>
@@ -277,6 +282,7 @@ function TripRow({
   onDelete: () => void;
 }) {
   const [editing, setEditing] = useState(false);
+  const [people, setPeople] = useState(false);
   const [name, setName] = useState(row.name);
   const commit = () => {
     const n = name.trim();
@@ -346,6 +352,15 @@ function TripRow({
         </Button>
         <Button
           size="sm"
+          variant="outline"
+          aria-expanded={people}
+          onClick={() => setPeople((p) => !p)}
+          aria-label={`People on ${row.name}`}
+        >
+          <Users /> People
+        </Button>
+        <Button
+          size="sm"
           variant="ghost"
           className="text-destructive"
           onClick={onDelete}
@@ -354,6 +369,38 @@ function TripRow({
           <Trash2 /> Delete
         </Button>
       </div>
+      {people && (
+        <div className="w-full sm:basis-full">
+          <TripPeople tripId={row.id} />
+        </div>
+      )}
     </div>
+  );
+}
+
+/** Trips other people shared with this traveler: the plan only, read-only. */
+function SharedWithMe() {
+  const q = useQuery(sharedTripsQuery);
+  const rows = q.data ?? [];
+  if (rows.length === 0) return null;
+  return (
+    <section className="space-y-4">
+      <h2 className="title-display text-title-1">Shared with me ({rows.length})</h2>
+      {rows.map((r) => (
+        <div key={r.trip_id} className="surface-card flex flex-wrap items-center gap-4 p-4">
+          <div className="min-w-0 flex-1">
+            <p className="truncate font-semibold">{r.name}</p>
+            <p className="text-xs text-muted-foreground">
+              You can view this plan · updated {new Date(r.updated_at).toLocaleDateString()}
+            </p>
+          </div>
+          <Button asChild size="sm" variant="ink">
+            <Link to="/shared-trip/$id" params={{ id: r.trip_id }}>
+              <FolderOpen /> View
+            </Link>
+          </Button>
+        </div>
+      ))}
+    </section>
   );
 }

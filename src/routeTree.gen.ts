@@ -16,6 +16,7 @@ import { Route as BookRouteImport } from './routes/book'
 import { Route as BudgetRouteImport } from './routes/budget'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as ItineraryRouteImport } from './routes/itinerary'
+import { Route as JoinRouteImport } from './routes/join'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as RoadTripRouteImport } from './routes/road-trip'
@@ -25,6 +26,7 @@ import { Route as TermsRouteImport } from './routes/terms'
 import { Route as AuthenticatedBookingsRouteImport } from './routes/_authenticated/bookings'
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
 import { Route as AuthenticatedTripsRouteImport } from './routes/_authenticated/trips'
+import { Route as AuthenticatedSharedTripIdRouteImport } from './routes/_authenticated/shared-trip.$id'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -58,6 +60,11 @@ const DashboardRoute = DashboardRouteImport.update({
 const ItineraryRoute = ItineraryRouteImport.update({
   id: '/itinerary',
   path: '/itinerary',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const JoinRoute = JoinRouteImport.update({
+  id: '/join',
+  path: '/join',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PrivacyRoute = PrivacyRouteImport.update({
@@ -105,6 +112,12 @@ const AuthenticatedTripsRoute = AuthenticatedTripsRouteImport.update({
   path: '/trips',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedSharedTripIdRoute =
+  AuthenticatedSharedTripIdRouteImport.update({
+    id: '/shared-trip/$id',
+    path: '/shared-trip/$id',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -113,6 +126,7 @@ export interface FileRoutesByFullPath {
   '/budget': typeof BudgetRoute
   '/dashboard': typeof DashboardRoute
   '/itinerary': typeof ItineraryRoute
+  '/join': typeof JoinRoute
   '/privacy': typeof PrivacyRoute
   '/reset-password': typeof ResetPasswordRoute
   '/road-trip': typeof RoadTripRoute
@@ -122,6 +136,7 @@ export interface FileRoutesByFullPath {
   '/bookings': typeof AuthenticatedBookingsRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/trips': typeof AuthenticatedTripsRoute
+  '/shared-trip/$id': typeof AuthenticatedSharedTripIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -130,6 +145,7 @@ export interface FileRoutesByTo {
   '/budget': typeof BudgetRoute
   '/dashboard': typeof DashboardRoute
   '/itinerary': typeof ItineraryRoute
+  '/join': typeof JoinRoute
   '/privacy': typeof PrivacyRoute
   '/reset-password': typeof ResetPasswordRoute
   '/road-trip': typeof RoadTripRoute
@@ -139,6 +155,7 @@ export interface FileRoutesByTo {
   '/bookings': typeof AuthenticatedBookingsRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/trips': typeof AuthenticatedTripsRoute
+  '/shared-trip/$id': typeof AuthenticatedSharedTripIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -149,6 +166,7 @@ export interface FileRoutesById {
   '/budget': typeof BudgetRoute
   '/dashboard': typeof DashboardRoute
   '/itinerary': typeof ItineraryRoute
+  '/join': typeof JoinRoute
   '/privacy': typeof PrivacyRoute
   '/reset-password': typeof ResetPasswordRoute
   '/road-trip': typeof RoadTripRoute
@@ -158,6 +176,7 @@ export interface FileRoutesById {
   '/_authenticated/bookings': typeof AuthenticatedBookingsRoute
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
   '/_authenticated/trips': typeof AuthenticatedTripsRoute
+  '/_authenticated/shared-trip/$id': typeof AuthenticatedSharedTripIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -168,6 +187,7 @@ export interface FileRouteTypes {
     | '/budget'
     | '/dashboard'
     | '/itinerary'
+    | '/join'
     | '/privacy'
     | '/reset-password'
     | '/road-trip'
@@ -177,6 +197,7 @@ export interface FileRouteTypes {
     | '/bookings'
     | '/profile'
     | '/trips'
+    | '/shared-trip/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -185,6 +206,7 @@ export interface FileRouteTypes {
     | '/budget'
     | '/dashboard'
     | '/itinerary'
+    | '/join'
     | '/privacy'
     | '/reset-password'
     | '/road-trip'
@@ -194,6 +216,7 @@ export interface FileRouteTypes {
     | '/bookings'
     | '/profile'
     | '/trips'
+    | '/shared-trip/$id'
   id:
     | '__root__'
     | '/'
@@ -203,6 +226,7 @@ export interface FileRouteTypes {
     | '/budget'
     | '/dashboard'
     | '/itinerary'
+    | '/join'
     | '/privacy'
     | '/reset-password'
     | '/road-trip'
@@ -212,6 +236,7 @@ export interface FileRouteTypes {
     | '/_authenticated/bookings'
     | '/_authenticated/profile'
     | '/_authenticated/trips'
+    | '/_authenticated/shared-trip/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -222,6 +247,7 @@ export interface RootRouteChildren {
   BudgetRoute: typeof BudgetRoute
   DashboardRoute: typeof DashboardRoute
   ItineraryRoute: typeof ItineraryRoute
+  JoinRoute: typeof JoinRoute
   PrivacyRoute: typeof PrivacyRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   RoadTripRoute: typeof RoadTripRoute
@@ -279,6 +305,13 @@ declare module '@tanstack/react-router' {
       path: '/itinerary'
       fullPath: '/itinerary'
       preLoaderRoute: typeof ItineraryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/join': {
+      id: '/join'
+      path: '/join'
+      fullPath: '/join'
+      preLoaderRoute: typeof JoinRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/privacy': {
@@ -344,6 +377,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedTripsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/shared-trip/$id': {
+      id: '/_authenticated/shared-trip/$id'
+      path: '/shared-trip/$id'
+      fullPath: '/shared-trip/$id'
+      preLoaderRoute: typeof AuthenticatedSharedTripIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
   }
 }
 
@@ -351,12 +391,14 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedBookingsRoute: typeof AuthenticatedBookingsRoute
   AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
   AuthenticatedTripsRoute: typeof AuthenticatedTripsRoute
+  AuthenticatedSharedTripIdRoute: typeof AuthenticatedSharedTripIdRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedBookingsRoute: AuthenticatedBookingsRoute,
   AuthenticatedProfileRoute: AuthenticatedProfileRoute,
   AuthenticatedTripsRoute: AuthenticatedTripsRoute,
+  AuthenticatedSharedTripIdRoute: AuthenticatedSharedTripIdRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
@@ -370,6 +412,7 @@ const rootRouteChildren: RootRouteChildren = {
   BudgetRoute: BudgetRoute,
   DashboardRoute: DashboardRoute,
   ItineraryRoute: ItineraryRoute,
+  JoinRoute: JoinRoute,
   PrivacyRoute: PrivacyRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   RoadTripRoute: RoadTripRoute,
