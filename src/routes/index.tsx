@@ -429,7 +429,7 @@ function Welcome() {
                         value={form.startDate}
                         min={todayIso()}
                         onChange={(e) => setStartDate(e.target.value)}
-                        className="h-11 min-w-0 px-2"
+                        className="h-12 min-w-0 px-2"
                       />
                     </div>
                     <div className="grid gap-2">
@@ -448,7 +448,7 @@ function Welcome() {
                         value={form.endDate}
                         min={form.startDate}
                         onChange={(e) => update({ endDate: e.target.value })}
-                        className="h-11 min-w-0 px-2"
+                        className="h-12 min-w-0 px-2"
                       />
                     </div>
                   </div>
@@ -456,12 +456,12 @@ function Welcome() {
                 <div className="min-w-0 rounded-2xl p-4 xl:rounded-none xl:px-6 xl:py-4">
                   <div className="flex items-center justify-between gap-4 xl:block">
                     <p className="text-footnote text-muted-foreground sm:mb-2">Travelers</p>
-                    <div className="flex h-11 items-center rounded-lg border border-input bg-fill">
+                    <div className="flex h-12 items-center rounded-lg border border-input bg-fill">
                       <Button
                         type="button"
                         variant="ghost"
                         size="icon"
-                        className="size-9"
+                        className="size-10"
                         aria-label="Fewer travelers"
                         disabled={form.travelers <= 1}
                         onClick={() => update({ travelers: Math.max(1, form.travelers - 1) })}
@@ -480,7 +480,7 @@ function Welcome() {
                         type="button"
                         variant="ghost"
                         size="icon"
-                        className="size-9"
+                        className="size-10"
                         aria-label="More travelers"
                         disabled={form.travelers >= MAX_TRAVELERS}
                         onClick={() =>
@@ -493,7 +493,7 @@ function Welcome() {
                   </div>
                 </div>
                 <div className="min-w-0 rounded-2xl p-4 xl:rounded-none xl:px-6 xl:py-4">
-                  <div>
+                  <div className="grid gap-2">
                     <Label
                       htmlFor="total-budget"
                       className="text-footnote font-normal text-muted-foreground"
@@ -507,13 +507,18 @@ function Welcome() {
                       value={totalBudget}
                       onChange={setBudget}
                       step={50}
-                      className="mt-2 h-12"
+                      className="h-12"
                       inputClassName="text-xl"
                     />
                   </div>
                 </div>
-                <div className="flex items-center p-1 sm:col-span-2 xl:col-span-1 xl:pl-2">
-                  <Button type="submit" size="lg" loading={planning} className="w-full xl:w-auto">
+                <div className="flex items-center p-1 sm:col-span-2 xl:col-span-1 xl:items-end xl:p-4 xl:pl-2">
+                  <Button
+                    type="submit"
+                    size="lg"
+                    loading={planning}
+                    className="h-12 w-full xl:w-auto"
+                  >
                     {planning ? "Planning…" : "Plan trip"}
                   </Button>
                 </div>
