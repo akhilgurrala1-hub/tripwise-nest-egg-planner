@@ -3,12 +3,15 @@ import { ArrowRight, ChevronDown, Info } from "lucide-react";
 import { useState, type CSSProperties, type ReactNode } from "react";
 import { toast } from "sonner";
 
+import { Photo } from "./Photo";
 import { TRIP_COLOR } from "./trip-colors";
 import { TRIP_ICONS, TripTypePicker } from "./TripTypePicker";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { formatCalendarDate } from "@/lib/dates";
 import { tripTypeInfo } from "@/lib/demo-data";
+import { thumbAt } from "@/lib/live/open-data";
+import { useDestinationSummary } from "@/lib/live/use-open-data";
 import { tripActions, useTrip } from "@/lib/trip-store";
 import { cn } from "@/lib/utils";
 
@@ -80,9 +83,12 @@ export function PageHeader({
           </p>
         )}
         <div className="flex flex-wrap items-end justify-between gap-6">
-          <div className="min-w-0">
-            <h1 className="title-display text-large-title">{accentTitle(title)}</h1>
-            {showTrip && <TripBar title={title} />}
+          <div className="flex min-w-0 items-center gap-4 sm:gap-6">
+            {showTrip && <PlacePhoto />}
+            <div className="min-w-0">
+              <h1 className="title-display text-large-title">{accentTitle(title)}</h1>
+              {showTrip && <TripBar title={title} />}
+            </div>
           </div>
           <div
             className={cn(
@@ -103,6 +109,21 @@ export function PageHeader({
         </div>
       </div>
     </div>
+  );
+}
+
+/** The destination as a small photograph beside the title; nothing at all when there isn't one. */
+function PlacePhoto() {
+  const { trip, dest } = useTrip();
+  const photo = useDestinationSummary(dest, trip.setup.origin).data;
+  if (!photo?.image) return null;
+  return (
+    <Photo
+      src={thumbAt(photo.image, 250)}
+      alt=""
+      priority
+      className="size-16 shrink-0 rounded-2xl sm:size-24"
+    />
   );
 }
 
