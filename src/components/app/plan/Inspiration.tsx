@@ -56,6 +56,7 @@ function ideasFor(
     // What this trip would cost with their dates and group (the same estimate the plan uses).
     cost: estimatedSpend({
       ...setup,
+      originPoint: from ?? setup.originPoint ?? null,
       destinationId: s.id,
       customDestination: "",
       destinationPoint: null,
