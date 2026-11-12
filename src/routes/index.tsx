@@ -12,7 +12,7 @@ import { OriginField } from "@/components/app/plan/OriginField";
 import { StylePicker } from "@/components/app/plan/StylePicker";
 import { HeroMosaic } from "@/components/app/plan/HeroMosaic";
 import { Inspiration } from "@/components/app/plan/Inspiration";
-import { Faq, HowItWorks } from "@/components/app/landing";
+import { Faq } from "@/components/app/landing";
 import { StopsPicker } from "@/components/app/plan/StopsPicker";
 import { formatDateRange } from "@/components/app/TripHeader";
 import { TripAssistant } from "@/components/app/plan/TripAssistant";
@@ -365,8 +365,7 @@ function Welcome() {
             Plan a trip around your budget
           </h1>
           <p className="mx-auto mt-6 max-w-xl text-headline font-normal text-foreground/80">
-            Say where and when in your own words. Waypoint estimates the cost, plans each day and
-            lists what to book.
+            Say where and when. Waypoint estimates the cost, plans the days and lists what to book.
           </p>
           <div className="mx-auto mt-10 max-w-2xl text-left">
             <TripAssistant
@@ -714,7 +713,6 @@ function Welcome() {
           </div>
         </div>
       </div>
-      <HowItWorks />
       <Faq />
     </div>
   );

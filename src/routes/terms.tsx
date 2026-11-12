@@ -132,7 +132,7 @@ function TermsPage() {
           (ODbL), driving routes from OSRM and the road-trip map from OpenFreeMap (OpenMapTiles and
           OpenStreetMap data), towns from GeoNames (CC BY), weather from Open-Meteo (CC BY 4.0),
           airports from OurAirports (public domain) and passport data from the Passport Index
-          dataset (MIT). Credits appear where the content is shown.
+          dataset (MIT). The credits are listed here, linked from the footer of every page.
         </p>
       </Section>
 

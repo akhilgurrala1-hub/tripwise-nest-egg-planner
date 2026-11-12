@@ -131,8 +131,8 @@ function AuthPage() {
               {mode === "forgot"
                 ? "We'll email you a link to choose a new password."
                 : mode === "signup"
-                  ? "Save your trips and plan with real places, drive times and routes."
-                  : "Sign in to see real places, drive times and routes for your trips."}
+                  ? "Save your trips to your account."
+                  : "Sign in to your account."}
             </p>
             <form onSubmit={submit} className="mt-6 space-y-4">
               <div>

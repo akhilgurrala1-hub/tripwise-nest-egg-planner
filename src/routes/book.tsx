@@ -165,10 +165,9 @@ function BookPage() {
     <div>
       <PageHeader title="Booking checklist" />
       <div className="page-container mt-4">
-        <p className="max-w-xl text-footnote text-muted-foreground">
-          Each search opens on the provider's own site with your dates and group filled in. You book
-          and pay there; Waypoint never takes payment. {affiliateDisclosure()} A status here is what
-          you tell us, and Waypoint can't check it with the provider.
+        <p className="max-w-lg text-footnote text-muted-foreground">
+          Each search opens the provider's own site with your dates filled in. You book and pay
+          there. {affiliateDisclosure()} Statuses are what you tell us.
         </p>
       </div>
 

@@ -75,7 +75,6 @@ export function HeroMosaic({
           </button>
         ))}
       </div>
-      <p className="mt-4 text-caption text-muted-foreground">Photos from Wikipedia.</p>
     </div>
   );
 }

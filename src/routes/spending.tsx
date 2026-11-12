@@ -117,7 +117,7 @@ function SpendingPage() {
 
           {days.length === 0 && summary.booked === 0 && (
             <EmptyState icon={<Receipt />} title="No costs logged yet">
-              Log what you spend as you go and it appears here day by day, against your plan.
+              Costs you log appear here, day by day.
             </EmptyState>
           )}
           {days.length > 0 && (
@@ -256,7 +256,7 @@ function SummaryCard() {
         {s.phase === "during"
           ? "The daily figure is what's left shared over the days still to come, today included."
           : s.phase === "before"
-            ? "Log costs you pay ahead too, like deposits or gear. Booked prices on the Book page count automatically."
+            ? "Log costs you pay ahead too. Booked prices on the Book page count automatically."
             : "The trip is over. Settle up with your group and download the spreadsheet to keep."}
         {s.over &&
           " Going over never touches the emergency fund in your plan; it's still there if you need it."}
@@ -638,8 +638,8 @@ function SplitCard() {
       <p className="mt-1 text-xs text-muted-foreground">
         {people.length < 2
           ? trip.setup.travelers > 1
-            ? `Add who's going, then pick who paid when you log a cost. Waypoint works out who owes whom.`
-            : "Traveling with others? Add them to split costs and see who owes whom."
+            ? `Add who's going, then pick who paid when you log a cost.`
+            : "Traveling with others? Add them to split costs."
           : "Pick who paid when you log a cost. Names stay on this trip."}
       </p>
       {people.length > 0 && (
