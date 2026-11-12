@@ -104,6 +104,28 @@ export function canMove(itin: Itinerary, itemId: string, direction: -1 | 1): boo
   return t >= 0 && t < itin.days[at.dayIndex]!.items.length;
 }
 
+/**
+ * Drag an item to another position in its own day. The day keeps reading in time order, so the
+ * time slots stay where they are and the items take them in their new order (the same idea as
+ * moveItem, for any distance). Returns the same plan when nothing would change.
+ */
+export function reorderItem(itin: Itinerary, itemId: string, toIndex: number): Itinerary {
+  const at = locateItem(itin, itemId);
+  if (!at) return itin;
+  const items = itin.days[at.dayIndex]!.items;
+  const to = Math.max(0, Math.min(items.length - 1, Math.trunc(toIndex)));
+  if (to === at.index) return itin;
+  const slots = items.map((i) => i.time);
+  const moved = [...items];
+  const [item] = moved.splice(at.index, 1);
+  moved.splice(to, 0, item!);
+  return withDayItems(
+    itin,
+    at.dayIndex,
+    moved.map((it, i) => (it.time === slots[i] ? it : { ...it, time: slots[i]! })),
+  );
+}
+
 /** Move an item to another day, keeping its time slot. */
 export function moveItemToDay(itin: Itinerary, itemId: string, toDay: number): Itinerary {
   const at = locateItem(itin, itemId);

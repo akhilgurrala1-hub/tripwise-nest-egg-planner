@@ -5,6 +5,7 @@ import {
   Car,
   Clock,
   Footprints,
+  GripVertical,
   Coffee,
   ExternalLink,
   Landmark,
@@ -17,9 +18,10 @@ import {
   Pencil,
   type LucideIcon,
 } from "lucide-react";
-import { useState, type CSSProperties } from "react";
+import { useState, type CSSProperties, type DragEvent } from "react";
 
 import { Button } from "@/components/ui/button";
+import { locateItem } from "@/lib/itinerary-edit";
 import { AddItemButton, ItemActions } from "@/components/app/ItineraryEditor";
 import { WeatherChip } from "@/components/app/Weather";
 import { safeExternalUrl } from "@/lib/booking";
@@ -30,7 +32,10 @@ import { clock, scheduleDay, type TimedStop } from "@/lib/itinerary-schedule";
 import { destinationQuery } from "@/lib/live/place";
 import type { DayWeather } from "@/lib/live/weather";
 import { placeReviewLinks } from "@/lib/reviews";
-import { useTrip } from "@/lib/trip-store";
+import { tripActions, useTrip } from "@/lib/trip-store";
+
+/** The drag carries only an item id, under this type, so nothing else can be dropped on a day. */
+const DRAG_TYPE = "application/x-waypoint-item";
 
 const KIND_ICON: Record<ItemKind, LucideIcon> = {
   sight: Landmark,
@@ -77,6 +82,17 @@ export function DayCard({
     <section
       className="surface-card render-lazy overflow-hidden print:break-inside-avoid print:shadow-none"
       style={style}
+      onDragOver={(e) => {
+        if (e.dataTransfer.types.includes(DRAG_TYPE)) e.preventDefault();
+      }}
+      onDrop={(e) => {
+        // Dropped on the card itself (not on a stop): the stop moves to this day, keeping its time slot.
+        const id = e.dataTransfer.getData(DRAG_TYPE);
+        if (!id) return;
+        e.preventDefault();
+        const from = locateItem(itinerary, id);
+        if (from && from.dayIndex !== dayIndex) tripActions.moveItineraryItemToDay(id, dayIndex);
+      }}
     >
       <header className="flex items-center gap-4 border-b border-border px-6 py-4">
         <span className="tabular grid size-9 shrink-0 place-items-center rounded-lg bg-fill text-footnote font-semibold text-muted-foreground">
@@ -144,16 +160,49 @@ function ItemRow({
   dayIndex: number;
 }) {
   const { item } = stop;
+  const [over, setOver] = useState(false);
   const Icon = KIND_ICON[item.kind] ?? Landmark;
   const TimeIcon = TIME_ICONS[item.time] ?? Sun;
   return (
     <li
       id={`stop-${item.id}`}
-      className={`group relative flex gap-4 py-4 ${selected ? "rounded-lg bg-fill" : ""}`}
+      className={`group relative flex gap-4 py-4 ${selected ? "rounded-lg bg-fill" : ""} ${over ? "outline-2 -outline-offset-2 outline-primary rounded-lg" : ""}`}
+      onDragOver={(e: DragEvent) => {
+        if (e.dataTransfer.types.includes(DRAG_TYPE)) {
+          e.preventDefault();
+          setOver(true);
+        }
+      }}
+      onDragLeave={() => setOver(false)}
+      onDrop={(e: DragEvent) => {
+        setOver(false);
+        const id = e.dataTransfer.getData(DRAG_TYPE);
+        const from = id ? locateItem(itinerary, id) : null;
+        if (!from) return;
+        // Same day: take this stop's place. Another day: the card's drop handler moves it.
+        if (from.dayIndex === dayIndex) {
+          e.preventDefault();
+          e.stopPropagation();
+          const to = itinerary.days[dayIndex]!.items.findIndex((i) => i.id === item.id);
+          tripActions.reorderItineraryItem(id, to);
+        }
+      }}
     >
       {!last && (
         <span className="absolute top-11 bottom-0 left-[15px] w-px bg-border" aria-hidden />
       )}
+      <span
+        draggable
+        onDragStart={(e: DragEvent) => {
+          e.dataTransfer.setData(DRAG_TYPE, item.id);
+          e.dataTransfer.effectAllowed = "move";
+        }}
+        title="Drag to move this stop (or use the arrows)"
+        aria-hidden
+        className="absolute top-5 -left-4 hidden cursor-grab text-muted-foreground opacity-0 group-hover:opacity-100 sm:block print:hidden"
+      >
+        <GripVertical className="size-4" />
+      </span>
       <span className="relative grid size-8 shrink-0 place-items-center rounded-full border border-border bg-card text-foreground/80">
         <Icon className="size-3.5" strokeWidth={1.8} />
       </span>
