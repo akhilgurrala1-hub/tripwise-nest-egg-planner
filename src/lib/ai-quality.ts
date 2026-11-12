@@ -178,6 +178,9 @@ export function cleanAiPlan(
               ...(match.hours ? { hours: match.hours } : {}),
               ...(match.priceText ? { priceText: match.priceText } : {}),
               ...(match.source ? { source: match.source } : {}),
+              ...(match.lat !== undefined && match.lon !== undefined
+                ? { lat: match.lat, lon: match.lon }
+                : {}),
             }
           : {}),
       });

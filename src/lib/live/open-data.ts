@@ -260,6 +260,9 @@ export function parseLandmarks(body: unknown, near: string, at?: GeoPoint | null
       costSource: "unknown",
       interests,
       source: "wikipedia",
+      ...(coords && Number.isFinite(coords.lat) && Number.isFinite(coords.lon)
+        ? { lat: coords.lat, lon: coords.lon }
+        : {}),
       ...(views !== null ? { fame: views } : {}),
       _score: fameScore(views, length, km),
     });
@@ -419,6 +422,7 @@ export function parseRestaurants(body: unknown, near: string, at?: GeoPoint | nu
       interests: CUISINE_INTERESTS.find(([re]) => re.test(cuisine))?.[1] ?? ["food"],
       ...(tags["opening_hours"] ? { hours: tags["opening_hours"].slice(0, 80) } : {}),
       source: "osm",
+      ...(Number.isFinite(lat) && Number.isFinite(lon) ? { lat, lon } : {}),
       _score: restaurantScore(tags, km),
     });
   }

@@ -1,8 +1,10 @@
 import {
+  AlertTriangle,
   BookOpen,
   CalendarHeart,
   Car,
   Clock,
+  Footprints,
   Coffee,
   ExternalLink,
   Landmark,
@@ -21,6 +23,7 @@ import { safeExternalUrl } from "@/lib/booking";
 import { formatMoney } from "@/lib/budget";
 import { formatCalendarDate } from "@/lib/dates";
 import type { Itinerary, ItineraryDay, ItineraryItem, ItemKind, SlotTime } from "@/lib/itinerary";
+import { clock, scheduleDay, type TimedStop } from "@/lib/itinerary-schedule";
 import { destinationQuery } from "@/lib/live/place";
 import type { DayWeather } from "@/lib/live/weather";
 import { placeReviewLinks } from "@/lib/reviews";
@@ -85,10 +88,10 @@ export function DayCard({
         </div>
       )}
       <ol className="relative px-6 py-4">
-        {day.items.map((item, idx) => (
+        {scheduleDay(day.items).map((stop, idx) => (
           <ItemRow
-            key={item.id}
-            item={item}
+            key={stop.item.id}
+            stop={stop}
             last={idx === day.items.length - 1}
             itinerary={itinerary}
             dayIndex={dayIndex}
@@ -98,6 +101,10 @@ export function DayCard({
           <li className="py-4 text-sm text-muted-foreground">Free day. Wander as you like.</li>
         )}
       </ol>
+      <p className="px-6 pb-2 text-caption text-muted-foreground">
+        Times are a suggested pace. Travel is estimated from the straight-line distance between
+        places that have a published location.
+      </p>
       <div className="px-6 pb-4 print:hidden">
         <AddItemButton dayIndex={dayIndex} itinerary={itinerary} />
       </div>
@@ -106,16 +113,17 @@ export function DayCard({
 }
 
 function ItemRow({
-  item,
+  stop,
   last,
   itinerary,
   dayIndex,
 }: {
-  item: ItineraryItem;
+  stop: TimedStop;
   last: boolean;
   itinerary: Itinerary;
   dayIndex: number;
 }) {
+  const { item } = stop;
   const Icon = KIND_ICON[item.kind] ?? Landmark;
   const TimeIcon = TIME_ICONS[item.time] ?? Sun;
   return (
@@ -128,8 +136,20 @@ function ItemRow({
       </span>
       <div className="min-w-0 flex-1">
         <p className="tabular inline-flex items-center gap-1 text-caption font-medium text-muted-foreground">
-          <TimeIcon className="size-3" aria-hidden /> {item.time}
+          <TimeIcon className="size-3" aria-hidden /> {item.time} · {clock(stop.start)} to{" "}
+          {clock(stop.end)}
         </p>
+        {stop.travel && (
+          <p className="mt-1 inline-flex items-center gap-1 text-caption text-muted-foreground">
+            {stop.travel.mode === "walk" ? (
+              <Footprints className="size-3" aria-hidden />
+            ) : (
+              <Car className="size-3" aria-hidden />
+            )}
+            About {stop.travel.minutes} min {stop.travel.mode === "walk" ? "walk" : "drive"} from
+            the stop before (estimate)
+          </p>
+        )}
         <p className="mt-1 text-sm leading-snug font-medium">
           {item.name}
           <SourceTag item={item} />
@@ -138,6 +158,12 @@ function ItemRow({
           {item.area}
           {item.note ? ` · ${item.note}` : ""}
         </p>
+        {stop.warnings.map((w) => (
+          <p key={w} className="mt-1 flex items-start gap-1 text-caption text-foreground">
+            <AlertTriangle className="size-3 shrink-0" aria-hidden />
+            <span>{w}</span>
+          </p>
+        ))}
         {(item.hours || item.source === "wikivoyage") && (
           <p className="mt-1 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
             {item.source === "wikivoyage" && (

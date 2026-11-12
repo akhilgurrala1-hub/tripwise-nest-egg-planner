@@ -33,6 +33,9 @@ export interface ItineraryItem {
   priceText?: string | null;
   /** Where the place came from (travel guide, Wikipedia, OpenStreetMap, Google Maps) */
   source?: PlaceSource;
+  /** Where it is, from the place's source; missing means distances to it are unknown */
+  lat?: number;
+  lon?: number;
   /** Added or edited by the traveler (shown as "Your stop"; never replaced by suggestions) */
   custom?: boolean;
 }
@@ -416,6 +419,7 @@ function placeItem(p: RealPlace, id: string, time: SlotTime): ItineraryItem {
     ...(p.hours ? { hours: p.hours } : {}),
     ...(p.priceText ? { priceText: p.priceText } : {}),
     ...(p.source ? { source: p.source } : {}),
+    ...(p.lat !== undefined && p.lon !== undefined ? { lat: p.lat, lon: p.lon } : {}),
   };
 }
 

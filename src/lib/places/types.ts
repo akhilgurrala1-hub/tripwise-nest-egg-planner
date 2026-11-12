@@ -27,6 +27,9 @@ export interface RealPlace {
   fame?: number;
   /** Where it came from: travel guide, Wikipedia, OpenStreetMap or Google Maps */
   source?: PlaceSource;
+  /** Where it is, when the source publishes coordinates (never guessed) */
+  lat?: number;
+  lon?: number;
 }
 
 export type PlaceSource = "wikivoyage" | "wikipedia" | "osm" | "google";
