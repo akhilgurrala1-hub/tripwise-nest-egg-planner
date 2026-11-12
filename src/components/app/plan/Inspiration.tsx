@@ -24,7 +24,7 @@ export interface Idea {
 }
 
 /** A drive and a flight, alternating, so the row shows both kinds of trip from home. */
-export function inspirationIdeas(setup: TripSetup, from: GeoPoint | null, limit = 4): Idea[] {
+function inspirationIdeas(setup: TripSetup, from: GeoPoint | null, limit = 4): Idea[] {
   const kinds: TripType[] =
     setup.tripType === "cruise" || setup.tripType === "staycation"
       ? ["road-trip", "flight"]
@@ -128,13 +128,13 @@ export function Inspiration({
       >
         {!settled &&
           [0, 1, 2].map((i) => (
-            <li key={i} aria-hidden className="w-[70%] shrink-0 snap-start sm:w-64">
+            <li key={i} aria-hidden className="w-[78%] shrink-0 snap-start sm:w-80">
               <span className="skeleton block aspect-[4/5] rounded-2xl" />
               <span className="mt-4 block h-[6.25rem]" />
             </li>
           ))}
         {ideas.map((idea, i) => (
-          <li key={idea.s.id} className="w-[70%] shrink-0 snap-start sm:w-64">
+          <li key={idea.s.id} className="w-[78%] shrink-0 snap-start sm:w-80">
             <IdeaCard
               idea={idea}
               origin={setup.origin}
