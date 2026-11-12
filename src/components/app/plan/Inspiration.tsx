@@ -112,8 +112,8 @@ export function Inspiration({
   if (settled && !ideas.length) return null;
   return (
     <section aria-labelledby="ideas-title">
-      <div>
-        <h2 id="ideas-title" className="title-display text-title-1">
+      <div className="text-center">
+        <h2 id="ideas-title" className="title-display text-large-title">
           Trips from {fromLabel}
         </h2>
         <p className="mt-2 text-body text-muted-foreground">

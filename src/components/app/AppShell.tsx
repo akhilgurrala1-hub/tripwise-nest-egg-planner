@@ -174,9 +174,9 @@ function TopNav({ items, pathname }: { items: typeof NAV; pathname: string }) {
   return (
     <header className="scroll-edge material-thick sticky top-0 z-50 hidden border-b border-separator lg:block print:hidden">
       <div aria-hidden className="nav-progress" />
-      <div className="page-container flex h-16 items-center justify-between gap-6 xl:gap-8">
+      <div className="page-container flex h-12 items-center justify-between gap-6 xl:gap-8">
         <Link to="/" className="flex items-center rounded-md" aria-label="Waypoint home">
-          <Logo markClassName="size-8" wordClassName="text-title-2" />
+          <Logo markClassName="size-7" wordClassName="text-headline" />
         </Link>
         <nav aria-label="Main">
           <ul className="flex items-center gap-4 xl:gap-8">
@@ -202,10 +202,8 @@ function TopNav({ items, pathname }: { items: typeof NAV; pathname: string }) {
         <div className="flex items-center gap-2">
           <ThemeToggle />
           <AccountButton />
-          <Button asChild size="sm" variant="outline">
-            <Link to="/">
-              Plan a trip <ArrowRight />
-            </Link>
+          <Button asChild size="sm">
+            <Link to="/">Plan a trip</Link>
           </Button>
         </div>
       </div>
@@ -382,50 +380,27 @@ function Footer() {
     "inline-flex min-h-11 items-center text-foreground/80 hover:text-foreground hover:underline underline-offset-4";
   return (
     <footer className="border-t border-separator bg-card print:hidden">
-      <div className="page-container grid gap-8 py-10 sm:py-12 lg:grid-cols-[1.2fr_2fr]">
-        <div>
-          <Logo markClassName="size-8" wordClassName="text-title-2" />
-          <p className="mt-4 max-w-xs text-footnote text-muted-foreground">
-            Plan a trip around your budget and see what to book. Costs are estimates in US dollars.
-            Waypoint never books or takes payment.
-          </p>
-        </div>
-        <div className="grid gap-6 sm:grid-cols-2">
-          <nav aria-label="Trip tools">
-            <p className="text-footnote font-semibold">Trip tools</p>
-            <div className="mt-2 flex flex-wrap gap-x-6">
-              {[
-                ...NAV.filter((n) => n.to !== "/road-trip"),
-                { to: "/spending" as const, label: "Spending" },
-              ].map((n) => (
-                <Link key={n.to} to={n.to} className={link}>
-                  {n.label}
-                </Link>
-              ))}
-            </div>
-          </nav>
-          <nav aria-label="About">
-            <p className="text-footnote font-semibold">About</p>
-            <div className="mt-2 flex flex-wrap gap-x-6">
-              <Link to="/privacy" className={link}>
-                Privacy
-              </Link>
-              <Link to="/terms" className={link}>
-                Terms
-              </Link>
-              <Link to="/terms" hash="credits" className={link}>
-                Credits
-              </Link>
-              <a href={`mailto:${LEGAL.contactEmail}`} className={link}>
-                Contact
-              </a>
-            </div>
-          </nav>
-        </div>
+      <div className="page-container flex flex-wrap items-center justify-between gap-x-8 gap-y-2 py-4">
+        <Logo markClassName="size-7" wordClassName="text-headline" />
+        <nav aria-label="About" className="flex flex-wrap gap-x-6">
+          <Link to="/privacy" className={link}>
+            Privacy
+          </Link>
+          <Link to="/terms" className={link}>
+            Terms
+          </Link>
+          <Link to="/terms" hash="credits" className={link}>
+            Credits
+          </Link>
+          <a href={`mailto:${LEGAL.contactEmail}`} className={link}>
+            Contact
+          </a>
+        </nav>
       </div>
       <div className="border-t border-separator">
         <p className="page-container py-4 text-footnote text-muted-foreground">
-          © {year} {LEGAL.owner}
+          © {year} {LEGAL.owner} · Costs are estimates in US dollars. Waypoint never books or takes
+          payment.
         </p>
       </div>
     </footer>

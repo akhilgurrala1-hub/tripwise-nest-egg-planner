@@ -39,27 +39,27 @@ export function HeroMosaic({
   // photos arrive. If too few real photos exist (offline, Wikipedia down) the space is released.
   if (!settled)
     return (
-      <div aria-hidden className="hidden xl:block">
-        <div className="grid aspect-[6/5] grid-cols-2 grid-rows-2 gap-4">
-          <span className="skeleton row-span-2 rounded-2xl" />
-          <span className="skeleton rounded-2xl" />
-          <span className="skeleton rounded-2xl" />
+      <div aria-hidden className="mt-16 hidden md:block">
+        <div className="grid grid-cols-3 gap-4">
+          <span className="skeleton aspect-[4/5] rounded-3xl" />
+          <span className="skeleton aspect-[4/5] rounded-3xl" />
+          <span className="skeleton aspect-[4/5] rounded-3xl" />
         </div>
       </div>
     );
   if (tiles.length < 3) return null;
   return (
-    <div className="hidden xl:block">
-      <div className="grid aspect-[6/5] grid-cols-2 grid-rows-2 gap-4">
+    <div className="mt-16 hidden md:block">
+      <div className="grid grid-cols-3 gap-4">
         {tiles.map(({ idea, image }, i) => (
           <button
             key={idea.s.id}
             type="button"
             onClick={() => onPick(idea.s.id, idea.tripType)}
-            className={`group pressable relative isolate overflow-hidden rounded-2xl text-left focus-visible:ring-4 focus-visible:ring-primary/30 focus-visible:outline-none ${i === 0 ? "row-span-2" : ""}`}
+            className="group pressable relative isolate aspect-[4/5] overflow-hidden rounded-3xl text-left focus-visible:ring-4 focus-visible:ring-primary/30 focus-visible:outline-none"
           >
             <Photo
-              src={thumbAt(image, i === 0 ? 960 : 500)}
+              src={thumbAt(image, 500)}
               alt=""
               priority={i === 0}
               className="absolute inset-0 -z-10"
@@ -75,7 +75,6 @@ export function HeroMosaic({
           </button>
         ))}
       </div>
-      <p className="mt-2 text-caption text-muted-foreground">Photos from Wikipedia.</p>
     </div>
   );
 }

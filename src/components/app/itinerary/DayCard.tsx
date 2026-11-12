@@ -133,10 +133,6 @@ export function DayCard({
         )}
       </ol>
       {onEditDay && <EditDay day={day.day} busy={busy ?? false} onEdit={onEditDay} />}
-      <p className="px-6 pb-2 text-caption text-muted-foreground">
-        Times are a suggested pace. Travel is estimated from the straight-line distance between
-        places that have a published location.
-      </p>
       <div className="px-6 pb-4 print:hidden">
         <AddItemButton dayIndex={dayIndex} itinerary={itinerary} />
       </div>

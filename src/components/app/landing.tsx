@@ -1,51 +1,5 @@
 import * as AccordionPrimitive from "@radix-ui/react-accordion";
 import { Plus } from "lucide-react";
-import type { ReactNode } from "react";
-
-/** A section head: a plain headline and, optionally, one line under it. */
-export function SectionHead({ title, lede }: { title: ReactNode; lede?: ReactNode }) {
-  return (
-    <div>
-      <h2 className="title-display max-w-3xl text-large-title">{title}</h2>
-      {lede && <p className="mt-4 max-w-xl text-body text-foreground/80">{lede}</p>}
-    </div>
-  );
-}
-
-const STEPS = [
-  {
-    title: "Describe the trip",
-    body: "Type it in your own words, or pick a place. Waypoint reads dates, group size and cities, and asks only for what's missing.",
-  },
-  {
-    title: "See the budget",
-    body: "Costs come from real distances, typical fares and local prices, with an emergency fund set aside first. Each number says whether it's an estimate, a live price or not listed.",
-  },
-  {
-    title: "Plan the days and bookings",
-    body: "Real places from Wikivoyage, Wikipedia and OpenStreetMap fill each day, and a checklist says what to book and by when. You book on the provider's own site.",
-  },
-];
-
-export function HowItWorks() {
-  return (
-    <section className="border-t border-separator py-16 sm:py-20" aria-labelledby="how-title">
-      <div className="page-container">
-        <h2 id="how-title" className="title-display text-title-1">
-          How it works
-        </h2>
-        <ul className="mt-8 grid gap-8 md:grid-cols-3">
-          {STEPS.map((s) => (
-            <li key={s.title}>
-              <h3 className="text-headline font-semibold">{s.title}</h3>
-              <p className="mt-2 text-body text-foreground/80">{s.body}</p>
-            </li>
-          ))}
-        </ul>
-      </div>
-    </section>
-  );
-}
 
 const QUESTIONS = [
   {
@@ -76,15 +30,15 @@ const QUESTIONS = [
 
 export function Faq() {
   return (
-    <section className="border-t border-separator py-16 sm:py-20" aria-labelledby="faq-title">
+    <section className="bg-card py-16 sm:py-24" aria-labelledby="faq-title">
       <div className="page-container">
-        <h2 id="faq-title" className="title-display text-title-1">
+        <h2 id="faq-title" className="title-display text-center text-large-title">
           Common questions
         </h2>
         <AccordionPrimitive.Root
           type="single"
           collapsible
-          className="mt-8 max-w-3xl border-t border-separator"
+          className="mx-auto mt-12 max-w-3xl border-t border-separator"
         >
           {QUESTIONS.map((x) => (
             <AccordionPrimitive.Item key={x.q} value={x.q} className="border-b border-separator">
