@@ -18,6 +18,7 @@ import {
   savePreferences,
   type Preferences,
 } from "@/lib/account";
+import { ACCESSIBILITY, DIETARY } from "@/lib/needs";
 import { airportByCode, airportsNear } from "@/lib/airports";
 import { INTERESTS, TRANSPORT_MODES, TRAVEL_STYLES } from "@/lib/demo-data";
 import { useAirports } from "@/lib/live/use-airports";
@@ -147,7 +148,7 @@ function ProfilePage() {
   const [saving, setSaving] = useState(false);
   const set = <K extends keyof Preferences>(k: K, v: Preferences[K]) =>
     setForm((f) => ({ ...f, [k]: v }));
-  const toggle = (k: "interests" | "memberships", v: string) =>
+  const toggle = (k: "interests" | "memberships" | "dietary" | "accessibility", v: string) =>
     setForm((f) => ({
       ...f,
       [k]: (f[k] as string[]).includes(v)
@@ -327,6 +328,48 @@ function ProfilePage() {
                   onClick={() => toggle("memberships", m)}
                 >
                   {m}
+                </Chip>
+              ))}
+            </div>
+          </fieldset>
+
+          <fieldset className="min-w-0">
+            <legend className="mb-1 text-sm font-semibold">Food needs (optional)</legend>
+            <p className="mb-2 text-xs text-muted-foreground">
+              When you ask the AI planner for a plan, these are sent to Google's Gemini service with
+              your request, so it can favor restaurants likely to suit you (see Privacy). Waypoint
+              can't verify that a place meets a need, so always confirm with the restaurant. Stored
+              privately, never in share links, deleted with your account.
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {DIETARY.map((d) => (
+                <Chip
+                  key={d.id}
+                  active={form.dietary.includes(d.id)}
+                  onClick={() => toggle("dietary", d.id)}
+                >
+                  {d.label}
+                </Chip>
+              ))}
+            </div>
+          </fieldset>
+
+          <fieldset className="min-w-0">
+            <legend className="mb-1 text-sm font-semibold">Access needs (optional)</legend>
+            <p className="mb-2 text-xs text-muted-foreground">
+              When you ask the AI planner for a plan, these are sent to Google's Gemini service with
+              your request, so it can favor accessible places and shorter walks (see Privacy).
+              Waypoint has no verified accessibility data, so confirm with each venue. Stored
+              privately, never in share links, deleted with your account.
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {ACCESSIBILITY.map((a) => (
+                <Chip
+                  key={a.id}
+                  active={form.accessibility.includes(a.id)}
+                  onClick={() => toggle("accessibility", a.id)}
+                >
+                  {a.label}
                 </Chip>
               ))}
             </div>

@@ -30,6 +30,7 @@ import {
 } from "@/lib/ai-quality";
 import { coveredLabels, formatMoney } from "@/lib/budget";
 import { dayCostPerPerson } from "@/lib/itinerary-edit";
+import { needsFacts } from "@/lib/needs";
 import { inclusiveDays } from "@/lib/dates";
 import { addDays, buildRealItinerary, stitchCityPlans, type Itinerary } from "@/lib/itinerary";
 import { destinationQuery } from "@/lib/live/place";
@@ -247,6 +248,7 @@ export function usePlanner() {
       facts.push(
         `Local currency: ${localCurrency}${usdRate ? ` (about ${usdRate.toFixed(2)} ${localCurrency} per US dollar today)` : ""}. Give costs in US dollars.`,
       );
+    facts.push(...needsFacts(prefs?.dietary ?? [], prefs?.accessibility ?? []));
     if (shape.travelers >= 6)
       facts.push(`A group of ${shape.travelers}: prefer places that take groups or reservations.`);
     return facts;

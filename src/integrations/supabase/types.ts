@@ -64,7 +64,9 @@ export type Database = {
       };
       traveler_preferences: {
         Row: {
+          accessibility: string[];
           created_at: string;
+          dietary: string[];
           home_airport: string;
           home_city: string;
           interests: string[];
@@ -76,7 +78,9 @@ export type Database = {
           user_id: string;
         };
         Insert: {
+          accessibility?: string[];
           created_at?: string;
+          dietary?: string[];
           home_airport?: string;
           home_city?: string;
           interests?: string[];
@@ -88,7 +92,9 @@ export type Database = {
           user_id?: string;
         };
         Update: {
+          accessibility?: string[];
           created_at?: string;
+          dietary?: string[];
           home_airport?: string;
           home_city?: string;
           interests?: string[];
