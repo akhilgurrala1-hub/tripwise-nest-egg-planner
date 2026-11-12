@@ -382,7 +382,7 @@ function Footer() {
     "inline-flex min-h-11 items-center text-foreground/80 hover:text-foreground hover:underline underline-offset-4";
   return (
     <footer className="border-t border-separator bg-card print:hidden">
-      <div className="page-container grid gap-10 py-12 sm:grid-cols-[1.4fr_1fr_1fr] sm:py-16">
+      <div className="page-container grid gap-8 py-10 sm:py-12 lg:grid-cols-[1.2fr_2fr]">
         <div>
           <Logo markClassName="size-8" wordClassName="text-title-2" />
           <p className="mt-4 max-w-xs text-footnote text-muted-foreground">
@@ -390,32 +390,36 @@ function Footer() {
             Waypoint never books or takes payment.
           </p>
         </div>
-        <div className="grid grid-cols-2 gap-8 sm:contents">
-          <nav aria-label="Trip tools" className="flex flex-col">
-            <p className="mb-2 text-footnote font-semibold">Trip tools</p>
-            {[
-              ...NAV.filter((n) => n.to !== "/road-trip"),
-              { to: "/spending" as const, label: "Spending" },
-            ].map((n) => (
-              <Link key={n.to} to={n.to} className={link}>
-                {n.label}
-              </Link>
-            ))}
+        <div className="grid gap-6 sm:grid-cols-2">
+          <nav aria-label="Trip tools">
+            <p className="text-footnote font-semibold">Trip tools</p>
+            <div className="mt-2 flex flex-wrap gap-x-6">
+              {[
+                ...NAV.filter((n) => n.to !== "/road-trip"),
+                { to: "/spending" as const, label: "Spending" },
+              ].map((n) => (
+                <Link key={n.to} to={n.to} className={link}>
+                  {n.label}
+                </Link>
+              ))}
+            </div>
           </nav>
-          <nav aria-label="About" className="flex flex-col">
-            <p className="mb-2 text-footnote font-semibold">About</p>
-            <Link to="/privacy" className={link}>
-              Privacy
-            </Link>
-            <Link to="/terms" className={link}>
-              Terms
-            </Link>
-            <Link to="/terms" hash="credits" className={link}>
-              Credits
-            </Link>
-            <a href={`mailto:${LEGAL.contactEmail}`} className={link}>
-              Contact
-            </a>
+          <nav aria-label="About">
+            <p className="text-footnote font-semibold">About</p>
+            <div className="mt-2 flex flex-wrap gap-x-6">
+              <Link to="/privacy" className={link}>
+                Privacy
+              </Link>
+              <Link to="/terms" className={link}>
+                Terms
+              </Link>
+              <Link to="/terms" hash="credits" className={link}>
+                Credits
+              </Link>
+              <a href={`mailto:${LEGAL.contactEmail}`} className={link}>
+                Contact
+              </a>
+            </div>
           </nav>
         </div>
       </div>
