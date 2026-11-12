@@ -1,4 +1,3 @@
-import { Check } from "lucide-react";
 import { useState } from "react";
 
 import { PlaceInput } from "@/components/app/PlaceInput";
@@ -37,11 +36,12 @@ export function DestinationPicker({
     return (
       <div>
         <p className="mb-2 text-footnote text-muted-foreground">{label}</p>
-        <div className="flex min-h-11 items-center gap-4 rounded-xl bg-fill px-4 py-2">
-          <Check aria-hidden className="size-5 shrink-0 text-primary" />
-          <span className="min-w-0 flex-1">
-            <span className="block truncate text-body font-semibold">{d.name}</span>
-            <span className="block truncate text-footnote text-muted-foreground">{d.region}</span>
+        <div className="flex h-12 items-center gap-2 rounded-lg bg-fill px-4">
+          <span
+            className="min-w-0 flex-1 truncate text-body font-semibold"
+            title={`${d.name}, ${d.region}`}
+          >
+            {d.name}
           </span>
           <button
             type="button"
@@ -49,7 +49,7 @@ export function DestinationPicker({
               setChanging(true);
               onPick(CUSTOM_DESTINATION_ID);
             }}
-            className="inline-flex h-11 shrink-0 items-center px-2 font-medium text-primary underline-offset-2 hover:underline"
+            className="inline-flex h-12 shrink-0 items-center px-2 font-medium text-primary underline-offset-2 hover:underline"
           >
             Change
           </button>
@@ -72,7 +72,7 @@ export function DestinationPicker({
         value={customDestination}
         onChange={(v) => onCustom(v, null)}
         onPickPlace={(p) => onCustom(p.label, p)}
-        className="h-11"
+        className="h-12"
       />
       {error && <FieldError id="destination-error">{error}</FieldError>}
     </div>
