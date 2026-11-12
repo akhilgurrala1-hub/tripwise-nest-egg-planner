@@ -18,8 +18,9 @@
 /*
  * Waypoint design system: the ARG Core editorial language, with apple.com's craft.
  * - Type: Inter only. Bold headlines, regular body at 16px or more, sentence-case labels.
- * - Color: 60% warm cream canvas, 30% deep midnight blue (text, bars, dark mode), 10% emerald
- *   for the one primary action per screen; sage for success and confirmed states.
+ * - Color: deep navy #142B3B (text, dark surfaces), ocean teal #0F766E (primary actions, links), warm
+ *   ivory #F7F7F5 canvas with white surfaces, soft mint #EEF4F2 support fills, coral #E87952 only in
+ *   route art; sage for success and confirmed states.
  * - Shape: sharp 4px surfaces, pill buttons, 8px fields.
  * - Motion: exponential ease-out, one authored moment per screen, springs for direct manipulation.
  * - Space: an 8px grid. All colors are oklch tokens; components use semantic classes only.
@@ -324,54 +325,54 @@
   --radius: 12px;
   color-scheme: light;
   /* apple.com: a light-gray page (#f5f5f7), white tiles, #1d1d1f text. */
-  --background: oklch(0.962 0.016 85);
-  --foreground: oklch(0.24 0.06 262);
-  --card: oklch(0.985 0.01 85);
-  --card-foreground: oklch(0.24 0.06 262);
-  --popover: oklch(0.99 0.008 85);
-  --popover-foreground: oklch(0.24 0.06 262);
+  --background: #f7f7f5;
+  --foreground: #142b3b;
+  --card: #ffffff;
+  --card-foreground: #142b3b;
+  --popover: #ffffff;
+  --popover-foreground: #142b3b;
   /* The one accent: interactive, selected, focused. */
   /* Brand blue (#2457E6), the logo's tile color, doubles as the interactive accent. */
-  --primary: oklch(0.42 0.13 262);
-  --primary-deep: oklch(0.34 0.11 262);
-  --primary-foreground: oklch(0.985 0.01 85);
+  --primary: #0f766e;
+  --primary-deep: #0b5f59;
+  --primary-foreground: #ffffff;
   /* Fills (#e8e8ed) for secondary controls and tracks. */
-  --secondary: oklch(0.93 0.018 85);
-  --secondary-foreground: oklch(0.24 0.06 262);
-  --muted: oklch(0.93 0.018 85);
-  --muted-foreground: oklch(0.43 0.04 262);
-  --accent: oklch(0.925 0.025 85);
-  --accent-foreground: oklch(0.24 0.06 262);
-  --fill: oklch(0.24 0.06 262 / 0.05);
+  --secondary: #eef4f2;
+  --secondary-foreground: #142b3b;
+  --muted: #eef4f2;
+  --muted-foreground: #4a5d6b;
+  --accent: #e1ede9;
+  --accent-foreground: #142b3b;
+  --fill: rgb(20 43 59 / 0.05);
   /* Legacy warm tokens now resolve to the accent / neutrals. */
   --sunset: var(--primary);
   --sunset-foreground: var(--primary-foreground);
-  --sunset-soft: oklch(0.925 0.025 85);
+  --sunset-soft: #e1ede9;
   --gold: oklch(0.7 0.12 80);
-  --gold-soft: oklch(0.93 0.018 85);
+  --gold-soft: #eef4f2;
   --success: oklch(0.45 0.06 150);
   --success-soft: oklch(0.93 0.03 140);
-  --shield: oklch(0.43 0.04 262);
-  --shield-soft: oklch(0.93 0.018 85);
-  --shield-foreground: oklch(0.985 0.01 85);
-  --demo: oklch(0.43 0.04 262);
-  --demo-soft: oklch(0.93 0.018 85);
+  --shield: #4a5d6b;
+  --shield-soft: #eef4f2;
+  --shield-foreground: #f7f7f5;
+  --demo: #4a5d6b;
+  --demo-soft: #eef4f2;
   --destructive: oklch(0.495 0.154 25);
-  --destructive-foreground: oklch(0.985 0.01 85);
+  --destructive-foreground: #ffffff;
   --destructive-soft: oklch(0.91 0.025 37);
   /* Separators are hairlines: black at low alpha, so they sit right on any surface. */
-  --border: oklch(0.24 0.06 262 / 0.16);
-  --separator: oklch(0.24 0.06 262 / 0.12);
-  --input: oklch(0.24 0.06 262 / 0.38);
-  --ring: oklch(0.5 0.13 262);
+  --border: rgb(20 43 59 / 0.16);
+  --separator: rgb(20 43 59 / 0.12);
+  --input: rgb(20 43 59 / 0.38);
+  --ring: #0f766e;
   /* Brand coral (#FF6B4A): the logo's destination dot. Used sparingly for "you are here / next" cues. */
-  --brand-coral: oklch(0.5 0.1 165);
+  --brand-coral: #e87952;
   /* Coral as small text (step numbers): darker so it reads at AA contrast on paper. */
-  --coral-text: oklch(0.42 0.09 165);
+  --coral-text: #b4472a;
   /* Solid emphasis surface (primary call to action, the balance card). */
-  --ink: oklch(0.24 0.06 262);
-  --ink-foreground: oklch(0.985 0.01 85);
-  --on-image: oklch(0.985 0.01 85);
+  --ink: #142b3b;
+  --ink-foreground: #f7f7f5;
+  --on-image: #ffffff;
 
   /* "Go" actions (Plan trip, See the days) use the brand blue: one action color. */
   --go: var(--brand);
@@ -419,7 +420,7 @@
   --shadow-glow-value: 0 1px 2px oklch(0 0 0 / 0.05);
 
   /* Materials: frosted glass for bars and menus (alpha of the base + blur). */
-  --material-base: oklch(0.962 0.016 85);
+  --material-base: #f7f7f5;
   --material-thick: 0.88;
   --material-regular: 0.74;
   --material-thin: 0.6;
@@ -435,53 +436,53 @@
   --sidebar-accent-foreground: var(--secondary-foreground);
   --sidebar-border: var(--border);
   --sidebar-ring: var(--ring);
-  --brand: oklch(0.5 0.1 165);
-  --brand-foreground: oklch(0.99 0.006 85);
-  --brand-deep: oklch(0.42 0.09 165);
+  --brand: #0f766e;
+  --brand-foreground: #ffffff;
+  --brand-deep: #0b5f59;
 }
 .dark {
   color-scheme: dark;
   /* Near-black page, #1d1d1f tiles: Apple's dark pages, a shade off pure black. */
-  --background: oklch(0.2 0.045 262);
-  --foreground: oklch(0.96 0.015 85);
-  --card: oklch(0.25 0.05 262);
-  --card-foreground: oklch(0.96 0.015 85);
-  --popover: oklch(0.28 0.05 262);
-  --popover-foreground: oklch(0.96 0.015 85);
-  --primary: oklch(0.78 0.1 262);
-  --primary-deep: oklch(0.84 0.08 262);
-  --primary-foreground: oklch(0.2 0.045 262);
-  --secondary: oklch(0.29 0.05 262);
-  --secondary-foreground: oklch(0.96 0.015 85);
-  --muted: oklch(0.29 0.05 262);
-  --muted-foreground: oklch(0.78 0.03 262);
-  --accent: oklch(0.3 0.05 262);
-  --accent-foreground: oklch(0.96 0.015 85);
-  --fill: oklch(0.96 0.015 85 / 0.07);
+  --background: #0e1f2b;
+  --foreground: #f1f4f3;
+  --card: #142b3b;
+  --card-foreground: #f1f4f3;
+  --popover: #1b3647;
+  --popover-foreground: #f1f4f3;
+  --primary: #5fcfc2;
+  --primary-deep: #8be0d6;
+  --primary-foreground: #0e1f2b;
+  --secondary: #1b3647;
+  --secondary-foreground: #f1f4f3;
+  --muted: #1b3647;
+  --muted-foreground: #a9bcc7;
+  --accent: #1f3e50;
+  --accent-foreground: #f1f4f3;
+  --fill: rgb(241 244 243 / 0.07);
   --sunset: var(--primary);
   --sunset-foreground: var(--primary-foreground);
-  --sunset-soft: oklch(0.3 0.05 262);
+  --sunset-soft: #1f3e50;
   --gold: oklch(0.78 0.11 80);
-  --gold-soft: oklch(0.29 0.05 262);
+  --gold-soft: #1b3647;
   --success: oklch(0.76 0.09 150);
   --success-soft: oklch(0.3 0.04 160);
-  --shield: oklch(0.86 0.025 262);
-  --shield-soft: oklch(0.29 0.05 262);
-  --shield-foreground: oklch(0.2 0.045 262);
-  --demo: oklch(0.72 0.03 262);
-  --demo-soft: oklch(0.29 0.05 262);
+  --shield: #c9d6dd;
+  --shield-soft: #1b3647;
+  --shield-foreground: #0e1f2b;
+  --demo: #a9bcc7;
+  --demo-soft: #1b3647;
   --destructive: oklch(0.662 0.162 26);
-  --destructive-foreground: oklch(0.2 0.045 262);
+  --destructive-foreground: #0e1f2b;
   --destructive-soft: oklch(0.222 0.037 26);
-  --border: oklch(0.96 0.015 85 / 0.16);
-  --separator: oklch(0.96 0.015 85 / 0.11);
-  --input: oklch(0.96 0.015 85 / 0.32);
-  --ring: oklch(0.78 0.1 262);
-  --brand-coral: oklch(0.72 0.12 165);
-  --coral-text: oklch(0.76 0.11 165);
-  --ink: oklch(0.96 0.015 85);
-  --ink-foreground: oklch(0.2 0.045 262);
-  --on-image: oklch(0.985 0.01 85);
+  --border: rgb(241 244 243 / 0.16);
+  --separator: rgb(241 244 243 / 0.11);
+  --input: rgb(241 244 243 / 0.32);
+  --ring: #5fcfc2;
+  --brand-coral: #e87952;
+  --coral-text: #f0a58c;
+  --ink: #f1f4f3;
+  --ink-foreground: #0e1f2b;
+  --on-image: #ffffff;
 
   --go: var(--brand);
   --go-deep: var(--brand-deep);
@@ -516,15 +517,15 @@
   --shadow-lift-value: 0 22px 60px -20px oklch(0 0 0 / 0.7);
   --shadow-glow-value: none;
 
-  --material-base: oklch(0.2 0.045 262);
+  --material-base: #0e1f2b;
   --material-thick: 0.86;
   --material-regular: 0.72;
   --material-thin: 0.58;
   --specular: oklch(1 0 0 / 0);
-  --material-edge: oklch(0.96 0.015 85 / 0.11);
-  --brand: oklch(0.52 0.1 165);
-  --brand-foreground: oklch(0.959 0.013 87);
-  --brand-deep: oklch(0.58 0.1 165);
+  --material-edge: rgb(241 244 243 / 0.11);
+  --brand: #0f766e;
+  --brand-foreground: #ffffff;
+  --brand-deep: #0b5f59;
 }
 
 @layer base {
