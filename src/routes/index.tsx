@@ -10,6 +10,7 @@ import { DestinationPicker } from "@/components/app/plan/DestinationPicker";
 import { CoveragePicker } from "@/components/app/plan/CoveragePicker";
 import { OriginField } from "@/components/app/plan/OriginField";
 import { StylePicker } from "@/components/app/plan/StylePicker";
+import { HeroMosaic } from "@/components/app/plan/HeroMosaic";
 import { Inspiration } from "@/components/app/plan/Inspiration";
 import { Faq, HowItWorks } from "@/components/app/landing";
 import { StopsPicker } from "@/components/app/plan/StopsPicker";
@@ -359,31 +360,34 @@ function Welcome() {
       )}
       {/* The hero: the planner comes first. Say the trip in plain words, or fill it in below. */}
       <section>
-        <div className="page-container pt-10 pb-12 sm:pt-16 sm:pb-16">
-          <div className="max-w-3xl">
-            <h1 className="title-display text-display">Plan a trip around your budget</h1>
-            <p className="mt-6 max-w-xl text-body text-foreground/80">
-              Say where and when in your own words. Waypoint estimates the cost, plans each day and
-              lists what to book.
-            </p>
-            <div className="mt-8 max-w-2xl">
-              <TripAssistant
-                variant="hero"
-                homeCity={form.origin}
-                from={originPoint}
-                onBuild={(draft) => void start(fromDraft(draft))}
-                onFill={(draft) => {
-                  const next = fromDraft(draft);
-                  touched.current = true;
-                  destPicked.current = true;
-                  reserveTouched.current = false;
-                  setBudgetOwn(!next.budgetAuto);
-                  setForm(next);
-                  toast("Filled in below. Adjust anything, then plan the trip.");
-                  document.getElementById("plan-steps")?.scrollIntoView({ behavior: "smooth" });
-                }}
-              />
+        <div className="page-container pt-10 pb-12 sm:pt-16 sm:pb-16 max-sm:min-h-[calc(100dvh-9rem)]">
+          <div className="grid items-center gap-12 xl:grid-cols-[1.1fr_1fr]">
+            <div className="max-w-3xl min-w-0">
+              <h1 className="title-display text-display">Plan a trip around your budget</h1>
+              <p className="mt-6 max-w-xl text-body text-foreground/80">
+                Say where and when in your own words. Waypoint estimates the cost, plans each day
+                and lists what to book.
+              </p>
+              <div className="mt-8 max-w-2xl">
+                <TripAssistant
+                  variant="hero"
+                  homeCity={form.origin}
+                  from={originPoint}
+                  onBuild={(draft) => void start(fromDraft(draft))}
+                  onFill={(draft) => {
+                    const next = fromDraft(draft);
+                    touched.current = true;
+                    destPicked.current = true;
+                    reserveTouched.current = false;
+                    setBudgetOwn(!next.budgetAuto);
+                    setForm(next);
+                    toast("Filled in below. Adjust anything, then plan the trip.");
+                    document.getElementById("plan-steps")?.scrollIntoView({ behavior: "smooth" });
+                  }}
+                />
+              </div>
             </div>
+            <HeroMosaic setup={effective} from={originPoint} onPick={pickIdea} />
           </div>
         </div>
       </section>
