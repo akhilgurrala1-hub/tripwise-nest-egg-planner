@@ -1,34 +1,15 @@
 @import "tailwindcss" source(none);
 @source "../src";
 @import "tw-animate-css";
-/* Two self-hosted faces (OFL): Figtree for text, Bricolage Grotesque for headlines. */
-@import "@fontsource-variable/figtree";
-@import "@fontsource-variable/bricolage-grotesque";
-
-/* Fallbacks sized to the web fonts' measured widths, so the swap never reflows the headline. */
-@font-face {
-  font-family: "Figtree Fallback";
-  font-style: normal;
-  font-weight: 100 900;
-  src: local("Arial");
-  size-adjust: 104%;
-}
-@font-face {
-  font-family: "Bricolage Fallback";
-  font-style: normal;
-  font-weight: 100 900;
-  src: local("Arial");
-  size-adjust: 100%;
-}
+/* No web fonts: the system face (San Francisco on Apple devices, Segoe UI on Windows, Roboto on Android). */
 
 @custom-variant dark (&:where(.dark, .dark *));
 
 /*
  * Waypoint design system: the ARG Core editorial language, with apple.com's craft.
- * - Type: Bricolage Grotesque for headlines, Figtree for everything else. Regular body at 16px or more, sentence-case labels.
+ * - Type: the system face, as apple.com does (San Francisco on Apple devices). Semibold headlines, regular body at 16px or more, sentence-case labels.
  * - Color: deep navy #142B3B (text, dark surfaces), ocean teal #0F766E (primary actions, links), warm
- *   ivory #F7F7F5 canvas with white surfaces, soft mint #EEF4F2 support fills, coral #E87952 only in
- *   route art; sage for success and confirmed states.
+ *   ivory #F7F7F5 canvas with white surfaces, soft mint #EEF4F2 support fills, the route art in teal; sage for success and confirmed states.
  * - Shape: sharp 4px surfaces, pill buttons, 8px fields.
  * - Motion: exponential ease-out, one authored moment per screen, springs for direct manipulation.
  * - Space: an 8px grid. All colors are oklch tokens; components use semantic classes only.
@@ -36,10 +17,11 @@
 
 @theme inline {
   --font-sans:
-    "Figtree Variable", "Figtree", "Figtree Fallback", ui-sans-serif, system-ui, sans-serif;
+    -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", "Helvetica Neue", Roboto, Arial,
+    sans-serif;
   --font-display:
-    "Bricolage Grotesque Variable", "Bricolage Grotesque", "Bricolage Fallback", ui-sans-serif,
-    system-ui, sans-serif;
+    -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI Variable Display", "Segoe UI",
+    "Helvetica Neue", Roboto, Arial, sans-serif;
   --font-mono: ui-monospace, "SF Mono", Menlo, monospace;
 
   /*
@@ -49,23 +31,23 @@
   --text-stat: clamp(1.75rem, 1rem + 2vw, 2.75rem);
   --text-stat--line-height: 1.05;
   --text-stat--letter-spacing: -0.03em;
-  --text-stat--font-weight: 650;
+  --text-stat--font-weight: 600;
   --text-display: clamp(2.75rem, 1.6rem + 5vw, 5.25rem);
   --text-display--line-height: 1.04;
   --text-display--letter-spacing: -0.035em;
-  --text-display--font-weight: 650;
+  --text-display--font-weight: 600;
   --text-large-title: clamp(1.875rem, 1.3rem + 2.2vw, 2.75rem);
   --text-large-title--line-height: 1.1;
   --text-large-title--letter-spacing: -0.024em;
-  --text-large-title--font-weight: 700;
+  --text-large-title--font-weight: 600;
   --text-title-1: 1.75rem;
   --text-title-1--line-height: 1.12;
   --text-title-1--letter-spacing: -0.016em;
-  --text-title-1--font-weight: 650;
+  --text-title-1--font-weight: 600;
   --text-title-2: 1.25rem;
   --text-title-2--line-height: 1.18;
   --text-title-2--letter-spacing: -0.012em;
-  --text-title-2--font-weight: 650;
+  --text-title-2--font-weight: 600;
   --text-headline: 1.0625rem;
   --text-headline--line-height: 1.3;
   --text-headline--letter-spacing: -0.012em;
@@ -377,7 +359,7 @@
   --input: rgb(20 43 59 / 0.38);
   --ring: #0f766e;
   /* Brand coral (#FF6B4A): the logo's destination dot. Used sparingly for "you are here / next" cues. */
-  --brand-coral: #e87952;
+  --brand-coral: #2bb3a5;
   /* Coral as small text (step numbers): darker so it reads at AA contrast on paper. */
   --coral-text: #b4472a;
   /* Solid emphasis surface (primary call to action, the balance card). */
@@ -489,7 +471,7 @@
   --separator: rgb(241 244 243 / 0.11);
   --input: rgb(241 244 243 / 0.32);
   --ring: #5fcfc2;
-  --brand-coral: #e87952;
+  --brand-coral: #2bb3a5;
   --coral-text: #f0a58c;
   --ink: #f1f4f3;
   --ink-foreground: #0e1f2b;
@@ -679,11 +661,11 @@
   }
 }
 
-/* Titles: Bricolage Grotesque, tightened as it grows. <em> is plain: no colored last word. */
+/* Titles: the system face, semibold, tightened as it grows. <em> is plain: no colored last word. */
 @utility title-display {
   font-family: var(--font-display);
-  --tw-font-weight: 650;
-  font-weight: 650;
+  --tw-font-weight: 600;
+  font-weight: 600;
   letter-spacing: -0.028em;
   text-wrap: balance;
   & em {
@@ -692,7 +674,7 @@
   }
 }
 
-/* Amounts that matter: bold Figtree with tabular figures. */
+/* Amounts that matter: bold with tabular figures. */
 @utility money-display {
   font-family: var(--font-sans);
   font-weight: 700;

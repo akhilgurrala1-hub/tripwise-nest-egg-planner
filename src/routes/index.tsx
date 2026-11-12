@@ -11,6 +11,7 @@ import { CoveragePicker } from "@/components/app/plan/CoveragePicker";
 import { OriginField } from "@/components/app/plan/OriginField";
 import { StylePicker } from "@/components/app/plan/StylePicker";
 import { Inspiration } from "@/components/app/plan/Inspiration";
+import { ProductTiles } from "@/components/app/plan/ProductTiles";
 import { Faq } from "@/components/app/landing";
 import { StopsPicker } from "@/components/app/plan/StopsPicker";
 import { formatDateRange } from "@/components/app/TripHeader";
@@ -358,7 +359,7 @@ function Welcome() {
         </div>
       )}
       {/* The hero, after apple.com: one big line, one short sentence, the planner, then the places. */}
-      <section>
+      <section className="bg-secondary">
         <div className="page-container pt-12 pb-16 text-center sm:pt-20 sm:pb-24 max-sm:min-h-[calc(100dvh-9rem)]">
           <h1 className="title-display mx-auto max-w-4xl text-display">
             Plan a trip around your budget
@@ -398,6 +399,8 @@ function Welcome() {
           />
         </div>
       </section>
+
+      <ProductTiles />
 
       <div className="page-container py-16 sm:py-24">
         <div className="layout-main-aside lg:gap-y-8">
