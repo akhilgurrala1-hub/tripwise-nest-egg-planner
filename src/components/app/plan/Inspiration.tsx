@@ -24,7 +24,7 @@ export interface Idea {
 }
 
 /** A drive and a flight, alternating, so the row shows both kinds of trip from home. */
-function inspirationIdeas(setup: TripSetup, from: GeoPoint | null, limit = 4): Idea[] {
+export function inspirationIdeas(setup: TripSetup, from: GeoPoint | null, limit = 4): Idea[] {
   const kinds: TripType[] =
     setup.tripType === "cruise" || setup.tripType === "staycation"
       ? ["road-trip", "flight"]
@@ -129,7 +129,7 @@ export function Inspiration({
         {!settled &&
           [0, 1, 2].map((i) => (
             <li key={i} aria-hidden className="w-[70%] shrink-0 snap-start sm:w-64">
-              <span className="skeleton block aspect-[16/9] rounded-2xl" />
+              <span className="skeleton block aspect-[4/5] rounded-2xl" />
               <span className="mt-4 block h-[6.25rem]" />
             </li>
           ))}
@@ -196,10 +196,10 @@ function IdeaCard({
       className="group lift block w-full rounded-2xl text-left pressable focus-visible:ring-4 focus-visible:ring-primary/30 focus-visible:outline-none"
     >
       {/* The place on top, the facts under it: a travel app's listing card. */}
-      <span className="relative isolate block aspect-[16/9] overflow-hidden rounded-2xl bg-fill">
+      <span className="relative isolate block aspect-[4/5] overflow-hidden rounded-2xl bg-fill">
         {photo?.image ? (
           <Photo
-            src={thumbAt(photo.image, 400)}
+            src={thumbAt(photo.image, 500)}
             alt=""
             priority={first ?? false}
             className="absolute inset-0 -z-10"
@@ -217,7 +217,7 @@ function IdeaCard({
         </span>
       </span>
       <span className="mt-4 block px-1">
-        <span className="title-display block text-title-2 font-normal">{idea.s.name}</span>
+        <span className="title-display block text-title-2">{idea.s.name}</span>
         <span className="mt-1 block label-mono">
           {idea.s.region}
           {idea.s.distanceLabel ? ` · ${idea.s.distanceLabel}` : ""}

@@ -69,8 +69,14 @@ const NOT_A_PHOTO =
  * (500px is about 50KB) instead of the 960px default (about 220KB).
  */
 export function thumbAt(url: string, width: number): string {
-  return url.replace(/\/\d+px-(?=[^/]+$)/, `/${width}px-`);
+  // Wikimedia answers only standard widths (anything else is an HTTP 400, so the photo never
+  // shows): use the nearest standard one at or above what was asked for.
+  const std = THUMB_WIDTHS.find((w) => w >= width) ?? THUMB_WIDTHS[THUMB_WIDTHS.length - 1]!;
+  return url.replace(/\/\d+px-(?=[^/]+$)/, `/${std}px-`);
 }
+
+/** Thumbnail widths Wikimedia serves (checked against upload.wikimedia.org). */
+const THUMB_WIDTHS = [250, 330, 500, 960, 1280, 1920];
 
 /** How far an article's coordinates may be from the destination and still describe it. */
 const MAX_KM = 350;
