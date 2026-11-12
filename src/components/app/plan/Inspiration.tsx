@@ -112,21 +112,19 @@ export function Inspiration({
   if (settled && !ideas.length) return null;
   return (
     <section aria-labelledby="ideas-title">
-      <div className="grid items-end gap-8 lg:grid-cols-[1.15fr_1fr] lg:gap-16">
-        <div>
-          <h2 id="ideas-title" className="title-display text-large-title">
-            Trips worth taking. <em>From {fromLabel}.</em>
-          </h2>
-        </div>
-        <p className="max-w-xl font-display text-title-2 leading-snug font-light text-muted-foreground italic lg:justify-self-end">
+      <div>
+        <h2 id="ideas-title" className="title-display text-title-1">
+          Trips from {fromLabel}
+        </h2>
+        <p className="mt-2 text-body text-muted-foreground">
           Estimated for {setup.travelers} {setup.travelers === 1 ? "traveler" : "travelers"},{" "}
-          {nights} night{nights === 1 ? "" : "s"}, from your door.
+          {nights} night{nights === 1 ? "" : "s"}, starting from you.
         </p>
       </div>
       <ul
         ref={rail}
         onScroll={onScroll}
-        className="-mx-6 mt-14 flex snap-x snap-mandatory scroll-px-6 gap-6 overflow-x-auto px-6 pb-2 [scrollbar-width:none] sm:-mx-8 sm:scroll-px-8 sm:px-8 lg:-mx-12 lg:scroll-px-12 lg:px-12 [&::-webkit-scrollbar]:hidden"
+        className="-mx-6 mt-8 flex snap-x snap-mandatory scroll-px-6 gap-6 overflow-x-auto px-6 pb-2 [scrollbar-width:none] sm:-mx-8 sm:scroll-px-8 sm:px-8 lg:-mx-12 lg:scroll-px-12 lg:px-12 [&::-webkit-scrollbar]:hidden"
       >
         {!settled &&
           [0, 1, 2].map((i) => (

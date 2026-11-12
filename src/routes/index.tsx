@@ -11,7 +11,7 @@ import { CoveragePicker } from "@/components/app/plan/CoveragePicker";
 import { OriginField } from "@/components/app/plan/OriginField";
 import { StylePicker } from "@/components/app/plan/StylePicker";
 import { Inspiration } from "@/components/app/plan/Inspiration";
-import { ClosingCta, Faq, HowItWorks, TheMath, Tools, TripTypes } from "@/components/app/landing";
+import { Faq, HowItWorks } from "@/components/app/landing";
 import { StopsPicker } from "@/components/app/plan/StopsPicker";
 import { formatDateRange } from "@/components/app/TripHeader";
 import { TripAssistant } from "@/components/app/plan/TripAssistant";
@@ -357,76 +357,37 @@ function Welcome() {
           </Link>
         </div>
       )}
-      {/* The hero: one question, one bar to answer it in plain words, a fact sheet beside it. */}
-      <section className="relative overflow-hidden">
-        <div className="page-container pt-12 pb-16 sm:pt-20 sm:pb-24">
-          <div className="grid gap-16 xl:grid-cols-[1.3fr_1fr] xl:items-end">
-            <div className="min-w-0">
-              <h1
-                aria-label="Plan a trip around your budget."
-                className="title-display text-display"
-              >
-                {["Plan", "a", "trip", "around", "your", "budget."].map((word, i) => (
-                  <span key={word} aria-hidden>
-                    {i > 0 && " "}
-                    <span className="hero-line">
-                      <span className="hero-word" style={{ "--w": i } as CSSProperties}>
-                        {i >= 3 ? <em>{word}</em> : word}
-                      </span>
-                    </span>
-                  </span>
-                ))}
-              </h1>
-              <p className="enter-rise mt-8 max-w-xl text-body text-foreground/80">
-                Say where and when in your own words. Waypoint prices the whole trip, plans each day
-                and lists what to book.
-              </p>
-              <div className="enter-rise mt-10 max-w-2xl" style={{ "--d": 120 } as CSSProperties}>
-                <TripAssistant
-                  variant="hero"
-                  homeCity={form.origin}
-                  from={originPoint}
-                  onBuild={(draft) => void start(fromDraft(draft))}
-                  onFill={(draft) => {
-                    const next = fromDraft(draft);
-                    touched.current = true;
-                    destPicked.current = true;
-                    reserveTouched.current = false;
-                    setBudgetOwn(!next.budgetAuto);
-                    setForm(next);
-                    toast("Filled in below. Adjust anything, then plan the trip.");
-                    document.getElementById("plan-steps")?.scrollIntoView({ behavior: "smooth" });
-                  }}
-                />
-              </div>
+      {/* The hero: the planner comes first. Say the trip in plain words, or fill it in below. */}
+      <section>
+        <div className="page-container pt-10 pb-12 sm:pt-16 sm:pb-16">
+          <div className="max-w-3xl">
+            <h1 className="title-display text-display">Plan a trip around your budget</h1>
+            <p className="mt-6 max-w-xl text-body text-foreground/80">
+              Say where and when in your own words. Waypoint estimates the cost, plans each day and
+              lists what to book.
+            </p>
+            <div className="mt-8 max-w-2xl">
+              <TripAssistant
+                variant="hero"
+                homeCity={form.origin}
+                from={originPoint}
+                onBuild={(draft) => void start(fromDraft(draft))}
+                onFill={(draft) => {
+                  const next = fromDraft(draft);
+                  touched.current = true;
+                  destPicked.current = true;
+                  reserveTouched.current = false;
+                  setBudgetOwn(!next.budgetAuto);
+                  setForm(next);
+                  toast("Filled in below. Adjust anything, then plan the trip.");
+                  document.getElementById("plan-steps")?.scrollIntoView({ behavior: "smooth" });
+                }}
+              />
             </div>
-            <aside className="enter-rise hidden xl:block" style={{ "--d": 220 } as CSSProperties}>
-              <p className="label-mono">At a glance</p>
-              <p className="mt-6 font-display text-title-2 leading-snug font-light text-muted-foreground italic">
-                A trip should have a price before it has a plan.
-              </p>
-              <dl className="mt-8 border-t border-separator">
-                {[
-                  ["Covers", "Road · Fly · Cruise · Rail · Home"],
-                  ["Data", "Wikipedia · OpenStreetMap · Open-Meteo"],
-                  ["Account", "Not required"],
-                  ["Payments", "Never taken"],
-                ].map(([k, v]) => (
-                  <div
-                    key={k}
-                    className="flex items-baseline justify-between gap-6 border-b border-separator py-4"
-                  >
-                    <dt className="label-mono">{k}</dt>
-                    <dd className="label-mono text-foreground">{v}</dd>
-                  </div>
-                ))}
-              </dl>
-            </aside>
           </div>
         </div>
       </section>
-      <HowItWorks />
-      <section className="border-t border-separator py-20 sm:py-28">
+      <section className="border-t border-separator py-16 sm:py-20">
         <div className="page-container">
           {/* Ideas get the full width, like a travel app's rail; the form and its live preview follow. */}
           <Inspiration
@@ -439,11 +400,11 @@ function Welcome() {
         </div>
       </section>
 
-      <div className="page-container border-t border-separator py-20 sm:py-28">
+      <div className="page-container border-t border-separator py-16 sm:py-20">
         <div className="layout-main-aside lg:gap-y-8">
           <div className="min-w-0">
-            <h2 id="plan-steps" className="title-display scroll-mt-32 text-large-title">
-              Set it up, <em>step by step.</em>
+            <h2 id="plan-steps" className="title-display scroll-mt-32 text-title-1">
+              Plan your trip
             </h2>
 
             <form
@@ -751,32 +712,8 @@ function Welcome() {
           </div>
         </div>
       </div>
-      <Tools />
-      <TheMath
-        sample={trip.isSample}
-        place={tripPlace}
-        totals={{
-          total: totals.totalBudget,
-          emergency: totals.emergencyFund,
-          spendable: totals.spendable,
-          planned: totals.planned,
-          left: totals.remaining,
-        }}
-      />
-      <TripTypes />
+      <HowItWorks />
       <Faq />
-      <ClosingCta
-        onStart={() => {
-          window.scrollTo({ top: 0, behavior: "smooth" });
-          window.setTimeout(
-            () =>
-              document
-                .querySelector<HTMLTextAreaElement>('textarea[aria-label="Describe your trip"]')
-                ?.focus(),
-            450,
-          );
-        }}
-      />
     </div>
   );
 }
