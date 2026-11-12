@@ -174,9 +174,9 @@ function TopNav({ items, pathname }: { items: typeof NAV; pathname: string }) {
   return (
     <header className="scroll-edge material-thick sticky top-0 z-50 hidden border-b border-separator lg:block print:hidden">
       <div aria-hidden className="nav-progress" />
-      <div className="page-container flex h-16 items-center justify-between gap-6 xl:gap-8">
+      <div className="page-container flex h-12 items-center justify-between gap-6 xl:gap-8">
         <Link to="/" className="flex items-center rounded-md" aria-label="Waypoint home">
-          <Logo markClassName="size-8" wordClassName="text-title-2" />
+          <Logo markClassName="size-7" wordClassName="text-headline" />
         </Link>
         <nav aria-label="Main">
           <ul className="flex items-center gap-4 xl:gap-8">
@@ -202,10 +202,8 @@ function TopNav({ items, pathname }: { items: typeof NAV; pathname: string }) {
         <div className="flex items-center gap-2">
           <ThemeToggle />
           <AccountButton />
-          <Button asChild size="sm" variant="outline">
-            <Link to="/">
-              Plan a trip <ArrowRight />
-            </Link>
+          <Button asChild size="sm">
+            <Link to="/">Plan a trip</Link>
           </Button>
         </div>
       </div>

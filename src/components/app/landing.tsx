@@ -29,12 +29,12 @@ const STEPS = [
 
 export function HowItWorks() {
   return (
-    <section className="border-t border-separator py-16 sm:py-20" aria-labelledby="how-title">
+    <section className="py-16 sm:py-24" aria-labelledby="how-title">
       <div className="page-container">
-        <h2 id="how-title" className="title-display text-title-1">
+        <h2 id="how-title" className="title-display text-center text-large-title">
           How it works
         </h2>
-        <ul className="mt-8 grid gap-8 md:grid-cols-3">
+        <ul className="mt-12 grid gap-10 text-center md:grid-cols-3">
           {STEPS.map((s) => (
             <li key={s.title}>
               <h3 className="text-headline font-semibold">{s.title}</h3>
@@ -76,15 +76,15 @@ const QUESTIONS = [
 
 export function Faq() {
   return (
-    <section className="border-t border-separator py-16 sm:py-20" aria-labelledby="faq-title">
+    <section className="bg-card py-16 sm:py-24" aria-labelledby="faq-title">
       <div className="page-container">
-        <h2 id="faq-title" className="title-display text-title-1">
+        <h2 id="faq-title" className="title-display text-center text-large-title">
           Common questions
         </h2>
         <AccordionPrimitive.Root
           type="single"
           collapsible
-          className="mt-8 max-w-3xl border-t border-separator"
+          className="mx-auto mt-12 max-w-3xl border-t border-separator"
         >
           {QUESTIONS.map((x) => (
             <AccordionPrimitive.Item key={x.q} value={x.q} className="border-b border-separator">
