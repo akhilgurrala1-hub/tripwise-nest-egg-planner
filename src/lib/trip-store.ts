@@ -43,6 +43,7 @@ import {
   moveItem,
   moveItemToDay,
   removeItem,
+  reorderItem,
   replaceDay,
   restoreDay as restoreDayInPlan,
   restoreItem,
@@ -528,6 +529,12 @@ export const tripActions = {
   moveItineraryItem(itemId: string, direction: -1 | 1) {
     setState((s) =>
       s.itinerary ? { ...s, itinerary: moveItem(s.itinerary, itemId, direction) } : s,
+    );
+  },
+  /** Drag to a new place in the same day (the time slots stay in order). */
+  reorderItineraryItem(itemId: string, toIndex: number) {
+    setState((s) =>
+      s.itinerary ? { ...s, itinerary: reorderItem(s.itinerary, itemId, toIndex) } : s,
     );
   },
   moveItineraryItemToDay(itemId: string, toDay: number) {

@@ -115,3 +115,52 @@ describe("the store's one-day edit", () => {
     expect(currentTrip().itinerary!.days[1]).toEqual(before.days[1]);
   });
 });
+
+describe("dragging an item to a new place", () => {
+  const day = (): Itinerary => ({
+    source: "demo",
+    tips: [],
+    days: [
+      {
+        day: 1,
+        date: "2027-03-01",
+        title: "One",
+        items: [
+          it_("m", { time: "Morning" }),
+          it_("l", { time: "Lunch", kind: "restaurant" }),
+          it_("a", { time: "Afternoon" }),
+          it_("d", { time: "Dinner", kind: "restaurant" }),
+        ],
+      },
+      { day: 2, date: "2027-03-02", title: "Two", items: [it_("x")] },
+    ],
+  });
+
+  it("moves an item any distance and hands the time slots down in order", async () => {
+    const { reorderItem } = await import("@/lib/itinerary-edit");
+    const out = reorderItem(day(), "d", 1);
+    expect(out.days[0]!.items.map((i) => i.id)).toEqual(["m", "d", "l", "a"]);
+    // The day still reads Morning, Lunch, Afternoon, Dinner from top to bottom.
+    expect(out.days[0]!.items.map((i) => i.time)).toEqual([
+      "Morning",
+      "Lunch",
+      "Afternoon",
+      "Dinner",
+    ]);
+  });
+
+  it("changes nothing for the same place, clamps a far target, and ignores unknown items", async () => {
+    const { reorderItem } = await import("@/lib/itinerary-edit");
+    const p = day();
+    expect(reorderItem(p, "l", 1)).toBe(p);
+    expect(reorderItem(p, "zzz", 0)).toBe(p);
+    expect(reorderItem(p, "m", 99).days[0]!.items.map((i) => i.id)).toEqual(["l", "a", "d", "m"]);
+    expect(reorderItem(p, "d", -5).days[0]!.items.map((i) => i.id)).toEqual(["d", "m", "l", "a"]);
+  });
+
+  it("leaves the other day untouched (same object)", async () => {
+    const { reorderItem } = await import("@/lib/itinerary-edit");
+    const p = day();
+    expect(reorderItem(p, "a", 0).days[1]).toBe(p.days[1]);
+  });
+});
