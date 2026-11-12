@@ -10,7 +10,6 @@ import { DestinationPicker } from "@/components/app/plan/DestinationPicker";
 import { CoveragePicker } from "@/components/app/plan/CoveragePicker";
 import { OriginField } from "@/components/app/plan/OriginField";
 import { StylePicker } from "@/components/app/plan/StylePicker";
-import { HeroMosaic } from "@/components/app/plan/HeroMosaic";
 import { Inspiration } from "@/components/app/plan/Inspiration";
 import { Faq } from "@/components/app/landing";
 import { StopsPicker } from "@/components/app/plan/StopsPicker";
@@ -385,7 +384,6 @@ function Welcome() {
               }}
             />
           </div>
-          <HeroMosaic setup={effective} from={originPoint} onPick={pickIdea} />
         </div>
       </section>
       <section className="bg-card py-16 sm:py-24">
