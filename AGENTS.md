@@ -1,7 +1,7 @@
 ## Hosting
 - The app is hosted on **Vercel** and its database and accounts are a **Supabase** project the owner controls (`wdphpwvkkfflwgwxazld`, us-east-1). It no longer runs on Lovable.
 - Build: plain `vite.config.ts` (TanStack Start + `nitro({ preset: "vercel" })`), output in `.vercel/output`. Server code runs as a Node.js Vercel Function (Fluid Compute).
-- Public Supabase values live in the committed `.env`; secrets (`GEMINI_API_KEY`, `SERPAPI_API_KEY`, `EIA_API_KEY`, optional `AI_*` overrides) are Vercel environment variables, and `.env.local` locally (git-ignored). Set `VITE_SITE_URL` to the production domain for social previews.
+- The three public `VITE_SUPABASE_*` values (they ship to every browser) are Vercel environment variables (production, preview and development); CI needs none (tests and the build pass without them); `.env` is git-ignored, with `.env.example` listing every name. Secrets (`GEMINI_API_KEY`, `SERPAPI_API_KEY`, `EIA_API_KEY`, optional `AI_*` overrides) are Vercel environment variables, and `.env.local` locally (git-ignored). Set `VITE_SITE_URL` to the production domain for social previews.
 - Schema changes: add a SQL file under `drizzle/migrations/` and apply it to the Supabase project.
 
 ## Project rules
