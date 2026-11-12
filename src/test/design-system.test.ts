@@ -196,14 +196,12 @@ describe("no template tells", () => {
     expect(find(/<img\b/g, (p) => p.endsWith("Photo.tsx"))).toEqual([]);
   });
 
-  it("sets headlines in Bricolage Grotesque and text in Figtree, self-hosted, with no serif or mono labels", () => {
+  it("uses the system face, with no web fonts to download, no serif and no mono labels", () => {
     const css = readFileSync(join(SRC, "styles.css"), "utf8");
     const stack = (name: string) => css.match(new RegExp(`--font-${name}:([^;]+);`))?.[1] ?? "";
-    expect(stack("sans")).toMatch(/^\s*"Figtree Variable"/);
-    expect(stack("display")).toMatch(/^\s*"Bricolage Grotesque Variable"/);
-    expect(css).toContain("@fontsource-variable/figtree");
-    expect(css).toContain("@fontsource-variable/bricolage-grotesque");
-    expect(css).not.toMatch(/fraunces|jetbrains|inter variable/i);
+    expect(stack("sans")).toMatch(/^\s*-apple-system/);
+    expect(stack("display")).toMatch(/^\s*-apple-system/);
+    expect(css).not.toMatch(/@fontsource|fraunces|jetbrains|inter variable|figtree|bricolage/i);
     // Small labels are plain sentence case: no uppercase, tracked-out caps.
     expect(css.match(/@utility label-mono \{[^}]*\}/)?.[0] ?? "").not.toMatch(/uppercase/);
   });

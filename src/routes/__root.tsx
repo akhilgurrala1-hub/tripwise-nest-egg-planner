@@ -11,8 +11,6 @@ import {
 import type { ReactNode } from "react";
 
 import appCss from "../styles.css?url";
-import figtree from "@fontsource-variable/figtree/files/figtree-latin-wght-normal.woff2?url";
-import bricolage from "@fontsource-variable/bricolage-grotesque/files/bricolage-grotesque-latin-wght-normal.woff2?url";
 import { AppShell } from "@/components/app/AppShell";
 import { Button } from "@/components/ui/button";
 import { Toaster } from "@/components/ui/sonner";
@@ -129,14 +127,6 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { rel: "icon", href: "/favicon.svg", type: "image/svg+xml" },
       { rel: "apple-touch-icon", href: "/apple-touch-icon.png" },
       { rel: "manifest", href: "/site.webmanifest" },
-      // The one face, fetched early so the headline never swaps late.
-      ...[figtree, bricolage].map((href) => ({
-        rel: "preload",
-        href,
-        as: "font",
-        type: "font/woff2",
-        crossOrigin: "anonymous" as const,
-      })),
       // Photos and their lookups come from Wikipedia and Wikimedia: open those connections early.
       { rel: "preconnect", href: "https://en.wikipedia.org", crossOrigin: "anonymous" },
       { rel: "preconnect", href: "https://thumb.wikimedia.org" },
