@@ -360,7 +360,7 @@ function Welcome() {
       )}
       {/* The hero: the planner comes first. Say the trip in plain words, or fill it in below. */}
       <section>
-        <div className="page-container pt-10 pb-12 sm:pt-16 sm:pb-16">
+        <div className="page-container pt-10 pb-12 sm:pt-16 sm:pb-16 max-sm:min-h-[calc(100dvh-9rem)]">
           <div className="grid items-center gap-12 xl:grid-cols-[1.1fr_1fr]">
             <div className="max-w-3xl min-w-0">
               <h1 className="title-display text-display">Plan a trip around your budget</h1>

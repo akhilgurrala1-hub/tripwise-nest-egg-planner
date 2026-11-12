@@ -34,7 +34,20 @@ export function HeroMosaic({
     .map((idea, i) => ({ idea, image: photos[i]?.data?.image ?? null }))
     .filter((t): t is { idea: (typeof candidates)[number]; image: string } => !!t.image)
     .slice(0, 3);
-  if (tiles.length < 3) return <div aria-hidden className="hidden xl:block" />;
+  const settled = photos.every((p) => !p.isPending);
+  // While the lookups run the space is held (same shape), so the headline never moves when the
+  // photos arrive. If too few real photos exist (offline, Wikipedia down) the space is released.
+  if (!settled)
+    return (
+      <div aria-hidden className="hidden xl:block">
+        <div className="grid aspect-[6/5] grid-cols-2 grid-rows-2 gap-4">
+          <span className="skeleton row-span-2 rounded-2xl" />
+          <span className="skeleton rounded-2xl" />
+          <span className="skeleton rounded-2xl" />
+        </div>
+      </div>
+    );
+  if (tiles.length < 3) return null;
   return (
     <div className="hidden xl:block">
       <div className="grid aspect-[6/5] grid-cols-2 grid-rows-2 gap-4">
