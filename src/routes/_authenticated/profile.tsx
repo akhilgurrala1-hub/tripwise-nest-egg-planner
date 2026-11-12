@@ -317,8 +317,9 @@ function ProfilePage() {
           <fieldset className="min-w-0">
             <legend className="mb-1 text-sm font-semibold">Memberships & travel cards</legend>
             <p className="mb-2 text-xs text-muted-foreground">
-              Saved for perk matching, such as lounges and member travel deals. Perks aren't applied
-              to prices yet.
+              Shown as reminders on the Booking checklist next to the bookings they might help with
+              (lounges, member rates, card travel benefits). Waypoint doesn't know your plan's
+              terms, so they never change prices. Don't enter card numbers anywhere.
             </p>
             <div className="flex flex-wrap gap-2">
               {MEMBERSHIPS.map((m) => (

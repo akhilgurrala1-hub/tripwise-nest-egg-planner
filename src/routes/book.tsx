@@ -27,6 +27,7 @@ import { PageHeader } from "@/components/app/TripHeader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { usePreferences } from "@/lib/account";
+import { perksFor } from "@/lib/perks";
 import {
   bookingPlan,
   bookingProgress,
@@ -373,6 +374,9 @@ function BookingCard({
   const inProgress = record.status === "in-progress";
   const cancelled = record.status === "cancelled";
   const refunded = record.status === "refunded";
+  // Reminders from the memberships and cards the traveler saved; only while there is still something to book.
+  const perks = usePreferences();
+  const hints = booked || skipped ? [] : perksFor(item.kind, perks?.memberships ?? []);
 
   const save = () => {
     tripActions.setBooking(item.key, {
@@ -455,6 +459,21 @@ function BookingCard({
                 : `Book by ${formatCalendarDate(when.by, { month: "short", day: "numeric" })}.`}{" "}
               <span className="font-normal text-muted-foreground">{when.why}</span>
             </p>
+          )}
+          {hints.length > 0 && (
+            <div className="mt-4 rounded-lg bg-fill p-4 text-xs">
+              <p className="font-semibold">Perks you may have: check before you book</p>
+              <ul className="mt-1 space-y-1 text-muted-foreground">
+                {hints.map((h) => (
+                  <li key={h.membership}>
+                    <span className="font-medium text-foreground">{h.membership}.</span> {h.tip}
+                  </li>
+                ))}
+              </ul>
+              <p className="mt-1 text-muted-foreground">
+                These are reminders, not savings. Waypoint doesn't know your plan's terms.
+              </p>
+            </div>
           )}
           {item.stops && item.stops.length > 0 && (
             <ul className="mt-2 flex flex-wrap gap-2">
